@@ -457,22 +457,47 @@ renderizarAgendaAgendamento();
 }
 
 function concluirAgendamento(){
-alert("OK");
+
+let prestadorIndex = document.getElementById("selectPrestador").value;
+
+if(prestadorIndex === "" || !prestadores[prestadorIndex]){
+alert("Selecione um prestador");
+return;
 }
-function renderizarAgendaAgendamento(){
 
-let idx = document.getElementById("selectPrestador").value;
-let container = document.getElementById("agenda-agendamento");
+let selecionados = document.querySelectorAll("#agenda-agendamento .cell.selecionado");
+let necessario = parseInt(document.getElementById("horasNecessarias").innerText || 0);
 
-container.innerHTML = "";
+// validação
+if(selecionados.length !== necessario){
+alert(`Você precisa selecionar exatamente ${necessario} horários`);
+return;
+}
 
-if(idx === "" || !prestadores[idx]) return;
+// monta registro simples de agendamento
+let agendamento = {
+prestador: prestadores[prestadorIndex].nome,
+servicos: [...itensSelecionados],
+horarios: [...selecionados].map(c => c.innerText),
+data: new Date().toLocaleString()
+};
 
-let agenda = prestadores[idx].agenda || [];
+// salva em memória (pode evoluir depois para backend)
+if(!window.agendamentos) window.agendamentos = [];
+window.agendamentos.push(agendamento);
 
-if(agenda.length === 0){
-    container.innerHTML = "<p>Prestador sem agenda cadastrada</p>";
-    return;
+alert("Agendamento concluído com sucesso!");
+
+// limpa tela
+itensSelecionados = [];
+document.getElementById("lista-produtos").innerHTML = "";
+document.getElementById("horasNecessarias").innerText = "0";
+
+document.querySelectorAll("#agenda-agendamento .cell")
+.forEach(c => c.classList.remove("selecionado"));
+
+document.getElementById("step-agendamento").style.display = "none";
+document.getElementById("step-cep").style.display = "block";
 }
 
 agenda.forEach(h => {
