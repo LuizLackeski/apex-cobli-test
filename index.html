@@ -1,3 +1,163 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<title>APEX - Sistema Completo</title>
+
+<style>
+:root { --primary: #2F4EA1; --bg: #f4f6f8; }
+
+body { font-family: 'Segoe UI', sans-serif; background:var(--bg); margin:0; padding:20px; }
+
+.topo { background: var(--primary); color: white; padding: 15px 30px; }
+
+.menu { background: #1F3C88; padding: 10px 30px; display: flex; }
+
+.menu button { background: none; border: none; color: #cbd5e1; margin-right: 20px; cursor: pointer; padding: 10px; }
+
+.menu button.ativo { color: white; border-bottom: 2px solid #4da3ff; }
+
+.conteudo { padding: 40px; max-width: 1000px; margin: 0 auto; }
+
+.aba { display: none; }
+.aba.ativa { display: block; }
+
+.card { background: white; padding: 25px; border-radius: 12px; margin-bottom: 25px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+
+/* AGENDA */
+.cell {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: center;
+    cursor: pointer;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 55px;
+    height: 28px;
+    margin: 2px;
+}
+
+.cell.selecionado {
+    background: var(--primary);
+    color: white;
+}
+
+.row-dia {
+    display: flex;
+    align-items: center;
+    margin-bottom: 6px;
+}
+
+/* FORM */
+input, select {
+    width: 100%;
+    padding: 12px;
+    margin: 5px 0;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+}
+
+button { cursor: pointer; }
+
+/* LISTA */
+.item-lista {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px;
+    border-bottom: 1px solid #eee;
+}
+</style>
+</head>
+
+<body>
+
+<div class="topo"><strong>APEX</strong> <span>Agenda Prestadores</span></div>
+
+<div class="menu">
+<button class="ativo" onclick="trocarAba('consulta', this)">Agendamento</button>
+<button onclick="trocarAba('cadastro', this)">Prestadores</button>
+<button onclick="trocarAba('painel', this); renderizarPainel();">Painel</button>
+</div>
+
+<div class="conteudo">
+
+<!-- ================= AGENDAMENTO ================= -->
+<div id="consulta" class="aba ativa">
+
+<div id="step-cep" class="card">
+<h2>Novo Agendamento</h2>
+<input type="text" id="inputCep" placeholder="Digite o CEP">
+<button onclick="iniciarAgendamento()">Buscar</button>
+</div>
+
+<div id="step-agendamento" class="card" style="display:none;">
+
+<h3>Prestador</h3>
+<select id="selectPrestador" onchange="renderizarAgendaAgendamento()"></select>
+
+<h3>Serviços</h3>
+
+<select id="produto"></select>
+<input type="number" id="quantidade" value="1">
+<button onclick="adicionarProduto()">Adicionar</button>
+
+<div id="lista-produtos"></div>
+
+<p><strong>Horas: <span id="horasNecessarias">0</span></strong></p>
+
+<h3>Agenda</h3>
+<div id="agenda-agendamento"></div>
+
+<button onclick="concluirAgendamento()">Finalizar</button>
+
+</div>
+</div>
+
+<!-- ================= CADASTRO ================= -->
+<div id="cadastro" class="aba">
+
+<div id="lista-prestadores-view" class="card">
+<button onclick="abrirCadastro()">+ Novo Prestador</button>
+<div id="lista-prestadores"></div>
+</div>
+
+<div id="cadastro-flow" class="card" style="display:none;">
+
+<div id="etapa-1">
+<h3>Dados</h3>
+<input id="nomeEmpresa" placeholder="Razão Social">
+<input id="endereco" placeholder="Endereço">
+<input id="cidade" placeholder="Cidade">
+<input id="uf" placeholder="UF">
+<input id="cep" placeholder="CEP">
+<input id="responsavel" placeholder="Responsável">
+<input id="contatoResponsavel" placeholder="Contato">
+</div>
+
+<div id="etapa-2" style="display:none;">
+<h3>Agenda</h3>
+<input id="qtdTecnicos" type="number" placeholder="Técnicos">
+<input id="raio" type="number" max="100" placeholder="Raio">
+<div id="agenda-cadastro"></div>
+</div>
+
+<button onclick="mudarEtapa(-1)">Voltar</button>
+<button onclick="mudarEtapa(1)" id="btnProximo">Próximo</button>
+<button onclick="salvarPrestador()" id="btnSalvar" style="display:none;">Concluir</button>
+
+</div>
+</div>
+
+<!-- ================= PAINEL ================= -->
+<div id="painel" class="aba">
+<div class="card"></div>
+</div>
+
+</div>
+
 <script>
 
 /* ================= DADOS ================= */
@@ -8,105 +168,32 @@ let etapa = 1;
 let editingIndex = -1;
 let agendaAtualPrestador = [];
 
-/* ================= INICIAL ================= */
+/* ================= INIT ================= */
 
 window.onload = () => {
-
-    if(document.getElementById('agenda-cadastro')){
-        criarGrid('agenda-cadastro');
-    }
-
-    if(document.getElementById('produto')){
-        carregarProdutos();
-    }
+    criarGrid('agenda-cadastro');
+    carregarProdutos();
 };
 
 /* ================= ABAS ================= */
 
 function trocarAba(id, btn){
+    document.querySelectorAll('.aba').forEach(a => a.classList.remove('ativa'));
+    document.getElementById(id).classList.add('ativa');
 
-let abas = document.querySelectorAll('.aba');
-let alvo = document.getElementById(id);
-
-if(!alvo) return;
-
-abas.forEach(a => a.classList.remove('ativa'));
-alvo.classList.add('ativa');
-
-document.querySelectorAll('.menu button')
-.forEach(b => b.classList.remove('ativo'));
-
-if(btn) btn.classList.add('ativo');
+    document.querySelectorAll('.menu button').forEach(b => b.classList.remove('ativo'));
+    if(btn) btn.classList.add('ativo');
 }
 
-/* ================= CADASTRO ================= */
-
-function abrirCadastro(index=-1){
-
-editingIndex = index;
-
-document.getElementById("lista-prestadores-view").style.display="none";
-document.getElementById("cadastro-flow").style.display="block";
-
-etapa = 1;
-
-document.getElementById("etapa-1").style.display="block";
-document.getElementById("etapa-2").style.display="none";
-
-document.getElementById("btnProximo").style.display="inline";
-document.getElementById("btnSalvar").style.display="none";
-
-document.querySelectorAll('#cadastro-flow input').forEach(i=>i.value="");
-document.querySelectorAll('#agenda-cadastro .cell').forEach(c=>c.classList.remove('selecionado'));
-
-if(index !== -1){
-let p = prestadores[index];
-
-nomeEmpresa.value=p.nome||"";
-endereco.value=p.endereco||"";
-cidade.value=p.cidade||"";
-uf.value=p.uf||"";
-cep.value=p.cep||"";
-responsavel.value=p.responsavel||"";
-contatoResponsavel.value=p.contato||"";
-qtdTecnicos.value=p.qtdTecnicos||"";
-raio.value=p.raio||"";
-
-p.agenda.forEach(h=>{
-document.querySelectorAll('#agenda-cadastro .cell')
-.forEach(c=>{ if(c.innerText===h) c.classList.add('selecionado') });
-});
-}
-}
-
-/* ================= ETAPA ================= */
-
-function mudarEtapa(dir){
-
-document.getElementById("etapa-"+etapa).style.display="none";
-
-etapa += dir;
-
-if(etapa < 1) etapa = 1;
-if(etapa > 2) etapa = 2;
-
-document.getElementById("etapa-"+etapa).style.display="block";
-
-document.getElementById("btnProximo").style.display = etapa === 2 ? "none" : "inline";
-document.getElementById("btnSalvar").style.display = etapa === 2 ? "inline" : "none";
-}
-
-/* ================= AGENDA CADASTRO ================= */
+/* ================= GRID ================= */
 
 function criarGrid(id){
-
 const grid = document.getElementById(id);
 grid.innerHTML = "";
 
 const dias = ["Segunda","Terça","Quarta","Quinta","Sexta","Sábado"];
 
 dias.forEach(d => {
-
 let row = document.createElement("div");
 row.className = "row-dia";
 
@@ -118,14 +205,13 @@ label.style.fontWeight = "bold";
 row.appendChild(label);
 
 for(let h=8; h<=18; h++){
-
 let cell = document.createElement("div");
 cell.className = "cell";
 cell.innerText = `${h}:00`;
 
-cell.addEventListener("click", function(){
-    this.classList.toggle("selecionado");
-});
+cell.onclick = function(){
+this.classList.toggle("selecionado");
+};
 
 row.appendChild(cell);
 }
@@ -164,12 +250,11 @@ const produtos = {
     ]
 };
 
-function carregarProdutos(){
 
+function carregarProdutos(){
 let select = document.getElementById("produto");
 
 for(let tipo in produtos){
-
 let group = document.createElement("optgroup");
 group.label = tipo;
 
@@ -184,93 +269,16 @@ select.appendChild(group);
 }
 }
 
-function adicionarProduto(){
+/* ================= AGENDAMENTO ================= */
 
-let select = document.getElementById("produto");
-let qtd = parseInt(document.getElementById("quantidade").value);
-let tempo = parseInt(select.value);
-
-itensSelecionados.push({
-desc: select.options[select.selectedIndex].text,
-tempo: tempo * qtd
-});
-
-renderizarProdutos();
-}
-
-function renderizarProdutos(){
-
-let div = document.getElementById("lista-produtos");
-let total = 0;
-
-div.innerHTML = itensSelecionados.map((i,idx)=>{
-total += i.tempo;
-return `<div class="item-lista">${i.desc} <button onclick="removerProduto(${idx})">X</button></div>`;
-}).join("");
-
-document.getElementById("horasNecessarias").innerText = Math.ceil(total/60);
-}
-
-function removerProduto(i){
-itensSelecionados.splice(i,1);
-renderizarProdutos();
-}
-
-/* ================= SALVAR PRESTADOR ================= */
-
-function salvarPrestador(){
-
-let agenda = [];
-
-document.querySelectorAll('#agenda-cadastro .cell.selecionado')
-.forEach(c=>agenda.push(c.innerText));
-
-let dados = {
-nome:nomeEmpresa.value,
-endereco:endereco.value,
-cidade:cidade.value,
-uf:uf.value,
-cep:cep.value,
-responsavel:responsavel.value,
-contato:contatoResponsavel.value,
-qtdTecnicos:qtdTecnicos.value,
-raio:Math.min(100,raio.value||0),
-agenda:agenda
-};
-
-if(editingIndex === -1) prestadores.push(dados);
-else prestadores[editingIndex] = dados;
-
-renderizarListaPrestadores();
+function iniciarAgendamento(){
+document.getElementById("step-cep").style.display="none";
+document.getElementById("step-agendamento").style.display="block";
 atualizarSelectPrestadores();
-
-document.getElementById("lista-prestadores-view").style.display="block";
-document.getElementById("cadastro-flow").style.display="none";
-
-etapa = 1;
-}
-
-/* ================= LISTA ================= */
-
-function renderizarListaPrestadores(){
-
-let l = document.getElementById("lista-prestadores");
-
-l.innerHTML = prestadores.map((p,i)=>
-`<div class="card"><strong>${p.nome}</strong>
-<button onclick="abrirCadastro(${i})">Editar</button>
-<button onclick="excluirPrestador(${i})">Excluir</button></div>`
-).join('');
-}
-
-function excluirPrestador(i){
-prestadores.splice(i,1);
-renderizarListaPrestadores();
-atualizarSelectPrestadores();
+renderizarAgendaAgendamento();
 }
 
 function atualizarSelectPrestadores(){
-
 let sel = document.getElementById("selectPrestador");
 sel.innerHTML = '<option>-- Escolha --</option>';
 
@@ -279,144 +287,74 @@ sel.innerHTML += `<option value="${i}">${p.nome}</option>`;
 });
 }
 
-/* ================= AGENDAMENTO ================= */
-
-function iniciarAgendamento(){
-
-if(prestadores.length === 0){
-alert("Cadastre primeiro");
-return;
-}
-
-document.getElementById("step-cep").style.display="none";
-document.getElementById("step-agendamento").style.display="block";
-
-atualizarSelectPrestadores();
-renderizarAgendaAgendamento();
-}
-
 function renderizarAgendaAgendamento(){
-
 let idx = document.getElementById("selectPrestador").value;
 let container = document.getElementById("agenda-agendamento");
 
 container.innerHTML = "";
 
-if(idx === "" || !prestadores[idx]) return;
+if(!prestadores[idx]) return;
 
 agendaAtualPrestador = prestadores[idx].agenda || [];
 
-let agenda = agendaAtualPrestador;
-
-if(agenda.length === 0){
-    container.innerHTML = "<p>Prestador sem agenda cadastrada</p>";
-    return;
-}
-
-let row = document.createElement("div");
-row.className = "row-dia";
-
-let label = document.createElement("div");
-label.innerText = "Horários disponíveis";
-label.style.width = "120px";
-label.style.fontWeight = "bold";
-
-row.appendChild(label);
-
-agenda.forEach(h => {
-
+agendaAtualPrestador.forEach(h=>{
 let cell = document.createElement("div");
 cell.className = "cell";
 cell.innerText = h;
 
-cell.addEventListener("click", function(){
-
-    let max = parseInt(document.getElementById("horasNecessarias").innerText || 0);
-    let sel = document.querySelectorAll("#agenda-agendamento .cell.selecionado");
-
-    if(!this.classList.contains("selecionado") && sel.length >= max){
-        alert("Limite de horas atingido pelo serviço.");
-        return;
-    }
-
-    this.classList.toggle("selecionado");
-});
-
-row.appendChild(cell);
-
-});
-
-container.appendChild(row);
-}
-
-/* ================= AGENDAMENTO FINAL ================= */
-
-function concluirAgendamento(){
-
-let prestadorIndex = document.getElementById("selectPrestador").value;
-
-if(prestadorIndex === "" || !prestadores[prestadorIndex]){
-alert("Selecione um prestador");
-return;
-}
-
-let selecionados = document.querySelectorAll("#agenda-agendamento .cell.selecionado");
-let necessario = parseInt(document.getElementById("horasNecessarias").innerText || 0);
-
-if(selecionados.length !== necessario){
-alert(`Você precisa selecionar exatamente ${necessario} horários`);
-return;
-}
-
-let agendamento = {
-prestador: prestadores[prestadorIndex].nome,
-servicos: [...itensSelecionados],
-horarios: [...selecionados].map(c => c.innerText),
-data: new Date().toLocaleString()
+cell.onclick = function(){
+this.classList.toggle("selecionado");
 };
 
-if(!window.agendamentos) window.agendamentos = [];
-window.agendamentos.push(agendamento);
+container.appendChild(cell);
+});
+}
 
-renderizarPainel();
+/* ================= SALVAR ================= */
 
-alert("Agendamento concluído com sucesso!");
+function salvarPrestador(){
 
-itensSelecionados = [];
-document.getElementById("lista-produtos").innerHTML = "";
-document.getElementById("horasNecessarias").innerText = "0";
+let agenda = [];
+document.querySelectorAll('#agenda-cadastro .cell.selecionado')
+.forEach(c=>agenda.push(c.innerText));
 
-document.querySelectorAll("#agenda-agendamento .cell")
-.forEach(c => c.classList.remove("selecionado"));
+let dados = {
+nome:nomeEmpresa.value,
+agenda:agenda
+};
 
-document.getElementById("step-agendamento").style.display = "none";
-document.getElementById("step-cep").style.display = "block";
+prestadores.push(dados);
+
+renderizarListaPrestadores();
+atualizarSelectPrestadores();
+
+document.getElementById("lista-prestadores-view").style.display="block";
+document.getElementById("cadastro-flow").style.display="none";
+}
+
+/* ================= LISTA ================= */
+
+function renderizarListaPrestadores(){
+let l = document.getElementById("lista-prestadores");
+
+l.innerHTML = prestadores.map((p,i)=>
+`<div class="card"><strong>${p.nome}</strong></div>`
+).join('');
 }
 
 /* ================= PAINEL ================= */
 
 function renderizarPainel(){
-
 let div = document.querySelector("#painel .card");
 
-if(!window.agendamentos || window.agendamentos.length === 0){
-div.innerHTML = "Nenhum agendamento ainda.";
-return;
-}
+if(!window.agendamentos) return;
 
-div.innerHTML = window.agendamentos.map((a)=>{
-
-return `
-<div style="border-bottom:1px solid #ddd; padding:10px 0;">
-<strong>${a.prestador}</strong><br>
-<small>${a.data}</small><br>
-<span>Serviços: ${a.servicos.map(s=>s.desc).join(", ")}</span><br>
-<span>Horários: ${a.horarios.join(", ")}</span>
-</div>
-`;
-
-}).join("");
-
+div.innerHTML = window.agendamentos.map(a=>`
+<div>${a.prestador} - ${a.data}</div>
+`).join('');
 }
 
 </script>
+
+</body>
+</html>
