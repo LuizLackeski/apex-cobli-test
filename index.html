@@ -188,28 +188,51 @@
         document.getElementById("step-agendamento").style.display="block";
     }
 
-    function rdaAgendamento(){
+   function rdaAgendamento(){
         let idx = document.getElementById("selectPrestador").value;
         let horasLimite = parseInt(document.getElementById("horasNecessarias").innerText);
-        if(horasLimite === 0){ alert("Adicione um serviço antes!"); document.getElementById("selectPrestador").value=""; return; }
-        
         let container = document.getElementById("agenda-agendamento");
+        
+        if (horasLimite === 0) {
+            alert("Adicione um serviço primeiro!");
+            document.getElementById("selectPrestador").value = "";
+            return;
+        }
+
         container.innerHTML = "";
         
-        prestadores[idx].agenda.forEach(item => {
-            let div = document.createElement("div");
-            div.className = "cell";
-            let h = parseInt(item.hora);
-            div.innerText = `${item.dia.toUpperCase()} - ${h < 10 ? '0'+h : h}H - ${h+1 < 10 ? '0'+(h+1) : h+1}H`;
-            div.onclick = () => {
-                let sel = document.querySelectorAll("#agenda-agendamento .selecionado");
-                if(!div.classList.contains("selecionado") && sel.length >= horasLimite) {
-                    alert("Você só pode selecionar " + horasLimite + " hora(s)!");
-                    return;
-                }
-                div.classList.toggle("selecionado");
-            };
-            container.appendChild(div);
+        // Lista de dias na ordem correta
+        let diasOrdem = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sab"];
+        
+        diasOrdem.forEach(d => {
+            // Filtra apenas os horários daquele dia que pertencem ao prestador
+            let slotsDoDia = prestadores[idx].agenda.filter(item => item.dia === d);
+            
+            if (slotsDoDia.length > 0) {
+                let row = document.createElement("div");
+                row.className = "row-dia";
+                row.innerHTML = `<div style="width:50px; font-weight:bold;">${d}</div>`;
+                
+                slotsDoDia.forEach(item => {
+                    let div = document.createElement("div");
+                    div.className = "cell";
+                    
+                    // Formata: 08H - 09H
+                    let h = parseInt(item.hora);
+                    div.innerText = `${h < 10 ? '0'+h : h}H - ${h+1 < 10 ? '0'+(h+1) : h+1}H`;
+                    
+                    div.onclick = () => {
+                        let selecionados = document.querySelectorAll("#agenda-agendamento .selecionado");
+                        if(!div.classList.contains("selecionado") && selecionados.length >= horasLimite) {
+                            alert("Você só pode selecionar " + horasLimite + " hora(s)!");
+                            return;
+                        }
+                        div.classList.toggle("selecionado");
+                    };
+                    row.appendChild(div);
+                });
+                container.appendChild(row);
+            }
         });
     }
 
