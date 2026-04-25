@@ -7,7 +7,7 @@
 <style>
 body {
   margin: 0;
-  font-family: Arial, sans-serif;
+  font-family: Arial;
   background: #f4f6f8;
 }
 
@@ -18,10 +18,6 @@ body {
   padding: 15px 30px;
   display: flex;
   justify-content: space-between;
-}
-
-.topo strong {
-  font-size: 18px;
 }
 
 /* MENU */
@@ -37,7 +33,6 @@ body {
   margin-right: 20px;
   font-size: 16px;
   cursor: pointer;
-  padding-bottom: 5px;
 }
 
 .menu button.ativo {
@@ -50,13 +45,8 @@ body {
   padding: 30px;
 }
 
-.aba {
-  display: none;
-}
-
-.aba.ativa {
-  display: block;
-}
+.aba { display: none; }
+.ativa { display: block; }
 
 /* CARD */
 .card {
@@ -66,13 +56,13 @@ body {
   margin-bottom: 20px;
 }
 
-/* INPUTS */
+/* INPUT */
 input, select {
   padding: 8px;
-  margin-right: 10px;
-  margin-top: 10px;
+  margin: 5px 5px 10px 0;
 }
 
+/* BOTÃO */
 button.acao {
   background: #2F4EA1;
   color: white;
@@ -81,7 +71,6 @@ button.acao {
   cursor: pointer;
   border-radius: 4px;
 }
-
 </style>
 </head>
 
@@ -100,72 +89,17 @@ button.acao {
   <button onclick="trocarAba('painel', this)">Painel</button>
 </div>
 
-<!-- CONTEÚDO -->
 <div class="conteudo">
 
-  <!-- CONSULTA -->
-  <div id="consulta" class="aba ativa">
+<!-- ================= AGENDAMENTO ================= -->
+<div id="consulta" class="aba ativa">
 
-  <!-- BUSCA -->
- function buscar() {
-  // simulação (depois entra API)
-  document.getElementById("fluxo-agendamento").style.display = "block";
+  <div class="card">
+    <h2>Novo Agendamento</h2>
+    <input placeholder="Digite o endereço ou CEP">
+    <button class="acao" onclick="buscar()">Buscar</button>
+  </div>
 
-  document.getElementById("prestadorSelecionado").innerText =
-    "Prestador X • 10km • 1 técnico";
-}
-
-let tempoTotal = 0;
-
-function calcularTempo() {
-  const produto = parseInt(document.getElementById("produto").value);
-  const qtd = parseInt(document.getElementById("quantidade").value || 0);
-
-  tempoTotal += produto * qtd;
-
-  document.getElementById("tempoTotal").innerText = tempoTotal + "h";
-
-  gerarHorarios();
-}
-
-function gerarHorarios() {
-  const container = document.getElementById("horarios");
-  container.innerHTML = "";
-
-  for (let h = 8; h <= 18; h++) {
-    const btn = document.createElement("button");
-    btn.innerText = h + ":00";
-    btn.onclick = () => selecionarHorario(btn, h);
-    container.appendChild(btn);
-  }
-}
-
-let horariosSelecionados = [];
-
-function selecionarHorario(btn, hora) {
-  if (horariosSelecionados.includes(hora)) {
-    horariosSelecionados = horariosSelecionados.filter(h => h !== hora);
-    btn.style.background = "";
-  } else {
-    horariosSelecionados.push(hora);
-    btn.style.background = "#2F4EA1";
-    btn.style.color = "white";
-  }
-
-  validarTempo();
-}
-
-function validarTempo() {
-  const alerta = document.getElementById("alertaTempo");
-
-  if (horariosSelecionados.length < tempoTotal) {
-    alerta.innerText = "Tempo insuficiente para execução";
-  } else {
-    alerta.innerText = "";
-  }
-}
-
-  <!-- RESULTADO / FLUXO -->
   <div id="fluxo-agendamento" style="display:none;">
 
     <div class="card">
@@ -196,21 +130,17 @@ function validarTempo() {
   </div>
 
 </div>
-  
-  <!-- CADASTRO -->
-  <div id="cadastro" class="aba">
 
-  <!-- LISTA / BOTÃO -->
+<!-- ================= CADASTRO ================= -->
+<div id="cadastro" class="aba">
+
   <div id="lista-prestadores-view">
-
     <div class="card">
       <h2>Prestadores</h2>
       <button class="acao" onclick="abrirCadastro()">+ Cadastrar Prestador</button>
     </div>
-
   </div>
 
-  <!-- FLUXO CADASTRO -->
   <div id="cadastro-flow" style="display:none;">
 
     <div class="card">
@@ -219,14 +149,167 @@ function validarTempo() {
     </div>
 
     <!-- ETAPA 1 -->
-    let etapa = 1;
+    <div class="card etapa" id="etapa1">
+      <h4>Dados</h4>
+      <input placeholder="Nome"><br>
+      <input placeholder="Telefone"><br>
+      <input placeholder="Contato"><br>
+      <input type="number" placeholder="Qtd Técnicos"><br>
+    </div>
+
+    <!-- ETAPA 2 -->
+    <div class="card etapa" id="etapa2" style="display:none;">
+      <h4>Localização</h4>
+      <input placeholder="Endereço"><br><br>
+
+      <label>Raio de atendimento (km)</label><br>
+      <input type="number" id="raio" min="1" max="100" placeholder="Ex: 20">
+
+      <p style="font-size:12px;color:gray;">Máximo permitido: 100 km</p>
+    </div>
+
+    <!-- ETAPA 3 -->
+    <div class="card etapa" id="etapa3" style="display:none;">
+      <h4>Agenda</h4>
+      <p>Selecionar horários disponíveis:</p>
+      <div id="agenda"></div>
+    </div>
+
+    <!-- ETAPA 4 -->
+    <div class="card etapa" id="etapa4" style="display:none;">
+      <h4>Revisão</h4>
+      <p>Confirmar dados antes de salvar</p>
+    </div>
+
+    <div class="card">
+      <button onclick="voltarEtapa()">Voltar</button>
+      <button class="acao" onclick="proximaEtapa()">Próximo</button>
+    </div>
+
+  </div>
+
+</div>
+
+<!-- ================= PAINEL ================= -->
+<div id="painel" class="aba">
+
+  <div class="card">
+    <h2>Painel de Agendamentos</h2>
+
+    <input type="date">
+    <input type="date">
+
+    <select>
+      <option>Todos Prestadores</option>
+    </select>
+
+    <button class="acao">Filtrar</button>
+  </div>
+
+  <div class="card">
+    <h3>Lista</h3>
+    <div id="lista-agendamentos"></div>
+  </div>
+
+</div>
+
+</div>
+
+<script>
+
+/* ===== ABAS ===== */
+function trocarAba(id, botao) {
+  document.querySelectorAll('.aba').forEach(a => a.classList.remove('ativa'));
+  document.getElementById(id).classList.add('ativa');
+
+  document.querySelectorAll('.menu button').forEach(b => b.classList.remove('ativo'));
+  botao.classList.add('ativo');
+}
+
+/* ===== AGENDAMENTO ===== */
+function buscar() {
+  document.getElementById("fluxo-agendamento").style.display = "block";
+  document.getElementById("prestadorSelecionado").innerText =
+    "Prestador X • 10km • 1 técnico";
+}
+
+let tempoTotal = 0;
+
+function calcularTempo() {
+  const produto = parseInt(document.getElementById("produto").value);
+  const qtd = parseInt(document.getElementById("quantidade").value || 0);
+
+  tempoTotal += produto * qtd;
+
+  document.getElementById("tempoTotal").innerText = tempoTotal + "h";
+
+  gerarHorarios();
+}
+
+function gerarHorarios() {
+  const container = document.getElementById("horarios");
+  container.innerHTML = "";
+
+  for (let h = 8; h <= 18; h++) {
+    const btn = document.createElement("button");
+    btn.innerText = h + ":00";
+    btn.style.margin = "5px";
+
+    btn.onclick = () => selecionarHorario(btn, h);
+
+    container.appendChild(btn);
+  }
+}
+
+let horariosSelecionados = [];
+
+function selecionarHorario(btn, hora) {
+  if (horariosSelecionados.includes(hora)) {
+    horariosSelecionados = horariosSelecionados.filter(h => h !== hora);
+    btn.style.background = "";
+    btn.style.color = "";
+  } else {
+    horariosSelecionados.push(hora);
+    btn.style.background = "#2F4EA1";
+    btn.style.color = "white";
+  }
+
+  validarTempo();
+}
+
+function validarTempo() {
+  const alerta = document.getElementById("alertaTempo");
+
+  if (horariosSelecionados.length < tempoTotal) {
+    alerta.innerText = "Tempo insuficiente para execução";
+  } else {
+    alerta.innerText = "";
+  }
+}
+
+/* ===== CADASTRO ===== */
+let etapa = 1;
 
 function abrirCadastro() {
   document.getElementById("lista-prestadores-view").style.display = "none";
   document.getElementById("cadastro-flow").style.display = "block";
 }
 
+function validarEtapa2() {
+  const raio = document.getElementById("raio").value;
+
+  if (!raio || raio <= 0 || raio > 100) {
+    alert("Informe um raio válido (1 a 100 km)");
+    return false;
+  }
+
+  return true;
+}
+
 function proximaEtapa() {
+
+  if (etapa === 2 && !validarEtapa2()) return;
+
   if (etapa < 4) {
     document.getElementById("etapa" + etapa).style.display = "none";
     etapa++;
@@ -242,25 +325,6 @@ function voltarEtapa() {
     document.getElementById("etapa" + etapa).style.display = "block";
     document.getElementById("etapaAtual").innerText = etapa;
   }
-}
-
-    <div class="card">
-      <button onclick="voltarEtapa()">Voltar</button>
-      <button class="acao" onclick="proximaEtapa()">Próximo</button>
-    </div>
-
-  </div>
-
-</div>
-    
-function trocarAba(id, botao) {
-  // esconder abas
-  document.querySelectorAll('.aba').forEach(a => a.classList.remove('ativa'));
-  document.getElementById(id).classList.add('ativa');
-
-  // atualizar menu ativo
-  document.querySelectorAll('.menu button').forEach(b => b.classList.remove('ativo'));
-  botao.classList.add('ativo');
 }
 
 </script>
