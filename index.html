@@ -317,16 +317,19 @@ container.innerHTML="";
 if(!prestadores[idx]) return;
 
 prestadores[idx].agenda.forEach(item=>{
-let div=document.createElement("div");
-div.className="cell";
-div.innerText = item.hora;
-div.dataset.dia = item.dia;
+let div = document.createElement("div");
+div.className = "cell";
 
-div.onclick=()=>div.classList.toggle("selecionado");
+// 👇 AQUI está a correção principal
+div.innerText = `${item.dia} ${item.hora}`;
+
+div.dataset.dia = item.dia;
+div.dataset.hora = item.hora;
+
+div.onclick = () => div.classList.toggle("selecionado");
 
 container.appendChild(div);
 });
-}
 
 function concluirAgendamento(){
 
