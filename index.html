@@ -163,42 +163,92 @@ document.getElementById("btnSalvar").style.display=etapa===2?"inline":"none";
 }
 
 function criarGrid(id){
-const grid=document.getElementById(id);
-grid.innerHTML="";
-['Seg','Ter','Qua','Qui','Sex','Sab'].forEach(d=>{
-for(let h=8;h<=18;h++){
-let c=document.createElement('div');
-c.className='cell';
-c.innerText=d+" "+h+":00";
-c.onclick=()=>c.classList.toggle('selecionado');
-grid.appendChild(c);
-}
-});
+    const grid = document.getElementById(id);
+    grid.innerHTML = "";
+
+    const dias = [
+        {label:"Segunda", short:"Seg"},
+        {label:"Terça", short:"Ter"},
+        {label:"Quarta", short:"Qua"},
+        {label:"Quinta", short:"Qui"},
+        {label:"Sexta", short:"Sex"},
+        {label:"Sábado", short:"Sab"}
+    ];
+
+    dias.forEach(dia => {
+
+        // linha
+        let row = document.createElement("div");
+        row.style.display = "flex";
+        row.style.marginBottom = "5px";
+        row.style.alignItems = "center";
+
+        // nome do dia
+        let label = document.createElement("div");
+        label.innerText = dia.label;
+        label.style.width = "100px";
+        label.style.fontWeight = "bold";
+
+        row.appendChild(label);
+
+        // horas
+        for(let h=8; h<=18; h++){
+            let cell = document.createElement("div");
+            cell.className = "cell";
+            cell.innerText = `${dia.short} ${h}:00`;
+
+            cell.style.marginRight = "5px";
+            cell.style.flex = "1";
+
+            cell.onclick = () => cell.classList.toggle("selecionado");
+
+            row.appendChild(cell);
+        }
+
+        grid.appendChild(row);
+    });
 }
 
 function salvarPrestador(){
-let agenda=[];
-document.querySelectorAll('#agenda-cadastro .cell.selecionado')
-.forEach(c=>agenda.push(c.innerText));
 
-let dados={
-nome:nomeEmpresa.value,
-endereco:endereco.value,
-cidade:cidade.value,
-uf:uf.value,
-cep:cep.value,
-responsavel:responsavel.value,
-contato:contatoResponsavel.value,
-qtdTecnicos:qtdTecnicos.value,
-raio:Math.min(100,raio.value||0),
-agenda:agenda
-};
+    let agenda=[];
+    document.querySelectorAll('#agenda-cadastro .cell.selecionado')
+    .forEach(c=>agenda.push(c.innerText));
 
-if(editingIndex===-1) prestadores.push(dados);
-else prestadores[editingIndex]=dados;
+    let dados={
+        nome: nomeEmpresa.value,
+        endereco: endereco.value,
+        cidade: cidade.value,
+        uf: uf.value,
+        cep: cep.value,
+        responsavel: responsavel.value,
+        contato: contatoResponsavel.value,
+        qtdTecnicos: qtdTecnicos.value,
+        raio: Math.min(100, raio.value || 0),
+        agenda: agenda
+    };
 
-document.getElementById("lista-prestadores-view").style.display="block";
-document.getElementById("cadastro-flow").style.display="none";
+    if(editingIndex === -1){
+        prestadores.push(dados);
+    } else {
+        prestadores[editingIndex] = dados;
+    }
+
+    // 🔥 ESSAS DUAS LINHAS SÃO ESSENCIAIS
+    renderizarListaPrestadores();
+    atualizarSelectPrestadores();
+
+    resetCadastro();
+}  function atualizarSelectPrestadores(){
+    let sel = document.getElementById("selectPrestador");
+
+    // limpa o select
+    sel.innerHTML = '<option value="">-- Escolha um prestador --</option>';
+
+    // adiciona todos os prestadores
+    prestadores.forEach((p,i)=>{
+        sel.innerHTML += `<option value="${i}">${p.nome}</option>`;
+    });
 }
 </script>
 
