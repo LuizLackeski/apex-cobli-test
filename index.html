@@ -332,12 +332,14 @@ function gerarAgenda(){
 
 /* ===== CADASTRO ===== */
 function abrirCadastro(){
+  document.getElementById("lista-view").style.display="none";
   document.getElementById("form-view").style.display="block";
   gerarAgenda();
 }
 
 function cancelarCadastro(){
   document.getElementById("form-view").style.display="none";
+  document.getElementById("lista-view").style.display="block";
 }
 
 function salvarPrestador(){
@@ -348,6 +350,7 @@ function salvarPrestador(){
     agenda: JSON.parse(JSON.stringify(agendaPrestador))
   });
 
+  cancelarCadastro(); // 🔥 VOLTA PRA LISTA
   renderPrestadores();
 }
 
@@ -357,21 +360,47 @@ function renderPrestadores(){
 
   prestadores.forEach((p,i)=>{
     let d=document.createElement("div");
+
     d.innerHTML=`
       <strong>${p.empresa}</strong>
+      <button onclick="editar(${i})">Editar</button>
       <button onclick="excluir(${i})">Excluir</button>
       <hr>
     `;
+
     l.appendChild(d);
   });
 }
+function editar(i){
+  let p=prestadores[i];
 
+  empresa.value=p.empresa;
+  tecnicos.value=p.tecnicos;
+
+  abrirCadastro();
+}
 function excluir(i){
   prestadores.splice(i,1);
   renderPrestadores();
 }
 
 </script>
+function buscar(){
 
+  let l=document.getElementById("lista-prestadores-ag");
+  l.innerHTML="";
+
+  prestadores.forEach((p,i)=>{
+    let b=document.createElement("button");
+    b.innerText=p.empresa;
+
+    b.onclick=()=>{
+      prestadorSelecionadoIndex=i;
+      document.getElementById("bloco-agendamento").style.display="block";
+    };
+
+    l.appendChild(b);
+  });
+}
 </body>
 </html>
