@@ -13,7 +13,8 @@
         .conteudo { padding: 40px; max-width: 1000px; margin: 0 auto; }
         .aba { display: none; } .aba.ativa { display: block; }
         .card { background: white; padding: 25px; border-radius: 12px; margin-bottom: 25px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        .cell { border: 1px solid #ddd; padding: 8px; text-align: center; cursor: pointer; border-radius: 4px; font-size: 0.75rem; display: inline-flex; align-items: center; justify-content: center; width: 55px; height: 28px; margin: 2px; }
+        /* Aumentei a largura da cell para caber o formato novo */
+        .cell { border: 1px solid #ddd; padding: 8px; text-align: center; cursor: pointer; border-radius: 4px; font-size: 0.75rem; display: inline-flex; align-items: center; justify-content: center; width: 120px; height: 35px; margin: 2px; }
         .cell.selecionado { background: var(--primary); color: white; }
         .row-dia { display: flex; align-items: center; margin-bottom: 6px; }
         input, select { width: 100%; padding: 12px; margin: 5px 0; border: 1px solid #ddd; border-radius: 8px; }
@@ -46,7 +47,7 @@
             <input type="number" id="quantidade" value="1">
             <button onclick="adicionarProduto()">Adicionar</button>
             <div id="lista-produtos"></div>
-            <p><strong>Horas: <span id="horasNecessarias">0</span></strong></p>
+            <p><strong>Total Horas: <span id="horasNecessarias">0</span>h</strong></p>
             <h3>Agenda</h3>
             <div id="agenda-agendamento"></div>
             <button onclick="concluirAgendamento()">Finalizar</button>
@@ -85,7 +86,6 @@
 <script>
     let prestadores = [];
     let itensSelecionados = [];
-    let agendamentos = [];
     let etapa = 1;
 
     const produtos = {
@@ -149,7 +149,7 @@
                 let cell=document.createElement("div");
                 cell.className="cell";
                 cell.dataset.dia = d; cell.dataset.hora = `${h}:00`;
-                cell.innerText = `${h}:00`;
+                cell.innerText = `${d.toUpperCase()} - ${h < 10 ? '0'+h : h}H - ${h+1 < 10 ? '0'+(h+1) : h+1}H`;
                 cell.onclick=()=>cell.classList.toggle("selecionado");
                 row.appendChild(cell);
             }
@@ -212,14 +212,24 @@
 
     function rdaAgendamento(){
         let idx = document.getElementById("selectPrestador").value;
-        let container = document.getElementById("agenda-agendamento");
         let horasLimite = parseInt(document.getElementById("horasNecessarias").innerText);
-        
+        let container = document.getElementById("agenda-agendamento");
+
+        if (horasLimite === 0) {
+            alert("Adicione pelo menos um produto/serviço antes de selecionar horários!");
+            container.innerHTML = "";
+            return;
+        }
+
         container.innerHTML = "";
         prestadores[idx].agenda.forEach(item => {
             let div = document.createElement("div");
             div.className = "cell";
-            div.innerText = `${item.dia} ${item.hora}`;
+            
+            // Formatando SEG - 08H - 09H
+            let h = parseInt(item.hora);
+            div.innerText = `${item.dia.toUpperCase()} - ${h < 10 ? '0'+h : h}H - ${h+1 < 10 ? '0'+(h+1) : h+1}H`;
+            
             div.onclick = () => {
                 let selecionados = document.querySelectorAll("#agenda-agendamento .cell.selecionado");
                 if(!div.classList.contains("selecionado") && selecionados.length >= horasLimite) {
@@ -247,7 +257,7 @@
         trocarAba('painel', null);
         let botoes = document.querySelectorAll('.menu button');
         botoes.forEach(b => b.classList.remove('ativo'));
-        botoes[2].classList.add('ativo'); // Painel é o terceiro botão
+        botoes[2].classList.add('ativo');
     }
 </script>
 </body>
