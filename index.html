@@ -7,54 +7,30 @@
 <style>
 body { margin:0; font-family: Arial; background:#f4f6f8; }
 
-.topo {
-  background:#2F4EA1;
-  color:white;
-  padding:15px 30px;
-  display:flex;
-  justify-content:space-between;
-}
-
+.topo { background:#2F4EA1; color:white; padding:15px 30px; display:flex; justify-content:space-between; }
 .menu { background:#1F3C88; padding:10px 30px; }
 
 .menu button {
-  background:none;
-  border:none;
-  color:#cbd5e1;
-  margin-right:20px;
-  font-size:16px;
-  cursor:pointer;
+  background:none; border:none; color:#cbd5e1;
+  margin-right:20px; font-size:16px; cursor:pointer;
 }
-
-.menu button.ativo {
-  color:white;
-  border-bottom:2px solid #4da3ff;
-}
+.menu button.ativo { color:white; border-bottom:2px solid #4da3ff; }
 
 .conteudo { padding:30px; }
-
 .aba { display:none; }
 .ativa { display:block; }
 
 .card {
-  background:white;
-  padding:20px;
-  border-radius:8px;
-  margin-bottom:20px;
+  background:white; padding:20px;
+  border-radius:8px; margin-bottom:20px;
 }
 
-input, select {
-  padding:8px;
-  margin:5px;
-}
+input, select { padding:8px; margin:5px; }
 
 button.acao {
-  background:#2F4EA1;
-  color:white;
-  border:none;
-  padding:8px 15px;
-  cursor:pointer;
-  border-radius:4px;
+  background:#2F4EA1; color:white;
+  border:none; padding:8px 15px;
+  cursor:pointer; border-radius:4px;
 }
 </style>
 </head>
@@ -79,8 +55,7 @@ button.acao {
 
   <div class="card">
     <h2>Novo Agendamento</h2>
-    <input placeholder="Digite endereço ou CEP">
-    <button class="acao" onclick="buscar()">Buscar</button>
+    <button class="acao" onclick="buscar()">Buscar Prestadores</button>
   </div>
 
   <div id="fluxo-agendamento" style="display:none;">
@@ -89,12 +64,14 @@ button.acao {
 
     <div class="card">
       <h3>Produtos</h3>
-      <select id="produto"></select>
 
-<input type="number" id="quantidade" placeholder="Qtd">
-<button class="acao" onclick="adicionarItem()">Adicionar</button>
-<div id="lista-itens"></div>
-<p>Tempo total: <strong id="tempoTotal">0h</strong></p>
+      <select id="produto"></select>
+      <input type="number" id="quantidade" placeholder="Qtd">
+      <button class="acao" onclick="adicionarItem()">Adicionar</button>
+
+      <div id="lista-itens"></div>
+
+      <p>Tempo total: <strong id="tempoTotal">0h</strong></p>
     </div>
 
     <div class="card">
@@ -170,7 +147,7 @@ button.acao {
 
 <script>
 
-/* ===== VARIÁVEIS ===== */
+/* ===== DADOS ===== */
 let prestadores = [];
 let agendamentos = [];
 let agendaPrestador = {};
@@ -179,34 +156,38 @@ let prestadorSelecionadoIndex = null;
 let prestadorEditando = null;
 let tempoTotal = 0;
 let horariosSelecionados = [];
-  const produtos = [
-  { nome: "TELEMETRIA - BLOQUEADOR", tempo: 60 },
-  { nome: "TELEMETRIA + CAN", tempo: 60 },
-  { nome: "IDENTIFICADOR", tempo: 60 },
-  { nome: "IDENTIFICADOR + CAN", tempo: 90 },
-  { nome: "IDENTIFICADOR RFID", tempo: 60 },
-  { nome: "IDENTIFICADOR RFID + CAN", tempo: 80 },
-  { nome: "IMOBILIZADOR", tempo: 80 },
-  { nome: "IMOBILIZADOR RFID", tempo: 80 },
-  { nome: "COBLICAM (2 CAMERAS)", tempo: 90 },
-  { nome: "IMOBILIZADOR RFID + CAN", tempo: 90 },
-  { nome: "IMOBILIZADOR + CAN", tempo: 100 },
-  { nome: "MULTICAM 3 CAM", tempo: 120 },
-  { nome: "MOTOS / MAQUINÁRIO", tempo: 40 },
-  { nome: "TELEMETRIA PADRÃO", tempo: 40 },
-  { nome: "MULTICAM 2+1", tempo: 240 },
-  { nome: "MULTICAM 4", tempo: 240 },
-  { nome: "MULTICAM 5", tempo: 300 }
+let itensAgendamento = [];
+
+/* ===== PRODUTOS ===== */
+const produtos = [
+  { nome: "Bloqueador", tempo: 60 },
+  { nome: "Telemetria + CAN", tempo: 60 },
+  { nome: "Identificador", tempo: 60 },
+  { nome: "Identificador + CAN", tempo: 90 },
+  { nome: "RFID", tempo: 60 },
+  { nome: "RFID + CAN", tempo: 80 },
+  { nome: "Imobilizador", tempo: 80 },
+  { nome: "Câmeras 2", tempo: 90 },
+  { nome: "Multicam 3", tempo: 120 },
+  { nome: "Multicam 4", tempo: 240 },
+  { nome: "Multicam 5", tempo: 300 }
 ];
 
-let itensAgendamento = [];
+window.onload = function(){
+  let select = document.getElementById("produto");
+  produtos.forEach((p,i)=>{
+    let o=document.createElement("option");
+    o.value=i;
+    o.text=p.nome;
+    select.appendChild(o);
+  });
+}
 
 /* ===== ABAS ===== */
 function trocarAba(id, botao){
-  document.querySelectorAll('.aba').forEach(a => a.classList.remove('ativa'));
+  document.querySelectorAll('.aba').forEach(a=>a.classList.remove('ativa'));
   document.getElementById(id).classList.add('ativa');
-
-  document.querySelectorAll('.menu button').forEach(b => b.classList.remove('ativo'));
+  document.querySelectorAll('.menu button').forEach(b=>b.classList.remove('ativo'));
   botao.classList.add('ativo');
 }
 
@@ -219,15 +200,13 @@ function abrirCadastro(){
 function proximaEtapa(){
   if(etapa===2){
     let r=document.getElementById("raio").value;
-    if(!r || r<1 || r>100){ alert("Raio inválido"); return;}
+    if(!r||r<1||r>100){ alert("Raio inválido"); return;}
   }
-
   if(etapa<4){
     document.getElementById("etapa"+etapa).style.display="none";
     etapa++;
     document.getElementById("etapa"+etapa).style.display="block";
     document.getElementById("etapaAtual").innerText=etapa;
-
     if(etapa===3) gerarAgenda();
   }
 }
@@ -249,14 +228,11 @@ function gerarAgenda(){
   dias.forEach(d=>{
     let div=document.createElement("div");
     div.innerHTML="<strong>"+d+"</strong><br>";
-
     for(let h=8;h<=18;h++){
       let b=document.createElement("button");
       b.innerText=h;
-
       b.onclick=()=>{
         if(!agendaPrestador[d]) agendaPrestador[d]=[];
-
         if(agendaPrestador[d].includes(h)){
           agendaPrestador[d]=agendaPrestador[d].filter(x=>x!==h);
           b.style.background="";
@@ -266,27 +242,25 @@ function gerarAgenda(){
           b.style.color="white";
         }
       };
-
       div.appendChild(b);
     }
-
     c.appendChild(div);
   });
 }
 
 function salvarPrestador(){
   let p={
-    nome: document.getElementById("nome").value,
-    endereco: document.getElementById("endereco").value,
-    tecnicos: document.getElementById("tecnicos").value,
-    raio: document.getElementById("raio").value,
+    nome: nome.value,
+    endereco: endereco.value,
+    tecnicos: tecnicos.value,
+    raio: raio.value,
     agenda: JSON.parse(JSON.stringify(agendaPrestador))
   };
 
   if(prestadorEditando!=null){
     prestadores[prestadorEditando]=p;
     prestadorEditando=null;
-  }else{
+  } else {
     prestadores.push(p);
   }
 
@@ -297,16 +271,13 @@ function salvarPrestador(){
 function renderizarPrestadores(){
   let l=document.getElementById("lista-prestadores");
   l.innerHTML="";
-
   prestadores.forEach((p,i)=>{
     let d=document.createElement("div");
     d.innerHTML=`
-      <strong>${p.nome}</strong> (${p.raio}km)
-      <br>
+      <strong>${p.nome}</strong>
       <button onclick="editarPrestador(${i})">Editar</button>
       <button onclick="excluirPrestador(${i})">Excluir</button>
-      <hr>
-    `;
+      <hr>`;
     l.appendChild(d);
   });
 }
@@ -314,19 +285,17 @@ function renderizarPrestadores(){
 function editarPrestador(i){
   let p=prestadores[i];
   abrirCadastro();
-  document.getElementById("nome").value=p.nome;
-  document.getElementById("endereco").value=p.endereco;
-  document.getElementById("tecnicos").value=p.tecnicos;
-  document.getElementById("raio").value=p.raio;
-  agendaPrestador=JSON.parse(JSON.stringify(p.agenda));
+  nome.value=p.nome;
+  endereco.value=p.endereco;
+  tecnicos.value=p.tecnicos;
+  raio.value=p.raio;
+  agendaPrestador=p.agenda;
   prestadorEditando=i;
 }
 
 function excluirPrestador(i){
-  if(confirm("Excluir?")){
-    prestadores.splice(i,1);
-    renderizarPrestadores();
-  }
+  prestadores.splice(i,1);
+  renderizarPrestadores();
 }
 
 function resetCadastro(){
@@ -335,17 +304,47 @@ function resetCadastro(){
   etapa=1;
   agendaPrestador={};
   document.querySelectorAll(".etapa").forEach((e,i)=>e.style.display=i===0?"block":"none");
-  document.getElementById("etapaAtual").innerText=1;
+}
+
+/* ===== ITENS ===== */
+function adicionarItem(){
+  let p=produtos[produto.value];
+  let q=parseInt(quantidade.value||0);
+  if(!q) return alert("Qtd inválida");
+
+  itensAgendamento.push({nome:p.nome, tempo:p.tempo, qtd:q});
+  renderizarItens();
+}
+
+function renderizarItens(){
+  let c=document.getElementById("lista-itens");
+  c.innerHTML="";
+  tempoTotal=0;
+
+  itensAgendamento.forEach((i,index)=>{
+    tempoTotal += i.tempo * i.qtd;
+
+    let d=document.createElement("div");
+    d.innerHTML=`${i.nome} x${i.qtd} 
+      <button onclick="removerItem(${index})">X</button>`;
+    c.appendChild(d);
+  });
+
+  document.getElementById("tempoTotal").innerText=(tempoTotal/60).toFixed(1)+"h";
+}
+
+function removerItem(i){
+  itensAgendamento.splice(i,1);
+  renderizarItens();
 }
 
 /* ===== AGENDAMENTO ===== */
 function buscar(){
-  if(prestadores.length===0){ alert("Cadastre prestador"); return;}
-
+  if(prestadores.length===0) return alert("Cadastre prestador");
   document.getElementById("fluxo-agendamento").style.display="block";
 
   let c=document.getElementById("prestadorSelecionado");
-  c.innerHTML="<strong>Escolha:</strong><br>";
+  c.innerHTML="Escolha:<br>";
 
   prestadores.forEach((p,i)=>{
     let b=document.createElement("button");
@@ -357,12 +356,9 @@ function buscar(){
 
 function selecionarPrestador(i){
   prestadorSelecionadoIndex=i;
-  let p=prestadores[i];
-  agendaPrestador=p.agenda;
+  agendaPrestador=prestadores[i].agenda;
 
-  let c=document.getElementById("prestadorSelecionado");
-  c.innerHTML="<strong>"+p.nome+"</strong>";
-
+  document.getElementById("prestadorSelecionado").innerHTML=prestadores[i].nome;
   mostrarAgenda();
 }
 
@@ -388,127 +384,74 @@ function mostrarAgenda(){
           b.style.background="#2F4EA1";
           b.style.color="white";
         }
-        function validarTempo() {
-  const alerta = document.getElementById("alertaTempo");
+        validarTempo();
+      };
 
-  const horasNecessarias = Math.ceil(tempoTotal / 60);
+      div.appendChild(b);
+    });
 
-  if (horariosSelecionados.length < horasNecessarias) {
-    alerta.innerText = "Tempo insuficiente";
-    return;
-  }
-
-  if (Math.max(...horariosSelecionados) + 1 > 19) {
-    alerta.innerText = "Excede 19h";
-    return;
-  }
-
-  alerta.innerText = "";
-}
-
-function adicionarItem() {
-
-  const index = document.getElementById("produto").value;
-  const qtd = parseInt(document.getElementById("quantidade").value || 0);
-
-  if (!qtd || qtd <= 0) {
-    alert("Informe quantidade");
-    return;
-  }
-
-  const produto = produtos[index];
-
-  itensAgendamento.push({
-    nome: produto.nome,
-    tempo: produto.tempo,
-    qtd: qtd
+    c.appendChild(div);
   });
+}
 
-  renderizarItens();
-}
-function renderizarItens() {
+function validarTempo(){
+  let alerta=document.getElementById("alertaTempo");
 
-  const container = document.getElementById("lista-itens");
-  container.innerHTML = "";
-  tempoTotal = 0;
-  itensAgendamento.forEach((item, index) => {
-    const tempoItem = item.tempo * item.qtd;
-    tempoTotal += tempoItem;
-    const div = document.createElement("div");
-    div.innerHTML = `
-      ${item.nome} | Qtd: ${item.qtd} 
-      <button onclick="removerItem(${index})">X</button>
-    `;
-    container.appendChild(div);
-  });
-  document.getElementById("tempoTotal").innerText =
-    (tempoTotal / 60).toFixed(1) + "h";
+  let horasNecessarias=Math.ceil(tempoTotal/60);
+
+  if(horariosSelecionados.length < horasNecessarias){
+    alerta.innerText="Tempo insuficiente";
+    return;
+  }
+
+  if(Math.max(...horariosSelecionados)+1>19){
+    alerta.innerText="Excede 19h";
+    return;
+  }
+
+  alerta.innerText="";
 }
-  function removerItem(index) {
-  itensAgendamento.splice(index, 1);
-  renderizarItens();
-}
+
 function concluirAgendamento(){
-  if(prestadorSelecionadoIndex==null){ alert("Selecione prestador"); return;}
-  if(horariosSelecionados.length==0){ alert("Selecione horário"); return;}
-  if(document.getElementById("alertaTempo").innerText!=""){ alert("Corrija horários"); return;}
-
   agendamentos.push({
     prestador: prestadores[prestadorSelecionadoIndex].nome,
     data: new Date().toISOString().split("T")[0],
-    horarios: [...horariosSelecionados],
     tempo: tempoTotal
   });
 
   resetAgendamento();
-  itensAgendamento = [];
-document.getElementById("lista-itens").innerHTML = "";
   renderizarPainel();
 }
 
 function resetAgendamento(){
   document.getElementById("fluxo-agendamento").style.display="none";
-  document.getElementById("prestadorSelecionado").innerHTML="";
   document.getElementById("horarios").innerHTML="";
   document.getElementById("tempoTotal").innerText="0h";
-
-  tempoTotal=0;
+  itensAgendamento=[];
   horariosSelecionados=[];
-  prestadorSelecionadoIndex=null;
+  tempoTotal=0;
 }
 
 /* ===== PAINEL ===== */
 function renderizarPainel(){
   let hoje=new Date().toISOString().split("T")[0];
 
-  document.getElementById("hoje").innerText =
+  document.getElementById("hoje").innerText=
     agendamentos.filter(a=>a.data===hoje).length;
 
-  document.getElementById("total").innerText =
-    agendamentos.length;
+  document.getElementById("total").innerText=agendamentos.length;
 
   let l=document.getElementById("lista-agendamentos");
   l.innerHTML="";
 
   agendamentos.forEach(a=>{
     let d=document.createElement("div");
-    d.innerHTML=`${a.prestador} - ${a.data} (${a.horarios.join(",")})`;
+    d.innerHTML=`${a.prestador} - ${a.data}`;
     l.appendChild(d);
   });
 }
 
 </script>
-function carregarProdutos() {
-  const select = document.getElementById("produto");
 
-  produtos.forEach((p, i) => {
-    const opt = document.createElement("option");
-    opt.value = i;
-    opt.text = p.nome;
-    select.appendChild(opt);
-  });
-}
-
-window.onload = carregarProdutos;
 </body>
 </html>
