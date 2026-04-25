@@ -13,7 +13,7 @@
         .conteudo { padding: 40px; max-width: 1000px; margin: 0 auto; }
         .aba { display: none; } .aba.ativa { display: block; }
         .card { background: white; padding: 25px; border-radius: 12px; margin-bottom: 25px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        .cell { border: 1px solid #ddd; padding: 8px; text-align: center; cursor: pointer; border-radius: 4px; font-size: 0.75rem; display: inline-flex; align-items: center; justify-content: center; width: 65px; height: 35px; margin: 2px; }
+        .cell { border: 1px solid #ddd; padding: 8px; text-align: center; cursor: pointer; border-radius: 4px; font-size: 0.75rem; display: inline-flex; align-items: center; justify-content: center; width: 55px; height: 28px; margin: 2px; }
         .cell.selecionado { background: var(--primary); color: white; }
         .row-dia { display: flex; align-items: center; margin-bottom: 6px; }
         input, select { width: 100%; padding: 12px; margin: 5px 0; border: 1px solid #ddd; border-radius: 8px; }
@@ -123,6 +123,7 @@
         document.getElementById("cadastro-flow").style.display="block";
         etapa = 1; document.getElementById("etapa-1").style.display="block"; document.getElementById("etapa-2").style.display="none";
         criarGrid("agenda-cadastro");
+        
         if(index !== -1){
             let p = prestadores[index];
             document.getElementById("nomeEmpresa").value = p.nome;
@@ -158,15 +159,25 @@
 
     function salvarPrestador(){
         let agenda = [...document.querySelectorAll('#agenda-cadastro .selecionado')].map(c => ({ dia: c.dataset.dia, hora: c.dataset.hora }));
-        let p = { nome: document.getElementById("nomeEmpresa").value, agenda: agenda };
-        if(editingIndex === -1) prestadores.push(p); else prestadores[editingIndex] = p;
-        renderizarListaPrestadores(); atualizarSelectPrestadores();
+        let p = { 
+            nome: document.getElementById("nomeEmpresa").value,
+            agenda: agenda 
+        };
+        
+        if(editingIndex === -1) prestadores.push(p);
+        else prestadores[editingIndex] = p;
+        
+        renderizarListaPrestadores();
+        atualizarSelectPrestadores();
         document.getElementById("cadastro-flow").style.display="none";
         document.getElementById("lista-prestadores-view").style.display="block";
     }
 
     function renderizarListaPrestadores(){
-        document.getElementById("lista-prestadores").innerHTML = prestadores.map((p, i) => `<div class="card">${p.nome} <button onclick="abrirCadastro(${i})">Editar</button> <button onclick="excluirPrestador(${i})">Excluir</button></div>`).join('');
+        document.getElementById("lista-prestadores").innerHTML = prestadores.map((p, i) => 
+            `<div class="card">${p.nome} 
+            <button onclick="abrirCadastro(${i})">Editar</button> 
+            <button onclick="excluirPrestador(${i})">Excluir</button></div>`).join('');
         document.getElementById("total-prest").innerText = prestadores.length;
     }
 
@@ -213,21 +224,27 @@
         let hoje = new Date();
         const diasSemana = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sab"];
         
-        // Loop 14 dias
         for(let i=0; i<14; i++){
             let data = new Date(); data.setDate(hoje.getDate() + i);
             let dNome = diasSemana[data.getDay()];
-            let slots = prestadores[idx].agenda.filter(a => a.dia == dNome);
+            let dStr = data.toLocaleDateString();
             
+            let slots = prestadores[idx].agenda.filter(a => a.dia == dNome);
             if(slots.length > 0){
                 let row = document.createElement("div"); row.className="row-dia";
-                row.innerHTML = `<div style="width:80px">${data.toLocaleDateString().slice(0,5)}</div>`;
+                row.innerHTML = `<div style="width:80px">${dStr.slice(0,5)}</div>`;
                 slots.forEach(item => {
+                    // Verifica se já está agendado
+                    let isBooked = agendamentos.some(a => a.prestador == prestadores[idx].nome && a.data == dStr && a.slots.includes(item.hora));
+                    if(isBooked) return;
+
                     let div = document.createElement("div"); div.className = "cell";
                     div.innerText = item.hora;
+                    div.dataset.hora = item.hora;
+                    div.dataset.date = dStr;
                     div.onclick = () => {
                         let sel = document.querySelectorAll("#agenda-agendamento .selecionado");
-                        if(!div.classList.contains("selecionado") && sel.length >= horas) return alert("Limite!");
+                        if(!div.classList.contains("selecionado") && sel.length >= horas) return alert("Limite de "+horas+"h!");
                         div.classList.toggle("selecionado");
                     };
                     row.appendChild(div);
@@ -242,12 +259,19 @@
         let sel = document.querySelectorAll("#agenda-agendamento .selecionado");
         if(sel.length !== horas) return alert("Selecione " + horas + " hora(s)!");
         
-        agendamentos.push({ prestador: prestadores[document.getElementById("selectPrestador").value].nome, data: new Date().toLocaleDateString() });
+        let slots = [...sel].map(s => s.dataset.hora);
+        agendamentos.push({ 
+            prestador: prestadores[document.getElementById("selectPrestador").value].nome, 
+            data: sel[0].dataset.date,
+            slots: slots
+        });
         
-        // Limpeza
+        // Limpeza Total
         itensSelecionados = [];
         document.getElementById("lista-produtos").innerHTML = "";
         document.getElementById("horasNecessarias").innerText = "0";
+        document.getElementById("inputCep").value = "";
+        document.getElementById("selectPrestador").value = "";
         document.getElementById("step-cep").style.display = "block";
         document.getElementById("step-agendamento").style.display = "none";
         
@@ -263,7 +287,7 @@
     }
 
     function renderPainel(){
-        document.getElementById("painel-conteudo").innerHTML = agendamentos.map((a, i) => `<div class="painel-item">Agendamento: ${a.prestador} - ${a.data} <button onclick="agendamentos.splice(${i},1); renderPainel()">Excluir</button></div>`).join('');
+        document.getElementById("painel-conteudo").innerHTML = agendamentos.map((a, i) => `<div class="painel-item">Agendamento: ${a.prestador} - ${a.data} (${a.slots.join(', ')}) <button onclick="agendamentos.splice(${i},1); renderPainel()">Excluir</button></div>`).join('');
     }
 </script>
 </body>
