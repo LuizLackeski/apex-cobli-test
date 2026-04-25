@@ -160,26 +160,50 @@ let itensAgendamento = [];
 
 /* ===== PRODUTOS ===== */
 const produtos = [
-  { nome: "Bloqueador", tempo: 60 },
-  { nome: "Telemetria + CAN", tempo: 60 },
-  { nome: "Identificador", tempo: 60 },
-  { nome: "Identificador + CAN", tempo: 90 },
-  { nome: "RFID", tempo: 60 },
-  { nome: "RFID + CAN", tempo: 80 },
-  { nome: "Imobilizador", tempo: 80 },
-  { nome: "Câmeras 2", tempo: 90 },
-  { nome: "Multicam 3", tempo: 120 },
-  { nome: "Multicam 4", tempo: 240 },
-  { nome: "Multicam 5", tempo: 300 }
+
+  { tipo: "IDENTIFICADOR", desc: "Identificador", tempo: 60 },
+  { tipo: "IDENTIFICADOR", desc: "Identificador + CAN", tempo: 90 },
+  { tipo: "IDENTIFICADOR", desc: "Identificador RFID", tempo: 60 },
+  { tipo: "IDENTIFICADOR", desc: "Identificador RFID + CAN", tempo: 80 },
+
+  { tipo: "TELEMETRIA", desc: "Instalado veículos leves e pesados", tempo: 40 }
+  { tipo: "TELEMETRIA", desc: "Bloqueador", tempo: 60 },
+  { tipo: "TELEMETRIA", desc: "Telemetria + CAN", tempo: 60 },
+  { tipo: "TELEMETRIA", desc: "Motos ou maquinários", tempo: 40 },
+  { tipo: "TELEMETRIA", desc: "Veículos leves e pesados", tempo: 40 },
+
+  { tipo: "TRAVA DE IGNIÇÃO", desc: "Imobilizador", tempo: 80 },
+  { tipo: "TRAVA DE IGNIÇÃO", desc: "Imobilizador RFID", tempo: 80 },
+  { tipo: "TRAVA DE IGNIÇÃO", desc: "Imobilizador RFID + CAN", tempo: 90 },
+  { tipo: "TRAVA DE IGNIÇÃO", desc: "Imobilizador + CAN", tempo: 100 },
+
+  { tipo: "VIDEOTELEMETRIA", desc: "CobliCam (2 câmeras)", tempo: 90 },
+  { tipo: "VIDEOTELEMETRIA", desc: "Multicam 3 câmeras", tempo: 120 },
+  { tipo: "VIDEOTELEMETRIA", desc: "Multicam 2+1", tempo: 240 },
+  { tipo: "VIDEOTELEMETRIA", desc: "Multicam 4 câmeras", tempo: 240 },
+  { tipo: "VIDEOTELEMETRIA", desc: "Multicam 5 câmeras", tempo: 300 }
 ];
 
 window.onload = function(){
-  let select = document.getElementById("produto");
+ window.onload = function(){
+
+  const select = document.getElementById("produto");
+  select.innerHTML = "";
+
   produtos.forEach((p,i)=>{
-    let o=document.createElement("option");
-    o.value=i;
-    o.text=p.nome;
-    select.appendChild(o);
+
+    const horas = Math.floor(p.tempo / 60);
+    const minutos = p.tempo % 60;
+
+    let tempoFormatado = "";
+    if(horas > 0) tempoFormatado += horas + "h ";
+    if(minutos > 0) tempoFormatado += minutos + "min";
+
+    const opt = document.createElement("option");
+    opt.value = i;
+    opt.innerHTML = `<strong>${formatarTipo(p.tipo)}</strong> - ${p.desc} (${tempoFormatado}/veic)`;
+
+    select.appendChild(opt);
   });
 }
 
@@ -325,10 +349,11 @@ function renderizarItens(){
     tempoTotal += i.tempo * i.qtd;
 
     let d=document.createElement("div");
-    d.innerHTML=`${i.nome} x${i.qtd} 
-      <button onclick="removerItem(${index})">X</button>`;
-    c.appendChild(d);
-  });
+   d.innerHTML = `
+  ${i.nome} | ${i.qtd} veic 
+  (${((i.tempo * i.qtd)/60).toFixed(1)}h)
+  <button onclick="removerItem(${index})">X</button>
+`;
 
   document.getElementById("tempoTotal").innerText=(tempoTotal/60).toFixed(1)+"h";
 }
@@ -452,6 +477,8 @@ function renderizarPainel(){
 }
 
 </script>
-
+function formatarTipo(texto) {
+  return texto.toLowerCase().replace(/(^\w|\s\w)/g, l => l.toUpperCase());
+}
 </body>
 </html>
