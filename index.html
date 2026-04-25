@@ -74,7 +74,7 @@ button.acao {
 
 <div class="conteudo">
 
-<!-- ================= AGENDAMENTO ================= -->
+<!-- AGENDAMENTO -->
 <div id="consulta" class="aba ativa">
 
   <div class="card">
@@ -102,21 +102,20 @@ button.acao {
       <h3>Agenda</h3>
       <div id="horarios"></div>
       <p id="alertaTempo" style="color:red;"></p>
-      <br>
-      <button class="acao" onclick="concluirAgendamento()">Concluir Agendamento</button>
+      <button class="acao" onclick="concluirAgendamento()">Concluir</button>
     </div>
 
   </div>
 
 </div>
 
-<!-- ================= CADASTRO ================= -->
+<!-- CADASTRO -->
 <div id="cadastro" class="aba">
 
   <div id="lista-prestadores-view">
     <div class="card">
       <h2>Prestadores</h2>
-      <button class="acao" onclick="abrirCadastro()">+ Cadastrar Prestador</button>
+      <button class="acao" onclick="abrirCadastro()">+ Cadastrar</button>
       <div id="lista-prestadores"></div>
     </div>
   </div>
@@ -124,7 +123,6 @@ button.acao {
   <div id="cadastro-flow" style="display:none;">
 
     <div class="card">
-      <h3>Cadastro</h3>
       <p>Etapa <span id="etapaAtual">1</span> de 4</p>
     </div>
 
@@ -139,7 +137,6 @@ button.acao {
     </div>
 
     <div class="card etapa" id="etapa3" style="display:none;">
-      <h4>Agenda</h4>
       <div id="agenda-semana"></div>
     </div>
 
@@ -156,17 +153,15 @@ button.acao {
 
 </div>
 
-<!-- ================= PAINEL ================= -->
+<!-- PAINEL -->
 <div id="painel" class="aba">
 
   <div class="card">
-    <h3>Resumo</h3>
-    Hoje: <strong id="hoje"></strong><br>
-    Total: <strong id="total"></strong>
+    Hoje: <strong id="hoje">0</strong><br>
+    Total: <strong id="total">0</strong>
   </div>
 
   <div class="card">
-    <h3>Agendamentos</h3>
     <div id="lista-agendamentos"></div>
   </div>
 
@@ -176,6 +171,7 @@ button.acao {
 
 <script>
 
+/* ===== VARIÁVEIS ===== */
 let prestadores = [];
 let agendamentos = [];
 let agendaPrestador = {};
@@ -185,10 +181,12 @@ let prestadorEditando = null;
 let tempoTotal = 0;
 let horariosSelecionados = [];
 
+/* ===== ABAS ===== */
 function trocarAba(id, botao){
-  document.querySelectorAll('.aba').forEach(a=>a.classList.remove('ativa'));
+  document.querySelectorAll('.aba').forEach(a => a.classList.remove('ativa'));
   document.getElementById(id).classList.add('ativa');
-  document.querySelectorAll('.menu button').forEach(b=>b.classList.remove('ativo'));
+
+  document.querySelectorAll('.menu button').forEach(b => b.classList.remove('ativo'));
   botao.classList.add('ativo');
 }
 
@@ -199,10 +197,9 @@ function abrirCadastro(){
 }
 
 function proximaEtapa(){
-
   if(etapa===2){
     let r=document.getElementById("raio").value;
-    if(!r||r<1||r>100){ alert("Raio inválido"); return;}
+    if(!r || r<1 || r>100){ alert("Raio inválido"); return;}
   }
 
   if(etapa<4){
@@ -236,8 +233,10 @@ function gerarAgenda(){
     for(let h=8;h<=18;h++){
       let b=document.createElement("button");
       b.innerText=h;
+
       b.onclick=()=>{
         if(!agendaPrestador[d]) agendaPrestador[d]=[];
+
         if(agendaPrestador[d].includes(h)){
           agendaPrestador[d]=agendaPrestador[d].filter(x=>x!==h);
           b.style.background="";
@@ -247,19 +246,20 @@ function gerarAgenda(){
           b.style.color="white";
         }
       };
+
       div.appendChild(b);
     }
+
     c.appendChild(div);
   });
 }
 
 function salvarPrestador(){
-
   let p={
-    nome: nome.value,
-    endereco: endereco.value,
-    tecnicos: tecnicos.value,
-    raio: raio.value,
+    nome: document.getElementById("nome").value,
+    endereco: document.getElementById("endereco").value,
+    tecnicos: document.getElementById("tecnicos").value,
+    raio: document.getElementById("raio").value,
     agenda: JSON.parse(JSON.stringify(agendaPrestador))
   };
 
@@ -294,10 +294,10 @@ function renderizarPrestadores(){
 function editarPrestador(i){
   let p=prestadores[i];
   abrirCadastro();
-  nome.value=p.nome;
-  endereco.value=p.endereco;
-  tecnicos.value=p.tecnicos;
-  raio.value=p.raio;
+  document.getElementById("nome").value=p.nome;
+  document.getElementById("endereco").value=p.endereco;
+  document.getElementById("tecnicos").value=p.tecnicos;
+  document.getElementById("raio").value=p.raio;
   agendaPrestador=JSON.parse(JSON.stringify(p.agenda));
   prestadorEditando=i;
 }
@@ -320,7 +320,6 @@ function resetCadastro(){
 
 /* ===== AGENDAMENTO ===== */
 function buscar(){
-
   if(prestadores.length===0){ alert("Cadastre prestador"); return;}
 
   document.getElementById("fluxo-agendamento").style.display="block";
@@ -380,19 +379,19 @@ function mostrarAgenda(){
 }
 
 function calcularTempo(){
-  tempoTotal+=parseInt(produto.value)*(quantidade.value||0);
-  tempoTotalSpan.innerText=tempoTotal+"h";
+  tempoTotal += parseInt(document.getElementById("produto").value) * (document.getElementById("quantidade").value || 0);
+  document.getElementById("tempoTotal").innerText = tempoTotal + "h";
 }
 
 function validarTempo(){
   let alerta=document.getElementById("alertaTempo");
 
-  if(horariosSelecionados.length<tempoTotal){
+  if(horariosSelecionados.length < tempoTotal){
     alerta.innerText="Tempo insuficiente";
     return;
   }
 
-  if(Math.max(...horariosSelecionados)+1>19){
+  if(Math.max(...horariosSelecionados)+1 > 19){
     alerta.innerText="Excede 19h";
     return;
   }
@@ -401,10 +400,9 @@ function validarTempo(){
 }
 
 function concluirAgendamento(){
-
-  if(prestadorSelecionadoIndex==null){alert("Selecione prestador");return;}
-  if(horariosSelecionados.length==0){alert("Selecione horário");return;}
-  if(alertaTempo.innerText!=""){alert("Corrija horários");return;}
+  if(prestadorSelecionadoIndex==null){ alert("Selecione prestador"); return;}
+  if(horariosSelecionados.length==0){ alert("Selecione horário"); return;}
+  if(document.getElementById("alertaTempo").innerText!=""){ alert("Corrija horários"); return;}
 
   agendamentos.push({
     prestador: prestadores[prestadorSelecionadoIndex].nome,
@@ -418,24 +416,25 @@ function concluirAgendamento(){
 }
 
 function resetAgendamento(){
-  fluxo-agendamento.style.display="none";
-  prestadorSelecionado.innerHTML="";
-  horarios.innerHTML="";
+  document.getElementById("fluxo-agendamento").style.display="none";
+  document.getElementById("prestadorSelecionado").innerHTML="";
+  document.getElementById("horarios").innerHTML="";
+  document.getElementById("tempoTotal").innerText="0h";
+
   tempoTotal=0;
-  tempoTotalSpan.innerText="0h";
   horariosSelecionados=[];
   prestadorSelecionadoIndex=null;
 }
 
 /* ===== PAINEL ===== */
 function renderizarPainel(){
-
   let hoje=new Date().toISOString().split("T")[0];
 
-  let hojeCount=agendamentos.filter(a=>a.data===hoje).length;
+  document.getElementById("hoje").innerText =
+    agendamentos.filter(a=>a.data===hoje).length;
 
-  document.getElementById("hoje").innerText=hojeCount;
-  document.getElementById("total").innerText=agendamentos.length;
+  document.getElementById("total").innerText =
+    agendamentos.length;
 
   let l=document.getElementById("lista-agendamentos");
   l.innerHTML="";
