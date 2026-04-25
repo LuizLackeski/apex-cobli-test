@@ -147,16 +147,17 @@ button.acao {
     <!-- ETAPA 1 -->
     <div class="card etapa" id="etapa1">
       <h4>Dados</h4>
-      <input placeholder="Nome"><br>
-      <input placeholder="Telefone"><br>
-      <input placeholder="Contato"><br>
-      <input type="number" placeholder="Qtd Técnicos"><br>
+     <input id="nome" placeholder="Nome"><br>
+<input id="telefone" placeholder="Telefone"><br>
+<input id="contato" placeholder="Contato"><br>
+<input id="tecnicos" type="number" placeholder="Qtd Técnicos"><br>
     </div>
 
     <!-- ETAPA 2 -->
     <div class="card etapa" id="etapa2" style="display:none;">
       <h4>Localização</h4>
-      <input placeholder="Endereço"><br><br>
+   <input id="endereco" placeholder="Endereço"><br><br>
+<input id="raio" type="number" min="1" max="100" placeholder="Ex: 20">
 
       <label>Raio de atendimento (km)</label><br>
       <input type="number" id="raio" min="1" max="100" placeholder="Ex: 20">
@@ -179,7 +180,7 @@ button.acao {
 
     <div class="card">
       <button onclick="voltarEtapa()">Voltar</button>
-      <button class="acao" onclick="proximaEtapa()">Próximo</button>
+      <button class="acao" onclick="salvarPrestador()">Salvar Prestador</button>
     </div>
 
   </div>
@@ -205,6 +206,7 @@ button.acao {
 </div>
 
 <script>
+  let prestadores = [];
 
 /* ===== ABAS ===== */
 function trocarAba(id, botao) {
