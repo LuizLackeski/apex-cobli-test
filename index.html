@@ -180,17 +180,32 @@ let editingIndex = -1;
 /* ================= INICIAL ================= */
 
 window.onload = () => {
-    criarGrid('agenda-cadastro');
-    carregarProdutos();
+
+    if(document.getElementById('agenda-cadastro')){
+        criarGrid('agenda-cadastro');
+    }
+
+    if(document.getElementById('produto')){
+        carregarProdutos();
+    }
 };
 
 /* ================= ABAS ================= */
 
 function trocarAba(id, btn){
-document.querySelectorAll('.aba').forEach(a=>a.classList.remove('ativa'));
-document.getElementById(id).classList.add('ativa');
-document.querySelectorAll('.menu button').forEach(b=>b.classList.remove('ativo'));
-btn.classList.add('ativo');
+
+let abas = document.querySelectorAll('.aba');
+let alvo = document.getElementById(id);
+
+if(!alvo) return;
+
+abas.forEach(a => a.classList.remove('ativa'));
+alvo.classList.add('ativa');
+
+document.querySelectorAll('.menu button')
+.forEach(b => b.classList.remove('ativo'));
+
+if(btn) btn.classList.add('ativo');
 }
 
 /* ================= CADASTRO ================= */
