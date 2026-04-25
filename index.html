@@ -69,54 +69,56 @@ button.acao { background: #4C5EB0; color: white; border: none; padding: 12px; cu
 </div>
 
 <!-- ================= CADASTRO ================= -->
-<div id="cadastro" class="aba">
+function abrirCadastro(index = -1) {
+    editingIndex = index;
 
-<div id="lista-prestadores-view" class="card">
-<h2>Prestadores</h2>
-<button class="acao" onclick="abrirCadastro()">+ Novo Prestador</button>
-<div id="lista-prestadores"></div>
-</div>
+    // troca telas
+    document.getElementById("lista-prestadores-view").style.display = "none";
+    document.getElementById("cadastro-flow").style.display = "block";
 
-<div id="cadastro-flow" class="card" style="display:none;">
-<h3>Cadastro (Etapa <span id="etapaAtual">1</span>/4)</h3>
+    // reset etapa
+    etapa = 1;
+    document.getElementById("etapaAtual").innerText = etapa;
 
-<!-- BLOCO 1 -->
-<div class="etapa-form" id="etapa-1">
-<h4>Dados do Prestador</h4>
+    // mostrar etapa 1 e esconder outras
+    document.querySelectorAll('.etapa-form').forEach((el, i) => {
+        el.style.display = (i === 0) ? "block" : "none";
+    });
 
-<input id="nomeEmpresa" placeholder="Razão Social *">
-<input id="endereco" placeholder="Endereço Completo *">
+    document.getElementById("btnProximo").style.display = "inline";
+    document.getElementById("btnSalvar").style.display = "none";
 
-<div style="display:flex; gap:10px;">
-<input id="cidade" placeholder="Cidade *">
-<input id="uf" placeholder="UF *" maxlength="2">
-</div>
+    // limpar seleção da agenda
+    document.querySelectorAll('#agenda-cadastro .cell')
+        .forEach(c => c.classList.remove('selecionado'));
 
-<input id="cep" placeholder="CEP *">
+    // se for edição, preenche os dados
+    if(index !== -1) {
+        let p = prestadores[index];
 
-<input id="responsavel" placeholder="Responsável Técnico *">
-<input id="contatoResponsavel" placeholder="Contato do Responsável *">
-</div>
+        document.getElementById("nomeEmpresa").value = p.nome || "";
+        document.getElementById("endereco").value = p.endereco || "";
+        document.getElementById("cidade").value = p.cidade || "";
+        document.getElementById("uf").value = p.uf || "";
+        document.getElementById("cep").value = p.cep || "";
+        document.getElementById("responsavel").value = p.responsavel || "";
+        document.getElementById("contatoResponsavel").value = p.contato || "";
+        document.getElementById("qtdTecnicos").value = p.qtdTecnicos || "";
+        document.getElementById("raio").value = p.raio || "";
 
-<!-- BLOCO 2 -->
-<div class="etapa-form" id="etapa-2" style="display:none;">
-<h4>Agenda</h4>
+        // marcar agenda existente
+        p.agenda.forEach(h => {
+            document.querySelectorAll('#agenda-cadastro .cell')
+                .forEach(c => {
+                    if(c.innerText === h) c.classList.add('selecionado');
+                });
+        });
 
-<input id="qtdTecnicos" type="number" min="1" placeholder="Quantidade de Técnicos">
-<input id="raio" type="number" max="100" placeholder="Raio de Atendimento (máx 100km)">
-
-<p>Dias disponíveis:</p>
-<div id="agenda-cadastro" class="agenda-grid"></div>
-</div>
-
-<div class="etapa-form" id="etapa-3" style="display:none;"></div>
-<div class="etapa-form" id="etapa-4" style="display:none;"></div>
-
-<div style="display:flex; gap:10px; margin-top:20px;">
-<button onclick="mudarEtapa(-1)">Voltar</button>
-<button class="acao" id="btnProximo" onclick="mudarEtapa(1)">Próximo</button>
-<button class="acao" id="btnSalvar" style="display:none; background:#28a745;" onclick="salvarPrestador()">Salvar Prestador</button>
-</div>
+    } else {
+        // limpar campos para novo cadastro
+        document.querySelectorAll('#cadastro-flow input').forEach(i => i.value = "");
+    }
+}
 
 </div>
 </div>
