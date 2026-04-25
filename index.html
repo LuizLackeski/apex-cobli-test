@@ -106,85 +106,153 @@ button.acao {
   <!-- CONSULTA -->
   <div id="consulta" class="aba ativa">
 
-    <div class="card">
-      <h2>Novo Agendamento</h2>
+  <!-- BUSCA -->
+ function buscar() {
+  // simulação (depois entra API)
+  document.getElementById("fluxo-agendamento").style.display = "block";
 
-      <input placeholder="Digite o endereço">
-      <input placeholder="Raio (km)">
-      <button class="acao">Buscar Prestadores</button>
+  document.getElementById("prestadorSelecionado").innerText =
+    "Prestador X • 10km • 1 técnico";
+}
+
+let tempoTotal = 0;
+
+function calcularTempo() {
+  const produto = parseInt(document.getElementById("produto").value);
+  const qtd = parseInt(document.getElementById("quantidade").value || 0);
+
+  tempoTotal += produto * qtd;
+
+  document.getElementById("tempoTotal").innerText = tempoTotal + "h";
+
+  gerarHorarios();
+}
+
+function gerarHorarios() {
+  const container = document.getElementById("horarios");
+  container.innerHTML = "";
+
+  for (let h = 8; h <= 18; h++) {
+    const btn = document.createElement("button");
+    btn.innerText = h + ":00";
+    btn.onclick = () => selecionarHorario(btn, h);
+    container.appendChild(btn);
+  }
+}
+
+let horariosSelecionados = [];
+
+function selecionarHorario(btn, hora) {
+  if (horariosSelecionados.includes(hora)) {
+    horariosSelecionados = horariosSelecionados.filter(h => h !== hora);
+    btn.style.background = "";
+  } else {
+    horariosSelecionados.push(hora);
+    btn.style.background = "#2F4EA1";
+    btn.style.color = "white";
+  }
+
+  validarTempo();
+}
+
+function validarTempo() {
+  const alerta = document.getElementById("alertaTempo");
+
+  if (horariosSelecionados.length < tempoTotal) {
+    alerta.innerText = "Tempo insuficiente para execução";
+  } else {
+    alerta.innerText = "";
+  }
+}
+
+  <!-- RESULTADO / FLUXO -->
+  <div id="fluxo-agendamento" style="display:none;">
+
+    <div class="card">
+      <strong id="prestadorSelecionado"></strong>
     </div>
 
     <div class="card">
-      <h3>Prestadores disponíveis</h3>
-      <div id="lista-prestadores"></div>
-    </div>
+      <h3>Produtos</h3>
 
-    <div class="card">
-      <h3>Reserva de Agenda</h3>
-
-      <select>
-        <option>Produto A - 1h</option>
-        <option>Produto B - 2h</option>
+      <select id="produto">
+        <option value="1">Produto A - 1h</option>
+        <option value="2">Produto B - 2h</option>
       </select>
 
-      <input type="number" placeholder="Quantidade">
+      <input type="number" id="quantidade" placeholder="Qtd">
 
-      <p>Tempo estimado: <strong>0h</strong></p>
+      <button class="acao" onclick="calcularTempo()">Adicionar</button>
 
-      <h4>Selecionar Horários</h4>
+      <p>Tempo total: <strong id="tempoTotal">0h</strong></p>
+    </div>
+
+    <div class="card">
+      <h3>Selecionar Horários</h3>
       <div id="horarios"></div>
-    </div>
-
-  </div>
-
-  <!-- CADASTRO -->
-  <div id="cadastro" class="aba">
-
-    <div class="card">
-      <h2>Cadastro de Prestador</h2>
-
-      <input placeholder="Nome"><br>
-      <input placeholder="Endereço"><br>
-      <input placeholder="Contato"><br>
-      <input placeholder="Email"><br>
-      <input type="number" placeholder="Qtd Técnicos"><br>
-
-      <h4>Disponibilidade</h4>
-      <div id="agenda-cadastro"></div>
-
-      <br>
-      <button class="acao">Salvar</button>
-    </div>
-
-  </div>
-
-  <!-- PAINEL -->
-  <div id="painel" class="aba">
-
-    <div class="card">
-      <h2>Painel de Agendamentos</h2>
-
-      <input type="date">
-      <input type="date">
-
-      <select>
-        <option>Todos Prestadores</option>
-      </select>
-
-      <button class="acao">Filtrar</button>
-    </div>
-
-    <div class="card">
-      <h3>Lista</h3>
-      <div id="lista-agendamentos"></div>
+      <p id="alertaTempo" style="color:red;"></p>
     </div>
 
   </div>
 
 </div>
+  
+  <!-- CADASTRO -->
+  <div id="cadastro" class="aba">
 
-<script>
+  <!-- LISTA / BOTÃO -->
+  <div id="lista-prestadores-view">
 
+    <div class="card">
+      <h2>Prestadores</h2>
+      <button class="acao" onclick="abrirCadastro()">+ Cadastrar Prestador</button>
+    </div>
+
+  </div>
+
+  <!-- FLUXO CADASTRO -->
+  <div id="cadastro-flow" style="display:none;">
+
+    <div class="card">
+      <h3>Cadastro de Prestador</h3>
+      <p>Etapa <span id="etapaAtual">1</span> de 4</p>
+    </div>
+
+    <!-- ETAPA 1 -->
+    let etapa = 1;
+
+function abrirCadastro() {
+  document.getElementById("lista-prestadores-view").style.display = "none";
+  document.getElementById("cadastro-flow").style.display = "block";
+}
+
+function proximaEtapa() {
+  if (etapa < 4) {
+    document.getElementById("etapa" + etapa).style.display = "none";
+    etapa++;
+    document.getElementById("etapa" + etapa).style.display = "block";
+    document.getElementById("etapaAtual").innerText = etapa;
+  }
+}
+
+function voltarEtapa() {
+  if (etapa > 1) {
+    document.getElementById("etapa" + etapa).style.display = "none";
+    etapa--;
+    document.getElementById("etapa" + etapa).style.display = "block";
+    document.getElementById("etapaAtual").innerText = etapa;
+  }
+}
+
+    <div class="card">
+      <button onclick="voltarEtapa()">Voltar</button>
+      <button class="acao" onclick="proximaEtapa()">Próximo</button>
+    </div>
+
+  </div>
+
+</div>
+    
 function trocarAba(id, botao) {
   // esconder abas
   document.querySelectorAll('.aba').forEach(a => a.classList.remove('ativa'));
