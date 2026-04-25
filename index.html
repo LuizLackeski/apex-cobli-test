@@ -2,7 +2,7 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>APEX - Sistema</title>
+    <title>APEX - Sistema Completo</title>
     <style>
         :root { --primary: #2F4EA1; --bg: #f4f6f8; }
         body { font-family: 'Segoe UI', sans-serif; background:var(--bg); margin:0; padding:20px; }
@@ -54,7 +54,10 @@
             <p><strong>Horas Necessárias: <span id="horasNecessarias">0</span></strong></p>
             <h3>Agenda</h3>
             <div id="agenda-agendamento"></div>
-            <button onclick="concluirAgendamento()">Finalizar</button>
+            <div style="margin-top:20px;">
+                <button onclick="document.location.reload()">Voltar</button>
+                <button onclick="concluirAgendamento()" style="background:green;">Concluir</button>
+            </div>
         </div>
     </div>
 
@@ -65,15 +68,20 @@
         </div>
         <div id="cadastro-flow" class="card" style="display:none;">
             <div id="etapa-1">
-                <h3>Dados do Prestador</h3>
+                <h3>Dados</h3>
                 <input id="nomeEmpresa" placeholder="Nome / Empresa">
                 <input id="endereco" placeholder="Endereço">
+                <input id="cidade" placeholder="Cidade">
+                <input id="uf" placeholder="UF">
+                <input id="cep" placeholder="CEP">
+                <input id="responsavel" placeholder="Responsável">
+                <input id="contatoResponsavel" placeholder="Contato">
             </div>
             <div id="etapa-2" style="display:none;">
-                <h3>Defina a Agenda</h3>
+                <h3>Agenda</h3>
                 <div id="agenda-cadastro"></div>
             </div>
-            <div style="margin-top: 20px;">
+            <div style="margin-top:20px;">
                 <button onclick="mudarEtapa(-1)">Voltar</button>
                 <button onclick="mudarEtapa(1)">Próximo</button>
                 <button onclick="salvarPrestador()" style="background: green;">Concluir</button>
@@ -99,6 +107,7 @@
     let itensSelecionados = [];
     let agendamentos = [];
     let etapa = 1;
+    let editingIndex = -1;
 
     const produtos = {
         "Telemetria": [{desc:"Instalado veículos leves bloqueador", tempo:60}, {desc:"Instalado veículos leves e pesados + CAN", tempo:60}],
@@ -115,8 +124,8 @@
         if(id === 'painel') renderPainel();
     }
 
-    // CADASTRO ORIGINAL
     function abrirCadastro(){
+        editingIndex = -1;
         document.getElementById("lista-prestadores-view").style.display="none";
         document.getElementById("cadastro-flow").style.display="block";
         etapa = 1; document.getElementById("etapa-1").style.display="block"; document.getElementById("etapa-2").style.display="none";
@@ -155,7 +164,23 @@
         document.getElementById("lista-prestadores-view").style.display="block";
     }
 
-    // AGENDAMENTO
+    function renderizarListaPrestadores(){
+        document.getElementById("lista-prestadores").innerHTML = prestadores.map((p, i) => `<div class="card">${p.nome} <button onclick="excluirPrestador(${i})">Excluir</button></div>`).join('');
+        document.getElementById("total-prest").innerText = prestadores.length;
+    }
+
+    function excluirPrestador(i){ prestadores.splice(i,1); renderizarListaPrestadores(); atualizarSelectPrestadores(); }
+
+    function atualizarSelectPrestadores(){
+        let sel = document.getElementById("selectPrestador");
+        let fil = document.getElementById("filtroPrestador");
+        sel.innerHTML = fil.innerHTML = '<option value="">-- Escolha --</option>';
+        prestadores.forEach((p,i) => {
+            sel.innerHTML += `<option value="${i}">${p.nome}</option>`;
+            fil.innerHTML += `<option value="${p.nome}">${p.nome}</option>`;
+        });
+    }
+
     function carregarProdutos(){
         let select=document.getElementById("produto");
         for(let tipo in produtos){
@@ -193,8 +218,8 @@
         
         let container = document.getElementById("agenda-agendamento");
         container.innerHTML = "";
-        let dias = ["Seg","Ter","Qua","Qui","Sex","Sab"];
-        dias.forEach(d => {
+        
+        ["Seg","Ter","Qua","Qui","Sex","Sab"].forEach(d => {
             let slots = prestadores[idx].agenda.filter(a => a.dia == d);
             if(slots.length > 0){
                 let row = document.createElement("div"); row.className="row-dia";
@@ -224,19 +249,11 @@
         trocarAba('painel');
     }
 
-    function renderizarListaPrestadores(){
-        document.getElementById("lista-prestadores").innerHTML = prestadores.map((p, i) => `<div class="card">${p.nome} <button onclick="prestadores.splice(${i},1); renderizarListaPrestadores();">Excluir</button></div>`).join('');
-        document.getElementById("total-prest").innerText = prestadores.length;
-    }
-
-    function atualizarSelectPrestadores(){
-        let sel = document.getElementById("selectPrestador");
-        sel.innerHTML = '<option value="">-- Escolha --</option>';
-        prestadores.forEach((p,i) => sel.innerHTML += `<option value="${i}">${p.nome}</option>`);
-    }
-
     function renderPainel(){
-        document.getElementById("painel-conteudo").innerHTML = agendamentos.map((a, i) => `<div class="painel-item">Agendamento: ${a.prestador} - ${a.data} <button onclick="agendamentos.splice(${i},1); renderPainel()">Excluir</button></div>`).join('');
+        let prestF = document.getElementById("filtroPrestador").value;
+        document.getElementById("painel-conteudo").innerHTML = agendamentos
+            .filter(a => (prestF == "" || a.prestador == prestF))
+            .map((a, i) => `<div class="painel-item">Agendamento: ${a.prestador} - ${a.data} <button onclick="agendamentos.splice(${i},1); renderPainel()">Excluir</button></div>`).join('');
     }
 </script>
 </body>
