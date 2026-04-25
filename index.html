@@ -293,10 +293,31 @@ grid.appendChild(row);
 /* ================= PRODUTOS ================= */
 
 const produtos = {
-"Telemetria":[{desc:"Instalado veículos leves",tempo:60}],
-"Identificador":[{desc:"Identificador padrão",tempo:60}],
-"Trava":[{desc:"Imobilizador",tempo:80}],
-"Video":[{desc:"CobliCam",tempo:90}]
+    "Telemetria": [
+        {desc:"Instalado veículos leves bloqueador", tempo:60},
+        {desc:"Instalado veículos leves e pesados + CAN", tempo:60},
+        {desc:"Instalado motos ou maquinários", tempo:40},
+        {desc:"Instalado veículos leves e pesados", tempo:40}
+    ],
+    "Identificador": [
+        {desc:"Instalado veículos leves e pesados identificador", tempo:60},
+        {desc:"Instalado veículos leves e pesados identificador + CAN", tempo:90},
+        {desc:"Instalado veículos leves e pesados identificador RFID", tempo:60},
+        {desc:"Instalado veículos leves e pesados identificador RFID + CAN", tempo:80}
+    ],
+    "Trava de ignição": [
+        {desc:"Instalado veículos leves imobilizador", tempo:80},
+        {desc:"Instalado veículos leves imobilizador RFID", tempo:80},
+        {desc:"Instalado veículos leves imobilizador RFID + CAN", tempo:90},
+        {desc:"Instalado veículos leves imobilizador + CAN", tempo:100}
+    ],
+    "Videotelemetria": [
+        {desc:"CobliCam (2 câmeras)", tempo:90},
+        {desc:"Cobli Multicam (3 câmeras internas)", tempo:120},
+        {desc:"Cobli Multicam (2 câmeras + 1 externa)", tempo:240},
+        {desc:"Cobli Multicam (4 câmeras)", tempo:240},
+        {desc:"Cobli Multicam (5 câmeras)", tempo:300}
+    ]
 };
 
 function carregarProdutos(){
