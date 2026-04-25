@@ -111,6 +111,9 @@
     window.onload = () => { carregarProdutos(); };
 
     function trocarAba(id, btn){
+        // Limpa estado da agenda se sair da aba
+        document.getElementById("agenda-agendamento").innerHTML = "";
+        
         document.querySelectorAll('.aba').forEach(a => a.classList.remove('ativa'));
         document.getElementById(id).classList.add('ativa');
         document.querySelectorAll('.menu button').forEach(b => b.classList.remove('ativo'));
@@ -127,6 +130,12 @@
         if(index !== -1){
             let p = prestadores[index];
             document.getElementById("nomeEmpresa").value = p.nome;
+            document.getElementById("endereco").value = p.endereco;
+            document.getElementById("cidade").value = p.cidade;
+            document.getElementById("uf").value = p.uf;
+            document.getElementById("cep").value = p.cep;
+            document.getElementById("responsavel").value = p.responsavel;
+            document.getElementById("contatoResponsavel").value = p.contato;
             p.agenda.forEach(item => {
                 let cells = document.querySelectorAll("#agenda-cadastro .cell");
                 cells.forEach(c => { if(c.dataset.dia == item.dia && c.dataset.hora == item.hora) c.classList.add("selecionado"); });
@@ -153,7 +162,7 @@
                 cell.onclick = () => cell.classList.toggle("selecionado");
                 row.appendChild(cell);
             }
-            grid.appendChild(row);
+            row.appendChild(cell);
         });
     }
 
@@ -161,6 +170,12 @@
         let agenda = [...document.querySelectorAll('#agenda-cadastro .selecionado')].map(c => ({ dia: c.dataset.dia, hora: c.dataset.hora }));
         let p = { 
             nome: document.getElementById("nomeEmpresa").value,
+            endereco: document.getElementById("endereco").value,
+            cidade: document.getElementById("cidade").value,
+            uf: document.getElementById("uf").value,
+            cep: document.getElementById("cep").value,
+            responsavel: document.getElementById("responsavel").value,
+            contato: document.getElementById("contatoResponsavel").value,
             agenda: agenda 
         };
         
@@ -221,6 +236,8 @@
         
         let container = document.getElementById("agenda-agendamento");
         container.innerHTML = "";
+        if(idx === "") return;
+        
         let hoje = new Date();
         const diasSemana = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sab"];
         
@@ -234,7 +251,7 @@
                 let row = document.createElement("div"); row.className="row-dia";
                 row.innerHTML = `<div style="width:80px">${dStr.slice(0,5)}</div>`;
                 slots.forEach(item => {
-                    // Verifica se já está agendado
+                    // VERIFICA SE O SLOT ESTÁ OCUPADO
                     let isBooked = agendamentos.some(a => a.prestador == prestadores[idx].nome && a.data == dStr && a.slots.includes(item.hora));
                     if(isBooked) return;
 
@@ -259,25 +276,25 @@
         let sel = document.querySelectorAll("#agenda-agendamento .selecionado");
         if(sel.length !== horas) return alert("Selecione " + horas + " hora(s)!");
         
-        let slots = [...sel].map(s => s.dataset.hora);
         agendamentos.push({ 
             prestador: prestadores[document.getElementById("selectPrestador").value].nome, 
             data: sel[0].dataset.date,
-            slots: slots
+            slots: [...sel].map(s => s.dataset.hora)
         });
         
-        // Limpeza Total
+        // RESET TOTAL (LIMPEZA)
         itensSelecionados = [];
         document.getElementById("lista-produtos").innerHTML = "";
         document.getElementById("horasNecessarias").innerText = "0";
-        document.getElementById("inputCep").value = "";
         document.getElementById("selectPrestador").value = "";
+        document.getElementById("agenda-agendamento").innerHTML = "";
+        document.getElementById("inputCep").value = "";
         document.getElementById("step-cep").style.display = "block";
         document.getElementById("step-agendamento").style.display = "none";
         
         document.getElementById("total-agend").innerText = agendamentos.length;
         renderPainel();
-        alert("Agendado!");
+        alert("Agendado com sucesso!");
     }
 
     function atualizarSelectPrestadores(){
@@ -287,7 +304,9 @@
     }
 
     function renderPainel(){
-        document.getElementById("painel-conteudo").innerHTML = agendamentos.map((a, i) => `<div class="painel-item">Agendamento: ${a.prestador} - ${a.data} (${a.slots.join(', ')}) <button onclick="agendamentos.splice(${i},1); renderPainel()">Excluir</button></div>`).join('');
+        document.getElementById("painel-conteudo").innerHTML = agendamentos.map((a, i) => 
+            `<div class="painel-item">Agendamento: ${a.prestador} - ${a.data} (${a.slots.join(', ')}) 
+            <button onclick="agendamentos.splice(${i},1); renderPainel()">Excluir</button></div>`).join('');
     }
 </script>
 </body>
