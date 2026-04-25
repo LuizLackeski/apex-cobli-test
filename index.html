@@ -7,7 +7,6 @@
 <style>
 body { margin:0; font-family: Arial; background:#f4f6f8; }
 
-/* TOPO */
 .topo {
   background:#2F4EA1;
   color:white;
@@ -16,7 +15,6 @@ body { margin:0; font-family: Arial; background:#f4f6f8; }
   justify-content:space-between;
 }
 
-/* MENU */
 .menu { background:#1F3C88; padding:10px 30px; }
 
 .menu button {
@@ -33,13 +31,11 @@ body { margin:0; font-family: Arial; background:#f4f6f8; }
   border-bottom:2px solid #4da3ff;
 }
 
-/* CONTEÚDO */
 .conteudo { padding:30px; }
 
 .aba { display:none; }
 .ativa { display:block; }
 
-/* CARD */
 .card {
   background:white;
   padding:20px;
@@ -47,13 +43,11 @@ body { margin:0; font-family: Arial; background:#f4f6f8; }
   margin-bottom:20px;
 }
 
-/* INPUT */
 input, select {
   padding:8px;
   margin:5px 5px 10px 0;
 }
 
-/* BOTÃO */
 button.acao {
   background:#2F4EA1;
   color:white;
@@ -112,20 +106,25 @@ button.acao {
 
     <div class="card">
       <h3>Selecionar Dia</h3>
-<select id="diaSelecionado" onchange="carregarHorarios()">
-  <option value="">Selecione</option>
-  <option value="Seg">Segunda</option>
-  <option value="Ter">Terça</option>
-  <option value="Qua">Quarta</option>
-  <option value="Qui">Quinta</option>
-  <option value="Sex">Sexta</option>
-  <option value="Sáb">Sábado</option>
-  <option value="Dom">Domingo</option>
-</select>
+      <select id="diaSelecionado" onchange="carregarHorarios()">
+        <option value="">Selecione</option>
+        <option value="Seg">Segunda</option>
+        <option value="Ter">Terça</option>
+        <option value="Qua">Quarta</option>
+        <option value="Qui">Quinta</option>
+        <option value="Sex">Sexta</option>
+        <option value="Sáb">Sábado</option>
+        <option value="Dom">Domingo</option>
+      </select>
 
-<h3>Horários disponíveis</h3>
-<div id="horarios"></div>
-<p id="alertaTempo" style="color:red;"></p>
+      <h3>Horários disponíveis</h3>
+      <div id="horarios"></div>
+      <p id="alertaTempo" style="color:red;"></p>
+    </div>
+
+  </div>
+
+</div>
 
 <!-- ================= CADASTRO ================= -->
 <div id="cadastro" class="aba">
@@ -134,6 +133,7 @@ button.acao {
     <div class="card">
       <h2>Prestadores</h2>
       <button class="acao" onclick="abrirCadastro()">+ Cadastrar Prestador</button>
+      <div id="lista-prestadores"></div>
     </div>
   </div>
 
@@ -146,41 +146,33 @@ button.acao {
 
     <!-- ETAPA 1 -->
     <div class="card etapa" id="etapa1">
-      <h4>Dados</h4>
-     <input id="nome" placeholder="Nome"><br>
-<input id="telefone" placeholder="Telefone"><br>
-<input id="contato" placeholder="Contato"><br>
-<input id="tecnicos" type="number" placeholder="Qtd Técnicos"><br>
+      <input id="nome" placeholder="Nome"><br>
+      <input id="telefone" placeholder="Telefone"><br>
+      <input id="contato" placeholder="Contato"><br>
+      <input id="tecnicos" type="number" placeholder="Qtd Técnicos"><br>
     </div>
 
     <!-- ETAPA 2 -->
     <div class="card etapa" id="etapa2" style="display:none;">
-      <h4>Localização</h4>
-   <input id="endereco" placeholder="Endereço"><br><br>
-<input id="raio" type="number" min="1" max="100" placeholder="Ex: 20">
-
-      <label>Raio de atendimento (km)</label><br>
-      <input type="number" id="raio" min="1" max="100" placeholder="Ex: 20">
-
-      <p style="font-size:12px;color:gray;">Máx: 100 km</p>
+      <input id="endereco" placeholder="Endereço"><br>
+      <input id="raio" type="number" placeholder="Raio (km 1-100)">
     </div>
 
     <!-- ETAPA 3 -->
     <div class="card etapa" id="etapa3" style="display:none;">
       <h4>Agenda</h4>
-      <p>Selecione dias e horários:</p>
       <div id="agenda-semana"></div>
     </div>
 
     <!-- ETAPA 4 -->
     <div class="card etapa" id="etapa4" style="display:none;">
       <h4>Revisão</h4>
-      <p>Confirmar dados antes de salvar</p>
+      <button class="acao" onclick="salvarPrestador()">Salvar Prestador</button>
     </div>
 
     <div class="card">
       <button onclick="voltarEtapa()">Voltar</button>
-      <button class="acao" onclick="salvarPrestador()">Salvar Prestador</button>
+      <button class="acao" onclick="proximaEtapa()">Próximo</button>
     </div>
 
   </div>
@@ -189,24 +181,15 @@ button.acao {
 
 <!-- ================= PAINEL ================= -->
 <div id="painel" class="aba">
-
   <div class="card">
     <h2>Painel</h2>
-    <input type="date">
-    <input type="date">
-    <button class="acao">Filtrar</button>
-  </div>
-
-  <div class="card">
     <div id="lista-agendamentos"></div>
   </div>
-
 </div>
 
 </div>
 
 <script>
-  let prestadores = [];
 
 /* ===== ABAS ===== */
 function trocarAba(id, botao) {
@@ -217,127 +200,34 @@ function trocarAba(id, botao) {
   botao.classList.add('ativo');
 }
 
-/* ===== AGENDAMENTO ===== */
-function buscar() {
-  document.getElementById("fluxo-agendamento").style.display = "block";
-  document.getElementById("prestadorSelecionado").innerText =
-    "Prestador X • 10km • 1 técnico";
-}
-
-let tempoTotal = 0;
-
-function calcularTempo() {
-  const produto = parseInt(document.getElementById("produto").value);
-  const qtd = parseInt(document.getElementById("quantidade").value || 0);
-
-  tempoTotal += produto * qtd;
-
-  document.getElementById("tempoTotal").innerText = tempoTotal + "h";
-
-  gerarHorarios();
-}
-
-function gerarHorarios() {
-  const container = document.getElementById("horarios");
-  container.innerHTML = "";
-
-  for (let h = 8; h <= 18; h++) {
-    const btn = document.createElement("button");
-    btn.innerText = h + ":00";
-    btn.style.margin = "5px";
-
-    btn.onclick = () => selecionarHorario(btn, h);
-
-    container.appendChild(btn);
-  }
-}
-
-let horariosSelecionados = [];
-
-function selecionarHorario(btn, hora) {
-  if (horariosSelecionados.includes(hora)) {
-    horariosSelecionados = horariosSelecionados.filter(h => h !== hora);
-    btn.style.background = "";
-    btn.style.color = "";
-  } else {
-    horariosSelecionados.push(hora);
-    btn.style.background = "#2F4EA1";
-    btn.style.color = "white";
-  }
-
-  validarTempo();
-}
-
-function validarTempo() {
-  const alerta = document.getElementById("alertaTempo");
-
-  const ordenados = [...horariosSelecionados].sort((a,b)=>a-b);
-
-  // verificar sequência contínua
-  let sequencial = true;
-
-  for (let i = 1; i < ordenados.length; i++) {
-    if (ordenados[i] !== ordenados[i-1] + 1) {
-      sequencial = false;
-      break;
-    }
-  }
-
-  if (!sequencial) {
-    alerta.innerText = "Selecione horários contínuos";
-    return;
-  }
-
-  if (horariosSelecionados.length < tempoTotal) {
-    alerta.innerText = "Tempo insuficiente";
-    return;
-  }
-
-  // REGRA 18h / 19h
-  const inicio = Math.min(...ordenados);
-  const fim = Math.max(...ordenados) + 1;
-
-  if (fim > 19) {
-    alerta.innerText = "Excede limite permitido (máx 19h)";
-    return;
-  }
-
-  alerta.innerText = "";
-}
-/* ===== CADASTRO ===== */
+/* ===== DADOS ===== */
+let prestadores = [];
+let agendaPrestador = {};
 let etapa = 1;
 
+/* ===== CADASTRO ===== */
 function abrirCadastro() {
   document.getElementById("lista-prestadores-view").style.display = "none";
   document.getElementById("cadastro-flow").style.display = "block";
 }
 
-function validarEtapa2() {
-  const raio = document.getElementById("raio").value;
-
-  if (!raio || raio <= 0 || raio > 100) {
-    alert("Raio deve ser entre 1 e 100 km");
-    return false;
-  }
-  return true;
-}
-
 function proximaEtapa() {
 
-  if (etapa === 2 && !validarEtapa2()) return;
+  if (etapa === 2) {
+    const raio = document.getElementById("raio").value;
+    if (!raio || raio <= 0 || raio > 100) {
+      alert("Raio deve ser entre 1 e 100 km");
+      return;
+    }
+  }
 
   if (etapa < 4) {
-
     document.getElementById("etapa" + etapa).style.display = "none";
-
     etapa++;
-
     document.getElementById("etapa" + etapa).style.display = "block";
     document.getElementById("etapaAtual").innerText = etapa;
 
-    if (etapa === 3) {
-      gerarAgendaCadastro();
-    }
+    if (etapa === 3) gerarAgenda();
   }
 }
 
@@ -350,40 +240,30 @@ function voltarEtapa() {
   }
 }
 
-/* ===== AGENDA INTELIGENTE ===== */
+/* ===== AGENDA ===== */
+const dias = ["Seg","Ter","Qua","Qui","Sex","Sáb","Dom"];
 
-const diasSemana = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
-
-let agendaPrestador = {};
-
-function gerarAgendaCadastro() {
+function gerarAgenda() {
   const container = document.getElementById("agenda-semana");
   container.innerHTML = "";
 
-  diasSemana.forEach(dia => {
-
-    const bloco = document.createElement("div");
-    bloco.style.marginBottom = "10px";
+  dias.forEach(dia => {
+    const div = document.createElement("div");
 
     const titulo = document.createElement("strong");
     titulo.innerText = dia;
-
-    bloco.appendChild(titulo);
-
-    const linha = document.createElement("div");
+    div.appendChild(titulo);
 
     for (let h = 8; h <= 18; h++) {
       const btn = document.createElement("button");
-      btn.innerText = h + ":00";
-      btn.style.margin = "3px";
+      btn.innerText = h;
 
-      btn.onclick = function () {
+      btn.onclick = () => {
         if (!agendaPrestador[dia]) agendaPrestador[dia] = [];
 
         if (agendaPrestador[dia].includes(h)) {
           agendaPrestador[dia] = agendaPrestador[dia].filter(x => x !== h);
           btn.style.background = "";
-          btn.style.color = "";
         } else {
           agendaPrestador[dia].push(h);
           btn.style.background = "#2F4EA1";
@@ -391,37 +271,132 @@ function gerarAgendaCadastro() {
         }
       };
 
-      linha.appendChild(btn);
+      div.appendChild(btn);
     }
 
-    bloco.appendChild(linha);
-    container.appendChild(bloco);
+    container.appendChild(div);
   });
 }
 
-</script>
-    
- function carregarHorarios() {
+/* ===== SALVAR ===== */
+function salvarPrestador() {
+
+  prestadores.push({
+    nome: document.getElementById("nome").value,
+    endereco: document.getElementById("endereco").value,
+    tecnicos: document.getElementById("tecnicos").value,
+    raio: document.getElementById("raio").value,
+    agenda: JSON.parse(JSON.stringify(agendaPrestador))
+  });
+
+  alert("Salvo!");
+
+  resetCadastro();
+  renderizarPrestadores();
+}
+
+function renderizarPrestadores() {
+  const lista = document.getElementById("lista-prestadores");
+  lista.innerHTML = "";
+
+  prestadores.forEach(p => {
+    const div = document.createElement("div");
+    div.innerHTML = `<strong>${p.nome}</strong> - ${p.endereco} (Raio ${p.raio}km)`;
+    lista.appendChild(div);
+  });
+}
+
+function resetCadastro() {
+  document.getElementById("cadastro-flow").style.display = "none";
+  document.getElementById("lista-prestadores-view").style.display = "block";
+
+  etapa = 1;
+  agendaPrestador = {};
+
+  document.querySelectorAll(".etapa").forEach((e,i)=>{
+    e.style.display = i===0?"block":"none";
+  });
+
+  document.getElementById("etapaAtual").innerText = 1;
+}
+
+/* ===== AGENDAMENTO ===== */
+function buscar() {
+  if (prestadores.length === 0) {
+    alert("Cadastre um prestador primeiro");
+    return;
+  }
+
+  document.getElementById("fluxo-agendamento").style.display = "block";
+
+  const p = prestadores[0]; // pega primeiro (simulação)
+  document.getElementById("prestadorSelecionado").innerText = p.nome;
+
+  agendaPrestador = p.agenda;
+}
+
+let tempoTotal = 0;
+let horariosSelecionados = [];
+
+function calcularTempo() {
+  const produto = parseInt(document.getElementById("produto").value);
+  const qtd = parseInt(document.getElementById("quantidade").value || 0);
+
+  tempoTotal += produto * qtd;
+  document.getElementById("tempoTotal").innerText = tempoTotal + "h";
+}
+
+function carregarHorarios() {
   const dia = document.getElementById("diaSelecionado").value;
   const container = document.getElementById("horarios");
 
   container.innerHTML = "";
-  horariosSelecionados = []; // limpa seleção
+  horariosSelecionados = [];
 
   if (!agendaPrestador[dia]) {
-    container.innerHTML = "<p>Sem horários disponíveis</p>";
+    container.innerHTML = "Sem horários";
     return;
   }
 
   agendaPrestador[dia].forEach(h => {
     const btn = document.createElement("button");
-    btn.innerText = h + ":00";
-    btn.style.margin = "5px";
+    btn.innerText = h;
 
-    btn.onclick = () => selecionarHorario(btn, h);
+    btn.onclick = () => {
+      if (horariosSelecionados.includes(h)) {
+        horariosSelecionados = horariosSelecionados.filter(x=>x!==h);
+        btn.style.background="";
+      } else {
+        horariosSelecionados.push(h);
+        btn.style.background="#2F4EA1";
+        btn.style.color="white";
+      }
+      validarTempo();
+    };
 
     container.appendChild(btn);
   });
 }
+
+function validarTempo() {
+  const alerta = document.getElementById("alertaTempo");
+
+  if (horariosSelecionados.length < tempoTotal) {
+    alerta.innerText = "Tempo insuficiente";
+    return;
+  }
+
+  const fim = Math.max(...horariosSelecionados)+1;
+
+  if (fim > 19) {
+    alerta.innerText = "Excede limite (19h)";
+    return;
+  }
+
+  alerta.innerText = "";
+}
+
+</script>
+
 </body>
 </html>
