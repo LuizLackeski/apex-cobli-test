@@ -13,20 +13,7 @@
         .conteudo { padding: 40px; max-width: 1000px; margin: 0 auto; }
         .aba { display: none; } .aba.ativa { display: block; }
         .card { background: white; padding: 25px; border-radius: 12px; margin-bottom: 25px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        .cell {
-            border: 1px solid #ddd;
-            padding: 8px;
-            text-align: center;
-            cursor: pointer;
-            border-radius: 4px;
-            font-size: 0.75rem;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 55px;
-            height: 28px;
-            margin: 2px;
-        }
+        .cell { border: 1px solid #ddd; padding: 8px; text-align: center; cursor: pointer; border-radius: 4px; font-size: 0.75rem; display: inline-flex; align-items: center; justify-content: center; width: 55px; height: 28px; margin: 2px; }
         .cell.selecionado { background: var(--primary); color: white; }
         .row-dia { display: flex; align-items: center; margin-bottom: 6px; }
         input, select { width: 100%; padding: 12px; margin: 5px 0; border: 1px solid #ddd; border-radius: 8px; }
@@ -48,7 +35,7 @@
     <div id="consulta" class="aba ativa">
         <div id="step-cep" class="card">
             <h2>Novo Agendamento</h2>
-            <input type="text" id="inputCep">
+            <input type="text" id="inputCep" placeholder="CEP">
             <button onclick="iniciarAgendamento()">Buscar</button>
         </div>
         <div id="step-agendamento" class="card" style="display:none;">
@@ -102,10 +89,31 @@
     let etapa = 1;
 
     const produtos = {
-        "Telemetria": [{desc:"Instalado veículos leves bloqueador", tempo:60}, {desc:"Instalado veículos leves e pesados + CAN", tempo:60}, {desc:"Instalado motos ou maquinários", tempo:40}, {desc:"Instalado veículos leves e pesados", tempo:40}],
-        "Identificador": [{desc:"Instalado veículos leves e pesados identificador", tempo:60}, {desc:"Instalado veículos leves e pesados identificador + CAN", tempo:90}, {desc:"Instalado veículos leves e pesados identificador RFID", tempo:60}, {desc:"Instalado veículos leves e pesados identificador RFID + CAN", tempo:80}],
-        "Trava de ignição": [{desc:"Instalado veículos leves imobilizador", tempo:80}, {desc:"Instalado veículos leves imobilizador RFID", tempo:80}, {desc:"Instalado veículos leves imobilizador RFID + CAN", tempo:90}, {desc:"Instalado veículos leves imobilizador + CAN", tempo:100}],
-        "Videotelemetria": [{desc:"CobliCam (2 câmeras)", tempo:90}, {desc:"Cobli Multicam (3 câmeras internas)", tempo:120}, {desc:"Cobli Multicam (2 câmeras + 1 externa)", tempo:240}, {desc:"Cobli Multicam (4 câmeras)", tempo:240}, {desc:"Cobli Multicam (5 câmeras)", tempo:300}]
+        "Telemetria": [
+            {desc:"Instalado veículos leves bloqueador", tempo:60},
+            {desc:"Instalado veículos leves e pesados + CAN", tempo:60},
+            {desc:"Instalado motos ou maquinários", tempo:40},
+            {desc:"Instalado veículos leves e pesados", tempo:40}
+        ],
+        "Identificador": [
+            {desc:"Instalado veículos leves e pesados identificador", tempo:60},
+            {desc:"Instalado veículos leves e pesados identificador + CAN", tempo:90},
+            {desc:"Instalado veículos leves e pesados identificador RFID", tempo:60},
+            {desc:"Instalado veículos leves e pesados identificador RFID + CAN", tempo:80}
+        ],
+        "Trava de ignição": [
+            {desc:"Instalado veículos leves imobilizador", tempo:80},
+            {desc:"Instalado veículos leves imobilizador RFID", tempo:80},
+            {desc:"Instalado veículos leves imobilizador RFID + CAN", tempo:90},
+            {desc:"Instalado veículos leves imobilizador + CAN", tempo:100}
+        ],
+        "Videotelemetria": [
+            {desc:"CobliCam (2 câmeras)", tempo:90},
+            {desc:"Cobli Multicam (3 câmeras internas)", tempo:120},
+            {desc:"Cobli Multicam (2 câmeras + 1 externa)", tempo:240},
+            {desc:"Cobli Multicam (4 câmeras)", tempo:240},
+            {desc:"Cobli Multicam (5 câmeras)", tempo:300}
+        ]
     };
 
     window.onload = () => { carregarProdutos(); };
@@ -114,7 +122,7 @@
         document.querySelectorAll('.aba').forEach(a => a.classList.remove('ativa'));
         document.getElementById(id).classList.add('ativa');
         document.querySelectorAll('.menu button').forEach(b => b.classList.remove('ativo'));
-        if(btn) btn.classList.add('ativo');
+        btn.classList.add('ativo');
     }
 
     function abrirCadastro(){
@@ -141,7 +149,7 @@
                 let cell=document.createElement("div");
                 cell.className="cell";
                 cell.dataset.dia = d; cell.dataset.hora = `${h}:00`;
-                cell.innerText = `${d.toUpperCase()} - ${h}H - ${h+1}H`;
+                cell.innerText = `${h}:00`;
                 cell.onclick=()=>cell.classList.toggle("selecionado");
                 row.appendChild(cell);
             }
@@ -151,7 +159,10 @@
 
     function salvarPrestador(){
         let agenda = [...document.querySelectorAll('#agenda-cadastro .selecionado')].map(c => ({ dia: c.dataset.dia, hora: c.dataset.hora }));
-        prestadores.push({ nome: document.getElementById("nomeEmpresa").value, agenda: agenda });
+        prestadores.push({
+            nome: document.getElementById("nomeEmpresa").value,
+            agenda: agenda
+        });
         renderizarListaPrestadores();
         atualizarSelectPrestadores();
         document.getElementById("cadastro-flow").style.display="none";
@@ -201,36 +212,20 @@
 
     function rdaAgendamento(){
         let idx = document.getElementById("selectPrestador").value;
-        let horasLimite = parseInt(document.getElementById("horasNecessarias").innerText);
         let container = document.getElementById("agenda-agendamento");
-        
         container.innerHTML = "";
         prestadores[idx].agenda.forEach(item => {
             let div = document.createElement("div");
             div.className = "cell";
-            div.innerText = `${item.dia.toUpperCase()} - ${parseInt(item.hora)}H - ${parseInt(item.hora)+1}H`;
-            div.onclick = () => {
-                let sel = document.querySelectorAll("#agenda-agendamento .selecionado");
-                if(!div.classList.contains("selecionado") && sel.length >= horasLimite) {
-                    alert("Você só pode selecionar " + horasLimite + " hora(s)!");
-                    return;
-                }
-                div.classList.toggle("selecionado");
-            };
+            div.innerText = `${item.dia} ${item.hora}`;
+            div.onclick = () => div.classList.toggle("selecionado");
             container.appendChild(div);
         });
     }
 
     function concluirAgendamento(){
-        let horasLimite = parseInt(document.getElementById("horasNecessarias").innerText);
-        let selecionados = document.querySelectorAll("#agenda-agendamento .selecionado");
-        
-        if(selecionados.length !== horasLimite) {
-            alert("Selecione exatamente " + horasLimite + " hora(s).");
-            return;
-        }
         alert("Agendamento salvo!");
-        trocarAba('painel', document.querySelectorAll('.menu button')[2]);
+        location.reload();
     }
 </script>
 </body>
