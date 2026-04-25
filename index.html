@@ -1,173 +1,3 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-<meta charset="UTF-8">
-<title>APEX - Sistema Completo</title>
-
-<style>
-:root { --primary: #2F4EA1; --bg: #f4f6f8; }
-
-body { font-family: 'Segoe UI', sans-serif; background:var(--bg); margin:0; padding:20px; }
-
-.topo { background: var(--primary); color: white; padding: 15px 30px; }
-
-.menu { background: #1F3C88; padding: 10px 30px; display: flex; }
-
-.menu button { background: none; border: none; color: #cbd5e1; margin-right: 20px; cursor: pointer; padding: 10px; }
-
-.menu button.ativo { color: white; border-bottom: 2px solid #4da3ff; }
-
-.conteudo { padding: 40px; max-width: 1000px; margin: 0 auto; }
-
-.aba { display: none; }
-.aba.ativa { display: block; }
-
-.card { background: white; padding: 25px; border-radius: 12px; margin-bottom: 25px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-
-/* ================= AGENDA (NÃO MEXIDO NO VISUAL) ================= */
-
-.agenda-grid { display: block; }
-
-.cell {
-    border: 1px solid #ddd;
-    padding: 8px;
-    text-align: center;
-    cursor: pointer;
-    border-radius: 4px;
-    font-size: 0.75rem;
-
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-
-    width: 55px;
-    height: 28px;
-    margin: 2px;
-}
-
-.cell.selecionado {
-    background: var(--primary);
-    color: white;
-}
-
-.row-dia {
-    display: flex;
-    align-items: center;
-    margin-bottom: 6px;
-}
-
-/* ================= FORM ================= */
-
-input, select {
-    width: 100%;
-    padding: 12px;
-    margin: 5px 0;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-}
-
-button {
-    cursor: pointer;
-}
-
-/* ================= PRODUTOS ================= */
-
-.item-lista {
-    display: flex;
-    justify-content: space-between;
-    padding: 8px;
-    border-bottom: 1px solid #eee;
-}
-
-</style>
-</head>
-
-<body>
-
-<div class="topo"><strong>APEX</strong> <span>Agenda Prestadores</span></div>
-
-<div class="menu">
-<button class="ativo" onclick="trocarAba('consulta', this)">Agendamento</button>
-<button onclick="trocarAba('cadastro', this)">Prestadores</button>
-<button onclick="trocarAba('painel', this)">Painel</button>
-</div>
-
-<div class="conteudo">
-
-<!-- ================= AGENDAMENTO ================= -->
-<div id="consulta" class="aba ativa">
-
-<div id="step-cep" class="card">
-<h2>Novo Agendamento</h2>
-<input type="text" id="inputCep" placeholder="Digite o CEP">
-<button onclick="iniciarAgendamento()">Buscar</button>
-</div>
-
-<div id="step-agendamento" class="card" style="display:none;">
-
-<h3>Prestador</h3>
-<select id="selectPrestador" onchange="renderizarAgendaAgendamento()"></select>
-
-<h3>Serviços</h3>
-
-<select id="produto"></select>
-<input type="number" id="quantidade" value="1">
-<button onclick="adicionarProduto()">Adicionar</button>
-
-<div id="lista-produtos"></div>
-
-<p><strong>Horas: <span id="horasNecessarias">0</span></strong></p>
-
-<h3>Agenda</h3>
-<div id="agenda-agendamento"></div>
-
-<button onclick="concluirAgendamento()">Finalizar</button>
-
-</div>
-</div>
-
-<!-- ================= CADASTRO ================= -->
-<div id="cadastro" class="aba">
-
-<div id="lista-prestadores-view" class="card">
-<button onclick="abrirCadastro()">+ Novo Prestador</button>
-<div id="lista-prestadores"></div>
-</div>
-
-<div id="cadastro-flow" class="card" style="display:none;">
-
-<div id="etapa-1">
-<h3>Dados</h3>
-<input id="nomeEmpresa" placeholder="Razão Social">
-<input id="endereco" placeholder="Endereço">
-<input id="cidade" placeholder="Cidade">
-<input id="uf" placeholder="UF">
-<input id="cep" placeholder="CEP">
-<input id="responsavel" placeholder="Responsável">
-<input id="contatoResponsavel" placeholder="Contato">
-</div>
-
-<div id="etapa-2" style="display:none;">
-<h3>Agenda</h3>
-<input id="qtdTecnicos" type="number" placeholder="Técnicos">
-<input id="raio" type="number" max="100" placeholder="Raio">
-<div id="agenda-cadastro"></div>
-</div>
-
-<button onclick="mudarEtapa(-1)">Voltar</button>
-<button onclick="mudarEtapa(1)" id="btnProximo">Próximo</button>
-<button onclick="salvarPrestador()" id="btnSalvar" style="display:none;">Concluir</button>
-
-</div>
-</div>
-
-<!-- ================= PAINEL ================= -->
-<div id="painel" class="aba">
-<div class="card">Painel</div>
-</div>
-
-</div>
-
 <script>
 
 /* ================= DADOS ================= */
@@ -226,11 +56,9 @@ document.getElementById("etapa-2").style.display="none";
 document.getElementById("btnProximo").style.display="inline";
 document.getElementById("btnSalvar").style.display="none";
 
-/* limpa */
 document.querySelectorAll('#cadastro-flow input').forEach(i=>i.value="");
 document.querySelectorAll('#agenda-cadastro .cell').forEach(c=>c.classList.remove('selecionado'));
 
-/* edição */
 if(index !== -1){
 let p = prestadores[index];
 
@@ -268,7 +96,7 @@ document.getElementById("btnProximo").style.display = etapa === 2 ? "none" : "in
 document.getElementById("btnSalvar").style.display = etapa === 2 ? "inline" : "none";
 }
 
-/* ================= AGENDA ================= */
+/* ================= AGENDA CADASTRO ================= */
 
 function criarGrid(id){
 
@@ -346,13 +174,10 @@ let group = document.createElement("optgroup");
 group.label = tipo;
 
 produtos[tipo].forEach(p=>{
-
 let opt = document.createElement("option");
 opt.value = p.tempo;
 opt.text = p.desc;
-
 group.appendChild(opt);
-
 });
 
 select.appendChild(group);
@@ -363,7 +188,6 @@ function adicionarProduto(){
 
 let select = document.getElementById("produto");
 let qtd = parseInt(document.getElementById("quantidade").value);
-
 let tempo = parseInt(select.value);
 
 itensSelecionados.push({
@@ -377,7 +201,6 @@ renderizarProdutos();
 function renderizarProdutos(){
 
 let div = document.getElementById("lista-produtos");
-
 let total = 0;
 
 div.innerHTML = itensSelecionados.map((i,idx)=>{
@@ -393,7 +216,7 @@ itensSelecionados.splice(i,1);
 renderizarProdutos();
 }
 
-/* ================= SALVAR ================= */
+/* ================= SALVAR PRESTADOR ================= */
 
 function salvarPrestador(){
 
@@ -472,48 +295,6 @@ atualizarSelectPrestadores();
 renderizarAgendaAgendamento();
 }
 
-function concluirAgendamento(){
-
-let prestadorIndex = document.getElementById("selectPrestador").value;
-
-if(prestadorIndex === "" || !prestadores[prestadorIndex]){
-alert("Selecione um prestador");
-return;
-}
-
-let selecionados = document.querySelectorAll("#agenda-agendamento .cell.selecionado");
-let necessario = parseInt(document.getElementById("horasNecessarias").innerText || 0);
-
-// valida quantidade
-if(selecionados.length !== necessario){
-alert(`Você precisa selecionar exatamente ${necessario} horários`);
-return;
-}
-
-// monta registro
-let agendamento = {
-prestador: prestadores[prestadorIndex].nome,
-servicos: [...itensSelecionados],
-horarios: [...selecionados].map(c => c.innerText),
-data: new Date().toLocaleString()
-};
-
-if(!window.agendamentos) window.agendamentos = [];
-window.agendamentos.push(agendamento);
-
-alert("Agendamento concluído com sucesso!");
-
-// reset
-itensSelecionados = [];
-document.getElementById("lista-produtos").innerHTML = "";
-document.getElementById("horasNecessarias").innerText = "0";
-
-document.querySelectorAll("#agenda-agendamento .cell")
-.forEach(c => c.classList.remove("selecionado"));
-
-document.getElementById("step-agendamento").style.display = "none";
-document.getElementById("step-cep").style.display = "block";
-}
 function renderizarAgendaAgendamento(){
 
 let idx = document.getElementById("selectPrestador").value;
@@ -532,15 +313,11 @@ if(agenda.length === 0){
     return;
 }
 
-const dias = ["Segunda","Terça","Quarta","Quinta","Sexta","Sábado"];
-
-dias.forEach(dia => {
-
 let row = document.createElement("div");
 row.className = "row-dia";
 
 let label = document.createElement("div");
-label.innerText = dia;
+label.innerText = "Horários disponíveis";
 label.style.width = "120px";
 label.style.fontWeight = "bold";
 
@@ -566,12 +343,80 @@ cell.addEventListener("click", function(){
 });
 
 row.appendChild(cell);
+
 });
 
 container.appendChild(row);
-});
 }
-</script>
 
-</body>
-</html>
+/* ================= AGENDAMENTO FINAL ================= */
+
+function concluirAgendamento(){
+
+let prestadorIndex = document.getElementById("selectPrestador").value;
+
+if(prestadorIndex === "" || !prestadores[prestadorIndex]){
+alert("Selecione um prestador");
+return;
+}
+
+let selecionados = document.querySelectorAll("#agenda-agendamento .cell.selecionado");
+let necessario = parseInt(document.getElementById("horasNecessarias").innerText || 0);
+
+if(selecionados.length !== necessario){
+alert(`Você precisa selecionar exatamente ${necessario} horários`);
+return;
+}
+
+let agendamento = {
+prestador: prestadores[prestadorIndex].nome,
+servicos: [...itensSelecionados],
+horarios: [...selecionados].map(c => c.innerText),
+data: new Date().toLocaleString()
+};
+
+if(!window.agendamentos) window.agendamentos = [];
+window.agendamentos.push(agendamento);
+
+renderizarPainel();
+
+alert("Agendamento concluído com sucesso!");
+
+itensSelecionados = [];
+document.getElementById("lista-produtos").innerHTML = "";
+document.getElementById("horasNecessarias").innerText = "0";
+
+document.querySelectorAll("#agenda-agendamento .cell")
+.forEach(c => c.classList.remove("selecionado"));
+
+document.getElementById("step-agendamento").style.display = "none";
+document.getElementById("step-cep").style.display = "block";
+}
+
+/* ================= PAINEL ================= */
+
+function renderizarPainel(){
+
+let div = document.querySelector("#painel .card");
+
+if(!window.agendamentos || window.agendamentos.length === 0){
+div.innerHTML = "Nenhum agendamento ainda.";
+return;
+}
+
+div.innerHTML = window.agendamentos.map((a)=>{
+
+return `
+<div style="border-bottom:1px solid #ddd; padding:10px 0;">
+<strong>${a.prestador}</strong><br>
+<small>${a.data}</small><br>
+<span>Serviços: ${a.servicos.map(s=>s.desc).join(", ")}</span><br>
+<span>Horários: ${a.horarios.join(", ")}</span>
+</div>
+`;
+
+}).join("");
+
+}
+
+</script>
