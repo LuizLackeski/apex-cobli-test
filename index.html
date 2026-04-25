@@ -122,7 +122,7 @@
         document.querySelectorAll('.aba').forEach(a => a.classList.remove('ativa'));
         document.getElementById(id).classList.add('ativa');
         document.querySelectorAll('.menu button').forEach(b => b.classList.remove('ativo'));
-        btn.classList.add('ativo');
+        if(btn) btn.classList.add('ativo');
     }
 
     function abrirCadastro(){
@@ -213,19 +213,41 @@
     function rdaAgendamento(){
         let idx = document.getElementById("selectPrestador").value;
         let container = document.getElementById("agenda-agendamento");
+        let horasLimite = parseInt(document.getElementById("horasNecessarias").innerText);
+        
         container.innerHTML = "";
         prestadores[idx].agenda.forEach(item => {
             let div = document.createElement("div");
             div.className = "cell";
             div.innerText = `${item.dia} ${item.hora}`;
-            div.onclick = () => div.classList.toggle("selecionado");
+            div.onclick = () => {
+                let selecionados = document.querySelectorAll("#agenda-agendamento .cell.selecionado");
+                if(!div.classList.contains("selecionado") && selecionados.length >= horasLimite) {
+                    alert("Você só pode selecionar " + horasLimite + " hora(s)!");
+                    return;
+                }
+                div.classList.toggle("selecionado");
+            };
             container.appendChild(div);
         });
     }
 
     function concluirAgendamento(){
+        let horasLimite = parseInt(document.getElementById("horasNecessarias").innerText);
+        let selecionados = document.querySelectorAll("#agenda-agendamento .cell.selecionado");
+        
+        if(selecionados.length !== horasLimite) {
+            alert("Selecione exatamente " + horasLimite + " hora(s).");
+            return;
+        }
+        
         alert("Agendamento salvo!");
-        location.reload();
+        
+        // Ir para o painel
+        trocarAba('painel', null);
+        let botoes = document.querySelectorAll('.menu button');
+        botoes.forEach(b => b.classList.remove('ativo'));
+        botoes[2].classList.add('ativo'); // Painel é o terceiro botão
     }
 </script>
 </body>
