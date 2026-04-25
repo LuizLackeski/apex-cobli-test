@@ -2,7 +2,7 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>APEX - Sistema Completo</title>
+    <title>APEX - Painel de Controle</title>
     <style>
         :root { --primary: #2F4EA1; --bg: #f4f6f8; }
         body { font-family: 'Segoe UI', sans-serif; background:var(--bg); margin:0; padding:20px; }
@@ -18,7 +18,12 @@
         .row-dia { display: flex; align-items: center; margin-bottom: 6px; }
         input, select { width: 100%; padding: 12px; margin: 5px 0; border: 1px solid #ddd; border-radius: 8px; }
         button { cursor: pointer; }
-        .item-lista { display: flex; justify-content: space-between; padding: 8px; border-bottom: 1px solid #eee; }
+        
+        /* Estilos Novos do Painel */
+        .progress-bar-bg { background: #eee; height: 8px; border-radius: 4px; margin: 10px 0; }
+        .progress-bar-fill { background: var(--primary); height: 8px; border-radius: 4px; width: 0%; }
+        .flex-header { display: flex; justify-content: space-between; align-items: center; }
+        .item-agendamento { background: #f9f9f9; padding: 10px; margin-top: 10px; border-radius: 5px; border-left: 4px solid var(--primary); display: flex; justify-content: space-between; }
     </style>
 </head>
 <body>
@@ -46,7 +51,7 @@
             <input type="number" id="quantidade" value="1">
             <button onclick="adicionarProduto()">Adicionar</button>
             <div id="lista-produtos"></div>
-            <p><strong>Horas: <span id="horasNecessarias">0</span></strong></p>
+            <p><strong>Horas: <span id="horasNecessarias">0</span>h</strong></p>
             <h3>Agenda</h3>
             <div id="agenda-agendamento"></div>
             <button onclick="concluirAgendamento()">Finalizar</button>
@@ -63,11 +68,6 @@
                 <h3>Dados</h3>
                 <input id="nomeEmpresa" placeholder="Nome / Empresa">
                 <input id="endereco" placeholder="Endereço">
-                <input id="cidade" placeholder="Cidade">
-                <input id="uf" placeholder="UF">
-                <input id="cep" placeholder="CEP">
-                <input id="responsavel" placeholder="Responsável">
-                <input id="contatoResponsavel" placeholder="Contato">
             </div>
             <div id="etapa-2" style="display:none;">
                 <h3>Agenda</h3>
@@ -79,7 +79,17 @@
         </div>
     </div>
 
-    <div id="painel" class="aba"><div class="card" id="painel-conteudo"></div></div>
+    <div id="painel" class="aba">
+        <div class="card">
+            <div style="display: flex; gap: 10px;">
+                <input type="date" id="filterData" onchange="renderPainel()">
+                <select id="filterPrestador" onchange="renderPainel()">
+                    <option value="">Todos Prestadores</option>
+                </select>
+            </div>
+        </div>
+        <div id="painel-conteudo"></div>
+    </div>
 </div>
 
 <script>
@@ -87,65 +97,35 @@
     let itensSelecionados = [];
     let agendamentos = [];
     let etapa = 1;
-    let editingIndex = -1;
 
-    const produtos = {
-        "Telemetria": [{desc:"Instalado veículos leves bloqueador", tempo:60}, {desc:"Instalado veículos leves e pesados + CAN", tempo:60}, {desc:"Instalado motos ou maquinários", tempo:40}, {desc:"Instalado veículos leves e pesados", tempo:40}],
-        "Identificador": [{desc:"Instalado veículos leves e pesados identificador", tempo:60}, {desc:"Instalado veículos leves e pesados identificador + CAN", tempo:90}, {desc:"Instalado veículos leves e pesados identificador RFID", tempo:60}, {desc:"Instalado veículos leves e pesados identificador RFID + CAN", tempo:80}],
-        "Trava de ignição": [{desc:"Instalado veículos leves imobilizador", tempo:80}, {desc:"Instalado veículos leves imobilizador RFID", tempo:80}, {desc:"Instalado veículos leves imobilizador RFID + CAN", tempo:90}, {desc:"Instalado veículos leves imobilizador + CAN", tempo:100}],
-        "Videotelemetria": [{desc:"CobliCam (2 câmeras)", tempo:90}, {desc:"Cobli Multicam (3 câmeras internas)", tempo:120}, {desc:"Cobli Multicam (2 câmeras + 1 externa)", tempo:240}, {desc:"Cobli Multicam (4 câmeras)", tempo:240}, {desc:"Cobli Multicam (5 câmeras)", tempo:300}]
-    };
+    const produtos = { "Telemetria": [{desc:"Instalado veículos leves", tempo:60}], "Videotelemetria": [{desc:"CobliCam", tempo:90}] };
 
     window.onload = () => { carregarProdutos(); };
 
+    // --- Lógica Geral ---
     function trocarAba(id, btn){
         document.querySelectorAll('.aba').forEach(a => a.classList.remove('ativa'));
         document.getElementById(id).classList.add('ativa');
         document.querySelectorAll('.menu button').forEach(b => b.classList.remove('ativo'));
         if(btn) btn.classList.add('ativo');
+        if(id === 'painel') renderPainel();
     }
 
-    function abrirCadastro(index = -1){
-        editingIndex = index;
+    // --- Cadastro ---
+    function abrirCadastro(){
         document.getElementById("lista-prestadores-view").style.display="none";
         document.getElementById("cadastro-flow").style.display="block";
-        etapa = 1;
-        document.getElementById("etapa-1").style.display="block";
-        document.getElementById("etapa-2").style.display="none";
         criarGrid("agenda-cadastro");
-        
-        if(index !== -1){
-            document.getElementById("nomeEmpresa").value = prestadores[index].nome;
-            prestadores[index].agenda.forEach(a => {
-                let cells = document.querySelectorAll("#agenda-cadastro .cell");
-                cells.forEach(c => {
-                    if(c.dataset.dia == a.dia && c.dataset.hora == a.hora) c.classList.add("selecionado");
-                });
-            });
-        } else {
-            document.getElementById("nomeEmpresa").value = "";
-        }
-    }
-
-    function mudarEtapa(dir){
-        document.getElementById("etapa-"+etapa).style.display="none";
-        etapa += dir;
-        if(etapa < 1) etapa = 1; if(etapa > 2) etapa = 2;
-        document.getElementById("etapa-"+etapa).style.display="block";
     }
 
     function criarGrid(id){
-        let grid = document.getElementById(id);
-        grid.innerHTML = "";
-        let dias = ["Seg","Ter","Qua","Qui","Sex","Sab"];
-        dias.forEach(d=>{
+        let grid = document.getElementById(id); grid.innerHTML = "";
+        ["Seg","Ter","Qua","Qui","Sex","Sab"].forEach(d=>{
             let row = document.createElement("div"); row.className="row-dia";
             row.innerHTML = `<div style="width:80px">${d}</div>`;
             for(let h=8;h<=18;h++){
-                let cell=document.createElement("div");
-                cell.className="cell";
-                cell.dataset.dia = d; cell.dataset.hora = `${h}:00`;
-                cell.innerText = `${h}:00`;
+                let cell=document.createElement("div"); cell.className="cell";
+                cell.dataset.dia=d; cell.dataset.hora=`${h}:00`; cell.innerText=`${h}:00`;
                 cell.onclick=()=>cell.classList.toggle("selecionado");
                 row.appendChild(cell);
             }
@@ -155,32 +135,20 @@
 
     function salvarPrestador(){
         let agenda = [...document.querySelectorAll('#agenda-cadastro .selecionado')].map(c => ({ dia: c.dataset.dia, hora: c.dataset.hora }));
-        if(editingIndex === -1){
-            prestadores.push({ nome: document.getElementById("nomeEmpresa").value, agenda: agenda });
-        } else {
-            prestadores[editingIndex] = { nome: document.getElementById("nomeEmpresa").value, agenda: agenda };
-        }
-        renderizarListaPrestadores();
+        prestadores.push({ nome: document.getElementById("nomeEmpresa").value, agenda: agenda });
         atualizarSelectPrestadores();
         document.getElementById("cadastro-flow").style.display="none";
         document.getElementById("lista-prestadores-view").style.display="block";
     }
 
-    function renderizarListaPrestadores(){
-        document.getElementById("lista-prestadores").innerHTML = prestadores.map((p, i) => `
-            <div class="card">
-                ${p.nome} 
-                <button onclick="abrirCadastro(${i})">Editar</button> 
-                <button onclick="excluirPrestador(${i})">Excluir</button>
-            </div>`).join('');
-    }
-
-    function excluirPrestador(i){ prestadores.splice(i,1); renderizarListaPrestadores(); atualizarSelectPrestadores(); }
-
     function atualizarSelectPrestadores(){
         let sel = document.getElementById("selectPrestador");
-        sel.innerHTML = '<option value="">-- Escolha --</option>';
-        prestadores.forEach((p,i) => sel.innerHTML += `<option value="${i}">${p.nome}</option>`);
+        let filter = document.getElementById("filterPrestador");
+        sel.innerHTML = filter.innerHTML = '<option value="">-- Escolha --</option>';
+        prestadores.forEach((p,i) => {
+            sel.innerHTML += `<option value="${i}">${p.nome}</option>`;
+            filter.innerHTML += `<option value="${p.nome}">${p.nome}</option>`;
+        });
     }
 
     function carregarProdutos(){
@@ -195,64 +163,69 @@
         }
     }
 
+    // --- Agendamento ---
     function adicionarProduto(){
         let select = document.getElementById("produto");
         let qtd = parseInt(document.getElementById("quantidade").value) || 1;
-        let tempo = parseInt(select.value);
-        itensSelecionados.push({desc: select.options[select.selectedIndex].text, tempo: tempo * qtd});
-        
+        itensSelecionados.push({desc: select.options[select.selectedIndex].text, tempo: parseInt(select.value) * qtd});
         let total = itensSelecionados.reduce((a, b) => a + b.tempo, 0);
         document.getElementById("horasNecessarias").innerText = Math.ceil(total/60);
-        
-        let lista = document.getElementById("lista-produtos");
-        lista.innerHTML = itensSelecionados.map((i, idx) => `<div class="item-lista">${i.desc} <button onclick="itensSelecionados.splice(${idx},1); adicionarProduto();">x</button></div>`).join('');
-    }
-
-    function iniciarAgendamento(){
-        if(prestadores.length === 0){ alert("Cadastre um prestador!"); return; }
-        document.getElementById("step-cep").style.display="none";
-        document.getElementById("step-agendamento").style.display="block";
     }
 
     function rdaAgendamento(){
         let idx = document.getElementById("selectPrestador").value;
-        let horasLimite = parseInt(document.getElementById("horasNecessarias").innerText);
-        if(horasLimite === 0){ alert("Adicione um serviço antes!"); document.getElementById("selectPrestador").value=""; return; }
-        
         let container = document.getElementById("agenda-agendamento");
         container.innerHTML = "";
-        
-        let dias = ["Seg","Ter","Qua","Qui","Sex","Sab"];
-        dias.forEach(d => {
-            let slotsDoDia = prestadores[idx].agenda.filter(a => a.dia == d);
-            if(slotsDoDia.length > 0){
-                let row = document.createElement("div"); row.className="row-dia";
-                row.innerHTML = `<div style="width:80px">${d}</div>`;
-                slotsDoDia.forEach(item => {
-                    let div = document.createElement("div");
-                    div.className = "cell";
-                    div.innerText = item.hora;
-                    div.onclick = () => {
-                        let sel = document.querySelectorAll("#agenda-agendamento .selecionado");
-                        if(!div.classList.contains("selecionado") && sel.length >= horasLimite) return alert("Limite de "+horasLimite+"h!");
-                        div.classList.toggle("selecionado");
-                    };
-                    row.appendChild(div);
-                });
-                container.appendChild(row);
-            }
+        prestadores[idx].agenda.forEach(item => {
+            let div = document.createElement("div"); div.className = "cell";
+            div.innerText = `${item.dia} ${item.hora}`;
+            div.onclick = () => div.classList.toggle("selecionado");
+            container.appendChild(div);
         });
     }
 
     function concluirAgendamento(){
-        let horasLimite = parseInt(document.getElementById("horasNecessarias").innerText);
-        let selecionados = document.querySelectorAll("#agenda-agendamento .selecionado");
-        if(selecionados.length !== horasLimite) return alert("Selecione " + horasLimite + " hora(s)!");
-        
-        agendamentos.push({ prestador: prestadores[document.getElementById("selectPrestador").value].nome, data: new Date().toLocaleDateString() });
-        document.getElementById("painel-conteudo").innerHTML = agendamentos.map(a => `<div class="card">Agendamento: ${a.prestador} - ${a.data}</div>`).join('');
-        alert("Agendado!");
+        agendamentos.push({ 
+            prestador: prestadores[document.getElementById("selectPrestador").value].nome, 
+            data: new Date().toISOString().split('T')[0],
+            horas: parseInt(document.getElementById("horasNecessarias").innerText)
+        });
+        alert("Agendamento salvo!");
         trocarAba('painel', document.querySelectorAll('.menu button')[2]);
+    }
+
+    // --- Painel ---
+    function renderPainel(){
+        let container = document.getElementById("painel-conteudo");
+        let filtroData = document.getElementById("filterData").value;
+        let filtroNome = document.getElementById("filterPrestador").value;
+        
+        container.innerHTML = prestadores.map(p => {
+            let ags = agendamentos.filter(a => a.prestador === p.nome && (filtroData === "" || a.data === filtroData));
+            let totalHoras = ags.reduce((sum, a) => sum + a.horas, 0);
+            let pct = Math.min((totalHoras / 10) * 100, 100);
+            
+            if(filtroNome !== "" && filtroNome !== p.nome) return "";
+
+            return `
+            <div class="card">
+                <div class="flex-header">
+                    <strong>${p.nome}</strong> <span>${totalHoras}h / 10h (${pct}%)</span>
+                </div>
+                <div class="progress-bar-bg"><div class="progress-bar-fill" style="width: ${pct}%"></div></div>
+                ${ags.map((a, idx) => `
+                    <div class="item-agendamento">
+                        ${a.data} - ${a.horas}h 
+                        <button onclick="excluirAgendamento('${p.nome}', ${idx})">Excluir</button>
+                    </div>
+                `).join('')}
+            </div>`;
+        }).join('');
+    }
+
+    function excluirAgendamento(nome, index){
+        agendamentos = agendamentos.filter((_, i) => i !== index);
+        renderPainel();
     }
 </script>
 </body>
