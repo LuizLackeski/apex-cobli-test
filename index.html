@@ -97,7 +97,8 @@
 </div>
 
 <script>
-   const produtos = {
+    /* DADOS EXATOS */
+    const produtos = {
         "Telemetria": [
             {desc:"Instalado veículos leves bloqueador", tempo:60},
             {desc:"Instalado veículos leves e pesados + CAN", tempo:60},
@@ -132,11 +133,16 @@
 
     window.onload = () => { carregarProdutos(); criarGrid('agenda-cadastro'); };
 
-    /* Lógica Agendamento */
-    function iniciarAgendamento() {
-        if(prestadores.length === 0) { alert("Cadastre um prestador primeiro!"); return; }
-        document.getElementById('step-cep').style.display = 'none';
-        document.getElementById('step-agendamento').style.display = 'block';
+    function carregarProdutos() {
+        let select = document.getElementById("produto");
+        for (let tipo in produtos) {
+            let group = document.createElement('optgroup'); group.label = tipo;
+            produtos[tipo].forEach(p => {
+                let opt = document.createElement("option"); opt.text = p.desc; opt.value = p.tempo;
+                group.appendChild(opt);
+            });
+            select.appendChild(group);
+        }
     }
 
     function adicionarProduto() {
@@ -157,25 +163,25 @@
 
     function removerProduto(idx) { itensSelecionados.splice(idx, 1); renderizarListaProdutos(); }
 
+    function iniciarAgendamento() {
+        if(prestadores.length === 0) { alert("Cadastre um prestador primeiro!"); return; }
+        document.getElementById('step-cep').style.display = 'none';
+        document.getElementById('step-agendamento').style.display = 'block';
+    }
+
     function renderizarAgendaAgendamento() {
         let idx = document.getElementById("selectPrestador").value;
         let c = document.getElementById("agenda-agendamento"); c.innerHTML = "";
-        let slotsMax = parseInt(document.getElementById("horasNecessarias").innerText);
-        
         if(idx === "") return;
+        
         prestadores[idx].agenda.forEach(hora => {
             let b = document.createElement("div");
             b.className = "cell"; b.innerText = hora;
-            b.onclick = () => {
-                let selecionados = document.querySelectorAll('#agenda-agendamento .cell.selecionado');
-                if(selecionados.length >= slotsMax && !b.classList.contains('selecionado')) { alert("Limite de horas atingido!"); return; }
-                b.classList.toggle("selecionado");
-            };
+            b.onclick = () => b.classList.toggle("selecionado");
             c.appendChild(b);
         });
     }
 
-    /* CRUD Prestadores */
     function abrirCadastro(index = -1) {
         editingIndex = index;
         document.getElementById("lista-prestadores-view").style.display = "none";
@@ -213,7 +219,6 @@
 
     function excluirPrestador(i) { prestadores.splice(i, 1); renderizarListaPrestadores(); atualizarSelectPrestadores(); }
 
-    /* Utilitários */
     function trocarAba(id, btn) {
         document.querySelectorAll('.aba').forEach(a => a.classList.remove('ativa'));
         document.getElementById(id).classList.add('ativa');
@@ -250,18 +255,15 @@
     }
 
     function resetarTelaParaInicio() { location.reload(); }
-    function concluirAgendamento() { alert("Agendado!"); resetarTelaParaInicio(); }
-    function carregarProdutos() { /* Lógica inicial de produtos mantida anteriormente */ 
-        let select = document.getElementById("produto");
-        for (let tipo in produtos) {
-            let group = document.createElement('optgroup'); group.label = tipo;
-            produtos[tipo].forEach(p => {
-                let opt = document.createElement("option"); opt.text = p.desc; opt.value = p.tempo;
-                group.appendChild(opt);
-            });
-            select.appendChild(group);
-        }
+
+    function concluirAgendamento() {
+        let slotsMax = parseInt(document.getElementById("horasNecessarias").innerText);
+        let selecionados = document.querySelectorAll('#agenda-agendamento .cell.selecionado').length;
+        if(selecionados !== slotsMax) { alert("Erro: Você precisa selecionar exatamente " + slotsMax + " horários."); return; }
+        alert("Agendamento concluído!");
+        resetarTelaParaInicio();
     }
+
     function atualizarSelectPrestadores() {
         let sel = document.getElementById("selectPrestador");
         sel.innerHTML = '<option value="">-- Escolha --</option>';
