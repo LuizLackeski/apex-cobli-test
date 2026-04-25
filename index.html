@@ -89,13 +89,12 @@ button.acao {
 
     <div class="card">
       <h3>Produtos</h3>
-      <select id="produto">
-        <option value="1">Produto A - 1h</option>
-        <option value="2">Produto B - 2h</option>
-      </select>
-      <input type="number" id="quantidade" placeholder="Qtd">
-      <button class="acao" onclick="calcularTempo()">Adicionar</button>
-      <p>Tempo total: <strong id="tempoTotal">0h</strong></p>
+      <select id="produto"></select>
+
+<input type="number" id="quantidade" placeholder="Qtd">
+<button class="acao" onclick="adicionarItem()">Adicionar</button>
+<div id="lista-itens"></div>
+<p>Tempo total: <strong id="tempoTotal">0h</strong></p>
     </div>
 
     <div class="card">
@@ -180,6 +179,27 @@ let prestadorSelecionadoIndex = null;
 let prestadorEditando = null;
 let tempoTotal = 0;
 let horariosSelecionados = [];
+  const produtos = [
+  { nome: "TELEMETRIA - BLOQUEADOR", tempo: 60 },
+  { nome: "TELEMETRIA + CAN", tempo: 60 },
+  { nome: "IDENTIFICADOR", tempo: 60 },
+  { nome: "IDENTIFICADOR + CAN", tempo: 90 },
+  { nome: "IDENTIFICADOR RFID", tempo: 60 },
+  { nome: "IDENTIFICADOR RFID + CAN", tempo: 80 },
+  { nome: "IMOBILIZADOR", tempo: 80 },
+  { nome: "IMOBILIZADOR RFID", tempo: 80 },
+  { nome: "COBLICAM (2 CAMERAS)", tempo: 90 },
+  { nome: "IMOBILIZADOR RFID + CAN", tempo: 90 },
+  { nome: "IMOBILIZADOR + CAN", tempo: 100 },
+  { nome: "MULTICAM 3 CAM", tempo: 120 },
+  { nome: "MOTOS / MAQUINÁRIO", tempo: 40 },
+  { nome: "TELEMETRIA PADRÃO", tempo: 40 },
+  { nome: "MULTICAM 2+1", tempo: 240 },
+  { nome: "MULTICAM 4", tempo: 240 },
+  { nome: "MULTICAM 5", tempo: 300 }
+];
+
+let itensAgendamento = [];
 
 /* ===== ABAS ===== */
 function trocarAba(id, botao){
@@ -368,37 +388,66 @@ function mostrarAgenda(){
           b.style.background="#2F4EA1";
           b.style.color="white";
         }
-        validarTempo();
-      };
+        function validarTempo() {
+  const alerta = document.getElementById("alertaTempo");
 
-      div.appendChild(b);
-    });
+  const horasNecessarias = Math.ceil(tempoTotal / 60);
 
-    c.appendChild(div);
+  if (horariosSelecionados.length < horasNecessarias) {
+    alerta.innerText = "Tempo insuficiente";
+    return;
+  }
+
+  if (Math.max(...horariosSelecionados) + 1 > 19) {
+    alerta.innerText = "Excede 19h";
+    return;
+  }
+
+  alerta.innerText = "";
+}
+
+function adicionarItem() {
+
+  const index = document.getElementById("produto").value;
+  const qtd = parseInt(document.getElementById("quantidade").value || 0);
+
+  if (!qtd || qtd <= 0) {
+    alert("Informe quantidade");
+    return;
+  }
+
+  const produto = produtos[index];
+
+  itensAgendamento.push({
+    nome: produto.nome,
+    tempo: produto.tempo,
+    qtd: qtd
   });
+
+  renderizarItens();
 }
+function renderizarItens() {
 
-function calcularTempo(){
-  tempoTotal += parseInt(document.getElementById("produto").value) * (document.getElementById("quantidade").value || 0);
-  document.getElementById("tempoTotal").innerText = tempoTotal + "h";
+  const container = document.getElementById("lista-itens");
+  container.innerHTML = "";
+  tempoTotal = 0;
+  itensAgendamento.forEach((item, index) => {
+    const tempoItem = item.tempo * item.qtd;
+    tempoTotal += tempoItem;
+    const div = document.createElement("div");
+    div.innerHTML = `
+      ${item.nome} | Qtd: ${item.qtd} 
+      <button onclick="removerItem(${index})">X</button>
+    `;
+    container.appendChild(div);
+  });
+  document.getElementById("tempoTotal").innerText =
+    (tempoTotal / 60).toFixed(1) + "h";
 }
-
-function validarTempo(){
-  let alerta=document.getElementById("alertaTempo");
-
-  if(horariosSelecionados.length < tempoTotal){
-    alerta.innerText="Tempo insuficiente";
-    return;
-  }
-
-  if(Math.max(...horariosSelecionados)+1 > 19){
-    alerta.innerText="Excede 19h";
-    return;
-  }
-
-  alerta.innerText="";
+  function removerItem(index) {
+  itensAgendamento.splice(index, 1);
+  renderizarItens();
 }
-
 function concluirAgendamento(){
   if(prestadorSelecionadoIndex==null){ alert("Selecione prestador"); return;}
   if(horariosSelecionados.length==0){ alert("Selecione horário"); return;}
@@ -412,6 +461,8 @@ function concluirAgendamento(){
   });
 
   resetAgendamento();
+  itensAgendamento = [];
+document.getElementById("lista-itens").innerHTML = "";
   renderizarPainel();
 }
 
@@ -447,6 +498,17 @@ function renderizarPainel(){
 }
 
 </script>
+function carregarProdutos() {
+  const select = document.getElementById("produto");
 
+  produtos.forEach((p, i) => {
+    const opt = document.createElement("option");
+    opt.value = i;
+    opt.text = p.nome;
+    select.appendChild(opt);
+  });
+}
+
+window.onload = carregarProdutos;
 </body>
 </html>
