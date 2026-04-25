@@ -1,146 +1,549 @@
 <!DOCTYPE html>
+
 <html lang="pt-br">
+
 <head>
+
     <meta charset="UTF-8">
-    <title>APEX - Agenda Prestadores</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <title>APEX - Sistema Completo</title>
+
     <style>
+
         :root { --primary: #2F4EA1; --bg: #f4f6f8; }
+
         body { font-family: 'Segoe UI', sans-serif; background:var(--bg); margin:0; padding:20px; }
+
         .topo { background: var(--primary); color: white; padding: 15px 30px; }
+
         .menu { background: #1F3C88; padding: 10px 30px; display: flex; }
+
         .menu button { background: none; border: none; color: #cbd5e1; margin-right: 20px; cursor: pointer; padding: 10px; }
+
         .menu button.ativo { color: white; border-bottom: 2px solid #4da3ff; }
+
         .conteudo { padding: 40px; max-width: 1000px; margin: 0 auto; }
+
         .aba { display: none; } .aba.ativa { display: block; }
+
         .card { background: white; padding: 25px; border-radius: 12px; margin-bottom: 25px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+
         .agenda-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 5px; margin-top: 10px; }
+
         .cell { border: 1px solid #ddd; padding: 10px; text-align: center; cursor: pointer; border-radius: 4px; font-size: 0.8rem; }
+
         .cell.selecionado { background: var(--primary); color: white; border-color: var(--primary); }
+
         input, select { width: 100%; padding: 12px; margin: 5px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
+
         button.acao { background: #4C5EB0; color: white; border: none; padding: 12px; cursor: pointer; border-radius: 8px; width: 100%; font-weight: bold; }
+
         .item-lista { display: flex; justify-content: space-between; padding: 8px; border-bottom: 1px solid #eee; font-size: 0.9rem; }
+
     </style>
+
 </head>
+
 <body>
 
+
+
 <div class="topo"><strong>APEX</strong> <span>Agenda Prestadores</span></div>
+
 <div class="menu">
+
     <button class="ativo" onclick="trocarAba('consulta', this)">Agendamento</button>
+
     <button onclick="trocarAba('cadastro', this)">Prestadores</button>
+
     <button onclick="trocarAba('painel', this)">Painel</button>
+
 </div>
+
+
 
 <div class="conteudo">
+
+
+
     <div id="consulta" class="aba ativa">
+
         <div id="step-cep" class="card">
+
             <h2>Novo Agendamento</h2>
+
             <input type="text" id="inputCep" placeholder="Digite o CEP (00000-000)">
+
             <button class="acao" onclick="iniciarAgendamento()">Buscar Endereço</button>
+
         </div>
+
+        
+
         <div id="step-agendamento" class="card" style="display: none;">
+
             <h3>1. Prestador</h3>
-            <select id="selectPrestador" onchange="renderizarAgendaAgendamento()"><option value="">-- Selecione --</option></select>
+
+            <select id="selectPrestador" onchange="renderizarAgendaAgendamento()">
+
+                <option value="">-- Escolha um prestador --</option>
+
+            </select>
+
+            
+
             <h3>2. Serviços</h3>
+
             <select id="produto"></select>
+
             <input type="number" id="quantidade" value="1" min="1" placeholder="Quantidade">
+
             <button class="acao" onclick="adicionarProduto()">+ Adicionar Item</button>
+
+            
+
             <div id="lista-produtos" style="margin-top:15px; border:1px solid #ddd; border-radius:8px; padding:10px;"></div>
-            <p><strong>Total Horas: <span id="horasNecessarias">0</span>h</strong></p>
+
+            <p><strong>Total Horas Necessárias: <span id="horasNecessarias">0</span>h</strong></p>
+
+            
+
             <h3>3. Agenda</h3>
+
             <div id="agenda-agendamento" class="agenda-grid"></div>
-            <button class="acao" style="background:#28a745; margin-top:20px;" onclick="concluirAgendamento()">Finalizar</button>
-            <button onclick="location.reload()" style="background:none; color:red; border:none; margin-top:10px; width:100%;">Cancelar</button>
+
+            
+
+            <button class="acao" style="background:#28a745; margin-top:20px;" onclick="concluirAgendamento()">Finalizar Agendamento</button>
+
+            <button onclick="resetarTelaParaInicio()" style="background:none; color:red; border:none; margin-top:10px; width:100%; cursor:pointer;">Cancelar/Reiniciar</button>
+
         </div>
+
     </div>
+
+
 
     <div id="cadastro" class="aba">
+
         <div id="lista-prestadores-view" class="card">
+
             <h2>Prestadores</h2>
+
             <button class="acao" onclick="abrirCadastro()">+ Novo Prestador</button>
+
             <div id="lista-prestadores" style="margin-top: 20px;"></div>
+
         </div>
+
+        
+
         <div id="cadastro-flow" class="card" style="display:none;">
-            <h3>Cadastro</h3>
-            <input id="nomeEmpresa" placeholder="Razão Social *">
-            <div id="agenda-cadastro" class="agenda-grid"></div>
-            <button class="acao" onclick="salvarPrestador()">Salvar</button>
-            <button onclick="location.reload()" style="background:none; color:red; border:none; width:100%;">Cancelar</button>
+
+            <h3>Cadastro (Etapa <span id="etapaAtual">1</span>/4)</h3>
+
+            <div class="etapa-form" id="etapa-1" style="display:block;">
+
+                <input id="nomeEmpresa" placeholder="Razão Social *">
+
+                <input id="endereco" placeholder="Endereço Completo *">
+
+            </div>
+
+            <div class="etapa-form" id="etapa-2" style="display:none;">
+
+                <input id="cidade" placeholder="Cidade / UF">
+
+            </div>
+
+            <div class="etapa-form" id="etapa-3" style="display:none;">
+
+                <p>Marque os horários disponíveis (Seg-Sex, 08h-18h):</p>
+
+                <div id="agenda-cadastro" class="agenda-grid"></div>
+
+            </div>
+
+            <div class="etapa-form" id="etapa-4" style="display:none;"><p>Revisão Final.</p></div>
+
+
+
+            <div style="display:flex; gap:10px; margin-top:20px;">
+
+                <button onclick="mudarEtapa(-1)">Voltar</button>
+
+                <button class="acao" id="btnProximo" onclick="mudarEtapa(1)">Próximo</button>
+
+                <button class="acao" id="btnSalvar" style="display:none; background:#28a745;" onclick="salvarPrestador()">Salvar Prestador</button>
+
+            </div>
+
         </div>
+
     </div>
 
-    <div id="painel" class="aba"><div class="card">Total: <strong id="total">0</strong></div></div>
+
+
+    <div id="painel" class="aba">
+
+        <div class="card">Total de Agendamentos: <strong id="total">0</strong></div>
+
+    </div>
+
 </div>
 
-<script>
-    const supabase = supabase.createClient('https://tmjmjrhgmyqamuphgdvi.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRtam1qcmhnbXlxYW11cGhnZHZpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcxMjY4NzMsImV4cCI6MjA5MjcwMjg3M30.gjClWn46TOgfa-y4PAUMBg4ZxS4xhFjep1mk_DcU2QY');
 
-    // Produtos mantidos intactos
+
+<script>
+
+    /* DADOS EXATOS */
+
     const produtos = {
-        "Telemetria": [{desc:"Instalado veículos leves bloqueador", tempo:60}, {desc:"Instalado veículos leves e pesados + CAN", tempo:60}, {desc:"Instalado motos ou maquinários", tempo:40}, {desc:"Instalado veículos leves e pesados", tempo:40}],
-        "Identificador": [{desc:"Instalado veículos leves e pesados identificador", tempo:60}, {desc:"Instalado veículos leves e pesados identificador + CAN", tempo:90}, {desc:"Instalado veículos leves e pesados identificador RFID", tempo:60}, {desc:"Instalado veículos leves e pesados identificador RFID + CAN", tempo:80}],
-        "Trava de ignição": [{desc:"Instalado veículos leves imobilizador", tempo:80}, {desc:"Instalado veículos leves imobilizador RFID", tempo:80}, {desc:"Instalado veículos leves imobilizador RFID + CAN", tempo:90}, {desc:"Instalado veículos leves imobilizador + CAN", tempo:100}],
-        "Videotelemetria": [{desc:"CobliCam (2 câmeras)", tempo:90}, {desc:"Cobli Multicam (3 câmeras internas)", tempo:120}, {desc:"Cobli Multicam (2 câmeras + 1 externa)", tempo:240}, {desc:"Cobli Multicam (4 câmeras)", tempo:240}, {desc:"Cobli Multicam (5 câmeras)", tempo:300}]
+
+        "Telemetria": [
+
+            {desc:"Instalado veículos leves bloqueador", tempo:60},
+
+            {desc:"Instalado veículos leves e pesados + CAN", tempo:60},
+
+            {desc:"Instalado motos ou maquinários", tempo:40},
+
+            {desc:"Instalado veículos leves e pesados", tempo:40}
+
+        ],
+
+        "Identificador": [
+
+            {desc:"Instalado veículos leves e pesados identificador", tempo:60},
+
+            {desc:"Instalado veículos leves e pesados identificador + CAN", tempo:90},
+
+            {desc:"Instalado veículos leves e pesados identificador RFID", tempo:60},
+
+            {desc:"Instalado veículos leves e pesados identificador RFID + CAN", tempo:80}
+
+        ],
+
+        "Trava de ignição": [
+
+            {desc:"Instalado veículos leves imobilizador", tempo:80},
+
+            {desc:"Instalado veículos leves imobilizador RFID", tempo:80},
+
+            {desc:"Instalado veículos leves imobilizador RFID + CAN", tempo:90},
+
+            {desc:"Instalado veículos leves imobilizador + CAN", tempo:100}
+
+        ],
+
+        "Videotelemetria": [
+
+            {desc:"CobliCam (2 câmeras)", tempo:90},
+
+            {desc:"Cobli Multicam (3 câmeras internas)", tempo:120},
+
+            {desc:"Cobli Multicam (2 câmeras + 1 externa)", tempo:240},
+
+            {desc:"Cobli Multicam (4 câmeras)", tempo:240},
+
+            {desc:"Cobli Multicam (5 câmeras)", tempo:300}
+
+        ]
+
     };
+
+
 
     let prestadores = [];
+
     let itensSelecionados = [];
 
-    // Inicialização não bloqueante
-    window.onload = () => {
-        carregarProdutos();
-        criarGrid('agenda-cadastro');
-        carregarPrestadores(); // Executa em segundo plano
-    };
+    let etapa = 1;
 
-    async function carregarPrestadores() {
-        try {
-            let { data } = await supabase.from('prestadores').select('*');
-            if (data) {
-                prestadores = data;
-                atualizarSelect();
-                renderizarLista();
-            }
-        } catch(e) { console.log("Sem conexão com banco."); }
-    }
+    let editingIndex = -1;
 
-    // [Funções de UI mantidas exatamente como você usa]
-    function trocarAba(id, btn) {
-        document.querySelectorAll('.aba').forEach(a => a.classList.remove('ativa'));
-        document.getElementById(id).classList.add('ativa');
-    }
 
-    function abrirCadastro() {
-        document.getElementById("lista-prestadores-view").style.display = "none";
-        document.getElementById("cadastro-flow").style.display = "block";
-    }
 
-    function criarGrid(id) {
-        const grid = document.getElementById(id);
-        ['Seg','Ter','Qua','Qui','Sex'].forEach(d => {
-            for(let h=8; h<=18; h++){
-                let c = document.createElement('div'); c.className="cell"; c.innerText = `${d} ${h}:00`;
-                c.onclick = () => c.classList.toggle("selecionado");
-                grid.appendChild(c);
-            }
-        });
-    }
+    window.onload = () => { carregarProdutos(); criarGrid('agenda-cadastro'); };
+
+
 
     function carregarProdutos() {
-        let sel = document.getElementById("produto");
-        for (let t in produtos) {
-            let g = document.createElement('optgroup'); g.label = t;
-            produtos[t].forEach(p => { let o = document.createElement("option"); o.text = p.desc; o.value = p.tempo; g.appendChild(o); });
-            sel.appendChild(g);
+
+        let select = document.getElementById("produto");
+
+        for (let tipo in produtos) {
+
+            let group = document.createElement('optgroup'); group.label = tipo;
+
+            produtos[tipo].forEach(p => {
+
+                let opt = document.createElement("option"); opt.text = p.desc; opt.value = p.tempo;
+
+                group.appendChild(opt);
+
+            });
+
+            select.appendChild(group);
+
         }
+
     }
 
-    async function salvarPrestador() {
-        let agenda = [];
-        document.querySelectorAll('#agenda-cadastro .cell.selecionado').forEach(c => agenda.push(c.innerText));
-        await supabase.from('prestadores').insert([{ nome: document.getElementById("nomeEmpresa").value, agenda: agenda }]);
-        location.reload();
+
+
+    function adicionarProduto() {
+
+        let select = document.getElementById("produto");
+
+        let qtd = parseInt(document.getElementById("quantidade").value);
+
+        let tempoTotal = parseInt(select.value) * qtd;
+
+        itensSelecionados.push({desc: `${select.options[select.selectedIndex].text} (Qtd: ${qtd})`, tempo: tempoTotal});
+
+        renderizarListaProdutos();
+
     }
+
+
+
+    function renderizarListaProdutos() {
+
+        let totalMinutos = itensSelecionados.reduce((acc, i) => acc + i.tempo, 0);
+
+        document.getElementById("horasNecessarias").innerText = Math.ceil(totalMinutos / 60);
+
+        document.getElementById("lista-produtos").innerHTML = itensSelecionados.map((i, idx) => `
+
+            <div class="item-lista">${i.desc} <button onclick="removerProduto(${idx})">x</button></div>
+
+        `).join('');
+
+    }
+
+
+
+    function removerProduto(idx) { itensSelecionados.splice(idx, 1); renderizarListaProdutos(); }
+
+
+
+    function iniciarAgendamento() {
+
+        if(prestadores.length === 0) { alert("Cadastre um prestador primeiro!"); return; }
+
+        document.getElementById('step-cep').style.display = 'none';
+
+        document.getElementById('step-agendamento').style.display = 'block';
+
+    }
+
+
+
+    function renderizarAgendaAgendamento() {
+
+        let idx = document.getElementById("selectPrestador").value;
+
+        let c = document.getElementById("agenda-agendamento"); c.innerHTML = "";
+
+        if(idx === "") return;
+
+        
+
+        prestadores[idx].agenda.forEach(hora => {
+
+            let b = document.createElement("div");
+
+            b.className = "cell"; b.innerText = hora;
+
+            b.onclick = () => b.classList.toggle("selecionado");
+
+            c.appendChild(b);
+
+        });
+
+    }
+
+
+
+    function abrirCadastro(index = -1) {
+
+        editingIndex = index;
+
+        document.getElementById("lista-prestadores-view").style.display = "none";
+
+        document.getElementById("cadastro-flow").style.display = "block";
+
+        document.getElementById("nomeEmpresa").value = index !== -1 ? prestadores[index].nome : "";
+
+        document.querySelectorAll('#agenda-cadastro .cell').forEach(c => c.classList.remove('selecionado'));
+
+        if(index !== -1) {
+
+            prestadores[index].agenda.forEach(h => {
+
+                document.querySelectorAll('#agenda-cadastro .cell').forEach(c => { if(c.innerText === h) c.classList.add('selecionado'); });
+
+            });
+
+        }
+
+    }
+
+
+
+    function salvarPrestador() {
+
+        let agenda = [];
+
+        document.querySelectorAll('#agenda-cadastro .cell.selecionado').forEach(c => agenda.push(c.innerText));
+
+        let dados = { nome: document.getElementById("nomeEmpresa").value, agenda: agenda };
+
+        
+
+        if(editingIndex === -1) prestadores.push(dados);
+
+        else prestadores[editingIndex] = dados;
+
+
+
+        renderizarListaPrestadores();
+
+        atualizarSelectPrestadores();
+
+        resetCadastro();
+
+    }
+
+
+
+    function renderizarListaPrestadores() {
+
+        let l = document.getElementById("lista-prestadores");
+
+        l.innerHTML = prestadores.map((p, i) => `
+
+            <div class="card" style="padding:10px; margin-bottom:5px;">
+
+                ${p.nome} <button onclick="abrirCadastro(${i})">Editar</button> <button onclick="excluirPrestador(${i})">Excluir</button>
+
+            </div>
+
+        `).join('');
+
+    }
+
+
+
+    function excluirPrestador(i) { prestadores.splice(i, 1); renderizarListaPrestadores(); atualizarSelectPrestadores(); }
+
+
+
+    function trocarAba(id, btn) {
+
+        document.querySelectorAll('.aba').forEach(a => a.classList.remove('ativa'));
+
+        document.getElementById(id).classList.add('ativa');
+
+        document.querySelectorAll('.menu button').forEach(b => b.classList.remove('ativo'));
+
+        btn.classList.add('ativo');
+
+    }
+
+
+
+    function mudarEtapa(dir) {
+
+        document.getElementById(`etapa-${etapa}`).style.display = "none";
+
+        etapa += dir;
+
+        if(etapa < 1) etapa = 1; if(etapa > 4) etapa = 4;
+
+        document.getElementById(`etapa-${etapa}`).style.display = "block";
+
+        document.getElementById("etapaAtual").innerText = etapa;
+
+        document.getElementById("btnProximo").style.display = etapa === 4 ? "none" : "inline";
+
+        document.getElementById("btnSalvar").style.display = etapa === 4 ? "inline" : "none";
+
+    }
+
+
+
+    function criarGrid(id) {
+
+        const grid = document.getElementById(id);
+
+        ['Seg', 'Ter', 'Qua', 'Qui', 'Sex'].forEach(d => {
+
+            for(let h=8; h<=18; h++) {
+
+                let cell = document.createElement('div');
+
+                cell.className = 'cell'; cell.innerText = `${d} ${h}:00`;
+
+                cell.onclick = () => cell.classList.toggle('selecionado');
+
+                grid.appendChild(cell);
+
+            }
+
+        });
+
+    }
+
+
+
+    function resetCadastro() {
+
+        document.getElementById("lista-prestadores-view").style.display = "block";
+
+        document.getElementById("cadastro-flow").style.display = "none";
+
+        etapa = 1;
+
+    }
+
+
+
+    function resetarTelaParaInicio() { location.reload(); }
+
+
+
+    function concluirAgendamento() {
+
+        let slotsMax = parseInt(document.getElementById("horasNecessarias").innerText);
+
+        let selecionados = document.querySelectorAll('#agenda-agendamento .cell.selecionado').length;
+
+        if(selecionados !== slotsMax) { alert("Erro: Você precisa selecionar exatamente " + slotsMax + " horários."); return; }
+
+        alert("Agendamento concluído!");
+
+        resetarTelaParaInicio();
+
+    }
+
+
+
+    function atualizarSelectPrestadores() {
+
+        let sel = document.getElementById("selectPrestador");
+
+        sel.innerHTML = '<option value="">-- Escolha --</option>';
+
+        prestadores.forEach((p, i) => sel.innerHTML += `<option value="${i}">${p.nome}</option>`);
+
+    }
+
 </script>
+
+
+
 </body>
+
 </html>
