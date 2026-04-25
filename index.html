@@ -13,7 +13,7 @@
         .conteudo { padding: 40px; max-width: 1000px; margin: 0 auto; }
         .aba { display: none; } .aba.ativa { display: block; }
         .card { background: white; padding: 25px; border-radius: 12px; margin-bottom: 25px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        .cell { border: 1px solid #ddd; padding: 8px; text-align: center; cursor: pointer; border-radius: 4px; font-size: 0.75rem; display: inline-flex; align-items: center; justify-content: center; width: 120px; height: 35px; margin: 2px; }
+        .cell { border: 1px solid #ddd; padding: 8px; text-align: center; cursor: pointer; border-radius: 4px; font-size: 0.75rem; display: inline-flex; align-items: center; justify-content: center; width: 55px; height: 28px; margin: 2px; }
         .cell.selecionado { background: var(--primary); color: white; }
         .row-dia { display: flex; align-items: center; margin-bottom: 6px; }
         input, select { width: 100%; padding: 12px; margin: 5px 0; border: 1px solid #ddd; border-radius: 8px; }
@@ -87,7 +87,7 @@
     let itensSelecionados = [];
     let agendamentos = [];
     let etapa = 1;
-    let editingIndex = -1; // Controle de edição
+    let editingIndex = -1;
 
     const produtos = {
         "Telemetria": [{desc:"Instalado veículos leves bloqueador", tempo:60}, {desc:"Instalado veículos leves e pesados + CAN", tempo:60}, {desc:"Instalado motos ou maquinários", tempo:40}, {desc:"Instalado veículos leves e pesados", tempo:40}],
@@ -109,14 +109,17 @@
         editingIndex = index;
         document.getElementById("lista-prestadores-view").style.display="none";
         document.getElementById("cadastro-flow").style.display="block";
+        etapa = 1;
+        document.getElementById("etapa-1").style.display="block";
+        document.getElementById("etapa-2").style.display="none";
         criarGrid("agenda-cadastro");
         
-        if(index !== -1) {
+        if(index !== -1){
             document.getElementById("nomeEmpresa").value = prestadores[index].nome;
-            prestadores[index].agenda.forEach(a => {
+            prestadores[index].agenda.forEach(item => {
                 let cells = document.querySelectorAll("#agenda-cadastro .cell");
                 cells.forEach(c => {
-                    if(c.dataset.dia === a.dia && c.dataset.hora === a.hora) c.classList.add("selecionado");
+                    if(c.dataset.dia == item.dia && c.dataset.hora == item.hora) c.classList.add("selecionado");
                 });
             });
         } else {
@@ -142,8 +145,7 @@
                 let cell=document.createElement("div");
                 cell.className="cell";
                 cell.dataset.dia = d; cell.dataset.hora = `${h}:00`;
-                let hNext = h+1;
-                cell.innerText = `${d.toUpperCase()} - ${h}H - ${hNext}H`;
+                cell.innerText = `${h}:00`;
                 cell.onclick=()=>cell.classList.toggle("selecionado");
                 row.appendChild(cell);
             }
@@ -153,7 +155,7 @@
 
     function salvarPrestador(){
         let agenda = [...document.querySelectorAll('#agenda-cadastro .selecionado')].map(c => ({ dia: c.dataset.dia, hora: c.dataset.hora }));
-        if(editingIndex === -1) {
+        if(editingIndex === -1){
             prestadores.push({ nome: document.getElementById("nomeEmpresa").value, agenda: agenda });
         } else {
             prestadores[editingIndex] = { nome: document.getElementById("nomeEmpresa").value, agenda: agenda };
@@ -198,12 +200,15 @@
         let qtd = parseInt(document.getElementById("quantidade").value) || 1;
         let tempo = parseInt(select.value);
         itensSelecionados.push({desc: select.options[select.selectedIndex].text, tempo: tempo * qtd});
-        
+        renderizarListaProdutos();
+    }
+
+    function renderizarListaProdutos(){
         let total = itensSelecionados.reduce((a, b) => a + b.tempo, 0);
         document.getElementById("horasNecessarias").innerText = Math.ceil(total/60);
-        
-        let lista = document.getElementById("lista-produtos");
-        lista.innerHTML = itensSelecionados.map((i, idx) => `<div class="item-lista">${i.desc} <button onclick="itensSelecionados.splice(${idx},1); adicionarProduto();">x</button></div>`).join('');
+        document.getElementById("lista-produtos").innerHTML = itensSelecionados.map((i, idx) => `
+            <div class="item-lista">${i.desc} <button onclick="itensSelecionados.splice(${idx},1); renderizarListaProdutos();">x</button></div>
+        `).join('');
     }
 
     function iniciarAgendamento(){
@@ -223,14 +228,10 @@
         prestadores[idx].agenda.forEach(item => {
             let div = document.createElement("div");
             div.className = "cell";
-            let h = parseInt(item.hora);
-            div.innerText = `${item.dia.toUpperCase()} - ${h}H - ${h+1}H`;
+            div.innerText = `${item.dia} ${item.hora}`;
             div.onclick = () => {
                 let sel = document.querySelectorAll("#agenda-agendamento .selecionado");
-                if(!div.classList.contains("selecionado") && sel.length >= horasLimite) {
-                    alert("Você só pode selecionar " + horasLimite + " hora(s)!");
-                    return;
-                }
+                if(!div.classList.contains("selecionado") && sel.length >= horasLimite) return alert("Limite atingido!");
                 div.classList.toggle("selecionado");
             };
             container.appendChild(div);
@@ -240,16 +241,11 @@
     function concluirAgendamento(){
         let horasLimite = parseInt(document.getElementById("horasNecessarias").innerText);
         let selecionados = document.querySelectorAll("#agenda-agendamento .selecionado");
-        
-        if(selecionados.length !== horasLimite) {
-            alert("Selecione exatamente " + horasLimite + " hora(s).");
-            return;
-        }
+        if(selecionados.length !== horasLimite) return alert("Selecione " + horasLimite + " hora(s)!");
         
         agendamentos.push({ prestador: prestadores[document.getElementById("selectPrestador").value].nome, data: new Date().toLocaleDateString() });
-        document.getElementById("painel-conteudo").innerHTML = agendamentos.map(a => `<div class="card">Agendado para: ${a.prestador} - ${a.data}</div>`).join('');
-        
-        alert("Agendamento concluído!");
+        document.getElementById("painel-conteudo").innerHTML = agendamentos.map(a => `<div class="card">Agendamento: ${a.prestador} - ${a.data}</div>`).join('');
+        alert("Agendado!");
         trocarAba('painel', document.querySelectorAll('.menu button')[2]);
     }
 </script>
