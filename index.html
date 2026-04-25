@@ -89,13 +89,13 @@ button.acao {
 
     <div class="card">
       <h3>Produtos</h3>
-      <select id="produto">
-        <option value="1">Produto A - 1h</option>
-        <option value="2">Produto B - 2h</option>
-      </select>
-      <input type="number" id="quantidade" placeholder="Qtd">
-      <button class="acao" onclick="calcularTempo()">Adicionar</button>
-      <p>Tempo total: <strong id="tempoTotal">0h</strong></p>
+     <select id="produto"></select>
+<input type="number" id="quantidade" placeholder="Qtd">
+<button class="acao" onclick="adicionarProduto()">Adicionar</button>
+
+<div id="lista-produtos"></div>
+
+<p>Tempo total: <strong id="tempoTotal">0h</strong></p>
     </div>
 
     <div class="card">
@@ -104,7 +104,36 @@ button.acao {
       <p id="alertaTempo" style="color:red;"></p>
       <button class="acao" onclick="concluirAgendamento()">Concluir</button>
     </div>
+const produtos = {
+  "Telemetria":[
+    {desc:"Instalado veículos leves bloqueador", tempo:60},
+    {desc:"Instalado veículos leves e pesados + CAN", tempo:60},
+    {desc:"Instalado motos ou maquinários", tempo:40},
+    {desc:"Instalado veículos leves e pesados", tempo:40}
+  ],
 
+  "Identificador":[
+    {desc:"Instalado veículos leves e pesados identificador", tempo:60},
+    {desc:"Instalado veículos leves e pesados identificador + CAN", tempo:90},
+    {desc:"Instalado veículos leves e pesados identificador RFID", tempo:60},
+    {desc:"Instalado veículos leves e pesados identificador RFID + CAN", tempo:80}
+  ],
+
+  "Trava de ignição":[
+    {desc:"Instalado veículos leves imobilizador", tempo:80},
+    {desc:"Instalado veículos leves imobilizador RFID", tempo:80},
+    {desc:"Instalado veículos leves imobilizador RFID + CAN", tempo:90},
+    {desc:"Instalado veículos leves imobilizador + CAN", tempo:100}
+  ],
+
+  "Videotelemetria":[
+    {desc:"CobliCam (2 câmeras)", tempo:90},
+    {desc:"Cobli Multicam (3 câmeras internas)", tempo:120},
+    {desc:"Cobli Multicam (2 câmeras + 1 externa)", tempo:240},
+    {desc:"Cobli Multicam (4 câmeras)", tempo:240},
+    {desc:"Cobli Multicam (5 câmeras)", tempo:300}
+  ]
+};
   </div>
 
 </div>
@@ -180,6 +209,7 @@ let prestadorSelecionadoIndex = null;
 let prestadorEditando = null;
 let tempoTotal = 0;
 let horariosSelecionados = [];
+let itensSelecionados = []
 
 /* ===== ABAS ===== */
 function trocarAba(id, botao){
@@ -189,7 +219,70 @@ function trocarAba(id, botao){
   document.querySelectorAll('.menu button').forEach(b => b.classList.remove('ativo'));
   botao.classList.add('ativo');
 }
+function carregarProdutos(){
+  let select = document.getElementById("produto");
+  select.innerHTML="";
 
+  Object.keys(produtos).forEach(tipo=>{
+    produtos[tipo].forEach(p=>{
+      let opt = document.createElement("option");
+      opt.value = p.tempo;
+      opt.text = `${tipo.toUpperCase()} - ${p.desc} (${formatarTempo(p.tempo)}/veic)`;
+      select.appendChild(opt);
+    });
+  });
+  }
+  function formatarTempo(min){
+  let h = Math.floor(min/60);
+  let m = min%60;
+
+  if(h && m) return `${h}h ${m}min`;
+  if(h) return `${h}h`;
+  return `${m}min`;
+}
+  function adicionarProduto(){
+
+  let select = document.getElementById("produto");
+  let texto = select.options[select.selectedIndex].text;
+  let tempo = parseInt(select.value);
+  let qtd = parseInt(document.getElementById("quantidade").value || 0);
+
+  if(!qtd){
+    alert("Informe quantidade");
+    return;
+  }
+
+  itensSelecionados.push({texto, tempo, qtd});
+
+  renderizarListaProdutos();
+}
+
+  function renderizarListaProdutos(){
+
+  let c = document.getElementById("lista-produtos");
+  c.innerHTML="";
+  tempoTotal=0;
+
+  itensSelecionados.forEach((item,index)=>{
+
+    let total = item.tempo * item.qtd;
+    tempoTotal += total;
+
+    let d=document.createElement("div");
+    d.innerHTML=`
+      ${item.texto} | ${item.qtd} veic (${(total/60).toFixed(1)}h)
+      <button onclick="removerProduto(${index})">X</button>
+    `;
+
+    c.appendChild(d);
+  });
+
+  document.getElementById("tempoTotal").innerText=(tempoTotal/60).toFixed(1)+"h";
+}
+  function removerProduto(i){
+  itensSelecionados.splice(i,1);
+  renderizarListaProdutos();
+}
 /* ===== CADASTRO ===== */
 function abrirCadastro(){
   document.getElementById("lista-prestadores-view").style.display="none";
