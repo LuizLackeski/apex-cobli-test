@@ -173,6 +173,7 @@
         if(id === 'painel') atualizarFiltrosPrestador();
     }
 
+    // Corrigido para garantir que a verificação de técnicos seja feita corretamente
     function getAgendamentosNoSlot(prestador, data, hora) {
         if (!agendamentos) return 0;
         return agendamentos.filter(a => 
@@ -195,6 +196,7 @@
             
             if (agendaDays.includes(d.getDay())) {
                 let slotsDoDia = prestador.agenda.filter(a => a.dia === dNome);
+                // Verifica se tem algum slot livre, considerando o limite de técnicos
                 let temLivre = slotsDoDia.some(s => getAgendamentosNoSlot(prestador, dStr, s.hora) < parseInt(prestador.qtdTecnicos));
                 if (temLivre) dates.push(dStr.slice(0,5));
             }
@@ -226,7 +228,6 @@
         }
         if(n === 3 && prestadorSelecionadoIndex === null) return alert("Selecione um prestador!");
         
-        // Garante que o passo 4 seja escondido e o alvo seja mostrado
         document.querySelectorAll('#consulta > div').forEach(div => div.style.display = 'none');
         document.getElementById('step-' + n).style.display = 'block';
         if(n === 3) rdaAgendamento(); 
@@ -240,7 +241,7 @@
         if (sel.length === 0) return alert("Selecione horário!");
         if (sel.length !== horas) return alert("Selecione " + horas + " hora(s)!");
         
-        // Força exibição do step 4
+        // Corrige exibição do passo 4
         document.querySelectorAll('#consulta > div').forEach(div => div.style.display = 'none');
         document.getElementById('step-4').style.display = 'block';
     }
@@ -334,7 +335,9 @@
     async function salvarPrestador() {
         const inputs = document.querySelectorAll('#etapa-1 input');
         for(let i of inputs) if(!i.value.trim()) return alert("Preencha todos os campos!");
+        
         let agenda = [...document.querySelectorAll('#agenda-cadastro .cell.selecionado')].map(c => ({ dia: c.dataset.dia, hora: c.dataset.hora }));
+        
         let p = { 
             nome: document.getElementById("nomeEmpresa").value, 
             endereco: document.getElementById("endereco").value, 
@@ -347,10 +350,17 @@
             range: document.getElementById("rangeAtendimento").value, 
             agenda: agenda 
         };
+
         const url = (editingIndex !== -1) ? `/api/prestadores/${prestadores[editingIndex].id}` : '/api/prestadores';
-        await fetch(url, { method: (editingIndex !== -1) ? 'PUT' : 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(p) });
+        await fetch(url, {
+            method: (editingIndex !== -1) ? 'PUT' : 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(p)
+        });
+        
         editingIndex = -1;
         await carregarDadosDoBanco();
+        
         document.getElementById("cadastro-flow").style.display="none";
         document.getElementById("lista-prestadores-view").style.display="block";
         showToast("Prestador salvo com sucesso!");
@@ -359,18 +369,31 @@
     function renderizarListaPrestadores(){
         document.getElementById("lista-prestadores").innerHTML = prestadores.map((p, i) => {
             let uniqueDays = p.agenda ? [...new Set(p.agenda.map(a => a.dia))].length : 0;
-            return `<div class="card"><strong>${p.nome}</strong> - ${p.cidade}/${p.uf}<br>Técnicos: ${p.qtdTecnicos} | Dias c/ agenda: ${uniqueDays}<div style="margin-top:10px"><button onclick="abrirCadastro(${i})">Editar</button> <button onclick="excluirPrestador(${i})">Excluir</button></div></div>`;
+            return `<div class="card">
+                <strong>${p.nome}</strong> - ${p.cidade}/${p.uf}<br>
+                Técnicos: ${p.qtdTecnicos} | Dias c/ agenda: ${uniqueDays}
+                <div style="margin-top:10px">
+                    <button onclick="abrirCadastro(${i})">Editar</button> 
+                    <button onclick="excluirPrestador(${i})">Excluir</button>
+                </div>
+            </div>`;
         }).join('');
         document.getElementById("total-prest").innerText = prestadores.length;
     }
 
-    async function excluirPrestador(i){ await fetch(`/api/prestadores/${prestadores[i].id}`, { method: 'DELETE' }); await carregarDadosDoBanco(); }
+    async function excluirPrestador(i){ 
+        await fetch(`/api/prestadores/${prestadores[i].id}`, { method: 'DELETE' });
+        await carregarDadosDoBanco();
+    }
 
     function carregarProdutos(){
         let select=document.getElementById("produto");
         for(let tipo in produtos){
             let group=document.createElement("optgroup"); group.label=tipo;
-            produtos[tipo].forEach(p=>{ let opt=document.createElement("option"); opt.value=p.tempo; opt.text=p.desc; group.appendChild(opt); });
+            produtos[tipo].forEach(p=>{
+                let opt=document.createElement("option"); opt.value=p.tempo; opt.text=p.desc;
+                group.appendChild(opt);
+            });
             select.appendChild(group);
         }
     }
@@ -387,7 +410,8 @@
     function renderizarProdutos(){
         let totalMinutos = itensSelecionados.reduce((a, b) => a + (b.tempo * b.qtd), 0);
         document.getElementById("horasNecessarias").innerText = Math.ceil(totalMinutos/60);
-        document.getElementById("lista-produtos").innerHTML = itensSelecionados.map((i, idx) => `<div class="item-lista">${i.desc} (Qtd: ${i.qtd} | Total: ${i.tempo * i.qtd} min) <button onclick="itensSelecionados.splice(${idx},1); renderizarProdutos(); rdaAgendamento();">x</button></div>`).join('');
+        document.getElementById("lista-produtos").innerHTML = itensSelecionados.map((i, idx) => 
+            `<div class="item-lista">${i.desc} (Qtd: ${i.qtd} | Total: ${i.tempo * i.qtd} min) <button onclick="itensSelecionados.splice(${idx},1); renderizarProdutos(); rdaAgendamento();">x</button></div>`).join('');
     }
 
     function rdaAgendamento(){
@@ -479,7 +503,7 @@
         document.getElementById("painel-conteudo").innerHTML = filtrados.map((a) => `
             <div class="painel-item">
                 <div><strong>Ticket: ${a.ticket}</strong> | Cliente: ${a.cliente}</div>
-                <div><strong>${a.prestador}</strong> | Técnicos: ${a.qtdTecnicos} | Data: ${a.data} | Horário(s): ${Array.isArray(a.slots) ? a.slots.join(', ') : 'N/A'} | Solicitante: ${a.solicitante}</div>
+                <div><strong>${a.prestador}</strong> | Técnicos: ${a.qtdTecnicos} | Data: ${a.data} | Horários: ${Array.isArray(a.slots) ? a.slots.join(', ') : 'N/A'} | Solicitante: ${a.solicitante}</div>
                 <div>Solicitado em: ${a.rawDate ? new Date(a.rawDate).toLocaleDateString() : 'N/A'}</div>
                 <div style="margin: 5px 0; font-size: 0.9em; color: #555;">${Array.isArray(a.produtos) ? a.produtos.map(prod => `${prod.desc} (${prod.qtd}x)`).join('; ') : ""}</div>
                 <button onclick="excluirAgendamento(${a.id})" style="background: red;">Excluir Agendamento</button>
