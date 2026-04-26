@@ -262,7 +262,14 @@
                     div.onclick = () => {
                         let totalMinutos = itensSelecionados.reduce((a, b) => a + (b.tempo * b.qtd), 0);
                         let horas = Math.ceil(totalMinutos / 60);
+                        
+                        // Garante que a seleção é feita apenas no mesmo dia
                         let sel = document.querySelectorAll("#agenda-agendamento .selecionado");
+                        if(sel.length > 0 && sel[0].dataset.date !== div.dataset.date) {
+                            sel.forEach(s => s.classList.remove('selecionado'));
+                            sel = document.querySelectorAll("#agenda-agendamento .selecionado");
+                        }
+
                         if(!div.classList.contains("selecionado") && sel.length >= horas) return alert("Limite de "+horas+"h!");
                         div.classList.toggle("selecionado");
                     };
@@ -277,7 +284,7 @@
         let totalMinutos = itensSelecionados.reduce((a, b) => a + (b.tempo * b.qtd), 0);
         let horas = Math.ceil(totalMinutos / 60);
         let sel = document.querySelectorAll("#agenda-agendamento .selecionado");
-        if(sel.length !== horas) return alert("Selecione exatamente " + horas + " hora(s)!");
+        if(sel.length !== horas) return alert("Selecione exatamente " + horas + " hora(s) no mesmo dia!");
         
         agendamentos.push({ prestador: prestadores[document.getElementById("selectPrestador").value].nome, data: sel[0].dataset.date, slots: [...sel].map(s => s.dataset.hora) });
         
@@ -292,13 +299,7 @@
         document.getElementById("step-agendamento").style.display = "none";
         document.getElementById("total-agend").innerText = agendamentos.length;
         renderPainel();
-        alert("Agendado!");
-    }
-
-    function atualizarSelectPrestadores(){
-        let sel = document.getElementById("selectPrestador");
-        sel.innerHTML = '<option value="">-- Escolha --</option>';
-        prestadores.forEach((p,i) => sel.innerHTML += `<option value="${i}">${p.nome}</option>`);
+        alert("Agendado com sucesso!");
     }
 
     function renderPainel(){
