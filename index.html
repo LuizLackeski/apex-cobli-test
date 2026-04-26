@@ -151,8 +151,65 @@
         "Trava de ignição": [{desc:"Instalado veículos leves imobilizador", tempo:80}, {desc:"Instalado veículos leves imobilizador RFID", tempo:80}, {desc:"Instalado veículos leves imobilizador RFID + CAN", tempo:90}, {desc:"Instalado veículos leves imobilizador + CAN", tempo:100}],
         "Videotelemetria": [{desc:"CobliCam (2 câmeras)", tempo:90}, {desc:"Cobli Multicam (3 câmeras internas)", tempo:120}, {desc:"Cobli Multicam (2 câmeras + 1 externa)", tempo:240}, {desc:"Cobli Multicam (4 câmeras)", tempo:240}, {desc:"Cobli Multicam (5 câmeras)", tempo:300}]
     };
+    // 1. Carregar dados do banco ao abrir
+async function carregarDados() {
+    const res = await fetch('http://localhost:3000/api/prestadores');
+    prestadores = await res.json();
+    renderizarListaPrestadores();
+}
 
-    window.onload = () => { carregarProdutos(); };
+// 2. Mudar a função salvarPrestador para enviar ao banco
+async function salvarPrestador() {
+    const inputs = document.querySelectorAll('#etapa-1 input');
+    for(let i of inputs) if(!i.value.trim()) return alert("Preencha todos os campos!");
+    
+    let agenda = [...document.querySelectorAll('#agenda-cadastro .selecionado')].map(c => ({ dia: c.dataset.dia, hora: c.dataset.hora }));
+    let p = { 
+        nome: document.getElementById("nomeEmpresa").value, 
+        endereco: document.getElementById("endereco").value, 
+        cidade: document.getElementById("cidade").value, 
+        uf: document.getElementById("uf").value, 
+        cep: document.getElementById("cep").value, 
+        responsavel: document.getElementById("responsavel").value, 
+        contato: document.getElementById("contatoResponsavel").value, 
+        qtdTecnicos: document.getElementById("qtdTecnicos").value, 
+        range: document.getElementById("rangeAtendimento").value, 
+        agenda: agenda 
+    };
+
+    await fetch('http://localhost:3000/api/prestadores', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(p)
+    });
+    
+    await carregarDados(); // Recarrega do banco
+    document.getElementById("cadastro-flow").style.display="none";
+    document.getElementById("lista-prestadores-view").style.display="block";
+    showToast("Prestador salvo no banco!");
+}
+
+// 3. Mudar concluirAgendamentoFinal para salvar no banco
+async function concluirAgendamentoFinal() {
+    // ... (sua validação de campos continua igual) ...
+    
+    let p = prestadores[prestadorSelecionadoIndex];
+    let agendamento = { 
+        prestador: p.nome, qtdTecnicos: p.qtdTecnicos, produtos: itensSelecionados,
+        data: sel[0].dataset.date, ticket: ticket, cliente: cli, solicitante: sol
+    };
+
+    await fetch('http://localhost:3000/api/agendamentos', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(agendamento)
+    });
+
+    // ... (restante da limpeza da tela igual) ...
+    showToast("Agendamento salvo no banco!");
+}
+
+    window.onload = () => { carregarProdutos(); carregarDados(); };
 
     function showToast(mensagem) {
         let t = document.getElementById("toast");
