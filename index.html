@@ -220,18 +220,26 @@
                 }
             }
             
-            btn.disabled = false;
-            btn.innerText = "Buscar Prestadores";
-            renderizarListaPrestadoresSelecao(prestadoresFiltrados);
-            if(prestadoresFiltrados.length === 0) alert("Nenhum prestador encontrado dentro do range.");
+           btn.disabled = false;
+        btn.innerText = "Buscar Prestadores";
+        
+        // --- AQUI ESTÁ O AJUSTE ---
+        // Se não achar ninguém, o sistema dá o alerta e PARA aqui (não avança para o step-2)
+        if(prestadoresFiltrados.length === 0) {
+            alert("Nenhum prestador encontrado dentro do range para esse CEP.");
+            return; 
         }
         
-        if(n === 3 && prestadorSelecionadoIndex === null) return alert("Selecione um prestador!");
-        document.querySelectorAll('#consulta > div').forEach(div => div.style.display = 'none');
-        document.getElementById('step-' + n).style.display = 'block';
-        if(n === 3) rdaAgendamento(); 
+        renderizarListaPrestadoresSelecao(prestadoresFiltrados);
     }
-
+    
+    if(n === 3 && prestadorSelecionadoIndex === null) return alert("Selecione um prestador!");
+    
+    // Este bloco abaixo só será executado se o código passou pelas validações acima
+    document.querySelectorAll('#consulta > div').forEach(div => div.style.display = 'none');
+    document.getElementById('step-' + n).style.display = 'block';
+    if(n === 3) rdaAgendamento(); 
+}
     function validarEAvancar() {
         let totalMinutos = itensSelecionados.reduce((a, b) => a + (b.tempo * b.qtd), 0);
         let horas = Math.ceil(totalMinutos / 60);
