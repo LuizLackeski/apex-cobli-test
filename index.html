@@ -105,36 +105,10 @@
     let etapa = 1;
     let editingIndex = -1;
 
-   const produtos = {
-  "Telemetria":[
-    {desc:"Instalado veículos leves bloqueador", tempo:60},
-    {desc:"Instalado veículos leves e pesados + CAN", tempo:60},
-    {desc:"Instalado motos ou maquinários", tempo:40},
-    {desc:"Instalado veículos leves e pesados", tempo:40}
-  ],
-
-  "Identificador":[
-    {desc:"Instalado veículos leves e pesados identificador", tempo:60},
-    {desc:"Instalado veículos leves e pesados identificador + CAN", tempo:90},
-    {desc:"Instalado veículos leves e pesados identificador RFID", tempo:60},
-    {desc:"Instalado veículos leves e pesados identificador RFID + CAN", tempo:80}
-  ],
-
-  "Trava de ignição":[
-    {desc:"Instalado veículos leves imobilizador", tempo:80},
-    {desc:"Instalado veículos leves imobilizador RFID", tempo:80},
-    {desc:"Instalado veículos leves imobilizador RFID + CAN", tempo:90},
-    {desc:"Instalado veículos leves imobilizador + CAN", tempo:100}
-  ],
-
-  "Videotelemetria":[
-    {desc:"CobliCam (2 câmeras)", tempo:90},
-    {desc:"Cobli Multicam (3 câmeras internas)", tempo:120},
-    {desc:"Cobli Multicam (2 câmeras + 1 externa)", tempo:240},
-    {desc:"Cobli Multicam (4 câmeras)", tempo:240},
-    {desc:"Cobli Multicam (5 câmeras)", tempo:300}
-  ]
-};
+    const produtos = {
+        "Telemetria": [{desc:"Instalação veículos leves", tempo:60}, {desc:"Instalação veículos pesados", tempo:120}],
+        "Identificador": [{desc:"Instalação identificador", tempo:60}]
+    };
 
     window.onload = () => { carregarProdutos(); };
 
@@ -149,7 +123,9 @@
         editingIndex = index;
         document.getElementById("lista-prestadores-view").style.display="none";
         document.getElementById("cadastro-flow").style.display="block";
-        etapa = 1; document.getElementById("etapa-1").style.display="block"; document.getElementById("etapa-2").style.display="none";
+        etapa = 1; 
+        document.getElementById("etapa-1").style.display="block"; 
+        document.getElementById("etapa-2").style.display="none";
         criarGrid("agenda-cadastro");
         
         if(index !== -1){
@@ -189,7 +165,6 @@
                 cell.onclick = () => cell.classList.toggle("selecionado");
                 row.appendChild(cell);
             }
-            row.appendChild(cell);
         });
     }
 
@@ -250,13 +225,7 @@
         let totalMinutos = itensSelecionados.reduce((a, b) => a + (b.tempo * b.qtd), 0);
         document.getElementById("horasNecessarias").innerText = Math.ceil(totalMinutos/60);
         document.getElementById("lista-produtos").innerHTML = itensSelecionados.map((i, idx) => 
-            `<div class="item-lista">${i.desc} (Qtd: ${i.qtd} | Total: ${i.tempo * i.qtd} min) <button onclick="itensSelecionados.splice(${idx},1); renderizarProdutos();">x</button></div>`).join('');
-    }
-
-    function iniciarAgendamento(){
-        if(prestadores.length === 0){ alert("Cadastre um prestador!"); return; }
-        document.getElementById("step-cep").style.display="none";
-        document.getElementById("step-agendamento").style.display="block";
+            `<div class="item-lista">${i.desc} (Qtd: ${i.qtd}) <button onclick="itensSelecionados.splice(${idx},1); renderizarProdutos();">x</button></div>`).join('');
     }
 
     function rdaAgendamento(){
@@ -281,7 +250,6 @@
                 let row = document.createElement("div"); row.className="row-dia";
                 row.innerHTML = `<div style="width:80px">${dStr.slice(0,5)}</div>`;
                 slots.forEach(item => {
-                    // Bloqueia se já estiver agendado
                     let isBooked = agendamentos.some(a => a.prestador == prestadores[idx].nome && a.data == dStr && a.slots.includes(item.hora));
                     if(isBooked) return;
 
@@ -313,16 +281,11 @@
             slots: [...sel].map(s => s.dataset.hora)
         });
         
-        // Limpeza Total
         itensSelecionados = [];
         document.getElementById("lista-produtos").innerHTML = "";
         document.getElementById("horasNecessarias").innerText = "0";
-        document.getElementById("inputCep").value = "";
-        document.getElementById("selectPrestador").value = "";
-        document.getElementById("agenda-agendamento").innerHTML = "";
         document.getElementById("step-cep").style.display = "block";
         document.getElementById("step-agendamento").style.display = "none";
-        
         document.getElementById("total-agend").innerText = agendamentos.length;
         renderPainel();
         alert("Agendado com sucesso!");
