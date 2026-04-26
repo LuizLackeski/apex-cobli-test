@@ -305,19 +305,12 @@
             agenda: agenda 
         };
 
-        if (editingIndex !== -1) {
-            await fetch(`/api/prestadores/${prestadores[editingIndex].id}`, {
-                method: 'PUT',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify(p)
-            });
-        } else {
-            await fetch('/api/prestadores', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify(p)
-            });
-        }
+        const url = (editingIndex !== -1) ? `/api/prestadores/${prestadores[editingIndex].id}` : '/api/prestadores';
+        await fetch(url, {
+            method: (editingIndex !== -1) ? 'PUT' : 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(p)
+        });
         
         editingIndex = -1;
         await carregarDadosDoBanco();
