@@ -173,28 +173,32 @@
         if(id === 'painel') atualizarFiltrosPrestador();
     }
 
-    // Lógica robusta para validar capacidade
+    // Função de segurança para evitar erro de 'undefined'
     function getAgendamentosNoSlot(prestador, data, hora) {
-        return agendamentos.filter(a => a.prestador === prestador.nome && a.data === data && a.slots.includes(hora)).length;
+        if (!agendamentos) return 0;
+        return agendamentos.filter(a => 
+            a.prestador === prestador.nome && 
+            a.data === data && 
+            Array.isArray(a.slots) && 
+            a.slots.includes(hora)
+        ).length;
     }
 
     function getNextDates(prestador) {
         let dates = [];
         let today = new Date();
         const daysMap = {"Dom":0, "Seg":1, "Ter":2, "Qua":3, "Qui":4, "Sex":5, "Sab":6};
-        let agendaDays = [...new Set(prestador.agenda.map(a => a.dia))].map(d => daysMap[d]);
+        let agendaDays = prestador.agenda ? [...new Set(prestador.agenda.map(a => a.dia))].map(d => daysMap[d]) : [];
         
         for (let i = 0; i < 30 && dates.length < 3; i++) {
             let d = new Date(); d.setDate(today.getDate() + i);
             let dStr = d.toLocaleDateString();
             let dNome = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sab"][d.getDay()];
             
-            // Verifica se o prestador trabalha nesse dia
             if (agendaDays.includes(d.getDay())) {
-                // Verifica se tem ao menos um slot livre
                 let slotsDoDia = prestador.agenda.filter(a => a.dia === dNome);
+                // Verifica se tem algum slot livre (agendamentos < técnicos)
                 let temLivre = slotsDoDia.some(s => getAgendamentosNoSlot(prestador, dStr, s.hora) < parseInt(prestador.qtdTecnicos));
-                
                 if (temLivre) dates.push(dStr.slice(0,5));
             }
         }
@@ -318,7 +322,9 @@
     async function salvarPrestador() {
         const inputs = document.querySelectorAll('#etapa-1 input');
         for(let i of inputs) if(!i.value.trim()) return alert("Preencha todos os campos!");
+        
         let agenda = [...document.querySelectorAll('#agenda-cadastro .cell.selecionado')].map(c => ({ dia: c.dataset.dia, hora: c.dataset.hora }));
+        
         let p = { 
             nome: document.getElementById("nomeEmpresa").value, 
             endereco: document.getElementById("endereco").value, 
@@ -331,10 +337,17 @@
             range: document.getElementById("rangeAtendimento").value, 
             agenda: agenda 
         };
+
         const url = (editingIndex !== -1) ? `/api/prestadores/${prestadores[editingIndex].id}` : '/api/prestadores';
-        await fetch(url, { method: (editingIndex !== -1) ? 'PUT' : 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(p) });
+        await fetch(url, {
+            method: (editingIndex !== -1) ? 'PUT' : 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(p)
+        });
+        
         editingIndex = -1;
         await carregarDadosDoBanco();
+        
         document.getElementById("cadastro-flow").style.display="none";
         document.getElementById("lista-prestadores-view").style.display="block";
         showToast("Prestador salvo com sucesso!");
@@ -343,18 +356,31 @@
     function renderizarListaPrestadores(){
         document.getElementById("lista-prestadores").innerHTML = prestadores.map((p, i) => {
             let uniqueDays = p.agenda ? [...new Set(p.agenda.map(a => a.dia))].length : 0;
-            return `<div class="card"><strong>${p.nome}</strong> - ${p.cidade}/${p.uf}<br>Técnicos: ${p.qtdTecnicos} | Dias c/ agenda: ${uniqueDays}<div style="margin-top:10px"><button onclick="abrirCadastro(${i})">Editar</button> <button onclick="excluirPrestador(${i})">Excluir</button></div></div>`;
+            return `<div class="card">
+                <strong>${p.nome}</strong> - ${p.cidade}/${p.uf}<br>
+                Técnicos: ${p.qtdTecnicos} | Dias c/ agenda: ${uniqueDays}
+                <div style="margin-top:10px">
+                    <button onclick="abrirCadastro(${i})">Editar</button> 
+                    <button onclick="excluirPrestador(${i})">Excluir</button>
+                </div>
+            </div>`;
         }).join('');
         document.getElementById("total-prest").innerText = prestadores.length;
     }
 
-    async function excluirPrestador(i){ await fetch(`/api/prestadores/${prestadores[i].id}`, { method: 'DELETE' }); await carregarDadosDoBanco(); }
+    async function excluirPrestador(i){ 
+        await fetch(`/api/prestadores/${prestadores[i].id}`, { method: 'DELETE' });
+        await carregarDadosDoBanco();
+    }
 
     function carregarProdutos(){
         let select=document.getElementById("produto");
         for(let tipo in produtos){
             let group=document.createElement("optgroup"); group.label=tipo;
-            produtos[tipo].forEach(p=>{ let opt=document.createElement("option"); opt.value=p.tempo; opt.text=p.desc; group.appendChild(opt); });
+            produtos[tipo].forEach(p=>{
+                let opt=document.createElement("option"); opt.value=p.tempo; opt.text=p.desc;
+                group.appendChild(opt);
+            });
             select.appendChild(group);
         }
     }
@@ -371,7 +397,8 @@
     function renderizarProdutos(){
         let totalMinutos = itensSelecionados.reduce((a, b) => a + (b.tempo * b.qtd), 0);
         document.getElementById("horasNecessarias").innerText = Math.ceil(totalMinutos/60);
-        document.getElementById("lista-produtos").innerHTML = itensSelecionados.map((i, idx) => `<div class="item-lista">${i.desc} (Qtd: ${i.qtd} | Total: ${i.tempo * i.qtd} min) <button onclick="itensSelecionados.splice(${idx},1); renderizarProdutos(); rdaAgendamento();">x</button></div>`).join('');
+        document.getElementById("lista-produtos").innerHTML = itensSelecionados.map((i, idx) => 
+            `<div class="item-lista">${i.desc} (Qtd: ${i.qtd} | Total: ${i.tempo * i.qtd} min) <button onclick="itensSelecionados.splice(${idx},1); renderizarProdutos(); rdaAgendamento();">x</button></div>`).join('');
     }
 
     function rdaAgendamento(){
@@ -384,8 +411,10 @@
             let data = new Date(); data.setDate(hoje.getDate() + i);
             let dNome = diasSemana[data.getDay()];
             let dStr = data.toLocaleDateString();
+            
             let allSlots = prestadores[prestadorSelecionadoIndex].agenda ? prestadores[prestadorSelecionadoIndex].agenda.filter(a => a.dia == dNome) : [];
             let availableSlots = allSlots.filter(item => getAgendamentosNoSlot(prestadores[prestadorSelecionadoIndex], dStr, item.hora) < parseInt(prestadores[prestadorSelecionadoIndex].qtdTecnicos));
+            
             if(availableSlots.length > 0){
                 let card = document.createElement("div"); card.className = "agenda-day-card";
                 card.innerHTML = `<div class="agenda-day-title">${dStr.slice(0,5)} (${dNome})</div>`;
