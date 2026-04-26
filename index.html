@@ -173,7 +173,6 @@
         if(id === 'painel') atualizarFiltrosPrestador();
     }
 
-    // Corrigido para garantir que a verificação de técnicos seja feita corretamente
     function getAgendamentosNoSlot(prestador, data, hora) {
         if (!agendamentos) return 0;
         return agendamentos.filter(a => 
@@ -196,7 +195,6 @@
             
             if (agendaDays.includes(d.getDay())) {
                 let slotsDoDia = prestador.agenda.filter(a => a.dia === dNome);
-                // Verifica se tem algum slot livre, considerando o limite de técnicos
                 let temLivre = slotsDoDia.some(s => getAgendamentosNoSlot(prestador, dStr, s.hora) < parseInt(prestador.qtdTecnicos));
                 if (temLivre) dates.push(dStr.slice(0,5));
             }
@@ -241,7 +239,6 @@
         if (sel.length === 0) return alert("Selecione horário!");
         if (sel.length !== horas) return alert("Selecione " + horas + " hora(s)!");
         
-        // Corrige exibição do passo 4
         document.querySelectorAll('#consulta > div').forEach(div => div.style.display = 'none');
         document.getElementById('step-4').style.display = 'block';
     }
@@ -503,7 +500,7 @@
         document.getElementById("painel-conteudo").innerHTML = filtrados.map((a) => `
             <div class="painel-item">
                 <div><strong>Ticket: ${a.ticket}</strong> | Cliente: ${a.cliente}</div>
-                <div><strong>${a.prestador}</strong> | Técnicos: ${a.qtdTecnicos} | Data: ${a.data} | Horários: ${Array.isArray(a.slots) ? a.slots.join(', ') : 'N/A'} | Solicitante: ${a.solicitante}</div>
+                <div><strong>${a.prestador}</strong> | Data: ${a.data} | ${Array.isArray(a.slots) ? a.slots.join(', ') : 'N/A'} | Solicitante: ${a.solicitante}</div>
                 <div>Solicitado em: ${a.rawDate ? new Date(a.rawDate).toLocaleDateString() : 'N/A'}</div>
                 <div style="margin: 5px 0; font-size: 0.9em; color: #555;">${Array.isArray(a.produtos) ? a.produtos.map(prod => `${prod.desc} (${prod.qtd}x)`).join('; ') : ""}</div>
                 <button onclick="excluirAgendamento(${a.id})" style="background: red;">Excluir Agendamento</button>
