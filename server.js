@@ -7,6 +7,7 @@ require('dotenv').config();
 
 const app = express();
 
+// Garante que o banco seja salvo no Volume persistente
 const dbFolder = process.env.RAILWAY_VOLUME_MOUNT_PATH || './';
 const dbPath = path.join(dbFolder, 'apex.db');
 const db = new sqlite3.Database(dbPath);
@@ -19,7 +20,7 @@ db.serialize(() => {
     db.run("CREATE TABLE IF NOT EXISTS agendamentos (id INTEGER PRIMARY KEY, prestador TEXT, qtdTecnicos INTEGER, produtos TEXT, data TEXT, ticket TEXT, cliente TEXT, solicitante TEXT, rawDate TEXT)");
 });
 
-// API ROTAS
+// Suas rotas permanecem iguais...
 app.get('/api/prestadores', (req, res) => {
     db.all("SELECT * FROM prestadores", [], (err, rows) => {
         if (err) return res.status(500).json({error: err.message});
@@ -72,9 +73,9 @@ app.post('/api/distancia', async (req, res) => {
     } catch (error) { res.status(500).json({ error: 'Erro no Google Maps' }); }
 });
 
-// Front-end e Porta
 app.use(express.static(path.join(__dirname)));
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
 
+// Porta Dinâmica - Usando a variável do Railway ou 3000
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, '0.0.0.0', () => console.log(`Servidor rodando na porta ${PORT}!`));
