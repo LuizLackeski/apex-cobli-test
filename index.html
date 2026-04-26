@@ -172,24 +172,11 @@
 
     function salvarPrestador(){
         let agenda = [...document.querySelectorAll('#agenda-cadastro .selecionado')].map(c => ({ dia: c.dataset.dia, hora: c.dataset.hora }));
-        let p = { 
-            nome: document.getElementById("nomeEmpresa").value, 
-            endereco: document.getElementById("endereco").value, 
-            cidade: document.getElementById("cidade").value, 
-            uf: document.getElementById("uf").value, 
-            cep: document.getElementById("cep").value, 
-            responsavel: document.getElementById("responsavel").value, 
-            contato: document.getElementById("contatoResponsavel").value, 
-            qtdTecnicos: document.getElementById("qtdTecnicos").value, 
-            range: document.getElementById("rangeAtendimento").value, 
-            agenda: agenda 
-        };
+        let p = { nome: document.getElementById("nomeEmpresa").value, endereco: document.getElementById("endereco").value, cidade: document.getElementById("cidade").value, uf: document.getElementById("uf").value, cep: document.getElementById("cep").value, responsavel: document.getElementById("responsavel").value, contato: document.getElementById("contatoResponsavel").value, qtdTecnicos: document.getElementById("qtdTecnicos").value, range: document.getElementById("rangeAtendimento").value, agenda: agenda };
         if(editingIndex === -1) prestadores.push(p); else prestadores[editingIndex] = p;
-        renderizarListaPrestadores(); 
-        atualizarSelectPrestadores();
+        renderizarListaPrestadores(); atualizarSelectPrestadores();
         document.getElementById("cadastro-flow").style.display="none";
         document.getElementById("lista-prestadores-view").style.display="block";
-        alert("Prestador salvo com sucesso!");
     }
 
     function renderizarListaPrestadores(){
@@ -223,7 +210,8 @@
     function renderizarProdutos(){
         let totalMinutos = itensSelecionados.reduce((a, b) => a + (b.tempo * b.qtd), 0);
         document.getElementById("horasNecessarias").innerText = Math.ceil(totalMinutos/60);
-        document.getElementById("lista-produtos").innerHTML = itensSelecionados.map((i, idx) => `<div class="item-lista">${i.desc} (Qtd: ${i.qtd}) <button onclick="itensSelecionados.splice(${idx},1); renderizarProdutos(); rdaAgendamento();">x</button></div>`).join('');
+        document.getElementById("lista-produtos").innerHTML = itensSelecionados.map((i, idx) => 
+            `<div class="item-lista">${i.desc} (Qtd: ${i.qtd} | Tempo Total: ${i.tempo * i.qtd} min) <button onclick="itensSelecionados.splice(${idx},1); renderizarProdutos(); rdaAgendamento();">x</button></div>`).join('');
     }
 
     function iniciarAgendamento(){
@@ -293,13 +281,7 @@
         document.getElementById("step-agendamento").style.display = "none";
         document.getElementById("total-agend").innerText = agendamentos.length;
         renderPainel();
-        alert("Agendado com sucesso!");
-    }
-
-    function atualizarSelectPrestadores(){
-        let sel = document.getElementById("selectPrestador");
-        sel.innerHTML = '<option value="">-- Escolha --</option>';
-        prestadores.forEach((p,i) => sel.innerHTML += `<option value="${i}">${p.nome}</option>`);
+        alert("Agendado!");
     }
 
     function renderPainel(){
