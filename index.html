@@ -124,7 +124,9 @@
         editingIndex = index;
         document.getElementById("lista-prestadores-view").style.display="none";
         document.getElementById("cadastro-flow").style.display="block";
-        etapa = 1; document.getElementById("etapa-1").style.display="block"; document.getElementById("etapa-2").style.display="none";
+        etapa = 1; 
+        document.getElementById("etapa-1").style.display="block"; 
+        document.getElementById("etapa-2").style.display="none";
         criarGrid("agenda-cadastro");
         
         if(index !== -1){
@@ -282,6 +284,12 @@
         document.getElementById("total-agend").innerText = agendamentos.length;
         renderPainel();
         alert("Agendado!");
+    }
+
+    function atualizarSelectPrestadores(){
+        let sel = document.getElementById("selectPrestador");
+        sel.innerHTML = '<option value="">-- Escolha --</option>';
+        prestadores.forEach((p,i) => sel.innerHTML += `<option value="${i}">${p.nome}</option>`);
     }
 
     function renderPainel(){
