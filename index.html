@@ -104,36 +104,12 @@
     let etapa = 1;
     let editingIndex = -1;
 
-  const produtos = {
-  "Telemetria":[
-    {desc:"Instalado veículos leves bloqueador", tempo:60},
-    {desc:"Instalado veículos leves e pesados + CAN", tempo:60},
-    {desc:"Instalado motos ou maquinários", tempo:40},
-    {desc:"Instalado veículos leves e pesados", tempo:40}
-  ],
-
-  "Identificador":[
-    {desc:"Instalado veículos leves e pesados identificador", tempo:60},
-    {desc:"Instalado veículos leves e pesados identificador + CAN", tempo:90},
-    {desc:"Instalado veículos leves e pesados identificador RFID", tempo:60},
-    {desc:"Instalado veículos leves e pesados identificador RFID + CAN", tempo:80}
-  ],
-
-  "Trava de ignição":[
-    {desc:"Instalado veículos leves imobilizador", tempo:80},
-    {desc:"Instalado veículos leves imobilizador RFID", tempo:80},
-    {desc:"Instalado veículos leves imobilizador RFID + CAN", tempo:90},
-    {desc:"Instalado veículos leves imobilizador + CAN", tempo:100}
-  ],
-
-  "Videotelemetria":[
-    {desc:"CobliCam (2 câmeras)", tempo:90},
-    {desc:"Cobli Multicam (3 câmeras internas)", tempo:120},
-    {desc:"Cobli Multicam (2 câmeras + 1 externa)", tempo:240},
-    {desc:"Cobli Multicam (4 câmeras)", tempo:240},
-    {desc:"Cobli Multicam (5 câmeras)", tempo:300}
-  ]
-};
+    const produtos = {
+        "Telemetria": [{desc:"Instalado veículos leves bloqueador", tempo:60}, {desc:"Instalado veículos leves e pesados + CAN", tempo:60}, {desc:"Instalado motos ou maquinários", tempo:40}, {desc:"Instalado veículos leves e pesados", tempo:40}],
+        "Identificador": [{desc:"Instalado veículos leves e pesados identificador", tempo:60}, {desc:"Instalado veículos leves e pesados identificador + CAN", tempo:90}, {desc:"Instalado veículos leves e pesados identificador RFID", tempo:60}, {desc:"Instalado veículos leves e pesados identificador RFID + CAN", tempo:80}],
+        "Trava de ignição": [{desc:"Instalado veículos leves imobilizador", tempo:80}, {desc:"Instalado veículos leves imobilizador RFID", tempo:80}, {desc:"Instalado veículos leves imobilizador RFID + CAN", tempo:90}, {desc:"Instalado veículos leves imobilizador + CAN", tempo:100}],
+        "Videotelemetria": [{desc:"CobliCam (2 câmeras)", tempo:90}, {desc:"Cobli Multicam (3 câmeras internas)", tempo:120}, {desc:"Cobli Multicam (2 câmeras + 1 externa)", tempo:240}, {desc:"Cobli Multicam (4 câmeras)", tempo:240}, {desc:"Cobli Multicam (5 câmeras)", tempo:300}]
+    };
 
     window.onload = () => { carregarProdutos(); };
 
@@ -210,10 +186,7 @@
             range: document.getElementById("rangeAtendimento").value,
             agenda: agenda 
         };
-        
-        if(editingIndex === -1) prestadores.push(p);
-        else prestadores[editingIndex] = p;
-        
+        if(editingIndex === -1) prestadores.push(p); else prestadores[editingIndex] = p;
         renderizarListaPrestadores();
         atualizarSelectPrestadores();
         document.getElementById("cadastro-flow").style.display="none";
@@ -222,9 +195,7 @@
 
     function renderizarListaPrestadores(){
         document.getElementById("lista-prestadores").innerHTML = prestadores.map((p, i) => 
-            `<div class="card">${p.nome} 
-            <button onclick="abrirCadastro(${i})">Editar</button> 
-            <button onclick="excluirPrestador(${i})">Excluir</button></div>`).join('');
+            `<div class="card">${p.nome} <button onclick="abrirCadastro(${i})">Editar</button> <button onclick="excluirPrestador(${i})">Excluir</button></div>`).join('');
         document.getElementById("total-prest").innerText = prestadores.length;
     }
 
@@ -254,7 +225,7 @@
         let totalMinutos = itensSelecionados.reduce((a, b) => a + (b.tempo * b.qtd), 0);
         document.getElementById("horasNecessarias").innerText = Math.ceil(totalMinutos/60);
         document.getElementById("lista-produtos").innerHTML = itensSelecionados.map((i, idx) => 
-            `<div class="item-lista">${i.desc} (Qtd: ${i.qtd} | Tempo: ${i.tempo * i.qtd} min) <button onclick="itensSelecionados.splice(${idx},1); renderizarProdutos();">x</button></div>`).join('');
+            `<div class="item-lista">${i.desc} (Qtd: ${i.qtd} | Total: ${i.tempo * i.qtd} min) <button onclick="itensSelecionados.splice(${idx},1); renderizarProdutos();">x</button></div>`).join('');
     }
 
     function iniciarAgendamento(){
@@ -265,14 +236,12 @@
 
     function rdaAgendamento(){
         let idx = document.getElementById("selectPrestador").value;
-        if(idx === "") return;
         let totalMinutos = itensSelecionados.reduce((a, b) => a + (b.tempo * b.qtd), 0);
         let horas = Math.ceil(totalMinutos / 60);
         if(horas === 0){ alert("Adicione um serviço!"); document.getElementById("selectPrestador").value=""; return; }
         
         let container = document.getElementById("agenda-agendamento");
         container.innerHTML = "";
-        
         let hoje = new Date();
         const diasSemana = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sab"];
         
