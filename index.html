@@ -151,19 +151,34 @@
 
     // Função para consultar o seu servidor local (que fala com o Google)
     async function consultarDistancia(cepOrigem, enderecoPrestador) {
-        try {
-            const response = await fetch('http://localhost:3000/api/distancia', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ origin: cepOrigem, destination: enderecoPrestador })
-            });
-            const data = await response.json();
-            if (data.rows && data.rows[0].elements[0].status === 'OK') {
-                return parseFloat(data.rows[0].elements[0].distance.value) / 1000;
+    try {
+        const response = await fetch('http://localhost:3000/api/distancia', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ origin: cepOrigem, destination: enderecoPrestador })
+        });
+        
+        const data = await response.json();
+        
+        // --- LOG DE SEGURANÇA ---
+        console.log("Resposta completa do servidor:", data); 
+
+        // Verificação segura:
+        if (data && data.status === 'OK' && data.rows && data.rows[0].elements[0].status === 'OK') {
+            return parseFloat(data.rows[0].elements[0].distance.value) / 1000;
+        } else {
+            // Se cair aqui, vamos descobrir o porquê
+            console.error("O Google não retornou dados de distância. Status da resposta:", data.status || "Erro desconhecido");
+            if (data.error_message) {
+                console.error("Mensagem de erro do Google:", data.error_message);
             }
-            return null;
-        } catch (e) { console.error("Erro na API:", e); return null; }
+        }
+        return null;
+    } catch (e) { 
+        console.error("Erro na comunicação:", e); 
+        return null; 
     }
+}
 
     function trocarAba(id, btn){
         document.querySelectorAll('.aba').forEach(a => a.classList.remove('ativa'));
