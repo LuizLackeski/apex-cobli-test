@@ -22,8 +22,11 @@
         .flex-cards { display: flex; gap: 20px; margin-bottom: 20px; }
         .stats-card { background: white; padding: 20px; border-radius: 12px; flex: 1; box-shadow: 0 4px 6px rgba(0,0,0,0.1); text-align: center; }
         .painel-item { background: #f9f9f9; margin-bottom: 15px; padding: 15px; border-radius: 8px; border-left: 4px solid var(--primary); }
-        .filtros-painel { display: flex; gap: 10px; margin-bottom: 20px; align-items: flex-end; }
+        
+        /* Ajuste de Filtros */
+        .filtros-painel { display: flex; gap: 25px; margin-bottom: 30px; align-items: flex-end; padding: 20px; }
         .filtros-painel > div { flex: 1; }
+        .filtros-painel label { font-size: 0.85rem; color: #666; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -194,7 +197,18 @@
 
     function salvarPrestador(){
         let agenda = [...document.querySelectorAll('#agenda-cadastro .selecionado')].map(c => ({ dia: c.dataset.dia, hora: c.dataset.hora }));
-        let p = { nome: document.getElementById("nomeEmpresa").value, endereco: document.getElementById("endereco").value, cidade: document.getElementById("cidade").value, uf: document.getElementById("uf").value, cep: document.getElementById("cep").value, responsavel: document.getElementById("responsavel").value, contato: document.getElementById("contatoResponsavel").value, qtdTecnicos: document.getElementById("qtdTecnicos").value, range: document.getElementById("rangeAtendimento").value, agenda: agenda };
+        let p = { 
+            nome: document.getElementById("nomeEmpresa").value, 
+            endereco: document.getElementById("endereco").value, 
+            cidade: document.getElementById("cidade").value, 
+            uf: document.getElementById("uf").value, 
+            cep: document.getElementById("cep").value, 
+            responsavel: document.getElementById("responsavel").value, 
+            contato: document.getElementById("contatoResponsavel").value, 
+            qtdTecnicos: document.getElementById("qtdTecnicos").value, 
+            range: document.getElementById("rangeAtendimento").value, 
+            agenda: agenda 
+        };
         if(editingIndex === -1) prestadores.push(p); else prestadores[editingIndex] = p;
         renderizarListaPrestadores(); atualizarSelectPrestadores();
         document.getElementById("cadastro-flow").style.display="none";
@@ -203,7 +217,17 @@
     }
 
     function renderizarListaPrestadores(){
-        document.getElementById("lista-prestadores").innerHTML = prestadores.map((p, i) => `<div class="card">${p.nome} <button onclick="abrirCadastro(${i})">Editar</button> <button onclick="excluirPrestador(${i})">Excluir</button></div>`).join('');
+        document.getElementById("lista-prestadores").innerHTML = prestadores.map((p, i) => {
+            let uniqueDays = [...new Set(p.agenda.map(a => a.dia))].length;
+            return `<div class="card">
+                <strong>${p.nome}</strong> - ${p.cidade}/${p.uf}<br>
+                Técnicos: ${p.qtdTecnicos} | Dias c/ agenda: ${uniqueDays}
+                <div style="margin-top:10px">
+                    <button onclick="abrirCadastro(${i})">Editar</button> 
+                    <button onclick="excluirPrestador(${i})">Excluir</button>
+                </div>
+            </div>`;
+        }).join('');
         document.getElementById("total-prest").innerText = prestadores.length;
     }
 
