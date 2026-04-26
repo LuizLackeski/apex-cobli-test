@@ -13,6 +13,13 @@
         .conteudo { padding: 40px; max-width: 1000px; margin: 0 auto; }
         .aba { display: none; } .aba.ativa { display: block; }
         .card { background: white; padding: 25px; border-radius: 12px; margin-bottom: 25px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        
+        /* Layout Bacana para Seleção */
+        .card-selecao { background: white; padding: 20px; border-radius: 15px; margin-bottom: 15px; border: 2px solid #eef2f7; transition: 0.3s; }
+        .card-selecao:hover { border-color: var(--primary); box-shadow: 0 6px 12px rgba(47, 78, 161, 0.15); }
+        .card-selecao strong { font-size: 1.2rem; color: var(--primary); }
+        .card-selecao .dates { color: #555; font-size: 0.9rem; margin: 10px 0; display: block; }
+
         .agenda-day-card { background: #fff; padding: 8px; border-radius: 7px; margin-bottom: 8px; border: 1px solid #e0e0e0; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         .agenda-day-title { font-weight: bold; color: var(--primary); margin-bottom: 8px; border-bottom: 1px solid #eee; padding-bottom: 4px; font-size: 0.9rem; }
         .slots-wrapper { display: flex; flex-wrap: wrap; gap: 5px; }
@@ -169,6 +176,18 @@
         if(id === 'painel') atualizarFiltrosPrestador();
     }
 
+    function getNextDates(agenda) {
+        let dates = [];
+        let today = new Date();
+        const daysMap = {"Dom":0, "Seg":1, "Ter":2, "Qua":3, "Qui":4, "Sex":5, "Sab":6};
+        let agendaDays = [...new Set(agenda.map(a => a.dia))].map(d => daysMap[d]);
+        for (let i = 0; i < 30 && dates.length < 3; i++) {
+            let d = new Date(); d.setDate(today.getDate() + i);
+            if (agendaDays.includes(d.getDay())) dates.push(d.toLocaleDateString().slice(0,5));
+        }
+        return dates.join(', ');
+    }
+
     async function proximoPasso(n) {
         if(n === 2) {
             if(prestadores.length === 0) return alert("Cadastre um prestador!");
@@ -182,6 +201,7 @@
                 const dist = await consultarDistancia(cepDigitado, p.endereco);
                 if(dist !== null && dist <= parseFloat(p.range)) {
                     p.distanciaFinal = dist.toFixed(1);
+                    p.nextDates = getNextDates(p.agenda);
                     prestadoresFiltrados.push(p);
                 }
             }
@@ -195,27 +215,15 @@
         if(n === 3) rdaAgendamento(); 
     }
 
-    function validarEAvancar() {
-        let totalMinutos = itensSelecionados.reduce((a, b) => a + (b.tempo * b.qtd), 0);
-        let horas = Math.ceil(totalMinutos / 60);
-        let sel = document.querySelectorAll("#agenda-agendamento .selecionado");
-        if (sel.length === 0) return alert("Selecione horário!");
-        if (sel.length !== horas) return alert("Selecione " + horas + " hora(s)!");
-        proximoPasso(4);
-    }
-
     function renderizarListaPrestadoresSelecao(lista) {
-        document.getElementById('lista-prestadores-selecao').innerHTML = lista.map(p => {
-            // Pegar os dias da agenda do prestador
-            let dias = p.agenda ? [...new Set(p.agenda.map(a => a.dia))] : [];
-            let preview = dias.slice(0,3).join(', ');
-            return `
-            <div class="card">
-                <strong>${p.nome}</strong><br>Distância: ${p.distanciaFinal} km<br>
-                <small>Disp: ${preview}</small><br>
-                <button onclick="selecionarPrestadorPorObjeto('${p.nome}')">Selecionar</button>
+        document.getElementById('lista-prestadores-selecao').innerHTML = lista.map(p => `
+            <div class="card-selecao">
+                <strong>${p.nome}</strong><br>
+                Distância: ${p.distanciaFinal} km<br>
+                <span class="dates">Disponível em: ${p.nextDates}</span>
+                <button onclick="selecionarPrestadorPorObjeto('${p.nome}')">Selecionar Prestador</button>
             </div>
-        `}).join('');
+        `).join('');
     }
 
     function selecionarPrestadorPorObjeto(nome) {
@@ -312,19 +320,12 @@
             agenda: agenda 
         };
 
-        if (editingIndex !== -1) {
-            await fetch(`/api/prestadores/${prestadores[editingIndex].id}`, {
-                method: 'PUT',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify(p)
-            });
-        } else {
-            await fetch('/api/prestadores', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify(p)
-            });
-        }
+        const url = (editingIndex !== -1) ? `/api/prestadores/${prestadores[editingIndex].id}` : '/api/prestadores';
+        await fetch(url, {
+            method: (editingIndex !== -1) ? 'PUT' : 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(p)
+        });
         
         editingIndex = -1;
         await carregarDadosDoBanco();
@@ -470,7 +471,7 @@
             <div class="painel-item">
                 <div><strong>Ticket: ${a.ticket}</strong> | Cliente: ${a.cliente}</div>
                 <div><strong>${a.prestador}</strong> | Técnicos: ${a.qtdTecnicos} | Data: ${a.data} | Solicitante: ${a.solicitante}</div>
-                <div>Solicitado em: ${new Date(a.rawDate).toLocaleDateString()}</div>
+                <div>Solicitado em: ${a.rawDate ? new Date(a.rawDate).toLocaleDateString() : 'N/A'}</div>
                 <div style="margin: 5px 0; font-size: 0.9em; color: #555;">${Array.isArray(a.produtos) ? a.produtos.map(prod => `${prod.desc} (${prod.qtd}x)`).join('; ') : ""}</div>
                 <button onclick="excluirAgendamento(${a.id})" style="background: red;">Excluir Agendamento</button>
             </div>`).join('');
