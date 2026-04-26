@@ -81,9 +81,9 @@
                 <div id="agenda-cadastro"></div>
             </div>
             <div style="margin-top:20px;">
-                <button id="btn-voltar" onclick="mudarEtapa(-1)" style="display:none;">Voltar</button>
+                <button id="btn-voltar" onclick="mudarEtapa(-1)">Voltar</button>
                 <button id="btn-proximo" onclick="mudarEtapa(1)">Próximo</button>
-                <button id="btn-concluir" onclick="salvarPrestador()" style="background: green; display: none;">Concluir</button>
+                <button id="btn-concluir" onclick="salvarPrestador()" style="background: green;">Concluir</button>
             </div>
         </div>
     </div>
@@ -120,12 +120,6 @@
         if(btn) btn.classList.add('ativo');
     }
 
-    function updateButtons() {
-        document.getElementById('btn-voltar').style.display = (etapa === 1) ? 'none' : 'inline-block';
-        document.getElementById('btn-proximo').style.display = (etapa === 1) ? 'inline-block' : 'none';
-        document.getElementById('btn-concluir').style.display = (etapa === 2) ? 'inline-block' : 'none';
-    }
-
     function abrirCadastro(index = -1){
         editingIndex = index;
         document.getElementById("lista-prestadores-view").style.display="none";
@@ -133,7 +127,6 @@
         etapa = 1; 
         document.getElementById("etapa-1").style.display="block"; 
         document.getElementById("etapa-2").style.display="none";
-        updateButtons();
         criarGrid("agenda-cadastro");
         
         if(index !== -1){
@@ -161,7 +154,6 @@
         etapa += dir;
         if(etapa < 1) etapa = 1; if(etapa > 2) etapa = 2;
         document.getElementById("etapa-"+etapa).style.display="block";
-        updateButtons();
     }
 
     function criarGrid(id){
@@ -182,12 +174,22 @@
 
     function salvarPrestador(){
         let agenda = [...document.querySelectorAll('#agenda-cadastro .selecionado')].map(c => ({ dia: c.dataset.dia, hora: c.dataset.hora }));
-        let p = { nome: document.getElementById("nomeEmpresa").value, endereco: document.getElementById("endereco").value, cidade: document.getElementById("cidade").value, uf: document.getElementById("uf").value, cep: document.getElementById("cep").value, responsavel: document.getElementById("responsavel").value, contato: document.getElementById("contatoResponsavel").value, qtdTecnicos: document.getElementById("qtdTecnicos").value, range: document.getElementById("rangeAtendimento").value, agenda: agenda };
+        let p = { 
+            nome: document.getElementById("nomeEmpresa").value, 
+            endereco: document.getElementById("endereco").value, 
+            cidade: document.getElementById("cidade").value, 
+            uf: document.getElementById("uf").value, 
+            cep: document.getElementById("cep").value, 
+            responsavel: document.getElementById("responsavel").value, 
+            contato: document.getElementById("contatoResponsavel").value, 
+            qtdTecnicos: document.getElementById("qtdTecnicos").value, 
+            range: document.getElementById("rangeAtendimento").value, 
+            agenda: agenda 
+        };
         if(editingIndex === -1) prestadores.push(p); else prestadores[editingIndex] = p;
         renderizarListaPrestadores(); atualizarSelectPrestadores();
         document.getElementById("cadastro-flow").style.display="none";
         document.getElementById("lista-prestadores-view").style.display="block";
-        alert("Prestador cadastrado com sucesso!");
     }
 
     function renderizarListaPrestadores(){
@@ -222,7 +224,7 @@
         let totalMinutos = itensSelecionados.reduce((a, b) => a + (b.tempo * b.qtd), 0);
         document.getElementById("horasNecessarias").innerText = Math.ceil(totalMinutos/60);
         document.getElementById("lista-produtos").innerHTML = itensSelecionados.map((i, idx) => 
-            `<div class="item-lista">${i.desc} (Qtd: ${i.qtd} | Tempo Total: ${i.tempo * i.qtd} min) <button onclick="itensSelecionados.splice(${idx},1); renderizarProdutos(); rdaAgendamento();">x</button></div>`).join('');
+            `<div class="item-lista">${i.desc} (Qtd: ${i.qtd}) <button onclick="itensSelecionados.splice(${idx},1); renderizarProdutos(); rdaAgendamento();">x</button></div>`).join('');
     }
 
     function iniciarAgendamento(){
@@ -260,16 +262,18 @@
                     div.dataset.hora = item.hora;
                     div.dataset.date = dStr;
                     div.onclick = () => {
-                        let totalMinutos = itensSelecionados.reduce((a, b) => a + (b.tempo * b.qtd), 0);
-                        let horas = Math.ceil(totalMinutos / 60);
-                        
                         let sel = document.querySelectorAll("#agenda-agendamento .selecionado");
+                        
+                        // Lógica: Se selecionar um dia novo, limpa os anteriores
                         if(sel.length > 0 && sel[0].dataset.date !== div.dataset.date) {
                             sel.forEach(s => s.classList.remove('selecionado'));
-                            sel = document.querySelectorAll("#agenda-agendamento .selecionado");
+                            sel = [];
                         }
 
-                        if(!div.classList.contains("selecionado") && sel.length >= horas) return alert("Limite de "+horas+"h!");
+                        let totalMinutos = itensSelecionados.reduce((a, b) => a + (b.tempo * b.qtd), 0);
+                        let horasNecessarias = Math.ceil(totalMinutos / 60);
+                        
+                        if(!div.classList.contains("selecionado") && sel.length >= horasNecessarias) return alert("Limite de "+horasNecessarias+"h!");
                         div.classList.toggle("selecionado");
                     };
                     row.appendChild(div);
@@ -280,17 +284,14 @@
     }
 
     function concluirAgendamento(){
+        let totalMinutos = itensSelecionados.reduce((a, b) => a + (b.tempo * b.qtd), 0);
+        let horas = Math.ceil(totalMinutos / 60);
         let sel = document.querySelectorAll("#agenda-agendamento .selecionado");
         if(sel.length === 0) return alert("Selecione um horário!");
         
-        // Verifica se todos os selecionados são do mesmo dia (segurança extra)
+        // Verifica se todos selecionados são do mesmo dia
         let dataRef = sel[0].dataset.date;
-        for(let s of sel) {
-            if(s.dataset.date !== dataRef) return alert("Todos os horários devem ser do mesmo dia!");
-        }
-
-        let totalMinutos = itensSelecionados.reduce((a, b) => a + (b.tempo * b.qtd), 0);
-        let horas = Math.ceil(totalMinutos / 60);
+        for(let s of sel) if(s.dataset.date !== dataRef) return alert("Todos os horários devem ser do mesmo dia!");
         
         if(sel.length !== horas) return alert("Selecione exatamente " + horas + " hora(s)!");
         
@@ -312,6 +313,12 @@
 
     function renderPainel(){
         document.getElementById("painel-conteudo").innerHTML = agendamentos.map((a, i) => `<div class="painel-item">Agendamento: ${a.prestador} - ${a.data} <button onclick="agendamentos.splice(${i},1); renderPainel()">Excluir</button></div>`).join('');
+    }
+
+    function atualizarSelectPrestadores(){
+        let sel = document.getElementById("selectPrestador");
+        sel.innerHTML = '<option value="">-- Escolha --</option>';
+        prestadores.forEach((p,i) => sel.innerHTML += `<option value="${i}">${p.nome}</option>`);
     }
 </script>
 </body>
