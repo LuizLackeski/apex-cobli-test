@@ -5,33 +5,37 @@
     <title>APEX - Sistema Completo</title>
     <style>
         :root { --primary: #2F4EA1; --bg: #f4f6f8; }
-        body { font-family: 'Segoe UI', sans-serif; background:var(--bg); margin:0; padding:15px; }
-        .topo { background: var(--primary); color: white; padding: 10px 20px; }
-        .menu { background: #1F3C88; padding: 5px 20px; display: flex; }
-        .menu button { background: none; border: none; color: #cbd5e1; margin-right: 20px; cursor: pointer; padding: 8px; }
+        body { font-family: 'Segoe UI', sans-serif; background:var(--bg); margin:0; padding:20px; }
+        .topo { background: var(--primary); color: white; padding: 15px 30px; }
+        .menu { background: #1F3C88; padding: 10px 30px; display: flex; }
+        .menu button { background: none; border: none; color: #cbd5e1; margin-right: 20px; cursor: pointer; padding: 10px; }
         .menu button.ativo { color: white; border-bottom: 2px solid #4da3ff; }
-        .conteudo { padding: 20px; max-width: 1000px; margin: 0 auto; }
+        .conteudo { padding: 40px; max-width: 1000px; margin: 0 auto; }
         .aba { display: none; } .aba.ativa { display: block; }
-        .card { background: white; padding: 15px; border-radius: 8px; margin-bottom: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
         
-        /* Layout Cards da Agenda - Compacto */
-        .agenda-day-card { background: #fff; padding: 8px; border-radius: 6px; margin-bottom: 8px; border: 1px solid #e0e0e0; }
-        .agenda-day-title { font-weight: bold; color: var(--primary); margin-bottom: 5px; border-bottom: 1px solid #eee; padding-bottom: 2px; font-size: 0.8rem; }
-        .slots-wrapper { display: flex; flex-wrap: wrap; gap: 4px; }
-
-        .cell { border: 1px solid #ddd; padding: 4px; text-align: center; cursor: pointer; border-radius: 4px; font-size: 0.75rem; display: inline-flex; align-items: center; justify-content: center; width: 50px; height: 25px; }
+        /* Ajuste sutil de compactação apenas no padding do card */
+        .card { background: white; padding: 20px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        
+        /* Layout original da agenda do cadastro (Linhas) */
+        .row-dia { display: flex; align-items: center; margin-bottom: 6px; }
+        .cell { border: 1px solid #ddd; padding: 8px; text-align: center; cursor: pointer; border-radius: 4px; font-size: 0.75rem; display: inline-flex; align-items: center; justify-content: center; width: 55px; height: 28px; margin: 2px; }
         .cell.selecionado { background: var(--primary); color: white; border-color: var(--primary); }
         
-        input, select { width: 100%; padding: 8px; margin: 4px 0; border: 1px solid #ddd; border-radius: 6px; }
-        button { cursor: pointer; padding: 6px 12px; background: var(--primary); color: white; border: none; border-radius: 4px; }
-        .item-lista { display: flex; justify-content: space-between; padding: 5px; border-bottom: 1px solid #eee; align-items: center; font-size: 0.9rem; }
-        .flex-cards { display: flex; gap: 15px; margin-bottom: 15px; }
-        .stats-card { background: white; padding: 15px; border-radius: 8px; flex: 1; box-shadow: 0 2px 4px rgba(0,0,0,0.1); text-align: center; }
-        .painel-item { background: #f9f9f9; margin-bottom: 8px; padding: 10px; border-radius: 6px; border-left: 4px solid var(--primary); }
+        /* Layout Card da agenda de agendamento */
+        .agenda-day-card { background: #fff; padding: 15px; border-radius: 8px; margin-bottom: 12px; border: 1px solid #e0e0e0; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .agenda-day-title { font-weight: bold; color: var(--primary); margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 5px; font-size: 0.9rem; }
+        .slots-wrapper { display: flex; flex-wrap: wrap; gap: 5px; }
+
+        input, select { width: 100%; padding: 12px; margin: 5px 0; border: 1px solid #ddd; border-radius: 8px; }
+        button { cursor: pointer; padding: 10px 20px; background: var(--primary); color: white; border: none; border-radius: 6px; }
+        .item-lista { display: flex; justify-content: space-between; padding: 8px; border-bottom: 1px solid #eee; align-items: center; }
+        .flex-cards { display: flex; gap: 20px; margin-bottom: 20px; }
+        .stats-card { background: white; padding: 20px; border-radius: 12px; flex: 1; box-shadow: 0 4px 6px rgba(0,0,0,0.1); text-align: center; }
+        .painel-item { background: #f9f9f9; margin-bottom: 15px; padding: 15px; border-radius: 8px; border-left: 4px solid var(--primary); }
         
-        .filtros-painel { display: flex; gap: 15px; margin-bottom: 20px; padding: 15px; background: #fff; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .filtros-painel { display: flex; gap: 20px; margin-bottom: 30px; padding: 20px; background: #fff; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
         .filtros-painel > div { flex: 1; }
-        .filtros-painel label { font-size: 0.75rem; color: #666; font-weight: bold; display: block; }
+        .filtros-painel label { font-size: 0.85rem; color: #666; font-weight: bold; display: block; }
         .filtros-painel button { align-self: flex-end; }
     </style>
 </head>
@@ -237,7 +241,7 @@
     function criarGridCadastro(id){
         let grid = document.getElementById(id); grid.innerHTML = "";
         ["Seg","Ter","Qua","Qui","Sex","Sab"].forEach(d=>{
-            let row = document.createElement("div"); row.style.display = "flex"; row.style.marginBottom = "6px";
+            let row = document.createElement("div"); row.className="row-dia";
             row.innerHTML = `<div style="width:80px">${d}</div>`;
             for(let h=8;h<=18;h++){
                 let cell = document.createElement("div"); cell.className="cell";
@@ -394,7 +398,7 @@
             solicitante: document.getElementById("solicitante").value
         });
         
-        // Limpeza dos campos e estados
+        // Limpeza
         itensSelecionados = []; prestadorSelecionadoIndex = null;
         document.getElementById("lista-produtos").innerHTML = "";
         document.getElementById("horasNecessarias").innerText = "0";
