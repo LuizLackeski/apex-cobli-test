@@ -184,7 +184,7 @@
             
             let prestadoresFiltrados = [];
             for(let p of prestadores) {
-                const dist = await consultarDistancia(cepDigitado, p.endereco);
+                const dist = await consultarDistancia(cepDigitado + ", Brasil", p.endereco + ", Brasil");
                 // Se o Google não achar a distância, vamos mostrar (ou bloquear se preferir)
                 if(dist !== null && dist <= p.range) {
                     prestadoresFiltrados.push(p);
