@@ -14,6 +14,7 @@
         .aba { display: none; } .aba.ativa { display: block; }
         .card { background: white; padding: 25px; border-radius: 12px; margin-bottom: 25px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
         
+        /* Layout dos Cards de Agenda */
         .agenda-day-card { background: #fff; padding: 15px; border-radius: 8px; margin-bottom: 12px; border: 1px solid #e0e0e0; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         .agenda-day-title { font-weight: bold; color: var(--primary); margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 5px; font-size: 0.9rem; }
         .slots-wrapper { display: flex; flex-wrap: wrap; gap: 5px; }
@@ -106,8 +107,8 @@
         </div>
         
         <div class="filtros-painel">
-            <div><label>Início</label><input type="date" id="filtroDataInicio"></div>
-            <div><label>Fim</label><input type="date" id="filtroDataFim"></div>
+            <div><label>Data Início</label><input type="date" id="filtroDataInicio"></div>
+            <div><label>Data Fim</label><input type="date" id="filtroDataFim"></div>
             <div><label>Prestador</label><select id="filtroPrestador"><option value="">Todos</option></select></div>
             <button onclick="renderPainel()">Filtrar</button>
             <button onclick="limparFiltros()" style="background:gray;">Limpar</button>
@@ -226,8 +227,8 @@
         document.getElementById("lista-prestadores").innerHTML = prestadores.map((p, i) => {
             let uniqueDays = [...new Set(p.agenda.map(a => a.dia))].length;
             return `<div class="card">
-                <strong>${p.nome}</strong> | ${p.cidade}/${p.uf}<br>
-                Técnicos: ${p.qtdTecnicos} | Agenda: ${uniqueDays} dia(s)
+                <strong>${p.nome}</strong> - ${p.cidade}/${p.uf}<br>
+                Técnicos: ${p.qtdTecnicos} | Dias c/ agenda: ${uniqueDays}
                 <div style="margin-top:10px">
                     <button onclick="abrirCadastro(${i})">Editar</button> 
                     <button onclick="excluirPrestador(${i})">Excluir</button>
@@ -264,7 +265,7 @@
         let totalMinutos = itensSelecionados.reduce((a, b) => a + (b.tempo * b.qtd), 0);
         document.getElementById("horasNecessarias").innerText = Math.ceil(totalMinutos/60);
         document.getElementById("lista-produtos").innerHTML = itensSelecionados.map((i, idx) => 
-            `<div class="item-lista">${i.desc} (Qtd: ${i.qtd}) <button onclick="itensSelecionados.splice(${idx},1); renderizarProdutos(); rdaAgendamento();">x</button></div>`).join('');
+            `<div class="item-lista">${i.desc} (Qtd: ${i.qtd} | Total: ${i.tempo * i.qtd} min) <button onclick="itensSelecionados.splice(${idx},1); renderizarProdutos(); rdaAgendamento();">x</button></div>`).join('');
     }
 
     function iniciarAgendamento(){
@@ -292,8 +293,12 @@
             
             let slots = prestadores[idx].agenda.filter(a => a.dia == dNome);
             if(slots.length > 0){
-                let row = document.createElement("div"); row.className="row-dia";
-                row.innerHTML = `<div style="width:80px">${dStr.slice(0,5)}</div>`;
+                let card = document.createElement("div");
+                card.className = "agenda-day-card";
+                card.innerHTML = `<div class="agenda-day-title">${dStr.slice(0,5)} (${dNome})</div>`;
+                let wrapper = document.createElement("div");
+                wrapper.className = "slots-wrapper";
+                
                 slots.forEach(item => {
                     let isBooked = agendamentos.some(a => a.prestador == prestadores[idx].nome && a.data == dStr && a.slots.includes(item.hora));
                     if(isBooked) return;
@@ -314,9 +319,10 @@
                         if(!div.classList.contains("selecionado") && sel.length >= horas) return alert("Limite de "+horas+"h!");
                         div.classList.toggle("selecionado");
                     };
-                    row.appendChild(div);
+                    wrapper.appendChild(div);
                 });
-                container.appendChild(row);
+                card.appendChild(wrapper);
+                container.appendChild(card);
             }
         }
     }
