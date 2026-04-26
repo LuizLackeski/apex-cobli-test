@@ -156,17 +156,26 @@
     };
 
     async function carregarDadosDoBanco() {
-        try {
-            const resP = await fetch('http://localhost:3000/api/prestadores');
-            prestadores = await resP.json();
-            renderizarListaPrestadores();
-            
-            const resA = await fetch('http://localhost:3000/api/agendamentos');
-            agendamentos = await resA.json();
-            document.getElementById("total-agend").innerText = agendamentos.length;
-            renderPainel();
-        } catch(e) { console.error("Erro ao carregar dados:", e); }
+    try {
+        console.log("Tentando buscar dados no banco...");
+        
+        const resP = await fetch('http://localhost:3000/api/prestadores');
+        const dadosPrestadores = await resP.json();
+        console.log("Dados de prestadores recebidos:", dadosPrestadores); // ISSO VAI MOSTRAR NO CONSOLE
+        
+        prestadores = dadosPrestadores;
+        renderizarListaPrestadores(); // Atualiza a tela de cadastro
+        
+        const resA = await fetch('http://localhost:3000/api/agendamentos');
+        agendamentos = await resA.json();
+        console.log("Dados de agendamentos recebidos:", agendamentos);
+        
+        document.getElementById("total-agend").innerText = agendamentos.length;
+        renderPainel();
+    } catch(e) { 
+        console.error("ERRO AO CARREGAR DADOS DO BANCO:", e); 
     }
+}
 
     function showToast(mensagem) {
         let t = document.getElementById("toast");
