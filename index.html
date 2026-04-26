@@ -184,7 +184,9 @@
         let agenda = [...document.querySelectorAll('#agenda-cadastro .selecionado')].map(c => ({ dia: c.dataset.dia, hora: c.dataset.hora }));
         let p = { nome: document.getElementById("nomeEmpresa").value, endereco: document.getElementById("endereco").value, cidade: document.getElementById("cidade").value, uf: document.getElementById("uf").value, cep: document.getElementById("cep").value, responsavel: document.getElementById("responsavel").value, contato: document.getElementById("contatoResponsavel").value, qtdTecnicos: document.getElementById("qtdTecnicos").value, range: document.getElementById("rangeAtendimento").value, agenda: agenda };
         if(editingIndex === -1) prestadores.push(p); else prestadores[editingIndex] = p;
-        renderizarListaPrestadores(); atualizarSelectPrestadores();
+        renderizarListaPrestadores(); 
+        atualizarSelectPrestadores();
+        // Garantindo que a tela troque corretamente
         document.getElementById("cadastro-flow").style.display="none";
         document.getElementById("lista-prestadores-view").style.display="block";
         alert("Prestador cadastrado com sucesso!");
