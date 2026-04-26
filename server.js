@@ -92,6 +92,16 @@ app.get('/', (req, res) => {
 // --- AJUSTE 2: Porta Dinâmica ---
 const PORT = process.env.PORT || 3000;
 
+app.use(express.static(path.join(__dirname)));
+
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
+});
+
+// --- 2. Porta Dinâmica (O segredo do Railway) ---
+// O Railway injeta a porta certa na variável process.env.PORT
+const PORT = process.env.PORT || 3000;
+
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`Servidor rodando na porta ${PORT}!`);
 });
