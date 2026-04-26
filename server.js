@@ -83,6 +83,11 @@ app.post('/api/distancia', async (req, res) => {
         res.json(response.data);
     } catch (error) { res.status(500).json({ error: 'Erro no Google Maps' }); }
 });
+app.use(express.static(path.join(__dirname)));
+
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
+});
 
 // --- AJUSTE 2: Porta Dinâmica ---
 const PORT = process.env.PORT || 3000;
