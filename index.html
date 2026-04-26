@@ -341,3 +341,59 @@
         });
         
         itensSelecionados = [];
+        document.getElementById("lista-produtos").innerHTML = "";
+        document.getElementById("horasNecessarias").innerText = "0";
+        document.getElementById("quantidade").value = "1";
+        document.getElementById("selectPrestador").value = "";
+        document.getElementById("agenda-agendamento").innerHTML = "";
+        document.getElementById("inputCep").value = "";
+        document.getElementById("step-cep").style.display = "block";
+        document.getElementById("step-agendamento").style.display = "none";
+        document.getElementById("total-agend").innerText = agendamentos.length;
+        renderPainel();
+        alert("Agendado com sucesso!");
+    }
+
+    function renderPainel(){
+        let fInicio = document.getElementById("filtroDataInicio").value;
+        let fFim = document.getElementById("filtroDataFim").value;
+        let fPrest = document.getElementById("filtroPrestador").value;
+
+        let filtrados = agendamentos.filter(a => {
+            let dataA = new Date(a.rawDate).toISOString().split('T')[0];
+            let matchDate = (!fInicio || dataA >= fInicio) && (!fFim || dataA <= fFim);
+            let matchPrest = (!fPrest || a.prestador === fPrest);
+            return matchDate && matchPrest;
+        });
+
+        document.getElementById("painel-conteudo").innerHTML = filtrados.map((a, i) => `
+            <div class="painel-item">
+                <div><strong>${a.prestador}</strong> | Técnicos: ${a.qtdTecnicos} | Data: ${a.data}</div>
+                <div style="margin: 5px 0; font-size: 0.9em; color: #555;">
+                    ${a.produtos.map(prod => `${prod.desc} (${prod.qtd}x | ${prod.tempo * prod.qtd} min)`).join('; ')}
+                </div>
+                <button onclick="agendamentos.splice(agendamentos.indexOf(a),1); renderPainel()">Excluir</button>
+            </div>`).join('');
+    }
+
+    function limparFiltros(){
+        document.getElementById("filtroDataInicio").value = "";
+        document.getElementById("filtroDataFim").value = "";
+        document.getElementById("filtroPrestador").value = "";
+        renderPainel();
+    }
+
+    function atualizarFiltrosPrestador(){
+        let sel = document.getElementById("filtroPrestador");
+        sel.innerHTML = '<option value="">Todos</option>';
+        prestadores.forEach(p => sel.innerHTML += `<option value="${p.nome}">${p.nome}</option>`);
+    }
+
+    function atualizarSelectPrestadores(){
+        let sel = document.getElementById("selectPrestador");
+        sel.innerHTML = '<option value="">-- Escolha --</option>';
+        prestadores.forEach((p,i) => sel.innerHTML += `<option value="${i}">${p.nome}</option>`);
+    }
+</script>
+</body>
+</html>
