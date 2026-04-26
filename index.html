@@ -123,7 +123,9 @@
         editingIndex = index;
         document.getElementById("lista-prestadores-view").style.display="none";
         document.getElementById("cadastro-flow").style.display="block";
-        etapa = 1; document.getElementById("etapa-1").style.display="block"; document.getElementById("etapa-2").style.display="none";
+        etapa = 1; 
+        document.getElementById("etapa-1").style.display="block"; 
+        document.getElementById("etapa-2").style.display="none";
         criarGrid("agenda-cadastro");
         
         if(index !== -1){
@@ -142,7 +144,7 @@
                 cells.forEach(c => { if(c.dataset.dia == item.dia && c.dataset.hora == item.hora) c.classList.add("selecionado"); });
             });
         } else {
-            // Limpa campos
+            // Limpa campos se for novo
             document.getElementById("nomeEmpresa").value = "";
             document.getElementById("endereco").value = "";
             document.getElementById("cidade").value = "";
@@ -174,7 +176,7 @@
                 cell.onclick = () => cell.classList.toggle("selecionado");
                 row.appendChild(cell);
             }
-            row.appendChild(cell);
+            grid.appendChild(row);
         });
     }
 
