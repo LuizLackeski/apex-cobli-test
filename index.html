@@ -39,7 +39,6 @@
 <body>
 
 <div class="topo"><strong>APEX</strong> <span>Agenda Prestadores</span></div>
-
 <div class="menu">
     <button class="ativo" onclick="trocarAba('consulta', this)">Agendamento</button>
     <button onclick="trocarAba('cadastro', this)">Prestadores</button>
@@ -53,13 +52,11 @@
             <input type="text" id="inputCep" placeholder="Digite o CEP do cliente" required>
             <button onclick="proximoPasso(2)" id="btnBuscar">Buscar Prestadores</button>
         </div>
-
         <div id="step-2" class="card" style="display:none;">
             <h2>2. Selecione o Prestador</h2>
             <div id="lista-prestadores-selecao"></div>
             <button onclick="proximoPasso(1)" style="background:gray;">Voltar</button>
         </div>
-
         <div id="step-3" class="card" style="display:none;">
             <h2>3. Serviços e Agenda</h2>
             <h3>Serviços</h3>
@@ -73,7 +70,6 @@
             <button onclick="proximoPasso(2)" style="background:gray;">Voltar</button>
             <button onclick="validarEAvancar()" style="background:green;">Próximo</button>
         </div>
-
         <div id="step-4" class="card" style="display:none;">
             <h2>4. Dados do Cliente</h2>
             <input id="ticket" placeholder="Nº do Ticket" required>
@@ -119,7 +115,6 @@
             <div class="stats-card">TOTAL<br><strong id="total-agend">0</strong></div>
             <div class="stats-card">PRESTADORES<br><strong id="total-prest">0</strong></div>
         </div>
-        
         <div class="filtros-painel">
             <div><label>Início</label><input type="date" id="filtroDataInicio"></div>
             <div><label>Fim</label><input type="date" id="filtroDataFim"></div>
@@ -127,7 +122,6 @@
             <button onclick="renderPainel()">Filtrar</button>
             <button onclick="limparFiltros()" style="background:gray;">Limpar</button>
         </div>
-
         <div id="painel-conteudo"></div>
     </div>
 </div>
@@ -135,13 +129,7 @@
 <div id="toast"></div>
 
 <script>
-    let prestadores = [];
-    let itensSelecionados = [];
-    let agendamentos = [];
-    let etapa = 1;
-    let editingIndex = -1;
-    let prestadorSelecionadoIndex = null;
-
+    let prestadores = [], itensSelecionados = [], agendamentos = [], etapa = 1, editingIndex = -1, prestadorSelecionadoIndex = null;
     const produtos = {
         "Telemetria": [{desc:"Instalado veículos leves bloqueador", tempo:60}, {desc:"Instalado veículos leves e pesados + CAN", tempo:60}, {desc:"Instalado motos ou maquinários", tempo:40}, {desc:"Instalado veículos leves e pesados", tempo:40}],
         "Identificador": [{desc:"Instalado veículos leves e pesados identificador", tempo:60}, {desc:"Instalado veículos leves e pesados identificador + CAN", tempo:90}, {desc:"Instalado veículos leves e pesados identificador RFID", tempo:60}, {desc:"Instalado veículos leves e pesados identificador RFID + CAN", tempo:80}],
@@ -149,17 +137,13 @@
         "Videotelemetria": [{desc:"CobliCam (2 câmeras)", tempo:90}, {desc:"Cobli Multicam (3 câmeras internas)", tempo:120}, {desc:"Cobli Multicam (2 câmeras + 1 externa)", tempo:240}, {desc:"Cobli Multicam (4 câmeras)", tempo:240}, {desc:"Cobli Multicam (5 câmeras)", tempo:300}]
     };
 
-    window.onload = async () => { 
-        carregarProdutos(); 
-        try { await carregarDadosDoBanco(); } catch(e) { console.log("Servidor offline"); }
-    };
+    window.onload = async () => { carregarProdutos(); await carregarDadosDoBanco(); };
 
     async function carregarDadosDoBanco() {
         try {
             const resP = await fetch('http://localhost:3000/api/prestadores');
             prestadores = await resP.json();
             renderizarListaPrestadores();
-            
             const resA = await fetch('http://localhost:3000/api/agendamentos');
             agendamentos = await resA.json();
             document.getElementById("total-agend").innerText = agendamentos.length;
@@ -167,19 +151,15 @@
         } catch(e) { console.error("Erro ao carregar dados:", e); }
     }
 
-    function showToast(mensagem) {
+    function showToast(msg) {
         let t = document.getElementById("toast");
-        t.innerText = mensagem; t.style.display = "block";
+        t.innerText = msg; t.style.display = "block";
         setTimeout(() => { t.style.display = "none"; }, 3000);
     }
 
     async function consultarDistancia(cepOrigem, enderecoPrestador) {
         try {
-            const response = await fetch('http://localhost:3000/api/distancia', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ origin: cepOrigem, destination: enderecoPrestador })
-            });
+            const response = await fetch('http://localhost:3000/api/distancia', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ origin: cepOrigem, destination: enderecoPrestador }) });
             const data = await response.json();
             return (data.status === 'OK') ? parseFloat(data.rows[0].elements[0].distance.value) / 1000 : null;
         } catch (e) { return null; }
@@ -195,7 +175,7 @@
 
     async function proximoPasso(n) {
         if(n === 2) {
-            if(prestadores.length === 0) return alert("Cadastre um prestador primeiro!");
+            if(prestadores.length === 0) return alert("Cadastre um prestador!");
             const cepDigitado = document.getElementById('inputCep').value;
             if(!cepDigitado) return alert("Digite o CEP!");
             const btn = document.getElementById('btnBuscar');
@@ -210,7 +190,7 @@
                 }
             }
             btn.disabled = false; btn.innerText = "Buscar Prestadores";
-            if(prestadoresFiltrados.length === 0) return alert("Nenhum prestador encontrado.");
+            if(prestadoresFiltrados.length === 0) return alert("Nenhum encontrado.");
             renderizarListaPrestadoresSelecao(prestadoresFiltrados);
         }
         if(n === 3 && prestadorSelecionadoIndex === null) return alert("Selecione um prestador!");
@@ -223,17 +203,16 @@
         let totalMinutos = itensSelecionados.reduce((a, b) => a + (b.tempo * b.qtd), 0);
         let horas = Math.ceil(totalMinutos / 60);
         let sel = document.querySelectorAll("#agenda-agendamento .selecionado");
-        if (sel.length === 0) return alert("Selecione um horário!");
-        if (sel.length !== horas) return alert("Selecione exatamente " + horas + " hora(s)!");
+        if (sel.length === 0) return alert("Selecione horário!");
+        if (sel.length !== horas) return alert("Selecione " + horas + " hora(s)!");
         proximoPasso(4);
     }
 
     function renderizarListaPrestadoresSelecao(lista) {
         document.getElementById('lista-prestadores-selecao').innerHTML = lista.map(p => `
             <div class="card">
-                <strong>${p.nome}</strong> - ${p.cidade}/${p.uf}<br>
-                <small>Distância: ${p.distanciaFinal} km</small>
-                <br><button onclick="selecionarPrestadorPorObjeto('${p.nome}')">Selecionar</button>
+                <strong>${p.nome}</strong><br>Distância: ${p.distanciaFinal} km<br>
+                <button onclick="selecionarPrestadorPorObjeto('${p.nome}')">Selecionar</button>
             </div>
         `).join('');
     }
@@ -298,7 +277,7 @@
     function mudarEtapa(dir){
         if (dir > 0 && etapa === 1) {
             const inputs = document.querySelectorAll("#etapa-1 input");
-            for(let i of inputs) if(!i.value.trim()) return alert("Preencha todos os campos obrigatórios!");
+            for(let i of inputs) if(!i.value.trim()) return alert("Preencha todos os campos!");
         }
         document.getElementById("etapa-"+etapa).style.display="none";
         etapa += dir;
@@ -340,7 +319,7 @@
         await carregarDadosDoBanco();
         document.getElementById("cadastro-flow").style.display="none";
         document.getElementById("lista-prestadores-view").style.display="block";
-        showToast("Prestador salvo com sucesso!");
+        showToast("Salvo com sucesso!");
     }
 
     function renderizarListaPrestadores(){
@@ -475,13 +454,20 @@
             let matchPrest = (!fPrest || a.prestador === fPrest);
             return matchDate && matchPrest;
         });
-        document.getElementById("painel-conteudo").innerHTML = filtrados.map((a, i) => `
+        document.getElementById("painel-conteudo").innerHTML = filtrados.map((a) => `
             <div class="painel-item">
                 <div><strong>Ticket: ${a.ticket}</strong> | Cliente: ${a.cliente}</div>
                 <div><strong>${a.prestador}</strong> | Técnicos: ${a.qtdTecnicos} | Data: ${a.data} | Solicitante: ${a.solicitante}</div>
                 <div style="margin: 5px 0; font-size: 0.9em; color: #555;">${Array.isArray(a.produtos) ? a.produtos.map(prod => `${prod.desc} (${prod.qtd}x)`).join('; ') : ""}</div>
-                <button onclick="excluirAgendamento(${a.id})">Excluir Agendamento</button>
+                <button onclick="excluirAgendamento(${a.id})" style="background: red;">Excluir Agendamento</button>
             </div>`).join('');
+    }
+
+    async function excluirAgendamento(id) {
+        if(!confirm("Tem certeza que deseja excluir este agendamento?")) return;
+        await fetch(`http://localhost:3000/api/agendamentos/${id}`, { method: 'DELETE' });
+        await carregarDadosDoBanco();
+        showToast("Agendamento excluído!");
     }
 
     function limparFiltros(){
