@@ -1,4 +1,4 @@
-quase lá<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
@@ -141,10 +141,10 @@ quase lá<!DOCTYPE html>
 
     async function carregarDadosDoBanco() {
         try {
-            const resP = await fetch('http://localhost:3000/api/prestadores');
+            const resP = await fetch('/api/prestadores');
             prestadores = await resP.json();
             renderizarListaPrestadores();
-            const resA = await fetch('http://localhost:3000/api/agendamentos');
+            const resA = await fetch('/api/agendamentos');
             agendamentos = await resA.json();
             document.getElementById("total-agend").innerText = agendamentos.length;
             renderPainel();
@@ -159,7 +159,7 @@ quase lá<!DOCTYPE html>
 
     async function consultarDistancia(cepOrigem, enderecoPrestador) {
         try {
-            const response = await fetch('http://localhost:3000/api/distancia', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ origin: cepOrigem, destination: enderecoPrestador }) });
+            const response = await fetch('/api/distancia', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ origin: cepOrigem, destination: enderecoPrestador }) });
             const data = await response.json();
             return (data.status === 'OK') ? parseFloat(data.rows[0].elements[0].distance.value) / 1000 : null;
         } catch (e) { return null; }
@@ -289,7 +289,9 @@ quase lá<!DOCTYPE html>
     async function salvarPrestador() {
         const inputs = document.querySelectorAll('#etapa-1 input');
         for(let i of inputs) if(!i.value.trim()) return alert("Preencha todos os campos!");
-        let agenda = [...document.querySelectorAll('#agenda-cadastro .selecionado')].map(c => ({ dia: c.dataset.dia, hora: c.dataset.hora }));
+        
+        let agenda = [...document.querySelectorAll('#agenda-cadastro .cell.selecionado')].map(c => ({ dia: c.dataset.dia, hora: c.dataset.hora }));
+        
         let p = { 
             nome: document.getElementById("nomeEmpresa").value, 
             endereco: document.getElementById("endereco").value, 
@@ -304,22 +306,25 @@ quase lá<!DOCTYPE html>
         };
 
         if (editingIndex !== -1) {
-            await fetch(`http://localhost:3000/api/prestadores/${prestadores[editingIndex].id}`, {
+            await fetch(`/api/prestadores/${prestadores[editingIndex].id}`, {
                 method: 'PUT',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify(p)
             });
         } else {
-            await fetch('http://localhost:3000/api/prestadores', {
+            await fetch('/api/prestadores', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify(p)
             });
         }
+        
+        editingIndex = -1;
         await carregarDadosDoBanco();
+        
         document.getElementById("cadastro-flow").style.display="none";
         document.getElementById("lista-prestadores-view").style.display="block";
-        showToast("Salvo com sucesso!");
+        showToast("Prestador salvo com sucesso!");
     }
 
     function renderizarListaPrestadores(){
@@ -338,7 +343,7 @@ quase lá<!DOCTYPE html>
     }
 
     async function excluirPrestador(i){ 
-        await fetch(`http://localhost:3000/api/prestadores/${prestadores[i].id}`, { method: 'DELETE' });
+        await fetch(`/api/prestadores/${prestadores[i].id}`, { method: 'DELETE' });
         await carregarDadosDoBanco();
     }
 
@@ -423,7 +428,7 @@ quase lá<!DOCTYPE html>
             ticket, cliente: cli, solicitante: sol
         };
 
-        await fetch('http://localhost:3000/api/agendamentos', {
+        await fetch('/api/agendamentos', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify(agendamento)
@@ -465,7 +470,7 @@ quase lá<!DOCTYPE html>
 
     async function excluirAgendamento(id) {
         if(!confirm("Tem certeza que deseja excluir este agendamento?")) return;
-        await fetch(`http://localhost:3000/api/agendamentos/${id}`, { method: 'DELETE' });
+        await fetch(`/api/agendamentos/${id}`, { method: 'DELETE' });
         await carregarDadosDoBanco();
         showToast("Agendamento excluído!");
     }
