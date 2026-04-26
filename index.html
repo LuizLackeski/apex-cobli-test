@@ -83,7 +83,7 @@
             <div style="margin-top:20px;">
                 <button id="btn-voltar" onclick="mudarEtapa(-1)">Voltar</button>
                 <button id="btn-proximo" onclick="mudarEtapa(1)">Próximo</button>
-                <button id="btn-concluir" onclick="salvarPrestador()" style="background: green;">Concluir</button>
+                <button id="btn-concluir" onclick="salvarPrestador()" style="background: green; display: none;">Concluir</button>
             </div>
         </div>
     </div>
@@ -263,7 +263,6 @@
                         let totalMinutos = itensSelecionados.reduce((a, b) => a + (b.tempo * b.qtd), 0);
                         let horas = Math.ceil(totalMinutos / 60);
                         
-                        // Garante que a seleção é feita apenas no mesmo dia
                         let sel = document.querySelectorAll("#agenda-agendamento .selecionado");
                         if(sel.length > 0 && sel[0].dataset.date !== div.dataset.date) {
                             sel.forEach(s => s.classList.remove('selecionado'));
