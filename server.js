@@ -16,18 +16,16 @@ app.use(cors());
 
 db.serialize(() => {
     db.run("CREATE TABLE IF NOT EXISTS prestadores (id INTEGER PRIMARY KEY, nome TEXT, endereco TEXT, cidade TEXT, uf TEXT, cep TEXT, responsavel TEXT, contato TEXT, qtdTecnicos INTEGER, range INTEGER, agenda TEXT)");
-    db.run("CREATE TABLE IF NOT EXISTS agendamentos (id INTEGER PRIMARY KEY, prestador TEXT, qtdTecnicos INTEGER, produtos TEXT, data TEXT, ticket TEXT, cliente TEXT, solicitante TEXT, rawDate TEXT)");
+    // Adicionada a coluna 'slots' na tabela de agendamentos
+    db.run("CREATE TABLE IF NOT EXISTS agendamentos (id INTEGER PRIMARY KEY, prestador TEXT, qtdTecnicos INTEGER, produtos TEXT, data TEXT, ticket TEXT, cliente TEXT, solicitante TEXT, rawDate TEXT, slots TEXT)");
 });
 
-// GET Prestadores com segurança para dados antigos
 app.get('/api/prestadores', (req, res) => {
     db.all("SELECT * FROM prestadores", [], (err, rows) => {
         if (err) return res.status(500).json({error: err.message});
         res.json(rows.map(r => {
             let agenda = [];
-            try {
-                if (r.agenda) agenda = JSON.parse(r.agenda);
-            } catch (e) { agenda = []; }
+            try { if (r.agenda) agenda = JSON.parse(r.agenda); } catch (e) { agenda = []; }
             return { ...r, agenda: agenda };
         }));
     });
@@ -51,24 +49,23 @@ app.delete('/api/prestadores/:id', (req, res) => {
     db.run("DELETE FROM prestadores WHERE id = ?", req.params.id, () => res.sendStatus(200));
 });
 
-// GET Agendamentos com segurança para dados antigos
 app.get('/api/agendamentos', (req, res) => {
     db.all("SELECT * FROM agendamentos", [], (err, rows) => {
         if (err) return res.status(500).json({error: err.message});
         res.json(rows.map(r => {
             let produtos = [];
-            try {
-                if (r.produtos) produtos = JSON.parse(r.produtos);
-            } catch (e) { produtos = []; }
-            return { ...r, produtos: produtos };
+            try { if (r.produtos) produtos = JSON.parse(r.produtos); } catch (e) { produtos = []; }
+            let slots = [];
+            try { if (r.slots) slots = JSON.parse(r.slots); } catch (e) { slots = []; }
+            return { ...r, produtos, slots };
         }));
     });
 });
 
 app.post('/api/agendamentos', (req, res) => {
-    const { prestador, qtdTecnicos, produtos, data, ticket, cliente, solicitante, rawDate } = req.body;
-    db.run("INSERT INTO agendamentos (prestador, qtdTecnicos, produtos, data, ticket, cliente, solicitante, rawDate) VALUES (?,?,?,?,?,?,?,?)",
-        [prestador, qtdTecnicos, JSON.stringify(produtos), data, ticket, cliente, solicitante, rawDate],
+    const { prestador, qtdTecnicos, produtos, data, ticket, cliente, solicitante, rawDate, slots } = req.body;
+    db.run("INSERT INTO agendamentos (prestador, qtdTecnicos, produtos, data, ticket, cliente, solicitante, rawDate, slots) VALUES (?,?,?,?,?,?,?,?,?)",
+        [prestador, qtdTecnicos, JSON.stringify(produtos), data, ticket, cliente, solicitante, rawDate, JSON.stringify(slots)],
         () => res.sendStatus(200));
 });
 
