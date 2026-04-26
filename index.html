@@ -253,4 +253,58 @@
             if(slots.length > 0){
                 let row = document.createElement("div"); row.className="row-dia";
                 row.innerHTML = `<div style="width:80px">${dStr.slice(0,5)}</div>`;
-                slots.forEach(item
+                slots.forEach(item => {
+                    let isBooked = agendamentos.some(a => a.prestador == prestadores[idx].nome && a.data == dStr && a.slots.includes(item.hora));
+                    if(isBooked) return;
+                    let div = document.createElement("div"); div.className = "cell";
+                    div.innerText = item.hora;
+                    div.dataset.hora = item.hora;
+                    div.dataset.date = dStr;
+                    div.onclick = () => {
+                        let totalMinutos = itensSelecionados.reduce((a, b) => a + (b.tempo * b.qtd), 0);
+                        let horas = Math.ceil(totalMinutos / 60);
+                        let sel = document.querySelectorAll("#agenda-agendamento .selecionado");
+                        if(!div.classList.contains("selecionado") && sel.length >= horas) return alert("Limite de "+horas+"h!");
+                        div.classList.toggle("selecionado");
+                    };
+                    row.appendChild(div);
+                });
+                container.appendChild(row);
+            }
+        }
+    }
+
+    function concluirAgendamento(){
+        let totalMinutos = itensSelecionados.reduce((a, b) => a + (b.tempo * b.qtd), 0);
+        let horas = Math.ceil(totalMinutos / 60);
+        let sel = document.querySelectorAll("#agenda-agendamento .selecionado");
+        if(sel.length !== horas) return alert("Selecione exatamente " + horas + " hora(s)!");
+        
+        agendamentos.push({ prestador: prestadores[document.getElementById("selectPrestador").value].nome, data: sel[0].dataset.date, slots: [...sel].map(s => s.dataset.hora) });
+        
+        itensSelecionados = [];
+        document.getElementById("lista-produtos").innerHTML = "";
+        document.getElementById("horasNecessarias").innerText = "0";
+        document.getElementById("quantidade").value = "1";
+        document.getElementById("selectPrestador").value = "";
+        document.getElementById("agenda-agendamento").innerHTML = "";
+        document.getElementById("inputCep").value = "";
+        document.getElementById("step-cep").style.display = "block";
+        document.getElementById("step-agendamento").style.display = "none";
+        document.getElementById("total-agend").innerText = agendamentos.length;
+        renderPainel();
+        alert("Agendado com sucesso!");
+    }
+
+    function atualizarSelectPrestadores(){
+        let sel = document.getElementById("selectPrestador");
+        sel.innerHTML = '<option value="">-- Escolha --</option>';
+        prestadores.forEach((p,i) => sel.innerHTML += `<option value="${i}">${p.nome}</option>`);
+    }
+
+    function renderPainel(){
+        document.getElementById("painel-conteudo").innerHTML = agendamentos.map((a, i) => `<div class="painel-item">Agendamento: ${a.prestador} - ${a.data} <button onclick="agendamentos.splice(${i},1); renderPainel()">Excluir</button></div>`).join('');
+    }
+</script>
+</body>
+</html>
