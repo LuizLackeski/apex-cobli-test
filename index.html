@@ -133,7 +133,7 @@
                 <button id="btn-voltar" onclick="window.mudarEtapa(-1)">Voltar</button>
                 <button id="btn-proximo" onclick="window.mudarEtapa(1)">Próximo</button>
                 <button id="btn-concluir" onclick="window.salvarPrestador(this)" style="background: green;">Concluir</button>
-                <button onclick="window.cancelarCadastro()" style="background:gray;">Cancelar</button>
+                <button onclick="window.cancelarCadastro()" style="background:red;">Cancelar</button>
             </div>
         </div>
     </div>
@@ -148,7 +148,7 @@
             <div><label>Fim</label><input type="date" id="filtroDataFim"></div>
             <div><label>Prestador</label><select id="filtroPrestador"><option value="">Todos</option></select></div>
             <button onclick="window.renderPainel()">Filtrar</button>
-            <button onclick="window.limparFiltros()" style="background:gray;">Limpar</button>
+            <button onclick="window.limparFiltros()" style="background:green;">Limpar</button>
         </div>
         <div id="painel-conteudo"></div>
     </div>
@@ -163,7 +163,7 @@
     function checkAuth() {
         let email = localStorage.getItem('userEmail');
         while (!email || email.trim() === "") {
-            email = prompt("Digite seu e-mail para acesso:");
+            email = prompt("Digite seu e-mail para acesso ADMIN | Nome acesso usuário:");
             if (email && email.trim() !== "") {
                 localStorage.setItem('userEmail', email);
             }
@@ -292,7 +292,7 @@
     window.renderizarListaPrestadores = function(){ 
         document.getElementById("btn-novo-container").innerHTML = isAuthorized ? `<button onclick="window.abrirCadastro()" style="margin-bottom: 20px;">+ Novo Prestador</button>` : '';
         document.getElementById("lista-prestadores").innerHTML = prestadores.map((p, i) => {
-            let btns = `<button onclick="window.abrirDetalhesPrestador(${i})" style="background:gray;">Ver</button>`;
+            let btns = `<button onclick="window.abrirDetalhesPrestador(${i})" style="background:green;">Ver</button>`;
             if (isAuthorized) btns += ` <button onclick="window.abrirCadastro(${i})">Editar</button> <button onclick="window.excluirPrestador(${i})" class="btn-cancelar">Excluir</button>`;
             return `<div class="card">
                         <div class="card-info">
