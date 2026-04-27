@@ -40,6 +40,7 @@
         .modal-overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); justify-content:center; align-items:center; z-index:9999; }
         .modal-card { background:white; padding:25px; border-radius:12px; width:500px; max-width:90%; box-shadow: 0 10px 25px rgba(0,0,0,0.2); max-height: 80vh; overflow-y: auto; }
         .modal-header { font-size: 1.2rem; font-weight: bold; color: var(--primary); margin-bottom: 15px; }
+        /* Toast centralizado */
         #toast { display:none; position:fixed; top:50%; left:50%; transform: translate(-50%, -50%); background:#1e293b; color:white; padding:15px 30px; border-radius:8px; z-index:9999; box-shadow:0 4px 15px rgba(0,0,0,0.3); font-weight: 600; }
     </style>
 </head>
@@ -158,8 +159,12 @@
     window.onload = async () => { carregarProdutos(); await carregarDadosDoBanco(); };
     async function carregarDadosDoBanco() { try { const resP = await fetch(`${API_URL}/prestadores`, { headers: getHeaders() }); prestadores = await resP.json(); renderizarListaPrestadores(); const resA = await fetch(`${API_URL}/agendamentos`, { headers: getHeaders() }); agendamentos = await resA.json(); document.getElementById("total-agend").innerText = agendamentos.length; renderPainel(); } catch(e) { console.error("Erro ao carregar dados:", e); } }
     
+    // Utilitários globais
+    window.showToast = function(msg) { let t = document.getElementById("toast"); t.innerText = msg; t.style.display = "block"; setTimeout(() => { t.style.display = "none"; }, 3000); };
     window.exibirModal = function(titulo, htmlBody) { document.getElementById('modalHeader').innerText = titulo; document.getElementById('modalBody').innerHTML = htmlBody; document.getElementById('modalAviso').style.display = 'flex'; };
     window.fecharModal = function() { document.getElementById('modalAviso').style.display = 'none'; };
+    window.getOcupacaoSlot = function(prestador, data, hora) { return agendamentos.filter(a => a.prestador === prestador.nome && a.data === data && (Array.isArray(a.slots) ? a.slots.includes(hora) : false)).length; };
+    window.getBlockedHours = function(prestador, data) { let blocked = new Set(); agendamentos.filter(a => a.prestador === prestador.nome && a.data === data).forEach(a => { a.slots.forEach(s => { let h = parseInt(s.split(':')[0]); blocked.add(h); blocked.add(h - 1); blocked.add(h + 1); }); }); return blocked; };
     
     window.abrirDetalhesPrestador = function(index) {
         let p = prestadores[index];
@@ -172,62 +177,58 @@
     };
 
     window.cancelarAgendamento = function() { if(confirm("Deseja realmente cancelar este agendamento?")) { window.limparFormulario(); window.proximoPasso(1); } };
-    
-    // Função Core de Validação de Ocupação (Contagem Real)
-    function getOcupacaoSlot(prestador, data, hora) { 
-        return agendamentos.filter(a => a.prestador === prestador.nome && a.data === data && (Array.isArray(a.slots) ? a.slots.includes(hora) : false)).length; 
-    }
-
     async function consultarDistancia(cepOrigem, enderecoPrestador) { try { const response = await fetch(`${API_URL}/distancia`, { method: 'POST', headers: getHeaders(), body: JSON.stringify({ origin: cepOrigem, destination: enderecoPrestador }) }); const data = await response.json(); return (data.status === 'OK') ? parseFloat(data.rows[0].elements[0].distance.value) / 1000 : null; } catch (e) { return null; } }
     
     window.salvarPrestador = async function(btn) { 
         const originalText = btn.innerText; btn.innerText = "Salvando..."; btn.disabled = true;
-        const inputs = document.querySelectorAll('#etapa-1 input'); for(let i of inputs) if(!i.value.trim()) { alert("Preencha todos os campos!"); btn.disabled = false; btn.innerText = originalText; return; }
-        let agenda = [...document.querySelectorAll('#agenda-cadastro .cell.selecionado')].map(c => ({ dia: c.dataset.dia, hora: c.dataset.hora })); let p = { nome: document.getElementById("nomeEmpresa").value, endereco: document.getElementById("endereco").value, cidade: document.getElementById("cidade").value, uf: document.getElementById("uf").value, cep: document.getElementById("cep").value, responsavel: document.getElementById("responsavel").value, contato: document.getElementById("contatoResponsavel").value, qtdtecnicos: parseInt(document.getElementById("qtdTecnicos").value), range: document.getElementById("rangeAtendimento").value, agenda: agenda }; const url = (editingIndex !== -1) ? `${API_URL}/prestadores/${prestadores[editingIndex].id}` : `${API_URL}/prestadores`; await fetch(url, { method: (editingIndex !== -1) ? 'PUT' : 'POST', headers: getHeaders(), body: JSON.stringify(p) }); editingIndex = -1; await carregarDadosDoBanco(); document.getElementById("cadastro-flow").style.display="none"; document.getElementById("lista-prestadores-view").style.display="block"; showToast("Prestador salvo com sucesso!"); btn.disabled = false; btn.innerText = originalText;
+        try {
+            const inputs = document.querySelectorAll('#etapa-1 input'); for(let i of inputs) if(!i.value.trim()) { alert("Preencha todos os campos!"); return; }
+            let agenda = [...document.querySelectorAll('#agenda-cadastro .cell.selecionado')].map(c => ({ dia: c.dataset.dia, hora: c.dataset.hora })); let p = { nome: document.getElementById("nomeEmpresa").value, endereco: document.getElementById("endereco").value, cidade: document.getElementById("cidade").value, uf: document.getElementById("uf").value, cep: document.getElementById("cep").value, responsavel: document.getElementById("responsavel").value, contato: document.getElementById("contatoResponsavel").value, qtdtecnicos: parseInt(document.getElementById("qtdTecnicos").value), range: document.getElementById("rangeAtendimento").value, agenda: agenda }; const url = (editingIndex !== -1) ? `${API_URL}/prestadores/${prestadores[editingIndex].id}` : `${API_URL}/prestadores`; await fetch(url, { method: (editingIndex !== -1) ? 'PUT' : 'POST', headers: getHeaders(), body: JSON.stringify(p) }); editingIndex = -1; await carregarDadosDoBanco(); document.getElementById("cadastro-flow").style.display="none"; document.getElementById("lista-prestadores-view").style.display="block"; window.showToast("Prestador salvo com sucesso!");
+        } finally { btn.disabled = false; btn.innerText = originalText; }
     };
     
     window.excluirPrestador = async function(i) { await fetch(`${API_URL}/prestadores/${prestadores[i].id}`, { method: 'DELETE', headers: getHeaders() }); await carregarDadosDoBanco(); };
-    window.excluirAgendamento = async function(id) { if(!confirm("Tem certeza que deseja excluir?")) return; await fetch(`${API_URL}/agendamentos/${id}`, { method: 'DELETE', headers: getHeaders() }); await carregarDadosDoBanco(); showToast("Agendamento excluído!"); };
+    window.excluirAgendamento = async function(id) { if(!confirm("Tem certeza que deseja excluir?")) return; await fetch(`${API_URL}/agendamentos/${id}`, { method: 'DELETE', headers: getHeaders() }); await carregarDadosDoBanco(); window.showToast("Agendamento excluído!"); };
     
     window.concluirAgendamentoFinal = async function(btn){ 
         const ticket = document.getElementById("ticket").value; const cli = document.getElementById("clienteNome").value; const sol = document.getElementById("solicitante").value; if(!ticket || !cli || !sol) return alert("Preencha todos os campos!"); let sel = document.querySelectorAll("#agenda-agendamento .cell.selecionado"); if(sel.length === 0) return alert("Selecione um horário!"); 
         let p = prestadores[prestadorSelecionadoIndex]; let qtdLimit = parseInt(p.qtdtecnicos) || 1;
-        for(let s of sel) { if(getOcupacaoSlot(p, s.dataset.date, s.dataset.hora) >= qtdLimit) { alert("Limite de técnicos atingido no horário " + s.dataset.hora); return; } }
-        btn.innerText = "Confirmando..."; btn.disabled = true;
-        let agendamento = { prestador: p.nome, qtdtecnicos: p.qtdtecnicos, produtos: itensSelecionados, data: sel[0].dataset.date, rawdate: new Date().toISOString(), slots: [...sel].map(s => s.dataset.hora), ticket, cliente: cli, solicitante: sol }; 
-        await fetch(`${API_URL}/agendamentos`, { method: 'POST', headers: getHeaders(), body: JSON.stringify(agendamento) }); 
-        window.limparFormulario(); await carregarDadosDoBanco(); window.proximoPasso(1); showToast("Agendamento salvo com sucesso!"); btn.innerText = "Confirmar"; btn.disabled = false;
+        for(let s of sel) { if(window.getOcupacaoSlot(p, s.dataset.date, s.dataset.hora) >= qtdLimit) { alert("Limite de técnicos atingido no horário " + s.dataset.hora); return; } }
+        const originalText = btn.innerText; btn.innerText = "Confirmando..."; btn.disabled = true;
+        try {
+            let agendamento = { prestador: p.nome, qtdtecnicos: p.qtdtecnicos, produtos: itensSelecionados, data: sel[0].dataset.date, rawdate: new Date().toISOString(), slots: [...sel].map(s => s.dataset.hora), ticket, cliente: cli, solicitante: sol }; 
+            await fetch(`${API_URL}/agendamentos`, { method: 'POST', headers: getHeaders(), body: JSON.stringify(agendamento) }); 
+            window.limparFormulario(); await carregarDadosDoBanco(); window.proximoPasso(1); window.showToast("Agendamento salvo com sucesso!");
+        } catch(e) { alert("Erro ao salvar."); } finally { btn.innerText = originalText; btn.disabled = false; }
     };
     
     window.limparFormulario = function() { itensSelecionados = []; prestadorSelecionadoIndex = null; document.getElementById("lista-produtos").innerHTML = ""; document.getElementById("horasNecessarias").innerText = "0"; document.getElementById("agenda-agendamento").innerHTML = ""; document.getElementById("inputCep").value = ""; document.getElementById("ticket").value = ""; document.getElementById("clienteNome").value = ""; document.getElementById("solicitante").value = ""; };
     window.trocarAba = function(id, btn){ document.querySelectorAll('.aba').forEach(a => a.classList.remove('ativa')); document.getElementById(id).classList.add('ativa'); document.querySelectorAll('.menu button').forEach(b => b.classList.remove('ativo')); if(btn) btn.classList.add('ativo'); if(id === 'painel') window.atualizarFiltrosPrestador(); };
     
-    // Core logic: verifica se uma hora é "proibida" por ter um agendamento real nela ou nos vizinhos
-    function getBlockedHours(prestador, data) {
-        let blocked = new Set();
-        let agendamentosDoDia = agendamentos.filter(a => a.prestador === prestador.nome && a.data === data);
-        agendamentosDoDia.forEach(a => {
-            a.slots.forEach(slot => {
-                let h = parseInt(slot.split(':')[0]);
-                blocked.add(h);
-                blocked.add(h - 1);
-                blocked.add(h + 1);
-            });
-        });
-        return blocked;
-    }
+    window.getNextDates = function(prestador) {
+        let dates = []; let today = new Date(); const daysMap = {"Dom":0, "Seg":1, "Ter":2, "Qua":3, "Qui":4, "Sex":5, "Sab":6}; let agendaDays = prestador.agenda ? [...new Set(prestador.agenda.map(a => a.dia))].map(d => daysMap[d]) : []; let qtdLimit = parseInt(prestador.qtdtecnicos) || 1;
+        for (let i = 0; i < 14; i++) {
+            let d = new Date(); d.setDate(today.getDate() + i); let dStr = d.toLocaleDateString(); let dNome = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sab"][d.getDay()];
+            let blocked = window.getBlockedHours(prestador, dStr);
+            let slotsDoDia = prestador.agenda.filter(a => a.dia == dNome);
+            let temLivre = slotsDoDia.some(s => !blocked.has(parseInt(s.hora.split(':')[0])) && window.getOcupacaoSlot(prestador, dStr, s.hora) < qtdLimit);
+            if (agendaDays.includes(d.getDay()) && temLivre) dates.push(dStr.slice(0,5));
+        }
+        return dates;
+    };
 
+    window.proximoPasso = async function(n) { if(n === 2) { if(prestadores.length === 0) return alert("Cadastre um prestador!"); const cepDigitado = document.getElementById('inputCep').value; if(!cepDigitado) return alert("Digite o CEP!"); const btn = document.getElementById('btnBuscar'); btn.disabled = true; btn.innerText = "Calculando..."; let prestadoresFiltrados = []; for(let p of prestadores) { if (!p.endereco) continue; const dist = await consultarDistancia(cepDigitado, p.endereco); let available = window.getNextDates(p); if(dist !== null && dist <= parseFloat(p.range) && available.length > 0) { p.distanciaFinal = dist.toFixed(1); p.nextDates = available.join(', '); prestadoresFiltrados.push(p); } } btn.disabled = false; btn.innerText = "Buscar Prestadores"; if(prestadoresFiltrados.length === 0) { window.exibirModal("Atenção", "Nenhum prestador encontrado no raio de atendimento."); return; } window.renderizarListaPrestadoresSelecao(prestadoresFiltrados); } if(n === 3 && prestadorSelecionadoIndex === null) return alert("Selecione um prestador!"); document.querySelectorAll('#consulta > div').forEach(div => div.style.display = 'none'); document.getElementById('step-' + n).style.display = 'block'; if(n === 3) window.rdaAgendamento(); };
+    
     window.rdaAgendamento = function() {
         let p = prestadores[prestadorSelecionadoIndex]; let container = document.getElementById("agenda-agendamento"); container.innerHTML = ""; let hoje = new Date(); const diasSemana = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sab"];
         let cap = parseInt(p.qtdtecnicos) || 1;
         for(let i=0; i<14; i++){
             let data = new Date(); data.setDate(hoje.getDate() + i); let dStr = data.toLocaleDateString(); let dNome = diasSemana[data.getDay()];
-            let blocked = getBlockedHours(p, dStr);
+            let blocked = window.getBlockedHours(p, dStr);
             let allSlots = p.agenda ? p.agenda.filter(a => a.dia == dNome) : [];
             let availableSlots = allSlots.filter(item => {
                 let h = parseInt(item.hora.split(':')[0]);
-                // Só bloqueia se o agendamento real atingiu a capacidade do técnico
-                return getOcupacaoSlot(p, dStr, item.hora) < cap && !blocked.has(h); 
+                return window.getOcupacaoSlot(p, dStr, item.hora) < cap && !blocked.has(h); 
             });
             if(availableSlots.length > 0){
                 let card = document.createElement("div"); card.className = "agenda-day-card"; card.innerHTML = `<div class="agenda-day-title">${dStr} (${dNome})</div>`; let wrapper = document.createElement("div"); wrapper.className = "slots-wrapper";
@@ -252,8 +253,7 @@
         document.querySelectorAll('#consulta > div').forEach(div => div.style.display = 'none'); document.getElementById('step-4').style.display = 'block';
     };
     
-    window.proximoPasso = async function(n) { if(n === 2) { if(prestadores.length === 0) return alert("Cadastre um prestador!"); const cepDigitado = document.getElementById('inputCep').value; if(!cepDigitado) return alert("Digite o CEP!"); const btn = document.getElementById('btnBuscar'); btn.disabled = true; btn.innerText = "Calculando..."; let prestadoresFiltrados = []; for(let p of prestadores) { if (!p.endereco) continue; const dist = await consultarDistancia(cepDigitado, p.endereco); if(dist !== null && dist <= parseFloat(p.range)) { p.distanciaFinal = dist.toFixed(1); prestadoresFiltrados.push(p); } } btn.disabled = false; btn.innerText = "Buscar Prestadores"; if(prestadoresFiltrados.length === 0) { exibirModal("Atenção", "Nenhum prestador encontrado no raio de atendimento."); return; } window.renderizarListaPrestadoresSelecao(prestadoresFiltrados); } if(n === 3 && prestadorSelecionadoIndex === null) return alert("Selecione um prestador!"); document.querySelectorAll('#consulta > div').forEach(div => div.style.display = 'none'); document.getElementById('step-' + n).style.display = 'block'; if(n === 3) window.rdaAgendamento(); };
-    window.renderizarListaPrestadoresSelecao = function(lista) { document.getElementById('lista-prestadores-selecao').innerHTML = lista.map(p => `<div class="card-selecao"><strong>${p.nome}</strong><br>Distância: ${p.distanciaFinal} km<div style="margin-top:10px"><button onclick="window.selecionarPrestadorPorObjeto('${p.nome}')">Selecionar Prestador</button></div></div>`).join(''); };
+    window.renderizarListaPrestadoresSelecao = function(lista) { document.getElementById('lista-prestadores-selecao').innerHTML = lista.map(p => `<div class="card-selecao"><strong>${p.nome}</strong><br>Distância: ${p.distanciaFinal} km<br><div style="margin-top:10px"><button onclick="window.selecionarPrestadorPorObjeto('${p.nome}')">Selecionar Prestador</button></div></div>`).join(''); };
     window.selecionarPrestadorPorObjeto = function(nome) { prestadorSelecionadoIndex = prestadores.findIndex(p => p.nome === nome); window.proximoPasso(3); };
     window.updateButtons = function() { document.getElementById('btn-voltar').style.display = (etapa === 1) ? 'none' : 'inline-block'; document.getElementById('btn-proximo').style.display = (etapa === 1) ? 'inline-block' : 'none'; document.getElementById('btn-concluir').style.display = (etapa === 2) ? 'inline-block' : 'none'; };
     window.abrirCadastro = function(index = -1){ editingIndex = index; document.getElementById("lista-prestadores-view").style.display="none"; document.getElementById("cadastro-flow").style.display="block"; etapa = 1; document.getElementById("etapa-1").style.display="block"; document.getElementById("etapa-2").style.display="none"; window.criarGridCadastro("agenda-cadastro"); if(index !== -1){ let p = prestadores[index]; document.getElementById("nomeEmpresa").value = p.nome; document.getElementById("endereco").value = p.endereco; document.getElementById("cidade").value = p.cidade; document.getElementById("uf").value = p.uf; document.getElementById("cep").value = p.cep; document.getElementById("responsavel").value = p.responsavel; document.getElementById("contatoResponsavel").value = p.contato; document.getElementById("qtdTecnicos").value = p.qtdtecnicos; document.getElementById("rangeAtendimento").value = p.range; if(p.agenda) { p.agenda.forEach(item => { let cells = document.querySelectorAll("#agenda-cadastro .cell"); cells.forEach(c => { if(c.dataset.dia == item.dia && c.dataset.hora == item.hora) c.classList.add("selecionado"); }); }); } } else { document.querySelectorAll('input').forEach(i => i.value = ""); } window.updateButtons(); };
