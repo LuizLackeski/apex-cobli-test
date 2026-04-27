@@ -129,14 +129,14 @@
             <div id="etapa-1">
                 <h3>Dados do Prestador</h3>
                 <label>Nome / Empresa</label><input id="nomeEmpresa" required>
-                <label>Endereço</label><input id="endereco" required>
+                <label>Endereço - Ex: R. Lourenço Marques, 297 - Vila Olímpia, São Paulo - SP, 04547-100</label><input id="endereco" required>
                 <label>Cidade</label><input id="cidade" required>
                 <label>UF</label><input id="uf" required>
                 <label>CEP</label><input id="cep" required>
                 <label>Responsável</label><input id="responsavel" required>
                 <label>Telefone</label><input id="contatoResponsavel" required>
                 <label>Quantidade de Técnicos</label><input id="qtdTecnicos" type="number" required>
-                <label>Range (Km)</label><input id="rangeAtendimento" type="number" required>
+                <label>Range de atendimento (Km)</label><input id="rangeAtendimento" type="number" required>
             </div>
             <div id="etapa-2" style="display:none;">
                 <h3>Agenda</h3>
@@ -234,7 +234,7 @@
     window.renderizarListaPrestadores = function(){ 
         document.getElementById("btn-novo-container").innerHTML = isAuthorized ? `<button onclick="window.abrirCadastro()" style="margin-bottom: 20px;">+ Novo Prestador</button>` : '';
         document.getElementById("lista-prestadores").innerHTML = prestadores.map((p, i) => {
-            let btns = `<button onclick="window.abrirDetalhesPrestador(${i})" style="background:gray;">Ver</button>`;
+            let btns = `<button onclick="window.abrirDetalhesPrestador(${i})" style="background:green;">Ver</button>`;
             if (isAuthorized) btns += ` <button onclick="window.abrirCadastro(${i})">Editar</button> <button onclick="window.excluirPrestador(${i})" class="btn-cancelar">Excluir</button>`;
             return `<div class="card">
                         <div class="card-info">
