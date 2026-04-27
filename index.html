@@ -40,8 +40,6 @@
         .modal-overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); justify-content:center; align-items:center; z-index:9999; }
         .modal-card { background:white; padding:25px; border-radius:12px; width:500px; max-width:90%; box-shadow: 0 10px 25px rgba(0,0,0,0.2); max-height: 80vh; overflow-y: auto; }
         .modal-header { font-size: 1.2rem; font-weight: bold; color: var(--primary); margin-bottom: 15px; }
-        
-        /* Toast centralizado */
         #toast { display:none; position:fixed; top:50%; left:50%; transform: translate(-50%, -50%); background:#1e293b; color:white; padding:15px 30px; border-radius:8px; z-index:9999; box-shadow:0 4px 15px rgba(0,0,0,0.3); font-weight: 600; }
     </style>
 </head>
@@ -156,6 +154,12 @@
     function getHeaders() { return { 'Content-Type': 'application/json', 'apikey': ANON_KEY, 'Authorization': `Bearer ${ANON_KEY}` }; }
     let prestadores = [], itensSelecionados = [], agendamentos = [], etapa = 1, editingIndex = -1, prestadorSelecionadoIndex = null;
     const produtos = { "Telemetria": [{desc:"Instalado veículos leves bloqueador", tempo:60}, {desc:"Instalado veículos leves e pesados + CAN", tempo:60}, {desc:"Instalado motos ou maquinários", tempo:40}, {desc:"Instalado veículos leves e pesados", tempo:40}], "Identificador": [{desc:"Instalado veículos leves e pesados identificador", tempo:60}, {desc:"Instalado veículos leves e pesados identificador + CAN", tempo:90}, {desc:"Instalado veículos leves e pesados identificador RFID", tempo:60}, {desc:"Instalado veículos leves e pesados identificador RFID + CAN", tempo:80}], "Trava de ignição": [{desc:"Instalado veículos leves imobilizador", tempo:80}, {desc:"Instalado veículos leves imobilizador RFID", tempo:80}, {desc:"Instalado veículos leves imobilizador RFID + CAN", tempo:90}, {desc:"Instalado veículos leves imobilizador + CAN", tempo:100}], "Videotelemetria": [{desc:"CobliCam (2 câmeras)", tempo:90}, {desc:"Cobli Multicam (3 câmeras internas)", tempo:120}, {desc:"Cobli Multicam (2 câmeras + 1 externa)", tempo:240}, {desc:"Cobli Multicam (4 câmeras)", tempo:240}, {desc:"Cobli Multicam (5 câmeras)", tempo:300}] };
+    
+    // --- FUNÇÕES GLOBAIS DE VALIDAÇÃO ---
+    function getAgendamentosNoSlot(prestador, data, hora) { if (!agendamentos) return 0; return agendamentos.filter(a => a.prestador === prestador.nome && a.data === data && (Array.isArray(a.slots) ? a.slots.includes(hora) : false)).length; }
+    function isHourBooked(prestador, data, hourInt) { let hourStr = hourInt + ":00"; return getAgendamentosNoSlot(prestador, data, hourStr) >= (parseInt(prestador.qtdtecnicos) || 1); }
+    function getForbiddenHours(prestador, data) { let forbidden = new Set(); agendamentos.forEach(a => { if(a.prestador === prestador.nome && a.data === data) { a.slots.forEach(s => { let h = parseInt(s.split(':')[0]); forbidden.add(h); forbidden.add(h-1); forbidden.add(h+1); }); } }); return forbidden; }
+
     window.onload = async () => { carregarProdutos(); await carregarDadosDoBanco(); };
     async function carregarDadosDoBanco() { try { const resP = await fetch(`${API_URL}/prestadores`, { headers: getHeaders() }); prestadores = await resP.json(); renderizarListaPrestadores(); const resA = await fetch(`${API_URL}/agendamentos`, { headers: getHeaders() }); agendamentos = await resA.json(); document.getElementById("total-agend").innerText = agendamentos.length; renderPainel(); } catch(e) { console.error("Erro ao carregar dados:", e); } }
     function showToast(msg) { let t = document.getElementById("toast"); t.innerText = msg; t.style.display = "block"; setTimeout(() => { t.style.display = "none"; }, 3000); }
@@ -173,12 +177,6 @@
     }
 
     function cancelarAgendamento() { if(confirm("Deseja realmente cancelar este agendamento?")) { limparFormulario(); proximoPasso(1); } }
-    function isHourBooked(prestador, data, hourInt) {
-        let hourStr = hourInt + ":00";
-        let count = agendamentos.filter(a => a.prestador === prestador.nome && a.data === data && (Array.isArray(a.slots) ? a.slots.includes(hourStr) : false)).length;
-        return count >= (parseInt(prestador.qtdtecnicos) || 1);
-    }
-    
     async function consultarDistancia(cepOrigem, enderecoPrestador) { try { const response = await fetch(`${API_URL}/distancia`, { method: 'POST', headers: getHeaders(), body: JSON.stringify({ origin: cepOrigem, destination: enderecoPrestador }) }); const data = await response.json(); return (data.status === 'OK') ? parseFloat(data.rows[0].elements[0].distance.value) / 1000 : null; } catch (e) { return null; } }
     async function salvarPrestador(btn) { 
         const originalText = btn.innerText; btn.innerText = "Salvando..."; btn.disabled = true;
@@ -189,14 +187,8 @@
     window.excluirAgendamento = async function(id) { if(!confirm("Tem certeza que deseja excluir?")) return; await fetch(`${API_URL}/agendamentos/${id}`, { method: 'DELETE', headers: getHeaders() }); await carregarDadosDoBanco(); showToast("Agendamento excluído!"); }
     async function concluirAgendamentoFinal(btn){ 
         const ticket = document.getElementById("ticket").value; const cli = document.getElementById("clienteNome").value; const sol = document.getElementById("solicitante").value; if(!ticket || !cli || !sol) return alert("Preencha todos os campos!"); let sel = document.querySelectorAll("#agenda-agendamento .cell.selecionado"); if(sel.length === 0) return alert("Selecione um horário!"); 
-        
-        let p = prestadores[prestadorSelecionadoIndex]; 
-        let qtdLimit = parseInt(p.qtdtecnicos) || 1;
-        // Validação extra de técnicos
-        for(let s of sel) {
-            if(getAgendamentosNoSlot(p, s.dataset.date, s.dataset.hora) >= qtdLimit) { alert("Limite de técnicos atingido no horário " + s.dataset.hora); return; }
-        }
-
+        let p = prestadores[prestadorSelecionadoIndex]; let qtdLimit = parseInt(p.qtdtecnicos) || 1;
+        for(let s of sel) { if(getAgendamentosNoSlot(p, s.dataset.date, s.dataset.hora) >= qtdLimit) { alert("Limite de técnicos atingido no horário " + s.dataset.hora); return; } }
         btn.innerText = "Confirmando..."; btn.disabled = true;
         let agendamento = { prestador: p.nome, qtdtecnicos: p.qtdtecnicos, produtos: itensSelecionados, data: sel[0].dataset.date, rawdate: new Date().toISOString(), slots: [...sel].map(s => s.dataset.hora), ticket, cliente: cli, solicitante: sol }; 
         await fetch(`${API_URL}/agendamentos`, { method: 'POST', headers: getHeaders(), body: JSON.stringify(agendamento) }); 
@@ -205,18 +197,6 @@
     function limparFormulario() { itensSelecionados = []; prestadorSelecionadoIndex = null; document.getElementById("lista-produtos").innerHTML = ""; document.getElementById("horasNecessarias").innerText = "0"; document.getElementById("agenda-agendamento").innerHTML = ""; document.getElementById("inputCep").value = ""; document.getElementById("ticket").value = ""; document.getElementById("clienteNome").value = ""; document.getElementById("solicitante").value = ""; }
     function trocarAba(id, btn){ document.querySelectorAll('.aba').forEach(a => a.classList.remove('ativa')); document.getElementById(id).classList.add('ativa'); document.querySelectorAll('.menu button').forEach(b => b.classList.remove('ativo')); if(btn) btn.classList.add('ativo'); if(id === 'painel') atualizarFiltrosPrestador(); }
     
-    function getForbiddenHours(prestador, data) {
-        let forbidden = new Set();
-        agendamentos.forEach(a => {
-            if(a.prestador === prestador.nome && a.data === data) {
-                a.slots.forEach(s => {
-                    let h = parseInt(s.split(':')[0]);
-                    forbidden.add(h); forbidden.add(h-1); forbidden.add(h+1);
-                });
-            }
-        });
-        return forbidden;
-    }
     function getNextDates(prestador) {
         let dates = []; let today = new Date(); const daysMap = {"Dom":0, "Seg":1, "Ter":2, "Qua":3, "Qui":4, "Sex":5, "Sab":6}; let agendaDays = prestador.agenda ? [...new Set(prestador.agenda.map(a => a.dia))].map(d => daysMap[d]) : []; let qtdLimit = parseInt(prestador.qtdtecnicos) || 1;
         for (let i = 0; i < 14; i++) {
