@@ -166,27 +166,26 @@
     </div>
 </div>
 
+<div id="toast"></div>
+
 <script>
-    // 1. Definições Globais e Auth (No topo para garantir que existam antes de serem chamadas)
     const ADMIN_EMAILS = ["luiz.lackeski@cobli.co", "fernando.souza@cobli.co"]; 
     let isAuthorized = false;
 
+    // --- MÓDULOS DE INTERFACE ---
     window.exibirModal = function(titulo, htmlBody) {
         document.getElementById('modalHeader').innerText = titulo;
         document.getElementById('modalBody').innerHTML = htmlBody;
         document.getElementById('modalFooter').innerHTML = '<button onclick="window.fecharModal()" style="background:var(--primary)">Fechar</button>';
         document.getElementById('modalAviso').style.display = 'flex';
     };
-
     window.fecharModal = function() { document.getElementById('modalAviso').style.display = 'none'; };
-
     window.showMessage = function(msg) {
         document.getElementById('modalHeader').innerText = "Aviso";
         document.getElementById('modalBody').innerHTML = `<p>${msg}</p>`;
         document.getElementById('modalFooter').innerHTML = '<button onclick="window.fecharModal()" style="background:var(--primary)">OK</button>';
         document.getElementById('modalAviso').style.display = 'flex';
     };
-
     window.showConfirm = function(msg, callbackFn) {
         document.getElementById('modalHeader').innerText = "Confirmação";
         document.getElementById('modalBody').innerHTML = `<p>${msg}</p>`;
@@ -197,7 +196,21 @@
         footer.appendChild(btnNao); footer.appendChild(btnSim);
         document.getElementById('modalAviso').style.display = 'flex';
     };
+    window.showToast = function(msg) { let t = document.getElementById("toast"); t.innerText = msg; t.style.display = "block"; setTimeout(() => { t.style.display = "none"; }, 3000); };
+    
+    // --- SLACK INTEGRAÇÃO ---
+    window.enviarNotificacaoSlack = async function(msg) {
+        const SLACK_WEBHOOK_URL = "https://hooks.slack.com/services/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"; 
+        try {
+            await fetch(SLACK_WEBHOOK_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text: msg })
+            });
+        } catch (e) { console.error("Erro Slack:", e); }
+    };
 
+    // --- AUTH E LÓGICA ---
     function checkAuth() {
         let email = localStorage.getItem('userEmail');
         if (email) {
@@ -218,7 +231,6 @@
     window.logout = function() { localStorage.removeItem('userEmail'); window.location.reload(); };
     checkAuth();
 
-    // 2. LÓGICA E DADOS
     const API_URL = 'https://fqaqlofndeihmhkopvan.supabase.co/functions/v1/smart-service';
     const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZxYXFsb2ZuZGVpaG1oa29wdmFuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcyMjU4ODIsImV4cCI6MjA5MjgwMTg4Mn0.nauPYoB9RDhLLueMEuop2H2FxdChjIxFkAmBcYbJLzc';
     function getHeaders() { return { 'Content-Type': 'application/json', 'apikey': ANON_KEY, 'Authorization': `Bearer ${ANON_KEY}` }; }
@@ -228,12 +240,7 @@
     window.onload = async () => { carregarProdutos(); await carregarDadosDoBanco(); };
     async function carregarDadosDoBanco() { try { const resP = await fetch(`${API_URL}/prestadores`, { headers: getHeaders() }); prestadores = await resP.json(); renderizarListaPrestadores(); const resA = await fetch(`${API_URL}/agendamentos`, { headers: getHeaders() }); agendamentos = await resA.json(); document.getElementById("total-agend").innerText = agendamentos.length; renderPainel(); } catch(e) { console.error("Erro ao carregar dados:", e); } }
     
-    // --- FUNÇÕES AUXILIARES ---
-    function parseDateToObj(dateStr) {
-        const [d, m, y] = dateStr.split('/');
-        return new Date(y, m - 1, d);
-    }
-
+    function parseDateToObj(dateStr) { const [d, m, y] = dateStr.split('/'); return new Date(y, m - 1, d); }
     window.getOcupacaoSlot = function(prestador, data, hora) { return agendamentos.filter(a => a.prestador === prestador.nome && a.data === data && (Array.isArray(a.slots) ? a.slots.includes(hora) : false)).length; };
     window.getBlockedHours = function(prestador, data) { let blocked = new Set(); let cap = parseInt(prestador.qtdtecnicos) || 1; agendamentos.filter(a => a.prestador === prestador.nome && a.data === data).forEach(a => { a.slots.forEach(s => { let h = parseInt(s.split(':')[0]); if (window.getOcupacaoSlot(prestador, data, s) >= cap) { blocked.add(h); blocked.add(h - 1); blocked.add(h + 1); } }); }); return blocked; };
     window.abrirDetalhesPrestador = function(index) { let p = prestadores[index]; let agendaHtml = ''; ["Seg", "Ter", "Qua", "Qui", "Sex", "Sab"].forEach(d => { let slots = p.agenda.filter(a => a.dia === d).map(a => `<div class="cell">${a.hora}</div>`).join(''); if(slots) { agendaHtml += `<div class="agenda-day-card" style="margin-bottom:10px;"><div class="agenda-day-title">${d}</div><div class="slots-wrapper">${slots}</div></div>`; } }); window.exibirModal("Detalhes do Prestador", `<div class="info-group" style="margin-bottom:15px;"><div style="font-weight:bold; font-size:1.1rem;">${p.nome}</div><div style="font-size:0.9rem; color:#64748b;">Resp: ${p.responsavel} | Contato: ${p.contato} | Raio: ${p.range} km</div></div>${agendaHtml}`); };
@@ -245,7 +252,14 @@
     window.confirmarExclusaoPrestador = async function(i) { await fetch(`${API_URL}/prestadores/${prestadores[i].id}`, { method: 'DELETE', headers: getHeaders() }); await carregarDadosDoBanco(); window.showToast("Prestador excluído!"); };
     window.excluirAgendamento = async function(id) { window.showConfirm("Tem certeza que deseja excluir?", () => window.confirmarExclusaoAgendamento(id)); };
     window.confirmarExclusaoAgendamento = async function(id) { await fetch(`${API_URL}/agendamentos/${id}`, { method: 'DELETE', headers: getHeaders() }); await carregarDadosDoBanco(); window.showToast("Agendamento excluído!"); };
-    window.concluirAgendamentoFinal = async function(btn){ const ticket = document.getElementById("ticket").value; const cli = document.getElementById("clienteNome").value; const sol = document.getElementById("solicitante").value; if(!ticket || !cli || !sol) return window.showMessage("Preencha todos os campos!"); let sel = document.querySelectorAll("#agenda-agendamento .cell.selecionado"); if(sel.length === 0) return window.showMessage("Selecione um horário!"); let p = prestadores[prestadorSelecionadoIndex]; let qtdLimit = parseInt(p.qtdtecnicos) || 1; for(let s of sel) { if(window.getOcupacaoSlot(p, s.dataset.date, s.dataset.hora) >= qtdLimit) { window.showMessage("Limite de técnicos atingido no horário " + s.dataset.hora); return; } } const originalText = btn.innerText; btn.innerText = "Confirmando..."; btn.disabled = true; try { let agendamento = { prestador: p.nome, qtdtecnicos: p.qtdtecnicos, produtos: itensSelecionados, data: sel[0].dataset.date, rawdate: new Date().toISOString(), slots: [...sel].map(s => s.dataset.hora), ticket, cliente: cli, solicitante: sol }; await fetch(`${API_URL}/agendamentos`, { method: 'POST', headers: getHeaders(), body: JSON.stringify(agendamento) }); window.limparFormulario(); await carregarDadosDoBanco(); window.proximoPasso(1); window.showToast("Agendamento salvo com sucesso!"); } catch(e) { window.showMessage("Agendamento conclúido."); } finally { btn.innerText = originalText; btn.disabled = false; } };
+    window.concluirAgendamentoFinal = async function(btn){ const ticket = document.getElementById("ticket").value; const cli = document.getElementById("clienteNome").value; const sol = document.getElementById("solicitante").value; if(!ticket || !cli || !sol) return window.showMessage("Preencha todos os campos!"); let sel = document.querySelectorAll("#agenda-agendamento .cell.selecionado"); if(sel.length === 0) return window.showMessage("Selecione um horário!"); let p = prestadores[prestadorSelecionadoIndex]; let qtdLimit = parseInt(p.qtdtecnicos) || 1; for(let s of sel) { if(window.getOcupacaoSlot(p, s.dataset.date, s.dataset.hora) >= qtdLimit) { window.showMessage("Limite de técnicos atingido no horário " + s.dataset.hora); return; } } const originalText = btn.innerText; btn.innerText = "Confirmando..."; btn.disabled = true; try { let agendamento = { prestador: p.nome, qtdtecnicos: p.qtdtecnicos, produtos: itensSelecionados, data: sel[0].dataset.date, rawdate: new Date().toISOString(), slots: [...sel].map(s => s.dataset.hora), ticket, cliente: cli, solicitante: sol }; await fetch(`${API_URL}/agendamentos`, { method: 'POST', headers: getHeaders(), body: JSON.stringify(agendamento) }); 
+        
+        // SLACK CALL
+        let msgSlack = `🚀 *Novo Agendamento*\n🎟️ Ticket: ${ticket}\n👤 Cliente: ${cli}\n🛠️ Prestador: ${p.nome}`;
+        window.enviarNotificacaoSlack(msgSlack);
+        
+        window.limparFormulario(); await carregarDadosDoBanco(); window.proximoPasso(1); window.showToast("Agendamento salvo com sucesso!"); } catch(e) { window.showMessage("Erro ao salvar."); } finally { btn.innerText = originalText; btn.disabled = false; } };
+    
     window.limparFormulario = function() { itensSelecionados = []; prestadorSelecionadoIndex = null; document.getElementById("lista-produtos").innerHTML = ""; document.getElementById("horasNecessarias").innerText = "0"; document.getElementById("agenda-agendamento").innerHTML = ""; document.getElementById("inputCep").value = ""; document.getElementById("ticket").value = ""; document.getElementById("clienteNome").value = ""; document.getElementById("solicitante").value = ""; };
     window.trocarAba = function(id, btn){ document.querySelectorAll('.aba').forEach(a => a.classList.remove('ativa')); document.getElementById(id).classList.add('ativa'); document.querySelectorAll('.menu button').forEach(b => b.classList.remove('ativo')); if(btn) btn.classList.add('ativo'); if(id === 'painel') window.atualizarFiltrosPrestador(); };
     window.getNextDates = function(prestador) { let dates = []; let today = new Date(); const daysMap = {"Dom":0, "Seg":1, "Ter":2, "Qua":3, "Qui":4, "Sex":5, "Sab":6}; let agendaDays = prestador.agenda ? [...new Set(prestador.agenda.map(a => a.dia))].map(d => daysMap[d]) : []; let qtdLimit = parseInt(prestador.qtdtecnicos) || 1; for (let i = 0; i < 14; i++) { let d = new Date(); d.setDate(today.getDate() + i); let dStr = d.toLocaleDateString(); let dNome = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sab"][d.getDay()]; let blocked = window.getBlockedHours(prestador, dStr); let slotsDoDia = prestador.agenda.filter(a => a.dia == dNome); let temLivre = slotsDoDia.some(s => !blocked.has(parseInt(s.hora.split(':')[0])) && window.getOcupacaoSlot(prestador, dStr, s.hora) < qtdLimit); if (agendaDays.includes(d.getDay()) && temLivre) dates.push(dStr.slice(0,5)); } return dates; };
@@ -282,7 +296,6 @@
     window.renderizarProdutos = function(){ let totalMinutos = itensSelecionados.reduce((a, b) => a + (b.tempo * b.qtd), 0); document.getElementById("horasNecessarias").innerText = Math.ceil(totalMinutos/60); document.getElementById("lista-produtos").innerHTML = itensSelecionados.map((i, idx) => `<div class="item-lista">${i.desc} (Qtd: ${i.qtd} | Total: ${i.tempo * i.qtd} min) <button onclick="itensSelecionados.splice(${idx},1); window.renderizarProdutos(); window.rdaAgendamento();">x</button></div>`).join(''); };
     window.renderPainel = function(){ 
         let fInicio = document.getElementById("filtroDataInicio").value; let fFim = document.getElementById("filtroDataFim").value; let fPrest = document.getElementById("filtroPrestador").value; 
-        // Ordenação por data mais recente
         let filtrados = agendamentos.filter(a => { 
             let [d, m, y] = a.data.split('/'); let dataAgendada = `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
             let matchDate = (!fInicio || dataAgendada >= fInicio) && (!fFim || dataAgendada <= fFim); let matchPrest = (!fPrest || a.prestador === fPrest); return matchDate && matchPrest; 
