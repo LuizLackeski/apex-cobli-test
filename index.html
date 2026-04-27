@@ -158,26 +158,21 @@
     window.onload = async () => { carregarProdutos(); await carregarDadosDoBanco(); };
     async function carregarDadosDoBanco() { try { const resP = await fetch(`${API_URL}/prestadores`, { headers: getHeaders() }); prestadores = await resP.json(); renderizarListaPrestadores(); const resA = await fetch(`${API_URL}/agendamentos`, { headers: getHeaders() }); agendamentos = await resA.json(); document.getElementById("total-agend").innerText = agendamentos.length; renderPainel(); } catch(e) { console.error("Erro ao carregar dados:", e); } }
     
-    // Globais
     window.showToast = function(msg) { let t = document.getElementById("toast"); t.innerText = msg; t.style.display = "block"; setTimeout(() => { t.style.display = "none"; }, 3000); };
     window.exibirModal = function(titulo, htmlBody) { document.getElementById('modalHeader').innerText = titulo; document.getElementById('modalBody').innerHTML = htmlBody; document.getElementById('modalAviso').style.display = 'flex'; };
     window.fecharModal = function() { document.getElementById('modalAviso').style.display = 'none'; };
+    
     window.getOcupacaoSlot = function(prestador, data, hora) { return agendamentos.filter(a => a.prestador === prestador.nome && a.data === data && (Array.isArray(a.slots) ? a.slots.includes(hora) : false)).length; };
     
-    // Regra: Bloqueia 1h antes e depois SE o slot estiver lotado (>= capacidade)
     window.getBlockedHours = function(prestador, data) { 
         let blocked = new Set(); 
         let cap = parseInt(prestador.qtdtecnicos) || 1;
-        
-        let agendamentosDoDia = agendamentos.filter(a => a.prestador === prestador.nome && a.data === data);
-        agendamentosDoDia.forEach(a => {
-            a.slots.forEach(slot => {
-                let h = parseInt(slot.split(':')[0]);
-                // Se a ocupação real atingiu a capacidade, bloqueia vizinhos
-                if (window.getOcupacaoSlot(prestador, data, h + ":00") >= cap) {
-                    blocked.add(h);
-                    blocked.add(h - 1);
-                    blocked.add(h + 1);
+        agendamentos.filter(a => a.prestador === prestador.nome && a.data === data).forEach(a => {
+            a.slots.forEach(s => {
+                let h = parseInt(s.split(':')[0]);
+                // Bloqueia vizinhos apenas se a capacidade do prestador já foi atingida nesse slot
+                if (window.getOcupacaoSlot(prestador, data, s) >= cap) {
+                    blocked.add(h); blocked.add(h - 1); blocked.add(h + 1);
                 }
             });
         });
