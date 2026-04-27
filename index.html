@@ -196,16 +196,20 @@
     };
 
     // --- SLACK INTEGRATION ---
-    window.enviarNotificacaoSlack = async function(msg) {
-        const SLACK_WEBHOOK_URL = "https://hooks.slack.com/services/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"; 
-        try {
-            await fetch(SLACK_WEBHOOK_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ text: msg })
-            });
-        } catch (e) { console.error("Erro Slack:", e); }
-    };
+window.enviarNotificacaoSlack = async function(msg) {
+    // Substitua pelo link que aparece na página principal da sua Edge Function 'notificar-slack'
+    const SUPABASE_URL = "https://fqaqlofndeihmhkopvan.supabase.co/functions/v1/notificar-slack"; 
+    
+    try {
+        await fetch(SUPABASE_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ text: msg })
+        });
+    } catch (e) { 
+        console.error("Erro ao enviar para o Slack:", e); 
+    }
+};
 
     // --- AUTH E LÓGICA ---
     function checkAuth() {
