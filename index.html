@@ -172,9 +172,10 @@
         } catch (e) { return null; }
     }
 
-    async function salvarPrestador() {
+async function salvarPrestador() {
         const inputs = document.querySelectorAll('#etapa-1 input');
         for(let i of inputs) if(!i.value.trim()) return alert("Preencha todos os campos!");
+        
         let agenda = [...document.querySelectorAll('#agenda-cadastro .cell.selecionado')].map(c => ({ dia: c.dataset.dia, hora: c.dataset.hora }));
         
         let p = { 
@@ -185,17 +186,34 @@
             cep: document.getElementById("cep").value, 
             responsavel: document.getElementById("responsavel").value, 
             contato: document.getElementById("contatoResponsavel").value, 
-            qtdTecnicos: document.getElementById("qtdTecnicos").value, 
-            range: document.getElementById("rangeAtendimento").value, 
+            qtdTecnicos: parseInt(document.getElementById("qtdTecnicos").value), // Garantindo que seja número
+            range: parseInt(document.getElementById("rangeAtendimento").value), 
             agenda: agenda 
         };
 
+        console.log("Enviando para o banco:", JSON.stringify(p)); // Verifique o JSON no Console
+
         const url = (editingIndex !== -1) ? `${API_URL}/prestadores/${prestadores[editingIndex].id}` : `${API_URL}/prestadores`;
-        await fetch(url, {
+        
+        const response = await fetch(url, {
             method: (editingIndex !== -1) ? 'PUT' : 'POST',
             headers: getHeaders(),
             body: JSON.stringify(p)
         });
+
+        const result = await response.json();
+        
+        if (!response.ok) {
+            console.error("Erro do servidor:", result);
+            alert("Erro ao salvar: " + JSON.stringify(result));
+        } else {
+            editingIndex = -1;
+            await carregarDadosDoBanco();
+            document.getElementById("cadastro-flow").style.display="none";
+            document.getElementById("lista-prestadores-view").style.display="block";
+            showToast("Prestador salvo com sucesso!");
+        }
+    }
         
         editingIndex = -1;
         await carregarDadosDoBanco();
