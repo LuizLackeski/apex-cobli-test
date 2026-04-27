@@ -11,7 +11,8 @@
         .menu button { background: none; border: none; color: #cbd5e1; padding: 15px 20px; cursor: pointer; font-size: 0.9rem; transition: 0.3s; }
         .menu button.ativo { color: white; border-bottom: 3px solid #4da3ff; }
         .menu button:hover { color: white; }
-        .menu .btn-sair { margin-left: auto; color: #ff9999; } /* Botão Sair alinhado à direita */
+        .menu .user-info { margin-left: auto; color: #ffffff; font-size: 0.8rem; margin-right: 15px; opacity: 0.8; }
+        .menu .btn-sair { color: #ff9999; }
         button:hover { filter: brightness(1.2); transform: translateY(-1px); box-shadow: 0 2px 4px rgba(0,0,0,0.2); transition: 0.2s; }
         button:active { transform: translateY(0); filter: brightness(0.9); }
         .conteudo { padding: 30px; max-width: 900px; margin: 0 auto; }
@@ -37,7 +38,6 @@
         .card-selecao { background: white; padding: 15px; border-radius: 8px; margin-bottom: 10px; border: 1px solid #e5e7eb; }
         .card-selecao strong { color: var(--primary); font-size: 1.1rem; }
         .card-selecao .dates { color: #555; font-size: 0.9rem; margin: 10px 0; display: block; }
-        
         .modal-overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); justify-content:center; align-items:center; z-index:9999; }
         .modal-card { background:white; padding:25px; border-radius:12px; width:500px; max-width:90%; box-shadow: 0 10px 25px rgba(0,0,0,0.2); max-height: 80vh; overflow-y: auto; }
         .modal-header { font-size: 1.2rem; font-weight: bold; color: var(--primary); margin-bottom: 15px; }
@@ -51,6 +51,7 @@
     <button class="ativo" onclick="window.trocarAba('consulta', this)">Agendamento</button>
     <button onclick="window.trocarAba('cadastro', this)">Prestadores</button>
     <button onclick="window.trocarAba('painel', this)">Painel</button>
+    <span id="user-display" class="user-info"></span>
     <button class="btn-sair" onclick="window.logout()">Sair</button>
 </div>
 
@@ -157,11 +158,15 @@
 
     function checkAuth() {
         let email = localStorage.getItem('userEmail');
-        if (!email) {
+        // Loop enquanto não for preenchido
+        while (!email || email.trim() === "") {
             email = prompt("Digite seu e-mail para acesso:");
-            if(email) localStorage.setItem('userEmail', email);
+            if (email && email.trim() !== "") {
+                localStorage.setItem('userEmail', email);
+            }
         }
         isAuthorized = ADMIN_EMAILS.includes(email);
+        document.getElementById('user-display').innerText = email;
     }
     checkAuth();
 
@@ -183,7 +188,17 @@
     window.exibirModal = function(titulo, htmlBody) { document.getElementById('modalHeader').innerText = titulo; document.getElementById('modalBody').innerHTML = htmlBody; document.getElementById('modalAviso').style.display = 'flex'; };
     window.fecharModal = function() { document.getElementById('modalAviso').style.display = 'none'; };
     window.getOcupacaoSlot = function(prestador, data, hora) { return agendamentos.filter(a => a.prestador === prestador.nome && a.data === data && (Array.isArray(a.slots) ? a.slots.includes(hora) : false)).length; };
-    window.getBlockedHours = function(prestador, data) { let blocked = new Set(); let cap = parseInt(prestador.qtdtecnicos) || 1; agendamentos.filter(a => a.prestador === prestador.nome && a.data === data).forEach(a => { a.slots.forEach(s => { let h = parseInt(s.split(':')[0]); if (window.getOcupacaoSlot(prestador, data, s) >= cap) { blocked.add(h); blocked.add(h - 1); blocked.add(h + 1); } }); }); return blocked; };
+    window.getBlockedHours = function(prestador, data) { 
+        let blocked = new Set(); 
+        let cap = parseInt(prestador.qtdtecnicos) || 1;
+        agendamentos.filter(a => a.prestador === prestador.nome && a.data === data).forEach(a => {
+            a.slots.forEach(s => {
+                let h = parseInt(s.split(':')[0]);
+                if (window.getOcupacaoSlot(prestador, data, s) >= cap) { blocked.add(h); blocked.add(h - 1); blocked.add(h + 1); }
+            });
+        });
+        return blocked; 
+    };
     
     window.abrirDetalhesPrestador = function(index) {
         let p = prestadores[index];
@@ -223,6 +238,7 @@
     
     window.limparFormulario = function() { itensSelecionados = []; prestadorSelecionadoIndex = null; document.getElementById("lista-produtos").innerHTML = ""; document.getElementById("horasNecessarias").innerText = "0"; document.getElementById("agenda-agendamento").innerHTML = ""; document.getElementById("inputCep").value = ""; document.getElementById("ticket").value = ""; document.getElementById("clienteNome").value = ""; document.getElementById("solicitante").value = ""; };
     window.trocarAba = function(id, btn){ document.querySelectorAll('.aba').forEach(a => a.classList.remove('ativa')); document.getElementById(id).classList.add('ativa'); document.querySelectorAll('.menu button').forEach(b => b.classList.remove('ativo')); if(btn) btn.classList.add('ativo'); if(id === 'painel') window.atualizarFiltrosPrestador(); };
+    
     window.getNextDates = function(prestador) {
         let dates = []; let today = new Date(); const daysMap = {"Dom":0, "Seg":1, "Ter":2, "Qua":3, "Qui":4, "Sex":5, "Sab":6}; let agendaDays = prestador.agenda ? [...new Set(prestador.agenda.map(a => a.dia))].map(d => daysMap[d]) : []; let qtdLimit = parseInt(prestador.qtdtecnicos) || 1;
         for (let i = 0; i < 14; i++) {
@@ -234,7 +250,9 @@
         }
         return dates;
     };
+
     window.proximoPasso = async function(n) { if(n === 2) { if(prestadores.length === 0) return alert("Cadastre um prestador!"); const cepDigitado = document.getElementById('inputCep').value; if(!cepDigitado) return alert("Digite o CEP!"); const btn = document.getElementById('btnBuscar'); btn.disabled = true; btn.innerText = "Calculando..."; let prestadoresFiltrados = []; for(let p of prestadores) { if (!p.endereco) continue; const dist = await consultarDistancia(cepDigitado, p.endereco); let available = window.getNextDates(p); if(dist !== null && dist <= parseFloat(p.range) && available.length > 0) { p.distanciaFinal = dist.toFixed(1); p.nextDates = available.join(', '); prestadoresFiltrados.push(p); } } btn.disabled = false; btn.innerText = "Buscar Prestadores"; if(prestadoresFiltrados.length === 0) { window.exibirModal("Atenção", "Nenhum prestador encontrado no raio de atendimento."); return; } window.renderizarListaPrestadoresSelecao(prestadoresFiltrados); } if(n === 3 && prestadorSelecionadoIndex === null) return alert("Selecione um prestador!"); document.querySelectorAll('#consulta > div').forEach(div => div.style.display = 'none'); document.getElementById('step-' + n).style.display = 'block'; if(n === 3) window.rdaAgendamento(); };
+    
     window.rdaAgendamento = function() {
         let p = prestadores[prestadorSelecionadoIndex]; let container = document.getElementById("agenda-agendamento"); container.innerHTML = ""; let hoje = new Date(); const diasSemana = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sab"];
         let cap = parseInt(p.qtdtecnicos) || 1;
@@ -262,10 +280,11 @@
                     };
                     wrapper.appendChild(div);
                 });
-                card.appendChild(wrapper); container.appendChild(card);
+                card.appendChild(wrapper); card.appendChild(wrapper); container.appendChild(card);
             }
         }
     };
+    
     window.validarEAvancar = function() { if (itensSelecionados.length === 0) return alert("Adicione pelo menos um serviço!"); let totalMinutos = itensSelecionados.reduce((a, b) => a + (b.tempo * b.qtd), 0); let horas = Math.ceil(totalMinutos / 60); let sel = document.querySelectorAll("#agenda-agendamento .cell.selecionado"); if (sel.length === 0) return alert("Selecione horário!"); if (sel.length !== horas && horas > 0) return alert("Selecione exatamente " + horas + " hora(s)!"); document.querySelectorAll('#consulta > div').forEach(div => div.style.display = 'none'); document.getElementById('step-4').style.display = 'block'; };
     window.renderizarListaPrestadoresSelecao = function(lista) { document.getElementById('lista-prestadores-selecao').innerHTML = lista.map(p => `<div class="card-selecao"><strong>${p.nome}</strong><br>Distância: ${p.distanciaFinal} km<br><span class="dates">Disponível em: ${p.nextDates}</span><div style="margin-top:10px"><button onclick="window.selecionarPrestadorPorObjeto('${p.nome}')">Selecionar Prestador</button></div></div>`).join(''); };
     window.selecionarPrestadorPorObjeto = function(nome) { prestadorSelecionadoIndex = prestadores.findIndex(p => p.nome === nome); window.proximoPasso(3); };
