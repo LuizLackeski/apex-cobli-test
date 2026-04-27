@@ -4,11 +4,10 @@
     <meta charset="UTF-8">
     <title>APEX - Sistema Completo</title>
     <style>
-        :root { --primary: #2F4EA1; --bg: #f0f2f5; --text: #334155; --cobli-blue: #2F4EA1; }
+        :root { --primary: #2F4EA1; --bg: #f0f2f5; --text: #334155; }
         body { font-family: 'Inter', -apple-system, sans-serif; background:var(--bg); color: var(--text); margin:0; padding:20px; }
         
-        /* Layout de Login */
-        #login-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #2F4EA1; display: flex; align-items: center; justify-content: center; z-index: 20000; }
+        #login-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #2F4EA1; display: none; align-items: center; justify-content: center; z-index: 20000; }
         .login-card { background: white; padding: 40px; border-radius: 12px; width: 350px; text-align: center; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2); }
         .login-card h2 { color: var(--primary); border-bottom: none; margin-bottom: 20px; }
         
@@ -48,10 +47,13 @@
         .filtros-painel label { font-size: 0.75rem; color: #64748b; font-weight: 600; text-transform: uppercase; }
         .card-selecao { background: white; padding: 15px; border-radius: 8px; margin-bottom: 10px; border: 1px solid #e5e7eb; }
         .card-selecao strong { color: var(--primary); font-size: 1.1rem; }
+        
         .modal-overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); justify-content:center; align-items:center; z-index:9999; }
-        .modal-card { background:white; padding:25px; border-radius:12px; width:500px; max-width:90%; box-shadow: 0 10px 25px rgba(0,0,0,0.2); max-height: 80vh; overflow-y: auto; }
+        .modal-card { background:white; padding:25px; border-radius:12px; width:400px; max-width:90%; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
         .modal-header { font-size: 1.2rem; font-weight: bold; color: var(--primary); margin-bottom: 15px; }
-        .modal-footer { margin-top:20px; text-align: right; }
+        .modal-body { margin-bottom: 20px; font-size: 0.95rem; }
+        .modal-footer { text-align: right; }
+        
         #toast { display:none; position:fixed; top:50%; left:50%; transform: translate(-50%, -50%); background:#1e293b; color:white; padding:15px 30px; border-radius:8px; z-index:9999; box-shadow:0 4px 15px rgba(0,0,0,0.3); font-weight: 600; }
     </style>
 </head>
@@ -60,7 +62,7 @@
 <div id="login-overlay">
     <div class="login-card">
         <h2 style="border:none;">APEX Cobli</h2>
-        <input type="text" id="loginEmail" placeholder="Digite E-mail para Admin | Nome para usuário">
+        <input type="text" id="loginEmail" placeholder="Digite seu nome ou e-mail">
         <button onclick="window.performLogin()" style="width:100%; background: var(--primary); padding: 12px; margin-top:10px;">Entrar</button>
     </div>
 </div>
@@ -75,9 +77,9 @@
 </div>
 
 <div id="modalAviso" class="modal-overlay">
-    <div class="modal-card" onclick="event.stopPropagation()">
+    <div class="modal-card">
         <div id="modalHeader" class="modal-header"></div>
-        <div id="modalBody" class="modal-body" style="margin-bottom: 15px;"></div>
+        <div id="modalBody" class="modal-body"></div>
         <div id="modalFooter" class="modal-footer"></div>
     </div>
 </div>
@@ -169,28 +171,10 @@
 <div id="toast"></div>
 
 <script>
-    // --- FUNÇÕES DE ALERTA CUSTOMIZADAS ---
-    window.showMessage = function(msg) {
-        document.getElementById('modalHeader').innerText = "Aviso";
-        document.getElementById('modalBody').innerText = msg;
-        document.getElementById('modalFooter').innerHTML = '<button onclick="window.fecharModal()" style="background:var(--primary)">OK</button>';
-        document.getElementById('modalAviso').style.display = 'flex';
-    };
-
-    window.showConfirm = function(msg, callback) {
-        document.getElementById('modalHeader').innerText = "Confirmação";
-        document.getElementById('modalBody').innerText = msg;
-        document.getElementById('modalFooter').innerHTML = 
-            '<button onclick="window.fecharModal()" style="background:gray;">Não</button>' +
-            '<button onclick="window.fecharModal(); ' + callback + '()" style="background:var(--primary); margin-left:10px;">Sim</button>';
-        document.getElementById('modalAviso').style.display = 'flex';
-    };
-
-    window.fecharModal = function() { document.getElementById('modalAviso').style.display = 'none'; };
-
-    // --- AUTENTICAÇÃO ---
+    // --- AUTH ---
     const ADMIN_EMAILS = ["luiz.lackeski@cobli.co", "fernando.souza@cobli.co"]; 
     let isAuthorized = false;
+
     function checkAuth() {
         let email = localStorage.getItem('userEmail');
         if (email) {
@@ -211,7 +195,38 @@
     window.logout = function() { localStorage.removeItem('userEmail'); window.location.reload(); };
     checkAuth();
 
-    // --- API & LOGICA ---
+    // --- MODAL APRIMORADO ---
+    window.exibirModal = function(titulo, htmlBody) {
+        document.getElementById('modalHeader').innerText = titulo;
+        document.getElementById('modalBody').innerHTML = htmlBody;
+        document.getElementById('modalFooter').innerHTML = '<button onclick="window.fecharModal()" style="background:var(--primary)">Fechar</button>';
+        document.getElementById('modalAviso').style.display = 'flex';
+    };
+
+    window.showMessage = function(msg) {
+        document.getElementById('modalHeader').innerText = "Aviso";
+        document.getElementById('modalBody').innerHTML = `<p>${msg}</p>`;
+        document.getElementById('modalFooter').innerHTML = '<button onclick="window.fecharModal()" style="background:var(--primary)">OK</button>';
+        document.getElementById('modalAviso').style.display = 'flex';
+    };
+
+    window.showConfirm = function(msg, callbackFn) {
+        document.getElementById('modalHeader').innerText = "Confirmação";
+        document.getElementById('modalBody').innerHTML = `<p>${msg}</p>`;
+        const footer = document.getElementById('modalFooter');
+        footer.innerHTML = '';
+        
+        let btnNao = document.createElement('button'); btnNao.innerText = "Não"; btnNao.style.background = "gray"; btnNao.onclick = window.fecharModal;
+        let btnSim = document.createElement('button'); btnSim.innerText = "Sim"; btnSim.style.background = "var(--primary)"; btnSim.style.marginLeft = "10px"; btnSim.onclick = () => { window.fecharModal(); callbackFn(); };
+        
+        footer.appendChild(btnNao);
+        footer.appendChild(btnSim);
+        document.getElementById('modalAviso').style.display = 'flex';
+    };
+
+    window.fecharModal = function() { document.getElementById('modalAviso').style.display = 'none'; };
+
+    // --- LÓGICA DO SISTEMA ---
     const API_URL = 'https://fqaqlofndeihmhkopvan.supabase.co/functions/v1/smart-service';
     const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZxYXFsb2ZuZGVpaG1oa29wdmFuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcyMjU4ODIsImV4cCI6MjA5MjgwMTg4Mn0.nauPYoB9RDhLLueMEuop2H2FxdChjIxFkAmBcYbJLzc';
     function getHeaders() { return { 'Content-Type': 'application/json', 'apikey': ANON_KEY, 'Authorization': `Bearer ${ANON_KEY}` }; }
@@ -235,9 +250,9 @@
         window.exibirModal("Detalhes do Prestador", `<div class="info-group" style="margin-bottom:15px;"><div style="font-weight:bold; font-size:1.1rem;">${p.nome}</div><div style="font-size:0.9rem; color:#64748b;">Resp: ${p.responsavel} | Contato: ${p.contato} | Raio: ${p.range} km</div></div>${agendaHtml}`);
     };
 
-    window.cancelarAgendamento = function() { window.showConfirm("Deseja realmente cancelar este agendamento?", "window.realizarCancelamento"); };
+    window.cancelarAgendamento = function() { window.showConfirm("Deseja realmente cancelar este agendamento?", window.realizarCancelamento); };
     window.realizarCancelamento = function() { window.limparFormulario(); window.proximoPasso(1); };
-
+    
     async function consultarDistancia(cepOrigem, enderecoPrestador) { try { const response = await fetch(`${API_URL}/distancia`, { method: 'POST', headers: getHeaders(), body: JSON.stringify({ origin: cepOrigem, destination: enderecoPrestador }) }); const data = await response.json(); return (data.status === 'OK') ? parseFloat(data.rows[0].elements[0].distance.value) / 1000 : null; } catch (e) { return null; } }
     
     window.salvarPrestador = async function(btn) { 
@@ -248,10 +263,10 @@
         } finally { btn.disabled = false; btn.innerText = originalText; }
     };
     
-    window.excluirPrestador = async function(i) { window.showConfirm("Tem certeza que deseja excluir?", "() => window.confirmarExclusaoPrestador(" + i + ")"); };
+    window.excluirPrestador = async function(i) { window.showConfirm("Tem certeza que deseja excluir?", () => window.confirmarExclusaoPrestador(i)); };
     window.confirmarExclusaoPrestador = async function(i) { await fetch(`${API_URL}/prestadores/${prestadores[i].id}`, { method: 'DELETE', headers: getHeaders() }); await carregarDadosDoBanco(); window.showToast("Prestador excluído!"); };
 
-    window.excluirAgendamento = async function(id) { window.showConfirm("Tem certeza que deseja excluir?", "() => window.confirmarExclusaoAgendamento(" + id + ")"); };
+    window.excluirAgendamento = async function(id) { window.showConfirm("Tem certeza que deseja excluir?", () => window.confirmarExclusaoAgendamento(id)); };
     window.confirmarExclusaoAgendamento = async function(id) { await fetch(`${API_URL}/agendamentos/${id}`, { method: 'DELETE', headers: getHeaders() }); await carregarDadosDoBanco(); window.showToast("Agendamento excluído!"); };
     
     window.concluirAgendamentoFinal = async function(btn){ 
