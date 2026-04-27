@@ -252,11 +252,29 @@ window.enviarNotificacaoSlack = async function(msg) {
     window.excluirPrestador = async function(i) { window.showConfirm("Tem certeza que deseja excluir?", () => window.confirmarExclusaoPrestador(i)); };
     window.confirmarExclusaoPrestador = async function(i) { await fetch(`${API_URL}/prestadores/${prestadores[i].id}`, { method: 'DELETE', headers: getHeaders() }); await carregarDadosDoBanco(); window.showToast("Prestador excluído!"); };
     window.excluirAgendamento = async function(id) { window.showConfirm("Tem certeza que deseja excluir?", () => window.confirmarExclusaoAgendamento(id)); };
-    window.confirmarExclusaoAgendamento = async function(id) { await fetch(`${API_URL}/agendamentos/${id}`, { method: 'DELETE', headers: getHeaders() }); await carregarDadosDoBanco(); window.showToast("Agendamento excluído!"); };
+    window.confirmarExclusaoAgendamento = async function(id) { 
+    await fetch(`${API_URL}/agendamentos/${id}`, { method: 'DELETE', headers: getHeaders() }); 
+    await carregarDadosDoBanco(); 
+    if(window.showToast) {
+        window.showToast("Agendamento excluído!"); 
+    }
+};
     window.concluirAgendamentoFinal = async function(btn){ const ticket = document.getElementById("ticket").value; const cli = document.getElementById("clienteNome").value; const sol = document.getElementById("solicitante").value; if(!ticket || !cli || !sol) return window.showMessage("Preencha todos os campos!"); let sel = document.querySelectorAll("#agenda-agendamento .cell.selecionado"); if(sel.length === 0) return window.showMessage("Selecione um horário!"); let p = prestadores[prestadorSelecionadoIndex]; let qtdLimit = parseInt(p.qtdtecnicos) || 1; for(let s of sel) { if(window.getOcupacaoSlot(p, s.dataset.date, s.dataset.hora) >= qtdLimit) { window.showMessage("Limite de técnicos atingido no horário " + s.dataset.hora); return; } } const originalText = btn.innerText; btn.innerText = "Confirmando..."; btn.disabled = true; try { let agendamento = { prestador: p.nome, qtdtecnicos: p.qtdtecnicos, produtos: itensSelecionados, data: sel[0].dataset.date, rawdate: new Date().toISOString(), slots: [...sel].map(s => s.dataset.hora), ticket, cliente: cli, solicitante: sol }; await fetch(`${API_URL}/agendamentos`, { method: 'POST', headers: getHeaders(), body: JSON.stringify(agendamento) }); 
         
         // SLACK NOTIFICATION
-        let msgSlack = `🚀 *Novo Agendamento*\n🎟️ Ticket: ${ticket}\n👤 Cliente: ${cli}\n🛠️ Prestador: ${p.nome}`;
+       const slotsFormatados = [...sel].map(s => s.dataset.hora).join(', ');
+        const produtosFormatados = itensSelecionados.map(item => `${item.desc} (${item.qtd}x)`).join(', ');
+
+        let msgSlack = `🚀 *Novo Agendamento*\n` +
+                       `🎟️ Ticket: ${ticket}\n` +
+                       `👤 Cliente: ${cli}\n` +
+                       `🛠️ Prestador: ${p.nome}\n` +
+                       `📅 Data: ${sel[0].dataset.date}\n` +
+                       `⏰ Horários: ${slotsFormatados}\n` +
+                       `📦 Produtos: ${produtosFormatados}\n` +
+                       `📝 Solicitante: ${sol}`;
+
+        // Envia para o Slack
         window.enviarNotificacaoSlack(msgSlack);
         
         window.limparFormulario(); await carregarDadosDoBanco(); window.proximoPasso(1); window.showToast("Agendamento salvo com sucesso!"); } catch(e) { window.showMessage("Erro ao salvar."); } finally { btn.innerText = originalText; btn.disabled = false; } };
