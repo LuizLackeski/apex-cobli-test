@@ -170,43 +170,40 @@
         } catch (e) { return null; }
     }
 window.rdaAgendamento = function() {
-    console.log("Tentando renderizar agenda para prestador:", prestadorSelecionadoIndex);
-    if (prestadorSelecionadoIndex === null) return;
-    
     let p = prestadores[prestadorSelecionadoIndex];
     let container = document.getElementById("agenda-agendamento");
     if (!container) return;
     
-    container.innerHTML = ""; // Limpa o que tinha antes
+    container.innerHTML = ""; // Limpa
     
-    if (!p.agenda || p.agenda.length === 0) {
-        container.innerHTML = "<p>Este prestador não tem agenda configurada.</p>";
-        return;
-    }
-
-    // Cria o grid de horários com base na agenda do prestador
-    let grid = document.createElement("div");
-    grid.className = "slots-wrapper";
+    // Agrupa os slots por dia para manter o visual de card
+    let dias = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sab"];
     
-    // Mostra os próximos 7 dias (exemplo)
-    let diasDaSemana = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sab"];
-    
-    p.agenda.forEach(item => {
-        let div = document.createElement("div");
-        div.className = "cell";
-        div.innerText = `${item.dia} ${item.hora}`;
-        div.dataset.dia = item.dia;
-        div.dataset.hora = item.hora;
-        // Pega uma data real para referência (ex: próxima ocorrência desse dia)
-        div.dataset.date = new Date().toLocaleDateString(); 
-        
-        div.onclick = function() {
-            this.classList.toggle("selecionado");
-        };
-        grid.appendChild(div);
+    dias.forEach(dia => {
+        let slotsDoDia = p.agenda.filter(a => a.dia === dia);
+        if (slotsDoDia.length > 0) {
+            let card = document.createElement("div");
+            card.className = "agenda-day-card";
+            card.innerHTML = `<div class="agenda-day-title">${dia}</div>`;
+            
+            let wrapper = document.createElement("div");
+            wrapper.className = "slots-wrapper";
+            
+            slotsDoDia.forEach(item => {
+                let cell = document.createElement("div");
+                cell.className = "cell";
+                cell.innerText = item.hora;
+                cell.dataset.dia = item.dia;
+                cell.dataset.hora = item.hora;
+                cell.dataset.date = new Date().toLocaleDateString(); // Ou lógica de data atual
+                cell.onclick = function() { this.classList.toggle("selecionado"); };
+                wrapper.appendChild(cell);
+            });
+            
+            card.appendChild(wrapper);
+            container.appendChild(card);
+        }
     });
-    
-    container.appendChild(grid);
 };
     async function salvarPrestador() {
         const inputs = document.querySelectorAll('#etapa-1 input');
@@ -245,27 +242,48 @@ window.rdaAgendamento = function() {
         await carregarDadosDoBanco();
     }
 
-    async function concluirAgendamentoFinal(){
-        const ticket = document.getElementById("ticket").value;
-        const cli = document.getElementById("clienteNome").value;
-        const sol = document.getElementById("solicitante").value;
-        if(!ticket || !cli || !sol) return alert("Preencha todos os campos do cliente!");
-        
-        let sel = document.querySelectorAll("#agenda-agendamento .selecionado");
-        if(sel.length === 0) return alert("Selecione um horário!");
-        
-        let p = prestadores[prestadorSelecionadoIndex];
-        let agendamento = { 
-            prestador: p.nome, qtdtecnicos: p.qtdtecnicos, produtos: itensSelecionados,
-            data: sel[0].dataset.date, rawDate: new Date(), slots: [...sel].map(s => s.dataset.hora),
-            ticket, cliente: cli, solicitante: sol
-        };
+  window.concluirAgendamentoFinal = async function(){
+    const ticket = document.getElementById("ticket").value;
+    const cli = document.getElementById("clienteNome").value;
+    const sol = document.getElementById("solicitante").value;
+    
+    if(!ticket || !cli || !sol) return alert("Preencha todos os campos do cliente!");
+    
+    let sel = document.querySelectorAll("#agenda-agendamento .cell.selecionado");
+    if(sel.length === 0) return alert("Selecione um horário!");
+    
+    let p = prestadores[prestadorSelecionadoIndex];
+    
+    let agendamento = { 
+        prestador: p.nome, 
+        qtdtecnicos: p.qtdtecnicos, // Minúsculo como no seu banco
+        produtos: itensSelecionados,
+        data: sel[0].dataset.date, 
+        rawDate: new Date().toISOString(), // Formato ISO para o banco
+        slots: [...sel].map(s => s.dataset.hora),
+        ticket: ticket, 
+        cliente: cli, 
+        solicitante: sol
+    };
 
-        await fetch(`${API_URL}/agendamentos`, { method: 'POST', headers: getHeaders(), body: JSON.stringify(agendamento) });
-        await carregarDadosDoBanco();
-        proximoPasso(1);
-        showToast("Agendamento salvo!");
+    console.log("Enviando agendamento:", agendamento); // <-- OLHE O CONSOLE (F12)
+
+    const response = await fetch(`${API_URL}/agendamentos`, { 
+        method: 'POST', 
+        headers: getHeaders(), 
+        body: JSON.stringify(agendamento) 
+    });
+
+    if (response.ok) {
+        await window.carregarDadosDoBanco();
+        window.proximoPasso(1);
+        showToast("Agendamento salvo com sucesso!");
+    } else {
+        const err = await response.json();
+        console.error("Erro ao salvar agendamento:", err);
+        alert("Erro ao salvar! Veja o console (F12) para detalhes.");
     }
+};
 
     // --- FUNÇÕES DE APOIO ---
     function trocarAba(id, btn){ document.querySelectorAll('.aba').forEach(a => a.classList.remove('ativa')); document.getElementById(id).classList.add('ativa'); document.querySelectorAll('.menu button').forEach(b => b.classList.remove('ativo')); if(btn) btn.classList.add('ativo'); if(id === 'painel') atualizarFiltrosPrestador(); }
