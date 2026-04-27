@@ -94,7 +94,7 @@
                 <label>CEP</label><input id="cep" required>
                 <label>Responsável</label><input id="responsavel" required>
                 <label>Contato</label><input id="contatoResponsavel" required>
-                <label>Quantidade de Técnicos</label><input id="qtdtecnicos" type="number" required>
+                <label>Quantidade de Técnicos</label><input id="qtdTecnicos" type="number" required>
                 <label>Range (Km)</label><input id="rangeAtendimento" type="number" required>
             </div>
             <div id="etapa-2" style="display:none;">
@@ -170,7 +170,7 @@
         } catch (e) { return null; }
     }
 
-    window.salvarPrestador = async function() {
+    async function salvarPrestador() {
         const inputs = document.querySelectorAll('#etapa-1 input');
         for(let i of inputs) if(!i.value.trim()) return alert("Preencha todos os campos!");
         let agenda = [...document.querySelectorAll('#agenda-cadastro .cell.selecionado')].map(c => ({ dia: c.dataset.dia, hora: c.dataset.hora }));
@@ -183,7 +183,7 @@
             cep: document.getElementById("cep").value, 
             responsavel: document.getElementById("responsavel").value, 
             contato: document.getElementById("contatoResponsavel").value, 
-            qtdtecnicos: document.getElementById("qtdtecnicos").value, 
+            qtdtecnicos: parseInt(document.getElementById("qtdTecnicos").value), 
             range: document.getElementById("rangeAtendimento").value, 
             agenda: agenda 
         };
@@ -202,7 +202,7 @@
         showToast("Prestador salvo com sucesso!");
     }
 
-    window.excluirPrestador = async function(i) {
+    async function excluirPrestador(i) {
         await fetch(`${API_URL}/prestadores/${prestadores[i].id}`, { method: 'DELETE', headers: getHeaders() });
         await carregarDadosDoBanco();
     }
@@ -214,11 +214,11 @@
         showToast("Agendamento excluído!");
     }
 
-    window.concluirAgendamentoFinal = async function(){
+    async function concluirAgendamentoFinal(){
         const ticket = document.getElementById("ticket").value;
         const cli = document.getElementById("clienteNome").value;
         const sol = document.getElementById("solicitante").value;
-        if(!ticket || !cli || !sol) return alert("Preencha todos os campos!");
+        if(!ticket || !cli || !sol) return alert("Preencha todos os campos do cliente!");
         
         let sel = document.querySelectorAll("#agenda-agendamento .cell.selecionado");
         if(sel.length === 0) return alert("Selecione um horário!");
@@ -352,7 +352,7 @@
     function renderizarListaPrestadoresSelecao(lista) { document.getElementById('lista-prestadores-selecao').innerHTML = lista.map(p => `<div class="card-selecao"><strong>${p.nome}</strong><br>Distância: ${p.distanciaFinal} km<br><span class="dates">Disponível em: ${p.nextDates}</span><button onclick="selecionarPrestadorPorObjeto('${p.nome}')">Selecionar Prestador</button></div>`).join(''); }
     function selecionarPrestadorPorObjeto(nome) { prestadorSelecionadoIndex = prestadores.findIndex(p => p.nome === nome); proximoPasso(3); }
     function updateButtons() { document.getElementById('btn-voltar').style.display = (etapa === 1) ? 'none' : 'inline-block'; document.getElementById('btn-proximo').style.display = (etapa === 1) ? 'inline-block' : 'none'; document.getElementById('btn-concluir').style.display = (etapa === 2) ? 'inline-block' : 'none'; }
-    function abrirCadastro(index = -1){ editingIndex = index; document.getElementById("lista-prestadores-view").style.display="none"; document.getElementById("cadastro-flow").style.display="block"; etapa = 1; document.getElementById("etapa-1").style.display="block"; document.getElementById("etapa-2").style.display="none"; criarGridCadastro("agenda-cadastro"); if(index !== -1){ let p = prestadores[index]; document.getElementById("nomeEmpresa").value = p.nome; document.getElementById("endereco").value = p.endereco; document.getElementById("cidade").value = p.cidade; document.getElementById("uf").value = p.uf; document.getElementById("cep").value = p.cep; document.getElementById("responsavel").value = p.responsavel; document.getElementById("contatoResponsavel").value = p.contato; document.getElementById("qtdtecnicos").value = p.qtdtecnicos; document.getElementById("rangeAtendimento").value = p.range; if(p.agenda) { p.agenda.forEach(item => { let cells = document.querySelectorAll("#agenda-cadastro .cell"); cells.forEach(c => { if(c.dataset.dia == item.dia && c.dataset.hora == item.hora) c.classList.add("selecionado"); }); }); } } else { document.querySelectorAll('input').forEach(i => i.value = ""); } updateButtons(); }
+    function abrirCadastro(index = -1){ editingIndex = index; document.getElementById("lista-prestadores-view").style.display="none"; document.getElementById("cadastro-flow").style.display="block"; etapa = 1; document.getElementById("etapa-1").style.display="block"; document.getElementById("etapa-2").style.display="none"; criarGridCadastro("agenda-cadastro"); if(index !== -1){ let p = prestadores[index]; document.getElementById("nomeEmpresa").value = p.nome; document.getElementById("endereco").value = p.endereco; document.getElementById("cidade").value = p.cidade; document.getElementById("uf").value = p.uf; document.getElementById("cep").value = p.cep; document.getElementById("responsavel").value = p.responsavel; document.getElementById("contatoResponsavel").value = p.contato; document.getElementById("qtdTecnicos").value = p.qtdtecnicos; document.getElementById("rangeAtendimento").value = p.range; if(p.agenda) { p.agenda.forEach(item => { let cells = document.querySelectorAll("#agenda-cadastro .cell"); cells.forEach(c => { if(c.dataset.dia == item.dia && c.dataset.hora == item.hora) c.classList.add("selecionado"); }); }); } } else { document.querySelectorAll('input').forEach(i => i.value = ""); } updateButtons(); }
     function cancelarCadastro() { document.getElementById("cadastro-flow").style.display="none"; document.getElementById("lista-prestadores-view").style.display="block"; editingIndex = -1; }
     function criarGridCadastro(id){ let grid = document.getElementById(id); grid.innerHTML = ""; ["Seg","Ter","Qua","Qui","Sex","Sab"].forEach(d=>{ let card = document.createElement("div"); card.className = "agenda-day-card"; card.innerHTML = `<div class="agenda-day-title">${d}</div>`; let wrapper = document.createElement("div"); wrapper.className = "slots-wrapper"; for(let h=8;h<=18;h++){ let cell = document.createElement("div"); cell.className="cell"; cell.dataset.dia = d; cell.dataset.hora = `${h}:00`; cell.innerText = `${h}:00`; cell.onclick = () => cell.classList.toggle("selecionado"); wrapper.appendChild(cell); } card.appendChild(wrapper); grid.appendChild(card); }); }
     function mudarEtapa(dir){ if (dir > 0 && etapa === 1) { const inputs = document.querySelectorAll("#etapa-1 input"); for(let i of inputs) if(!i.value.trim()) return alert("Preencha todos os campos!"); } document.getElementById("etapa-"+etapa).style.display="none"; etapa += dir; if(etapa < 1) etapa = 1; if(etapa > 2) etapa = 2; document.getElementById("etapa-"+etapa).style.display="block"; updateButtons(); }
