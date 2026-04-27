@@ -129,6 +129,7 @@
 <div id="toast"></div>
 
 <script>
+    const API_URL = 'https://fqaqlofndeihmhkopvan.supabase.co/functions/v1/smart-service';
     let prestadores = [], itensSelecionados = [], agendamentos = [], etapa = 1, editingIndex = -1, prestadorSelecionadoIndex = null;
     const produtos = {
         "Telemetria": [{desc:"Instalado veículos leves bloqueador", tempo:60}, {desc:"Instalado veículos leves e pesados + CAN", tempo:60}, {desc:"Instalado motos ou maquinários", tempo:40}, {desc:"Instalado veículos leves e pesados", tempo:40}],
@@ -141,10 +142,10 @@
 
     async function carregarDadosDoBanco() {
         try {
-            const resP = await fetch('/api/prestadores');
+            const resP = await fetch(`${API_URL}/prestadores`);
             prestadores = await resP.json();
             renderizarListaPrestadores();
-            const resA = await fetch('/api/agendamentos');
+            const resA = await fetch(`${API_URL}/agendamentos`);
             agendamentos = await resA.json();
             document.getElementById("total-agend").innerText = agendamentos.length;
             renderPainel();
@@ -159,12 +160,13 @@
 
     async function consultarDistancia(cepOrigem, enderecoPrestador) {
         try {
-            const response = await fetch('/api/distancia', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ origin: cepOrigem, destination: enderecoPrestador }) });
+            const response = await fetch(`${API_URL}/distancia`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ origin: cepOrigem, destination: enderecoPrestador }) });
             const data = await response.json();
             return (data.status === 'OK') ? parseFloat(data.rows[0].elements[0].distance.value) / 1000 : null;
         } catch (e) { return null; }
     }
 
+    // ... (restante das funções que não fazem fetch, mantêm o mesmo código) ...
     function trocarAba(id, btn){
         document.querySelectorAll('.aba').forEach(a => a.classList.remove('ativa'));
         document.getElementById(id).classList.add('ativa');
@@ -348,7 +350,7 @@
             agenda: agenda 
         };
 
-        const url = (editingIndex !== -1) ? `/api/prestadores/${prestadores[editingIndex].id}` : '/api/prestadores';
+        const url = (editingIndex !== -1) ? `${API_URL}/prestadores/${prestadores[editingIndex].id}` : `${API_URL}/prestadores`;
         await fetch(url, {
             method: (editingIndex !== -1) ? 'PUT' : 'POST',
             headers: {'Content-Type': 'application/json'},
@@ -379,7 +381,7 @@
     }
 
     async function excluirPrestador(i){ 
-        await fetch(`/api/prestadores/${prestadores[i].id}`, { method: 'DELETE' });
+        await fetch(`${API_URL}/prestadores/${prestadores[i].id}`, { method: 'DELETE' });
         await carregarDadosDoBanco();
     }
 
@@ -466,7 +468,7 @@
             ticket, cliente: cli, solicitante: sol
         };
 
-        await fetch('/api/agendamentos', {
+        await fetch(`${API_URL}/agendamentos`, {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify(agendamento)
@@ -509,7 +511,7 @@
 
     async function excluirAgendamento(id) {
         if(!confirm("Tem certeza que deseja excluir este agendamento?")) return;
-        await fetch(`/api/agendamentos/${id}`, { method: 'DELETE' });
+        await fetch(`${API_URL}/agendamentos/${id}`, { method: 'DELETE' });
         await carregarDadosDoBanco();
         showToast("Agendamento excluído!");
     }
