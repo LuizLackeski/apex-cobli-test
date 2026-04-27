@@ -130,6 +130,16 @@
 
 <script>
     const API_URL = 'https://fqaqlofndeihmhkopvan.supabase.co/functions/v1/smart-service';
+    const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZxYXFsb2ZuZGVpaG1oa29wdmFuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcyMjU4ODIsImV4cCI6MjA5MjgwMTg4Mn0.nauPYoB9RDhLLueMEuop2H2FxdChjIxFkAmBcYbJLzc';
+
+    function getHeaders() {
+        return {
+            'Content-Type': 'application/json',
+            'apikey': ANON_KEY,
+            'Authorization': `Bearer ${ANON_KEY}`
+        };
+    }
+
     let prestadores = [], itensSelecionados = [], agendamentos = [], etapa = 1, editingIndex = -1, prestadorSelecionadoIndex = null;
     const produtos = {
         "Telemetria": [{desc:"Instalado veículos leves bloqueador", tempo:60}, {desc:"Instalado veículos leves e pesados + CAN", tempo:60}, {desc:"Instalado motos ou maquinários", tempo:40}, {desc:"Instalado veículos leves e pesados", tempo:40}],
@@ -142,10 +152,10 @@
 
     async function carregarDadosDoBanco() {
         try {
-            const resP = await fetch(`${API_URL}/prestadores`);
+            const resP = await fetch(`${API_URL}/prestadores`, { headers: getHeaders() });
             prestadores = await resP.json();
             renderizarListaPrestadores();
-            const resA = await fetch(`${API_URL}/agendamentos`);
+            const resA = await fetch(`${API_URL}/agendamentos`, { headers: getHeaders() });
             agendamentos = await resA.json();
             document.getElementById("total-agend").innerText = agendamentos.length;
             renderPainel();
@@ -160,13 +170,16 @@
 
     async function consultarDistancia(cepOrigem, enderecoPrestador) {
         try {
-            const response = await fetch(`${API_URL}/distancia`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ origin: cepOrigem, destination: enderecoPrestador }) });
+            const response = await fetch(`${API_URL}/distancia`, { 
+                method: 'POST', 
+                headers: getHeaders(), 
+                body: JSON.stringify({ origin: cepOrigem, destination: enderecoPrestador }) 
+            });
             const data = await response.json();
             return (data.status === 'OK') ? parseFloat(data.rows[0].elements[0].distance.value) / 1000 : null;
         } catch (e) { return null; }
     }
 
-    // ... (restante das funções que não fazem fetch, mantêm o mesmo código) ...
     function trocarAba(id, btn){
         document.querySelectorAll('.aba').forEach(a => a.classList.remove('ativa'));
         document.getElementById(id).classList.add('ativa');
@@ -353,7 +366,7 @@
         const url = (editingIndex !== -1) ? `${API_URL}/prestadores/${prestadores[editingIndex].id}` : `${API_URL}/prestadores`;
         await fetch(url, {
             method: (editingIndex !== -1) ? 'PUT' : 'POST',
-            headers: {'Content-Type': 'application/json'},
+            headers: getHeaders(),
             body: JSON.stringify(p)
         });
         
@@ -381,7 +394,7 @@
     }
 
     async function excluirPrestador(i){ 
-        await fetch(`${API_URL}/prestadores/${prestadores[i].id}`, { method: 'DELETE' });
+        await fetch(`${API_URL}/prestadores/${prestadores[i].id}`, { method: 'DELETE', headers: getHeaders() });
         await carregarDadosDoBanco();
     }
 
@@ -470,7 +483,7 @@
 
         await fetch(`${API_URL}/agendamentos`, {
             method: 'POST',
-            headers: {'Content-Type': 'application/json'},
+            headers: getHeaders(),
             body: JSON.stringify(agendamento)
         });
 
@@ -511,7 +524,7 @@
 
     async function excluirAgendamento(id) {
         if(!confirm("Tem certeza que deseja excluir este agendamento?")) return;
-        await fetch(`${API_URL}/agendamentos/${id}`, { method: 'DELETE' });
+        await fetch(`${API_URL}/agendamentos/${id}`, { method: 'DELETE', headers: getHeaders() });
         await carregarDadosDoBanco();
         showToast("Agendamento excluído!");
     }
