@@ -40,7 +40,6 @@
         .modal-overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); justify-content:center; align-items:center; z-index:9999; }
         .modal-card { background:white; padding:25px; border-radius:12px; width:500px; max-width:90%; box-shadow: 0 10px 25px rgba(0,0,0,0.2); max-height: 80vh; overflow-y: auto; }
         .modal-header { font-size: 1.2rem; font-weight: bold; color: var(--primary); margin-bottom: 15px; }
-        /* Toast centralizado */
         #toast { display:none; position:fixed; top:50%; left:50%; transform: translate(-50%, -50%); background:#1e293b; color:white; padding:15px 30px; border-radius:8px; z-index:9999; box-shadow:0 4px 15px rgba(0,0,0,0.3); font-weight: 600; }
     </style>
 </head>
@@ -48,17 +47,17 @@
 
 <div class="topo"><strong>APEX</strong> <span>Agenda Prestadores</span></div>
 <div class="menu">
-    <button class="ativo" onclick="trocarAba('consulta', this)">Agendamento</button>
-    <button onclick="trocarAba('cadastro', this)">Prestadores</button>
-    <button onclick="trocarAba('painel', this)">Painel</button>
+    <button class="ativo" onclick="window.trocarAba('consulta', this)">Agendamento</button>
+    <button onclick="window.trocarAba('cadastro', this)">Prestadores</button>
+    <button onclick="window.trocarAba('painel', this)">Painel</button>
 </div>
 
-<div id="modalAviso" class="modal-overlay" onclick="fecharModal()">
+<div id="modalAviso" class="modal-overlay" onclick="window.fecharModal()">
     <div class="modal-card" onclick="event.stopPropagation()">
         <div id="modalHeader" class="modal-header"></div>
         <div id="modalBody"></div>
         <div style="margin-top:20px; text-align: right;">
-            <button onclick="fecharModal()">Fechar</button>
+            <button onclick="window.fecharModal()">Fechar</button>
         </div>
     </div>
 </div>
@@ -159,7 +158,7 @@
     window.onload = async () => { carregarProdutos(); await carregarDadosDoBanco(); };
     async function carregarDadosDoBanco() { try { const resP = await fetch(`${API_URL}/prestadores`, { headers: getHeaders() }); prestadores = await resP.json(); renderizarListaPrestadores(); const resA = await fetch(`${API_URL}/agendamentos`, { headers: getHeaders() }); agendamentos = await resA.json(); document.getElementById("total-agend").innerText = agendamentos.length; renderPainel(); } catch(e) { console.error("Erro ao carregar dados:", e); } }
     
-    // Utilitários globais
+    // Globais para evitar erros de referência
     window.showToast = function(msg) { let t = document.getElementById("toast"); t.innerText = msg; t.style.display = "block"; setTimeout(() => { t.style.display = "none"; }, 3000); };
     window.exibirModal = function(titulo, htmlBody) { document.getElementById('modalHeader').innerText = titulo; document.getElementById('modalBody').innerHTML = htmlBody; document.getElementById('modalAviso').style.display = 'flex'; };
     window.fecharModal = function() { document.getElementById('modalAviso').style.display = 'none'; };
@@ -236,7 +235,17 @@
                     let div = document.createElement("div"); div.className = "cell"; div.innerText = item.hora; div.dataset.hora = item.hora; div.dataset.date = dStr;
                     div.onclick = function() {
                         let totalMinutos = itensSelecionados.reduce((a, b) => a + (b.tempo * b.qtd), 0); let horas = Math.ceil(totalMinutos / 60); let sel = document.querySelectorAll("#agenda-agendamento .cell.selecionado");
-                        if(sel.length > 0 && sel[0].dataset.date !== div.dataset.date) { sel.forEach(s => s.classList.remove('selecionado')); sel = []; }
+                        let clickedHour = parseInt(div.dataset.hora.split(':')[0]);
+                        
+                        if(sel.length > 0) {
+                            if(sel[0].dataset.date !== div.dataset.date) { sel.forEach(s => s.classList.remove('selecionado')); sel = []; }
+                            else {
+                                // Lógica de sequência: verifica se é adjacente
+                                let isAdjacent = false;
+                                sel.forEach(s => { let h = parseInt(s.dataset.hora.split(':')[0]); if(Math.abs(h - clickedHour) === 1) isAdjacent = true; });
+                                if(!isAdjacent && !div.classList.contains("selecionado")) return alert("Os horários precisam ser em sequência!");
+                            }
+                        }
                         if(!div.classList.contains("selecionado") && sel.length >= horas && horas > 0) return alert("Limite de "+horas+"h!");
                         div.classList.toggle("selecionado");
                     };
@@ -253,7 +262,7 @@
         document.querySelectorAll('#consulta > div').forEach(div => div.style.display = 'none'); document.getElementById('step-4').style.display = 'block';
     };
     
-    window.renderizarListaPrestadoresSelecao = function(lista) { document.getElementById('lista-prestadores-selecao').innerHTML = lista.map(p => `<div class="card-selecao"><strong>${p.nome}</strong><br>Distância: ${p.distanciaFinal} km<br><div style="margin-top:10px"><button onclick="window.selecionarPrestadorPorObjeto('${p.nome}')">Selecionar Prestador</button></div></div>`).join(''); };
+    window.renderizarListaPrestadoresSelecao = function(lista) { document.getElementById('lista-prestadores-selecao').innerHTML = lista.map(p => `<div class="card-selecao"><strong>${p.nome}</strong><br>Distância: ${p.distanciaFinal} km<br><span class="dates">Disponível em: ${p.nextDates}</span><div style="margin-top:10px"><button onclick="window.selecionarPrestadorPorObjeto('${p.nome}')">Selecionar Prestador</button></div></div>`).join(''); };
     window.selecionarPrestadorPorObjeto = function(nome) { prestadorSelecionadoIndex = prestadores.findIndex(p => p.nome === nome); window.proximoPasso(3); };
     window.updateButtons = function() { document.getElementById('btn-voltar').style.display = (etapa === 1) ? 'none' : 'inline-block'; document.getElementById('btn-proximo').style.display = (etapa === 1) ? 'inline-block' : 'none'; document.getElementById('btn-concluir').style.display = (etapa === 2) ? 'inline-block' : 'none'; };
     window.abrirCadastro = function(index = -1){ editingIndex = index; document.getElementById("lista-prestadores-view").style.display="none"; document.getElementById("cadastro-flow").style.display="block"; etapa = 1; document.getElementById("etapa-1").style.display="block"; document.getElementById("etapa-2").style.display="none"; window.criarGridCadastro("agenda-cadastro"); if(index !== -1){ let p = prestadores[index]; document.getElementById("nomeEmpresa").value = p.nome; document.getElementById("endereco").value = p.endereco; document.getElementById("cidade").value = p.cidade; document.getElementById("uf").value = p.uf; document.getElementById("cep").value = p.cep; document.getElementById("responsavel").value = p.responsavel; document.getElementById("contatoResponsavel").value = p.contato; document.getElementById("qtdTecnicos").value = p.qtdtecnicos; document.getElementById("rangeAtendimento").value = p.range; if(p.agenda) { p.agenda.forEach(item => { let cells = document.querySelectorAll("#agenda-cadastro .cell"); cells.forEach(c => { if(c.dataset.dia == item.dia && c.dataset.hora == item.hora) c.classList.add("selecionado"); }); }); } } else { document.querySelectorAll('input').forEach(i => i.value = ""); } window.updateButtons(); };
