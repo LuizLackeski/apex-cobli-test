@@ -169,7 +169,45 @@
             return (data.status === 'OK') ? parseFloat(data.rows[0].elements[0].distance.value) / 1000 : null;
         } catch (e) { return null; }
     }
+window.rdaAgendamento = function() {
+    console.log("Tentando renderizar agenda para prestador:", prestadorSelecionadoIndex);
+    if (prestadorSelecionadoIndex === null) return;
+    
+    let p = prestadores[prestadorSelecionadoIndex];
+    let container = document.getElementById("agenda-agendamento");
+    if (!container) return;
+    
+    container.innerHTML = ""; // Limpa o que tinha antes
+    
+    if (!p.agenda || p.agenda.length === 0) {
+        container.innerHTML = "<p>Este prestador não tem agenda configurada.</p>";
+        return;
+    }
 
+    // Cria o grid de horários com base na agenda do prestador
+    let grid = document.createElement("div");
+    grid.className = "slots-wrapper";
+    
+    // Mostra os próximos 7 dias (exemplo)
+    let diasDaSemana = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sab"];
+    
+    p.agenda.forEach(item => {
+        let div = document.createElement("div");
+        div.className = "cell";
+        div.innerText = `${item.dia} ${item.hora}`;
+        div.dataset.dia = item.dia;
+        div.dataset.hora = item.hora;
+        // Pega uma data real para referência (ex: próxima ocorrência desse dia)
+        div.dataset.date = new Date().toLocaleDateString(); 
+        
+        div.onclick = function() {
+            this.classList.toggle("selecionado");
+        };
+        grid.appendChild(div);
+    });
+    
+    container.appendChild(grid);
+};
     async function salvarPrestador() {
         const inputs = document.querySelectorAll('#etapa-1 input');
         for(let i of inputs) if(!i.value.trim()) return alert("Preencha todos os campos!");
