@@ -364,14 +364,19 @@
         };
 
         const url = (editingIndex !== -1) ? `${API_URL}/prestadores/${prestadores[editingIndex].id}` : `${API_URL}/prestadores`;
-        await fetch(url, {
-            method: (editingIndex !== -1) ? 'PUT' : 'POST',
-            headers: getHeaders(),
-            body: JSON.stringify(p)
-        });
-        
-        editingIndex = -1;
-        await carregarDadosDoBanco();
+     console.log("Tentando salvar em:", url); // <--- ADICIONE ISSO
+    
+    const response = await fetch(url, {
+        method: (editingIndex !== -1) ? 'PUT' : 'POST',
+        headers: getHeaders(),
+        body: JSON.stringify(p)
+    });
+
+    const result = await response.json(); // <--- ADICIONE ISSO
+    console.log("Resposta do servidor:", result); // <--- ADICIONE ISSO
+    
+    editingIndex = -1;
+    await carregarDadosDoBanco();
         
         document.getElementById("cadastro-flow").style.display="none";
         document.getElementById("lista-prestadores-view").style.display="block";
