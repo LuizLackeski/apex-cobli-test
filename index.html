@@ -20,6 +20,9 @@
         input, select { width: 100%; padding: 10px; margin: 8px 0; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; }
         label { font-size: 0.8rem; color: #64748b; font-weight: 600; text-transform: uppercase; margin-bottom: 2px; display: block; }
         button { cursor: pointer; padding: 8px 16px; background: var(--primary); color: white; border: none; border-radius: 5px; font-weight: 500; }
+        /* Botão cancelar com espaçamento */
+        .btn-cancelar { background: red !important; margin-left: 20px; }
+        
         .agenda-day-card { background: #fafafa; padding: 10px; border-radius: 6px; margin-bottom: 8px; border: 1px solid #e5e7eb; }
         .agenda-day-title { font-weight: 600; color: var(--primary); margin-bottom: 6px; font-size: 0.85rem; }
         .slots-wrapper { display: flex; flex-wrap: wrap; gap: 4px; }
@@ -36,7 +39,6 @@
         .card-selecao strong { color: var(--primary); font-size: 1.1rem; }
         .card-selecao .dates { color: #555; font-size: 0.9rem; margin: 10px 0; display: block; }
         
-        /* Modal Style */
         .modal-overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); justify-content:center; align-items:center; z-index:9999; }
         .modal-card { background:white; padding:25px; border-radius:12px; width:500px; max-width:90%; box-shadow: 0 10px 25px rgba(0,0,0,0.2); max-height: 80vh; overflow-y: auto; }
         .modal-header { font-size: 1.2rem; font-weight: bold; color: var(--primary); margin-bottom: 15px; }
@@ -73,7 +75,7 @@
             <h2>Selecione o Prestador</h2>
             <div id="lista-prestadores-selecao"></div>
             <button onclick="proximoPasso(1)" style="background:gray;">Voltar</button>
-            <button onclick="cancelarAgendamento()" style="background:red;">Cancelar</button>
+            <button onclick="cancelarAgendamento()" class="btn-cancelar">Cancelar</button>
         </div>
         <div id="step-3" class="card" style="display:none;">
             <h2>Serviços e Agenda</h2>
@@ -86,7 +88,7 @@
             <div id="agenda-agendamento"></div>
             <button onclick="proximoPasso(2)" style="background:gray;">Voltar</button>
             <button onclick="validarEAvancar()" style="background:green;">Próximo</button>
-            <button onclick="cancelarAgendamento()" style="background:red;">Cancelar</button>
+            <button onclick="cancelarAgendamento()" class="btn-cancelar">Cancelar</button>
         </div>
         <div id="step-4" class="card" style="display:none;">
             <h2>Dados do Cliente</h2>
@@ -95,7 +97,7 @@
             <label>Responsável pela solicitação</label><input id="solicitante" required>
             <button onclick="proximoPasso(3)" style="background:gray;">Voltar</button>
             <button onclick="concluirAgendamentoFinal()" style="background:green;">Confirmar</button>
-            <button onclick="cancelarAgendamento()" style="background:red;">Cancelar</button>
+            <button onclick="cancelarAgendamento()" class="btn-cancelar">Cancelar</button>
         </div>
     </div>
 
@@ -160,7 +162,6 @@
     
     function exibirModal(titulo, htmlBody) { document.getElementById('modalHeader').innerText = titulo; document.getElementById('modalBody').innerHTML = htmlBody; document.getElementById('modalAviso').style.display = 'flex'; }
     function fecharModal() { document.getElementById('modalAviso').style.display = 'none'; }
-    
     function abrirDetalhesPrestador(index) {
         let p = prestadores[index];
         let agendaHtml = '';
@@ -168,17 +169,10 @@
             let slots = p.agenda.filter(a => a.dia === d).map(a => `<div class="cell">${a.hora}</div>`).join('');
             if(slots) { agendaHtml += `<div class="agenda-day-card" style="margin-bottom:10px;"><div class="agenda-day-title">${d}</div><div class="slots-wrapper">${slots}</div></div>`; }
         });
-        exibirModal("Detalhes do Prestador", `
-            <label>Nome / Empresa</label><p style="margin-top:0;">${p.nome}</p>
-            <div style="display:flex; gap:10px;">
-                <div style="flex:1;"><label>Responsável</label><p style="margin-top:0;">${p.responsavel}</p></div>
-                <div style="flex:1;"><label>Contato</label><p style="margin-top:0;">${p.contato}</p></div>
-            </div>
-            <label>Raio de Atendimento</label><p style="margin-top:0;">${p.range} km</p>
-            <label>Agenda</label>${agendaHtml}
-        `);
+        exibirModal("Detalhes do Prestador", `<div class="info-group" style="margin-bottom:15px;"><div style="font-weight:bold; font-size:1.1rem;">${p.nome}</div><div style="font-size:0.9rem; color:#64748b;">Resp: ${p.responsavel} | Contato: ${p.contato} | Raio: ${p.range} km</div></div>${agendaHtml}`);
     }
 
+    function cancelarAgendamento() { if(confirm("Deseja realmente cancelar este agendamento?")) { limparFormulario(); proximoPasso(1); } }
     async function consultarDistancia(cepOrigem, enderecoPrestador) { try { const response = await fetch(`${API_URL}/distancia`, { method: 'POST', headers: getHeaders(), body: JSON.stringify({ origin: cepOrigem, destination: enderecoPrestador }) }); const data = await response.json(); return (data.status === 'OK') ? parseFloat(data.rows[0].elements[0].distance.value) / 1000 : null; } catch (e) { return null; } }
     async function salvarPrestador() { const inputs = document.querySelectorAll('#etapa-1 input'); for(let i of inputs) if(!i.value.trim()) return alert("Preencha todos os campos!"); let agenda = [...document.querySelectorAll('#agenda-cadastro .cell.selecionado')].map(c => ({ dia: c.dataset.dia, hora: c.dataset.hora })); let p = { nome: document.getElementById("nomeEmpresa").value, endereco: document.getElementById("endereco").value, cidade: document.getElementById("cidade").value, uf: document.getElementById("uf").value, cep: document.getElementById("cep").value, responsavel: document.getElementById("responsavel").value, contato: document.getElementById("contatoResponsavel").value, qtdtecnicos: parseInt(document.getElementById("qtdTecnicos").value), range: document.getElementById("rangeAtendimento").value, agenda: agenda }; const url = (editingIndex !== -1) ? `${API_URL}/prestadores/${prestadores[editingIndex].id}` : `${API_URL}/prestadores`; await fetch(url, { method: (editingIndex !== -1) ? 'PUT' : 'POST', headers: getHeaders(), body: JSON.stringify(p) }); editingIndex = -1; await carregarDadosDoBanco(); document.getElementById("cadastro-flow").style.display="none"; document.getElementById("lista-prestadores-view").style.display="block"; showToast("Prestador salvo com sucesso!"); }
     async function excluirPrestador(i) { await fetch(`${API_URL}/prestadores/${prestadores[i].id}`, { method: 'DELETE', headers: getHeaders() }); await carregarDadosDoBanco(); }
@@ -199,7 +193,7 @@
     function cancelarCadastro() { document.getElementById("cadastro-flow").style.display="none"; document.getElementById("lista-prestadores-view").style.display="block"; editingIndex = -1; }
     function criarGridCadastro(id){ let grid = document.getElementById(id); grid.innerHTML = ""; ["Seg","Ter","Qua","Qui","Sex","Sab"].forEach(d=>{ let card = document.createElement("div"); card.className = "agenda-day-card"; card.innerHTML = `<div class="agenda-day-title">${d}</div>`; let wrapper = document.createElement("div"); wrapper.className = "slots-wrapper"; for(let h=8;h<=18;h++){ let cell = document.createElement("div"); cell.className="cell"; cell.dataset.dia = d; cell.dataset.hora = `${h}:00`; cell.innerText = `${h}:00`; cell.onclick = () => cell.classList.toggle("selecionado"); wrapper.appendChild(cell); } card.appendChild(wrapper); grid.appendChild(card); }); }
     function mudarEtapa(dir){ if (dir > 0 && etapa === 1) { const inputs = document.querySelectorAll("#etapa-1 input"); for(let i of inputs) if(!i.value.trim()) return alert("Preencha todos os campos!"); } document.getElementById("etapa-"+etapa).style.display="none"; etapa += dir; if(etapa < 1) etapa = 1; if(etapa > 2) etapa = 2; document.getElementById("etapa-"+etapa).style.display="block"; updateButtons(); }
-    function renderizarListaPrestadores(){ document.getElementById("lista-prestadores").innerHTML = prestadores.map((p, i) => { let uniqueDays = p.agenda ? [...new Set(p.agenda.map(a => a.dia))].length : 0; return `<div class="card"><strong>${p.nome}</strong> - ${p.cidade}/${p.uf}<br>Técnicos: ${p.qtdtecnicos} | Dias c/ agenda: ${uniqueDays} | Raio Atendimento: ${p.range}km<div style="margin-top:10px"><button onclick="abrirDetalhesPrestador(${i})" style="background:gray;">Ver</button> <button onclick="abrirCadastro(${i})">Editar</button> <button onclick="excluirPrestador(${i})" style="background: red;">Excluir</button></div></div>`; }).join(''); document.getElementById("total-prest").innerText = prestadores.length; }
+    function renderizarListaPrestadores(){ document.getElementById("lista-prestadores").innerHTML = prestadores.map((p, i) => { let uniqueDays = p.agenda ? [...new Set(p.agenda.map(a => a.dia))].length : 0; return `<div class="card"><strong>${p.nome}</strong> - ${p.cidade}/${p.uf}<br>Técnicos: ${p.qtdtecnicos} | Dias c/ agenda: ${uniqueDays} | Raio Atendimento: ${p.range}km<div style="margin-top:10px"><button onclick="abrirDetalhesPrestador(${i})" style="background:gray;">Ver</button> <button onclick="abrirCadastro(${i})">Editar</button> <button onclick="excluirPrestador(${i})" class="btn-cancelar">Excluir</button></div></div>`; }).join(''); document.getElementById("total-prest").innerText = prestadores.length; }
     function carregarProdutos(){ let select=document.getElementById("produto"); for(let tipo in produtos){ let group=document.createElement("optgroup"); group.label=tipo; produtos[tipo].forEach(p=>{ let opt=document.createElement("option"); opt.value=p.tempo; opt.text=p.desc; group.appendChild(opt); }); select.appendChild(group); } }
     function adicionarProduto(){ let select = document.getElementById("produto"); let qtd = parseInt(document.getElementById("quantidade").value) || 1; let tempoBase = parseInt(select.value); itensSelecionados.push({desc: select.options[select.selectedIndex].text, tempo: tempoBase, qtd: qtd}); renderizarProdutos(); if(prestadorSelecionadoIndex !== null) rdaAgendamento(); }
     function renderizarProdutos(){ let totalMinutos = itensSelecionados.reduce((a, b) => a + (b.tempo * b.qtd), 0); document.getElementById("horasNecessarias").innerText = Math.ceil(totalMinutos/60); document.getElementById("lista-produtos").innerHTML = itensSelecionados.map((i, idx) => `<div class="item-lista">${i.desc} (Qtd: ${i.qtd} | Total: ${i.tempo * i.qtd} min) <button onclick="itensSelecionados.splice(${idx},1); renderizarProdutos(); rdaAgendamento();">x</button></div>`).join(''); }
@@ -214,7 +208,7 @@
             let matchPrest = (!fPrest || a.prestador === fPrest); 
             return matchDate && matchPrest; 
         }); 
-        document.getElementById("painel-conteudo").innerHTML = filtrados.map((a) => `<div class="painel-item"><div><strong>Ticket: ${a.ticket}</strong> | Cliente: ${a.cliente}</div><div><strong>${a.prestador}</strong> | Data: ${a.data} | ${Array.isArray(a.slots) ? a.slots.join(', ') : 'N/A'} | Solicitante: ${a.solicitante}</div><div>Solicitado em: ${a.rawdate ? new Date(a.rawdate).toLocaleDateString() : 'N/A'}</div><div style="margin: 5px 0; font-size: 0.9em; color: #555;">${Array.isArray(a.produtos) ? a.produtos.map(prod => `${prod.desc} (${prod.qtd}x)`).join('; ') : ""}</div><button onclick="window.excluirAgendamento(${a.id})" style="background: red;">Excluir Agendamento</button></div>`).join(''); 
+        document.getElementById("painel-conteudo").innerHTML = filtrados.map((a) => `<div class="painel-item"><div><strong>Ticket: ${a.ticket}</strong> | Cliente: ${a.cliente}</div><div><strong>${a.prestador}</strong> | Data: ${a.data} | ${Array.isArray(a.slots) ? a.slots.join(', ') : 'N/A'} | Solicitante: ${a.solicitante}</div><div>Solicitado em: ${a.rawdate ? new Date(a.rawdate).toLocaleDateString() : 'N/A'}</div><div style="margin: 5px 0; font-size: 0.9em; color: #555;">${Array.isArray(a.produtos) ? a.produtos.map(prod => `${prod.desc} (${prod.qtd}x)`).join('; ') : ""}</div><button onclick="window.excluirAgendamento(${a.id})" class="btn-cancelar">Excluir Agendamento</button></div>`).join(''); 
     }
     function limparFiltros(){ document.getElementById("filtroDataInicio").value = ""; document.getElementById("filtroDataFim").value = ""; document.getElementById("filtroPrestador").value = ""; renderPainel(); }
     function atualizarFiltrosPrestador(){ let sel = document.getElementById("filtroPrestador"); sel.innerHTML = '<option value="">Todos</option>'; prestadores.forEach(p => sel.innerHTML += `<option value="${p.nome}">${p.nome}</option>`); }
