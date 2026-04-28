@@ -9,10 +9,9 @@
         
         #toast { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #f0f0f0; color: #334155; padding: 20px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); z-index: 10000; border: 1px solid #e5e7eb; font-weight: 600; text-align: center; }
 
-        /* Estilo Card Compacto */
         .card-compact { background: white; padding: 10px 15px; border-radius: 8px; margin-bottom: 8px; border: 1px solid #e5e7eb; display: flex; align-items: center; justify-content: space-between; cursor: pointer; transition: 0.2s; }
         .card-compact:hover { background: #f8fafc; border-color: var(--primary); }
-        .card-compact span { font-size: 0.85rem; flex: 1; margin-right: 10px; }
+        .card-compact span { font-size: 0.85rem; flex: 1; }
 
         #login-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #2F4EA1; display: none; align-items: center; justify-content: center; z-index: 20000; }
         .login-card { background: white; padding: 40px; border-radius: 12px; width: 350px; text-align: center; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2); }
@@ -105,6 +104,7 @@
             <div id="agenda-agendamento"></div>
             <button onclick="window.proximoPasso(2)" style="background:gray;">Voltar</button>
             <button onclick="window.validarEAvancar()" style="background:green;">Próximo</button>
+            <button onclick="window.cancelarAgendamento()" class="btn-cancelar">Cancelar</button>
         </div>
         <div id="step-4" class="card" style="display:none;">
             <h2>Dados do Cliente</h2>
@@ -113,6 +113,7 @@
             <input id="solicitante" placeholder="Responsável" required>
             <button onclick="window.proximoPasso(3)" style="background:gray;">Voltar</button>
             <button id="btnConfirmar" onclick="window.concluirAgendamentoFinal(this)" style="background:green;">Confirmar</button>
+            <button onclick="window.cancelarAgendamento()" class="btn-cancelar">Cancelar</button>
         </div>
     </div>
 
@@ -124,7 +125,7 @@
         <div id="cadastro-flow" class="card" style="display:none;">
             <div id="etapa-1"><h3>Dados</h3><input id="nomeEmpresa" placeholder="Nome"><input id="endereco" placeholder="Endereço"><input id="cidade" placeholder="Cidade"><input id="uf" placeholder="UF"><input id="cep" placeholder="CEP"><input id="responsavel" placeholder="Responsável"><input id="contatoResponsavel" placeholder="Telefone"><input id="qtdTecnicos" type="number" placeholder="Técnicos"><input id="rangeAtendimento" type="number" placeholder="Range (Km)"></div>
             <div id="etapa-2" style="display:none;"><h3>Agenda</h3><div id="agenda-cadastro"></div></div>
-            <div style="margin-top:20px;"><button onclick="window.mudarEtapa(-1)">Voltar</button><button onclick="window.mudarEtapa(1)">Próximo</button><button onclick="window.salvarPrestador(this)" style="background: green;">Concluir</button></div>
+            <div style="margin-top:20px;"><button onclick="window.mudarEtapa(-1)">Voltar</button><button onclick="window.mudarEtapa(1)">Próximo</button><button onclick="window.salvarPrestador(this)" style="background: green;">Concluir</button><button onclick="window.cancelarCadastro()" style="background:red;">Cancelar</button></div>
         </div>
     </div>
 
@@ -151,39 +152,42 @@
 
 <script>
     const API_URL = 'https://fqaqlofndeihmhkopvan.supabase.co/functions/v1/smart-service';
-    const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZxYXFsb2ZuZGVpaG1oa29wdmFuIiwicm9sZSI6IkpXVCIsImlhdCI6MTc3NzIyNTg4MiwiZXhwIjoyMDkyODAxODgyfQ.nauPYoB9RDhLLueMEuop2H2FxdChjIxFkAmBcYbJLzc'; // Nota: Chave fictícia mantida conforme seu original
+    const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZxYXFsb2ZuZGVpaG1oa29wdmFuIiwicm9sZSI6IkpXVCIsImlhdCI6MTc3NzIyNTg4MiwiZXhwIjoyMDkyODAxODgyfQ.nauPYoB9RDhLLueMEuop2H2FxdChjIxFkAmBcYbJLzc';
     function getHeaders() { return { 'Content-Type': 'application/json', 'apikey': ANON_KEY, 'Authorization': `Bearer ${ANON_KEY}` }; }
     
     let prestadores = [], itensSelecionados = [], agendamentos = [], etapa = 1, editingIndex = -1, prestadorSelecionadoIndex = null;
     const ADMIN_EMAILS = ["luiz.lackeski@cobli.co", "fernando.souza@cobli.co"]; 
     const produtos = { "Telemetria": [{desc:"Instalado veículos leves bloqueador", tempo:60}, {desc:"Instalado veículos leves e pesados + CAN", tempo:60}, {desc:"Instalado motos ou maquinários", tempo:40}, {desc:"Instalado veículos leves e pesados", tempo:40}], "Identificador": [{desc:"Instalado veículos leves e pesados identificador", tempo:60}, {desc:"Instalado veículos leves e pesados identificador + CAN", tempo:90}, {desc:"Instalado veículos leves e pesados identificador RFID", tempo:60}, {desc:"Instalado veículos leves e pesados identificador RFID + CAN", tempo:80}], "Trava de ignição": [{desc:"Instalado veículos leves imobilizador", tempo:80}, {desc:"Instalado veículos leves imobilizador RFID", tempo:80}, {desc:"Instalado veículos leves imobilizador RFID + CAN", tempo:90}, {desc:"Instalado veículos leves imobilizador + CAN", tempo:100}], "Videotelemetria": [{desc:"CobliCam (2 câmeras)", tempo:90}, {desc:"Cobli Multicam (3 câmeras internas)", tempo:120}, {desc:"Cobli Multicam (2 câmeras + 1 externa)", tempo:240}, {desc:"Cobli Multicam (4 câmeras)", tempo:240}, {desc:"Cobli Multicam (5 câmeras)", tempo:300}] };
 
-    // --- UI HELPERS ---
+    // --- UTILS ---
     window.exibirModal = function(t, h) { document.getElementById('modalHeader').innerText = t; document.getElementById('modalBody').innerHTML = h; document.getElementById('modalFooter').innerHTML = '<button onclick="window.fecharModal()" style="background:var(--primary)">Fechar</button>'; document.getElementById('modalAviso').style.display = 'flex'; };
     window.fecharModal = function() { document.getElementById('modalAviso').style.display = 'none'; };
     window.showMessage = function(msg) { document.getElementById('modalHeader').innerText = "Aviso"; document.getElementById('modalBody').innerHTML = `<p>${msg}</p>`; document.getElementById('modalFooter').innerHTML = '<button onclick="window.fecharModal()" style="background:var(--primary)">OK</button>'; document.getElementById('modalAviso').style.display = 'flex'; };
     window.showConfirm = function(msg, callbackFn) { document.getElementById('modalHeader').innerText = "Confirmação"; document.getElementById('modalBody').innerHTML = `<p>${msg}</p>`; const f = document.getElementById('modalFooter'); f.innerHTML = ''; let bN=document.createElement('button'); bN.innerText="Não"; bN.style.background="gray"; bN.onclick=window.fecharModal; let bS=document.createElement('button'); bS.innerText="Sim"; bS.style.background="var(--primary)"; bS.style.marginLeft="10px"; bS.onclick=()=>{window.fecharModal(); callbackFn();}; f.appendChild(bN); f.appendChild(bS); document.getElementById('modalAviso').style.display='flex'; };
     window.showToast = function(msg) { let t = document.getElementById("toast"); if(!t) return; t.innerText = msg; t.style.display = "block"; setTimeout(() => { t.style.display = "none"; }, 3000); };
+    window.enviarNotificacaoSlack = async function(msg) { try { await fetch("https://fqaqlofndeihmhkopvan.supabase.co/functions/v1/notificar-slack", { method: 'POST', headers: getHeaders(), body: JSON.stringify({ text: msg }) }); } catch (e) { console.error(e); } };
 
     // --- AUTH ---
-    window.checkAuth = function() { let email = localStorage.getItem('userEmail'); if (email && email.toLowerCase().endsWith("@cobli.co")) { document.getElementById('login-overlay').style.display = 'none'; isAuthorized = ADMIN_EMAILS.includes(email.toLowerCase()); document.getElementById('user-display').innerText = email; if(window.renderizarListaPrestadores) window.renderizarListaPrestadores(); } else { localStorage.removeItem('userEmail'); document.getElementById('login-overlay').style.display = 'flex'; } };
+    window.checkAuth = function() { let email = localStorage.getItem('userEmail'); if (email && email.toLowerCase().endsWith("@cobli.co")) { document.getElementById('login-overlay').style.display = 'none'; isAuthorized = ADMIN_EMAILS.includes(email.toLowerCase()); document.getElementById('user-display').innerText = email; } else { localStorage.removeItem('userEmail'); document.getElementById('login-overlay').style.display = 'flex'; } };
     window.performLogin = function() { let e = document.getElementById('loginEmail').value.trim().toLowerCase(); if (!e.endsWith("@cobli.co")) return window.showMessage("Acesso restrito. Informe seu e-mail corporativo (@cobli.co)."); localStorage.setItem('userEmail', e); window.location.reload(); };
     window.logout = function() { localStorage.removeItem('userEmail'); window.location.reload(); };
+    window.checkAuth();
 
-    // --- SLACK & DATA ---
-    window.enviarNotificacaoSlack = async function(msg) { try { await fetch("https://fqaqlofndeihmhkopvan.supabase.co/functions/v1/notificar-slack", { method: 'POST', headers: getHeaders(), body: JSON.stringify({ text: msg }) }); } catch (e) { console.error(e); } };
+    // --- DATA HANDLING ---
     async function carregarDadosDoBanco() { 
         try { 
             const resP = await fetch(`${API_URL}/prestadores`, { headers: getHeaders() }); prestadores = await resP.json(); 
             const resA = await fetch(`${API_URL}/agendamentos`, { headers: getHeaders() }); agendamentos = await resA.json(); 
-            window.renderizarListaPrestadores(); window.renderPainel(); window.renderDashboard();
+            window.renderizarListaPrestadores(); 
+            window.renderPainel(); 
+            window.renderDashboard();
             let setPrest = new Set(agendamentos.map(a => a.prestador));
             let sel = document.getElementById("filtroPrestador");
             sel.innerHTML = '<option value="">Todos</option>' + [...setPrest].map(p => `<option value="${p}">${p}</option>`).join('');
         } catch(e) { console.error(e); } 
     }
 
-    // --- DASHBOARD & PAINEL ---
+    // --- FEATURES ---
     window.renderDashboard = function() {
         document.getElementById("dash-total").innerText = agendamentos.length;
         let contagem = {}; agendamentos.forEach(a => contagem[a.prestador] = (contagem[a.prestador] || 0) + 1);
@@ -217,7 +221,6 @@
         window.exibirModal("Detalhes do Agendamento", `<p><strong>Ticket:</strong> ${a.ticket}</p><p><strong>Cliente:</strong> ${a.cliente}</p><p><strong>Prestador:</strong> ${a.prestador}</p><p><strong>Data:</strong> ${a.data}</p><p><strong>Horários:</strong> ${(Array.isArray(a.slots) ? a.slots.join(', ') : 'N/A')}</p><p><strong>Serviços:</strong> ${(Array.isArray(a.produtos) ? a.produtos.map(p => p.desc).join(', ') : 'N/A')}</p>`);
     };
 
-    // --- LÓGICA DE AGENDAMENTO (PRESERVADA) ---
     window.carregarProdutos = function(){ let s=document.getElementById("produto"); for(let tipo in produtos){ let g=document.createElement("optgroup"); g.label=tipo; produtos[tipo].forEach(p=>{ let o=document.createElement("option"); o.value=p.tempo; o.text=p.desc; g.appendChild(o); }); s.appendChild(g); } };
     window.adicionarProduto = function(){ let s=document.getElementById("produto"); let q=parseInt(document.getElementById("quantidade").value)||1; let t=parseInt(s.value); itensSelecionados.push({desc:s.options[s.selectedIndex].text, tempo:t, qtd:q}); window.renderizarProdutos(); if(prestadorSelecionadoIndex!==null) window.rdaAgendamento(); };
     window.renderizarProdutos = function(){ let tot=itensSelecionados.reduce((a,b)=>a+(b.tempo*b.qtd),0); document.getElementById("horasNecessarias").innerText=Math.ceil(tot/60); document.getElementById("lista-produtos").innerHTML=itensSelecionados.map((i,idx)=>`<div class="item-lista">${i.desc} (${i.qtd}x) <button onclick="itensSelecionados.splice(${idx},1); window.renderizarProdutos(); window.rdaAgendamento();">x</button></div>`).join(''); };
@@ -233,16 +236,10 @@
     window.selecionarPrestadorPorObjeto = function(n) { prestadorSelecionadoIndex = prestadores.findIndex(p=>p.nome===n); window.proximoPasso(3); };
     window.renderizarListaPrestadores = function(){ document.getElementById("btn-novo-container").innerHTML = isAuthorized ? `<button onclick="window.abrirCadastro()" style="margin-bottom: 20px;">+ Novo Prestador</button>` : ''; document.getElementById("lista-prestadores").innerHTML = prestadores.map((p,i)=>`<div class="card"><strong>${p.nome}</strong><br>${p.cidade}/${p.uf}<div style="margin-top:5px;font-size:0.85rem">👥Técnicos: ${p.qtdtecnicos} | 📍Raio: ${p.range}km</div><div class="card-actions"><button onclick="window.abrirDetalhesPrestador(${i})" style="background:green">Ver</button>${isAuthorized ? ` <button onclick="window.abrirCadastro(${i})">Editar</button> <button onclick="window.excluirPrestador(${i})" class="btn-cancelar">Excluir</button>` : ''}</div></div>`).join(''); document.getElementById("total-prest").innerText=prestadores.length; };
     window.limparFiltros = function(){ document.getElementById("filtroTicket").value=""; document.getElementById("filtroData").value=""; document.getElementById("filtroPrestador").value=""; window.renderPainel(); };
-    window.salvarPrestador = async function(btn) { /* ... lógica de salvar original ... */ };
-    window.abrirCadastro = function(index = -1){ /* ... */ };
-    window.cancelarCadastro = function() { /* ... */ };
-    window.criarGridCadastro = function(id){ /* ... */ };
-    window.mudarEtapa = function(dir){ /* ... */ };
-    window.getOcupacaoSlot = function(prestador, data, hora) { return agendamentos.filter(a => a.prestador === prestador.nome && a.data === data && (Array.isArray(a.slots) ? a.slots.includes(hora) : false)).length; };
-    window.getBlockedHours = function(prestador, data) { let blocked = new Set(); let cap = parseInt(prestador.qtdtecnicos) || 1; agendamentos.filter(a => a.prestador === prestador.nome && a.data === data).forEach(a => { a.slots.forEach(s => { let h = parseInt(s.split(':')[0]); if (window.getOcupacaoSlot(prestador, data, s) >= cap) { blocked.add(h); blocked.add(h - 1); blocked.add(h + 1); } }); }); return blocked; };
+    window.salvarPrestador = async function(btn) { /* ... lógica de salvar original ... */ }; window.abrirCadastro = function(index = -1){ /* ... */ }; window.cancelarCadastro = function(){ /* ... */ }; window.criarGridCadastro = function(id){ /* ... */ }; window.mudarEtapa = function(d){ /* ... */ }; window.getOcupacaoSlot = function(prestador, data, hora) { return agendamentos.filter(a => a.prestador === prestador.nome && a.data === data && (Array.isArray(a.slots) ? a.slots.includes(hora) : false)).length; }; window.getBlockedHours = function(prestador, data) { let blocked = new Set(); let cap = parseInt(prestador.qtdtecnicos) || 1; agendamentos.filter(a => a.prestador === prestador.nome && a.data === data).forEach(a => { a.slots.forEach(s => { let h = parseInt(s.split(':')[0]); if (window.getOcupacaoSlot(prestador, data, s) >= cap) { blocked.add(h); blocked.add(h - 1); blocked.add(h + 1); } }); }); return blocked; };
 
-    window.checkAuth();
     window.onload = async () => { window.carregarProdutos(); await carregarDadosDoBanco(); };
+    window.checkAuth();
 </script>
 </body>
 </html>
