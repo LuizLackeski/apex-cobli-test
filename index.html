@@ -49,7 +49,6 @@
         .flex-cards { display: flex; gap: 15px; margin-bottom: 20px; }
         .stats-card { background: white; padding: 15px; border-radius: 8px; flex: 1; border: 1px solid #e5e7eb; text-align: center; }
         
-        /* Layout Painel Ajustado */
         .painel-item { background: white; margin-bottom: 8px; padding: 12px; border-radius: 8px; border: 1px solid #e5e7eb; border-left: 5px solid var(--primary); box-shadow: 0 1px 3px rgba(0,0,0,0.1); display: flex; align-items: center; justify-content: space-between; }
         
         .filtros-painel { display: flex; gap: 10px; margin-bottom: 20px; padding: 15px; background: white; border-radius: 8px; border: 1px solid #e5e7eb; align-items: flex-end; flex-wrap: wrap; }
@@ -309,6 +308,13 @@
         
         let totalMinutos = itensSelecionados.reduce((a, b) => a + (b.tempo * b.qtd), 0);
         let horasNecessarias = Math.ceil(totalMinutos / 60);
+        
+        if (itensSelecionados.length === 0) {
+            container.innerHTML = `<div style="color: #64748b; font-size: 0.9rem; padding: 10px;">Inclua o serviço para verificar a agenda disponível.</div>`;
+            return;
+        }
+
+        container.innerHTML = `<div style="font-weight:600; color:var(--primary); margin-bottom: 10px;">Agenda disponível para o serviço selecionado:</div>`;
 
         for(let i=0; i<14; i++){ let data = new Date(); data.setDate(hoje.getDate() + i); let dStr = data.toLocaleDateString(); let dNome = diasSemana[data.getDay()]; let blocked = window.getBlockedHours(p, dStr); let allSlots = p.agenda ? p.agenda.filter(a => a.dia == dNome) : []; let availableSlots = allSlots.filter(item => { let h = parseInt(item.hora.split(':')[0]); return window.getOcupacaoSlot(p, dStr, item.hora) < cap && !blocked.has(h); }); 
         
@@ -363,7 +369,7 @@
             return `
             <div class="painel-item">
                 <div style="flex-grow: 1; font-size: 0.95rem;">
-                    <strong>🎟️ #${a.ticket}</strong> &nbsp; 📅 ${a.data}<br>
+                    <strong>🎟️ #${a.ticket}</strong> &nbsp; 📅 ${a.data} &nbsp; ⏰ ${Array.isArray(a.slots) ? a.slots.join(', ') : 'N/A'}<br>
                     <div style="margin-top:5px;">
                         👤 <strong>Cliente:</strong> ${a.cliente}<br>
                         🛠️ <strong>Prestador:</strong> ${a.prestador} | <strong>Qtd Serviços:</strong> ${qtdTotal} | <strong>Solicitante:</strong> ${a.solicitante}
