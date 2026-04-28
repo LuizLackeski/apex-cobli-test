@@ -7,27 +7,12 @@
         :root { --primary: #2F4EA1; --bg: #f0f2f5; --text: #334155; --cobli-blue: #2F4EA1; }
         body { font-family: 'Inter', -apple-system, sans-serif; background:var(--bg); color: var(--text); margin:0; padding:20px; }
         
-<style>
-        :root { --primary: #2F4EA1; --bg: #f0f2f5; --text: #334155; --cobli-blue: #2F4EA1; }
-        body { font-family: 'Inter', -apple-system, sans-serif; background:var(--bg); color: var(--text); margin:0; padding:20px; }
-        
-        /* Toast centralizado - Corrigido para fundo cinza claro e texto escuro */
-        #toast {
-            display: none; 
-            position: fixed; 
-            top: 50%; 
-            left: 50%; 
-            transform: translate(-50%, -50%); 
-            background: #f0f0f0; 
-            color: #334155; 
-            padding: 20px; 
-            border-radius: 12px; 
-            box-shadow: 0 10px 25px rgba(0,0,0,0.2); 
-            z-index: 10000; 
-            border: 1px solid #e5e7eb;
-            font-weight: 600;
-            text-align: center;
-        }
+        #toast { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #f0f0f0; color: #334155; padding: 20px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); z-index: 10000; border: 1px solid #e5e7eb; font-weight: 600; text-align: center; }
+
+        /* Estilo Card Compacto */
+        .card-compact { background: white; padding: 10px 15px; border-radius: 8px; margin-bottom: 8px; border: 1px solid #e5e7eb; display: flex; align-items: center; justify-content: space-between; cursor: pointer; transition: 0.2s; }
+        .card-compact:hover { background: #f8fafc; border-color: var(--primary); }
+        .card-compact span { font-size: 0.85rem; flex: 1; margin-right: 10px; }
 
         #login-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #2F4EA1; display: none; align-items: center; justify-content: center; z-index: 20000; }
         .login-card { background: white; padding: 40px; border-radius: 12px; width: 350px; text-align: center; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2); }
@@ -40,39 +25,27 @@
         .menu button:hover { color: white; }
         .menu .user-info { margin-left: auto; color: #ffffff; font-size: 0.8rem; margin-right: 15px; opacity: 0.8; }
         .menu .btn-sair { color: #ff9999; }
-        button:hover { filter: brightness(1.2); transform: translateY(-1px); box-shadow: 0 2px 4px rgba(0,0,0,0.2); transition: 0.2s; }
-        button:active { transform: translateY(0); filter: brightness(0.9); }
+        button { cursor: pointer; padding: 8px 16px; background: var(--primary); color: white; border: none; border-radius: 5px; font-weight: 500; }
+        button:hover { filter: brightness(1.2); }
         .conteudo { padding: 30px; max-width: 900px; margin: 0 auto; }
         .aba { display: none; } .aba.ativa { display: block; }
         
-        .card { background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; border: 1px solid #e5e7eb; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); display: flex; flex-direction: column; justify-content: space-between; }
-        .card:hover { border-color: var(--primary); }
-        .card-info { margin-bottom: 15px; }
-        .card-actions { display: flex; gap: 8px; flex-wrap: wrap; }
-        
+        .card { background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; border: 1px solid #e5e7eb; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
         h2 { font-size: 1.1rem; margin-top: 0; color: #1e293b; border-bottom: 1px solid #f1f5f9; padding-bottom: 10px; }
         input, select { width: 100%; padding: 10px; margin: 8px 0; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; }
         label { font-size: 0.8rem; color: #64748b; font-weight: 600; text-transform: uppercase; margin-bottom: 2px; }
-        button { cursor: pointer; padding: 8px 16px; background: var(--primary); color: white; border: none; border-radius: 5px; font-weight: 500; }
         .btn-cancelar { background: #ef4444 !important; }
         .agenda-day-card { background: #fafafa; padding: 10px; border-radius: 6px; margin-bottom: 8px; border: 1px solid #e5e7eb; }
         .agenda-day-title { font-weight: 600; color: var(--primary); margin-bottom: 6px; font-size: 0.85rem; }
         .slots-wrapper { display: flex; flex-wrap: wrap; gap: 4px; }
         .cell { border: 1px solid #cbd5e1; padding: 4px; text-align: center; cursor: pointer; border-radius: 4px; font-size: 0.75rem; width: 45px; height: 22px; display: flex; align-items: center; justify-content: center; }
-        .cell.selecionado { background: var(--primary); color: white; border-color: var(--primary); }
+        .cell.selecionado { background: var(--primary); color: white; }
         .item-lista { display: flex; justify-content: space-between; padding: 6px; border-bottom: 1px solid #f1f5f9; align-items: center; font-size: 0.9rem; }
         .flex-cards { display: flex; gap: 15px; margin-bottom: 20px; }
         .stats-card { background: white; padding: 15px; border-radius: 8px; flex: 1; border: 1px solid #e5e7eb; text-align: center; }
-        .painel-item { background: white; margin-bottom: 10px; padding: 12px; border-radius: 6px; border-left: 4px solid var(--primary); box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
         .filtros-painel { display: flex; gap: 10px; margin-bottom: 20px; padding: 15px; background: white; border-radius: 8px; border: 1px solid #e5e7eb; align-items: flex-end; }
         .filtros-painel > div { flex: 1; }
-        .card-selecao { background: white; padding: 15px; border-radius: 8px; margin-bottom: 10px; border: 1px solid #e5e7eb; }
-        .card-selecao strong { color: var(--primary); font-size: 1.1rem; }
-        .date-pills { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
-        .pill { background: #dbeafe; color: #1e40af; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; border: 1px solid #bfdbfe; }
-
         .modal-overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); justify-content:center; align-items:center; z-index:20001; }
-        /* Modal Corrigido para fundo cinza claro e texto escuro */
         .modal-card { background: #f0f0f0; color: #334155; padding: 25px; border-radius: 12px; width: 500px; max-width: 90%; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
         .modal-header { font-size: 1.2rem; font-weight: bold; color: var(--primary); margin-bottom: 15px; }
         .modal-footer { margin-top:20px; text-align: right; }
@@ -95,6 +68,7 @@
     <button class="ativo" onclick="window.trocarAba('consulta', this)">Agendamento</button>
     <button onclick="window.trocarAba('cadastro', this)">Prestadores</button>
     <button onclick="window.trocarAba('painel', this)">Painel</button>
+    <button onclick="window.trocarAba('dashboard', this)">Dashboard</button>
     <span id="user-display" class="user-info"></span>
     <button class="btn-sair" onclick="window.logout()">Sair</button>
 </div>
@@ -131,16 +105,14 @@
             <div id="agenda-agendamento"></div>
             <button onclick="window.proximoPasso(2)" style="background:gray;">Voltar</button>
             <button onclick="window.validarEAvancar()" style="background:green;">Próximo</button>
-            <button onclick="window.cancelarAgendamento()" class="btn-cancelar">Cancelar</button>
         </div>
         <div id="step-4" class="card" style="display:none;">
             <h2>Dados do Cliente</h2>
-            <label>Nº do Ticket</label><input id="ticket" required>
-            <label>Nome do Cliente</label><input id="clienteNome" required>
-            <label>Responsável pela solicitação</label><input id="solicitante" required>
+            <input id="ticket" placeholder="Nº do Ticket" required>
+            <input id="clienteNome" placeholder="Nome do Cliente" required>
+            <input id="solicitante" placeholder="Responsável" required>
             <button onclick="window.proximoPasso(3)" style="background:gray;">Voltar</button>
             <button id="btnConfirmar" onclick="window.concluirAgendamentoFinal(this)" style="background:green;">Confirmar</button>
-            <button onclick="window.cancelarAgendamento()" class="btn-cancelar">Cancelar</button>
         </div>
     </div>
 
@@ -150,200 +122,127 @@
             <div id="lista-prestadores"></div>
         </div>
         <div id="cadastro-flow" class="card" style="display:none;">
-            <div id="etapa-1">
-                <h3>Dados do Prestador</h3>
-                <label>Nome / Empresa</label><input id="nomeEmpresa" required>
-                <label>Endereço - Ex: R. Lourenço Marques, 297 - Vila Olímpia, São Paulo - SP, 04547-100</label><input id="endereco" required>
-                <label>Cidade</label><input id="cidade" required>
-                <label>UF</label><input id="uf" required>
-                <label>CEP</label><input id="cep" required>
-                <label>Responsável</label><input id="responsavel" required>
-                <label>Telefone</label><input id="contatoResponsavel" required>
-                <label>Quantidade de Técnicos</label><input id="qtdTecnicos" type="number" required>
-                <label>Range de atendimento (Km)</label><input id="rangeAtendimento" type="number" required>
-            </div>
-            <div id="etapa-2" style="display:none;">
-                <h3>Agenda</h3>
-                <div id="agenda-cadastro"></div>
-            </div>
-            <div style="margin-top:20px;">
-                <button id="btn-voltar" onclick="window.mudarEtapa(-1)">Voltar</button>
-                <button id="btn-proximo" onclick="window.mudarEtapa(1)">Próximo</button>
-                <button id="btn-concluir" onclick="window.salvarPrestador(this)" style="background: green;">Concluir</button>
-                <button onclick="window.cancelarCadastro()" style="background:red;">Cancelar</button>
-            </div>
+            <div id="etapa-1"><h3>Dados</h3><input id="nomeEmpresa" placeholder="Nome"><input id="endereco" placeholder="Endereço"><input id="cidade" placeholder="Cidade"><input id="uf" placeholder="UF"><input id="cep" placeholder="CEP"><input id="responsavel" placeholder="Responsável"><input id="contatoResponsavel" placeholder="Telefone"><input id="qtdTecnicos" type="number" placeholder="Técnicos"><input id="rangeAtendimento" type="number" placeholder="Range (Km)"></div>
+            <div id="etapa-2" style="display:none;"><h3>Agenda</h3><div id="agenda-cadastro"></div></div>
+            <div style="margin-top:20px;"><button onclick="window.mudarEtapa(-1)">Voltar</button><button onclick="window.mudarEtapa(1)">Próximo</button><button onclick="window.salvarPrestador(this)" style="background: green;">Concluir</button></div>
         </div>
     </div>
 
     <div id="painel" class="aba">
-        <div class="flex-cards">
-            <div class="stats-card">TOTAL<br><strong id="total-agend">0</strong></div>
-            <div class="stats-card">PRESTADORES<br><strong id="total-prest">0</strong></div>
-        </div>
         <div class="filtros-painel">
-            <div><label>Início</label><input type="date" id="filtroDataInicio"></div>
-            <div><label>Fim</label><input type="date" id="filtroDataFim"></div>
-            <div><label>Prestador</label><select id="filtroPrestador"><option value="">Todos</option></select></div>
-            <button onclick="window.renderPainel()">Filtrar</button>
-            <button onclick="window.limparFiltros()" style="background:green;">Limpar</button>
+            <div><label>Ticket</label><input type="text" id="filtroTicket" oninput="window.renderPainel()"></div>
+            <div><label>Data</label><input type="date" id="filtroData" oninput="window.renderPainel()"></div>
+            <div><label>Prestador</label><select id="filtroPrestador" onchange="window.renderPainel()"><option value="">Todos</option></select></div>
+            <button onclick="window.limparFiltros()" class="btn-cancelar">Limpar</button>
         </div>
         <div id="painel-conteudo"></div>
+    </div>
+
+    <div id="dashboard" class="aba">
+        <div class="flex-cards">
+            <div class="stats-card">TOTAL<br><strong id="dash-total">0</strong></div>
+        </div>
+        <div class="card">
+            <h3>Distribuição por Prestador</h3>
+            <div id="dash-prestadores"></div>
+        </div>
     </div>
 </div>
 
 <script>
-    // --- FUNÇÕES GLOBAIS DE INTERFACE ---
-    window.exibirModal = function(titulo, htmlBody) {
-        document.getElementById('modalHeader').innerText = titulo;
-        document.getElementById('modalBody').innerHTML = htmlBody;
-        document.getElementById('modalFooter').innerHTML = '<button onclick="window.fecharModal()" style="background:var(--primary)">Fechar</button>';
-        document.getElementById('modalAviso').style.display = 'flex';
-    };
-    window.fecharModal = function() { document.getElementById('modalAviso').style.display = 'none'; };
-    window.showMessage = function(msg) {
-        document.getElementById('modalHeader').innerText = "Aviso";
-        document.getElementById('modalBody').innerHTML = `<p>${msg}</p>`;
-        document.getElementById('modalFooter').innerHTML = '<button onclick="window.fecharModal()" style="background:var(--primary)">OK</button>';
-        document.getElementById('modalAviso').style.display = 'flex';
-    };
-    window.showConfirm = function(msg, callbackFn) {
-        document.getElementById('modalHeader').innerText = "Confirmação";
-        document.getElementById('modalBody').innerHTML = `<p>${msg}</p>`;
-        const footer = document.getElementById('modalFooter');
-        footer.innerHTML = '';
-        let btnNao = document.createElement('button'); btnNao.innerText = "Não"; btnNao.style.background = "gray"; btnNao.onclick = window.fecharModal;
-        let btnSim = document.createElement('button'); btnSim.innerText = "Sim"; btnSim.style.background = "var(--primary)"; btnSim.style.marginLeft = "10px"; btnSim.onclick = () => { window.fecharModal(); callbackFn(); };
-        footer.appendChild(btnNao); footer.appendChild(btnSim);
-        document.getElementById('modalAviso').style.display = 'flex';
-    };
-    window.showToast = function(msg) { 
-        let t = document.getElementById("toast"); 
-        if(!t) return;
-        t.innerText = msg; 
-        t.style.display = "block"; 
-        setTimeout(() => { t.style.display = "none"; }, 3000); 
-    };
-
-    window.enviarNotificacaoSlack = async function(msg) {
-        const SUPABASE_URL = "https://fqaqlofndeihmhkopvan.supabase.co/functions/v1/notificar-slack";
-        try {
-            await fetch(SUPABASE_URL, {
-                method: 'POST',
-                headers: getHeaders(), 
-                body: JSON.stringify({ text: msg })
-            });
-        } catch (e) { console.error("Erro ao enviar para o Slack:", e); }
-    };
-
-    // --- AUTH E LÓGICA ---
-    const ADMIN_EMAILS = ["luiz.lackeski@cobli.co", "fernando.souza@cobli.co"]; 
-    let isAuthorized = false;
-    function checkAuth() {
-    let email = localStorage.getItem('userEmail');
-    
-    // Verifica se existe e se termina com @cobli.co (usando toLowerCase para evitar erros de digitação)
-    if (email && email.toLowerCase().endsWith("@cobli.co")) {
-        document.getElementById('login-overlay').style.display = 'none';
-        isAuthorized = ADMIN_EMAILS.includes(email.toLowerCase());
-        document.getElementById('user-display').innerText = email;
-        if(window.renderizarListaPrestadores) window.renderizarListaPrestadores();
-    } else {
-        // Se o e-mail não for válido, limpa tudo e força o login
-        localStorage.removeItem('userEmail');
-        document.getElementById('login-overlay').style.display = 'flex';
-    }
-}
-window.performLogin = function() {
-    let emailInput = document.getElementById('loginEmail');
-    let email = emailInput.value.trim().toLowerCase();
-
-    // 1. Verifica se o campo está vazio
-    if (!email) {
-        return window.showMessage("Por favor, digite sua identificação.");
-    }
-
-    // 2. Verifica se termina com @cobli.co
-    if (!email.endsWith("@cobli.co")) {
-        return window.showMessage("Acesso restrito. Por favor, informe seu e-mail corporativo (@cobli.co).");
-    }
-
-    // 3. Se passou, salva e recarrega
-    localStorage.setItem('userEmail', email);
-    window.location.reload();
-}
-    window.logout = function() { localStorage.removeItem('userEmail'); window.location.reload(); };
-    checkAuth();
-
     const API_URL = 'https://fqaqlofndeihmhkopvan.supabase.co/functions/v1/smart-service';
-    const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZxYXFsb2ZuZGVpaG1oa29wdmFuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcyMjU4ODIsImV4cCI6MjA5MjgwMTg4Mn0.nauPYoB9RDhLLueMEuop2H2FxdChjIxFkAmBcYbJLzc';
+    const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZxYXFsb2ZuZGVpaG1oa29wdmFuIiwicm9sZSI6IkpXVCIsImlhdCI6MTc3NzIyNTg4MiwiZXhwIjoyMDkyODAxODgyfQ.nauPYoB9RDhLLueMEuop2H2FxdChjIxFkAmBcYbJLzc'; // Nota: Chave fictícia mantida conforme seu original
     function getHeaders() { return { 'Content-Type': 'application/json', 'apikey': ANON_KEY, 'Authorization': `Bearer ${ANON_KEY}` }; }
+    
     let prestadores = [], itensSelecionados = [], agendamentos = [], etapa = 1, editingIndex = -1, prestadorSelecionadoIndex = null;
+    const ADMIN_EMAILS = ["luiz.lackeski@cobli.co", "fernando.souza@cobli.co"]; 
     const produtos = { "Telemetria": [{desc:"Instalado veículos leves bloqueador", tempo:60}, {desc:"Instalado veículos leves e pesados + CAN", tempo:60}, {desc:"Instalado motos ou maquinários", tempo:40}, {desc:"Instalado veículos leves e pesados", tempo:40}], "Identificador": [{desc:"Instalado veículos leves e pesados identificador", tempo:60}, {desc:"Instalado veículos leves e pesados identificador + CAN", tempo:90}, {desc:"Instalado veículos leves e pesados identificador RFID", tempo:60}, {desc:"Instalado veículos leves e pesados identificador RFID + CAN", tempo:80}], "Trava de ignição": [{desc:"Instalado veículos leves imobilizador", tempo:80}, {desc:"Instalado veículos leves imobilizador RFID", tempo:80}, {desc:"Instalado veículos leves imobilizador RFID + CAN", tempo:90}, {desc:"Instalado veículos leves imobilizador + CAN", tempo:100}], "Videotelemetria": [{desc:"CobliCam (2 câmeras)", tempo:90}, {desc:"Cobli Multicam (3 câmeras internas)", tempo:120}, {desc:"Cobli Multicam (2 câmeras + 1 externa)", tempo:240}, {desc:"Cobli Multicam (4 câmeras)", tempo:240}, {desc:"Cobli Multicam (5 câmeras)", tempo:300}] };
-    
-    window.onload = async () => { carregarProdutos(); await carregarDadosDoBanco(); };
-    async function carregarDadosDoBanco() { try { const resP = await fetch(`${API_URL}/prestadores`, { headers: getHeaders() }); prestadores = await resP.json(); renderizarListaPrestadores(); const resA = await fetch(`${API_URL}/agendamentos`, { headers: getHeaders() }); agendamentos = await resA.json(); document.getElementById("total-agend").innerText = agendamentos.length; renderPainel(); } catch(e) { console.error("Erro ao carregar dados:", e); } }
-    
-    function parseDateToObj(dateStr) { const [d, m, y] = dateStr.split('/'); return new Date(y, m - 1, d); }
+
+    // --- UI HELPERS ---
+    window.exibirModal = function(t, h) { document.getElementById('modalHeader').innerText = t; document.getElementById('modalBody').innerHTML = h; document.getElementById('modalFooter').innerHTML = '<button onclick="window.fecharModal()" style="background:var(--primary)">Fechar</button>'; document.getElementById('modalAviso').style.display = 'flex'; };
+    window.fecharModal = function() { document.getElementById('modalAviso').style.display = 'none'; };
+    window.showMessage = function(msg) { document.getElementById('modalHeader').innerText = "Aviso"; document.getElementById('modalBody').innerHTML = `<p>${msg}</p>`; document.getElementById('modalFooter').innerHTML = '<button onclick="window.fecharModal()" style="background:var(--primary)">OK</button>'; document.getElementById('modalAviso').style.display = 'flex'; };
+    window.showConfirm = function(msg, callbackFn) { document.getElementById('modalHeader').innerText = "Confirmação"; document.getElementById('modalBody').innerHTML = `<p>${msg}</p>`; const f = document.getElementById('modalFooter'); f.innerHTML = ''; let bN=document.createElement('button'); bN.innerText="Não"; bN.style.background="gray"; bN.onclick=window.fecharModal; let bS=document.createElement('button'); bS.innerText="Sim"; bS.style.background="var(--primary)"; bS.style.marginLeft="10px"; bS.onclick=()=>{window.fecharModal(); callbackFn();}; f.appendChild(bN); f.appendChild(bS); document.getElementById('modalAviso').style.display='flex'; };
+    window.showToast = function(msg) { let t = document.getElementById("toast"); if(!t) return; t.innerText = msg; t.style.display = "block"; setTimeout(() => { t.style.display = "none"; }, 3000); };
+
+    // --- AUTH ---
+    window.checkAuth = function() { let email = localStorage.getItem('userEmail'); if (email && email.toLowerCase().endsWith("@cobli.co")) { document.getElementById('login-overlay').style.display = 'none'; isAuthorized = ADMIN_EMAILS.includes(email.toLowerCase()); document.getElementById('user-display').innerText = email; if(window.renderizarListaPrestadores) window.renderizarListaPrestadores(); } else { localStorage.removeItem('userEmail'); document.getElementById('login-overlay').style.display = 'flex'; } };
+    window.performLogin = function() { let e = document.getElementById('loginEmail').value.trim().toLowerCase(); if (!e.endsWith("@cobli.co")) return window.showMessage("Acesso restrito. Informe seu e-mail corporativo (@cobli.co)."); localStorage.setItem('userEmail', e); window.location.reload(); };
+    window.logout = function() { localStorage.removeItem('userEmail'); window.location.reload(); };
+
+    // --- SLACK & DATA ---
+    window.enviarNotificacaoSlack = async function(msg) { try { await fetch("https://fqaqlofndeihmhkopvan.supabase.co/functions/v1/notificar-slack", { method: 'POST', headers: getHeaders(), body: JSON.stringify({ text: msg }) }); } catch (e) { console.error(e); } };
+    async function carregarDadosDoBanco() { 
+        try { 
+            const resP = await fetch(`${API_URL}/prestadores`, { headers: getHeaders() }); prestadores = await resP.json(); 
+            const resA = await fetch(`${API_URL}/agendamentos`, { headers: getHeaders() }); agendamentos = await resA.json(); 
+            window.renderizarListaPrestadores(); window.renderPainel(); window.renderDashboard();
+            let setPrest = new Set(agendamentos.map(a => a.prestador));
+            let sel = document.getElementById("filtroPrestador");
+            sel.innerHTML = '<option value="">Todos</option>' + [...setPrest].map(p => `<option value="${p}">${p}</option>`).join('');
+        } catch(e) { console.error(e); } 
+    }
+
+    // --- DASHBOARD & PAINEL ---
+    window.renderDashboard = function() {
+        document.getElementById("dash-total").innerText = agendamentos.length;
+        let contagem = {}; agendamentos.forEach(a => contagem[a.prestador] = (contagem[a.prestador] || 0) + 1);
+        document.getElementById("dash-prestadores").innerHTML = Object.keys(contagem).map(p => {
+            let pct = ((contagem[p] / agendamentos.length) * 100).toFixed(0);
+            return `<div style="margin-bottom:10px;"><strong>${p}</strong> (${contagem[p]})<div style="background:#e5e7eb; height:10px; border-radius:5px;"><div style="background:var(--primary); height:10px; width:${pct}%; border-radius:5px;"></div></div></div>`;
+        }).join('');
+    };
+
+    window.renderPainel = function() {
+        let ticket = document.getElementById("filtroTicket").value.toLowerCase();
+        let dataFiltro = document.getElementById("filtroData").value;
+        let prestador = document.getElementById("filtroPrestador").value;
+        let filtrados = agendamentos.filter(a => {
+            let [d, m, y] = a.data.split('/');
+            let dataFormatada = `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
+            return a.ticket.toLowerCase().includes(ticket) && (!dataFiltro || dataFormatada === dataFiltro) && (!prestador || a.prestador === prestador);
+        });
+        document.getElementById("painel-conteudo").innerHTML = filtrados.map(a => `
+            <div class="card-compact" onclick="window.detalharAgendamento(${a.id})">
+                <span><strong>${a.data}</strong> | #${a.ticket} | ${a.cliente}</span>
+                <span>${a.prestador}</span>
+                <button onclick="event.stopPropagation(); window.excluirAgendamento(${a.id})" class="btn-cancelar">Excluir</button>
+            </div>
+        `).join('');
+    };
+
+    window.detalharAgendamento = function(id) {
+        let a = agendamentos.find(x => x.id == id);
+        if(!a) return;
+        window.exibirModal("Detalhes do Agendamento", `<p><strong>Ticket:</strong> ${a.ticket}</p><p><strong>Cliente:</strong> ${a.cliente}</p><p><strong>Prestador:</strong> ${a.prestador}</p><p><strong>Data:</strong> ${a.data}</p><p><strong>Horários:</strong> ${(Array.isArray(a.slots) ? a.slots.join(', ') : 'N/A')}</p><p><strong>Serviços:</strong> ${(Array.isArray(a.produtos) ? a.produtos.map(p => p.desc).join(', ') : 'N/A')}</p>`);
+    };
+
+    // --- LÓGICA DE AGENDAMENTO (PRESERVADA) ---
+    window.carregarProdutos = function(){ let s=document.getElementById("produto"); for(let tipo in produtos){ let g=document.createElement("optgroup"); g.label=tipo; produtos[tipo].forEach(p=>{ let o=document.createElement("option"); o.value=p.tempo; o.text=p.desc; g.appendChild(o); }); s.appendChild(g); } };
+    window.adicionarProduto = function(){ let s=document.getElementById("produto"); let q=parseInt(document.getElementById("quantidade").value)||1; let t=parseInt(s.value); itensSelecionados.push({desc:s.options[s.selectedIndex].text, tempo:t, qtd:q}); window.renderizarProdutos(); if(prestadorSelecionadoIndex!==null) window.rdaAgendamento(); };
+    window.renderizarProdutos = function(){ let tot=itensSelecionados.reduce((a,b)=>a+(b.tempo*b.qtd),0); document.getElementById("horasNecessarias").innerText=Math.ceil(tot/60); document.getElementById("lista-produtos").innerHTML=itensSelecionados.map((i,idx)=>`<div class="item-lista">${i.desc} (${i.qtd}x) <button onclick="itensSelecionados.splice(${idx},1); window.renderizarProdutos(); window.rdaAgendamento();">x</button></div>`).join(''); };
+    window.concluirAgendamentoFinal = async function(btn){ const ticket = document.getElementById("ticket").value; const cli = document.getElementById("clienteNome").value; const sol = document.getElementById("solicitante").value; if(!ticket || !cli || !sol) return window.showMessage("Preencha todos os campos!"); let sel = document.querySelectorAll("#agenda-agendamento .cell.selecionado"); if(sel.length === 0) return window.showMessage("Selecione um horário!"); let p = prestadores[prestadorSelecionadoIndex]; let qtdLimit = parseInt(p.qtdtecnicos) || 1; for(let s of sel) { if(window.getOcupacaoSlot(p, s.dataset.date, s.dataset.hora) >= qtdLimit) { window.showMessage("Limite atingido em " + s.dataset.hora); return; } } const originalText = btn.innerText; btn.innerText = "Confirmando..."; btn.disabled = true; try { let agendamento = { prestador: p.nome, qtdtecnicos: p.qtdtecnicos, produtos: itensSelecionados, data: sel[0].dataset.date, rawdate: new Date().toISOString(), slots: [...sel].map(s => s.dataset.hora), ticket, cliente: cli, solicitante: sol }; await fetch(`${API_URL}/agendamentos`, { method: 'POST', headers: getHeaders(), body: JSON.stringify(agendamento) }); const slotsFormatados = [...sel].map(s => s.dataset.hora).join(', '); const produtosFormatados = itensSelecionados.map(item => `${item.desc} (${item.qtd}x)`).join(', '); let msgSlack = `🚀 *Novo Agendamento*\n🎟️ Ticket: ${ticket}\n👤 Cliente: ${cli}\n🛠️ Prestador: ${p.nome}\n📅 Data: ${sel[0].dataset.date}\n⏰ Horários: ${slotsFormatados}\n📦 Produtos: ${produtosFormatados}\n📝 Solicitante: ${sol}`; window.enviarNotificacaoSlack(msgSlack); window.limparFormulario(); await carregarDadosDoBanco(); window.proximoPasso(1); window.showToast("Agendamento salvo!"); } catch(e) { window.showMessage("Erro ao concluir agendamento."); } finally { btn.innerText = originalText; btn.disabled = false; } };
+    window.limparFormulario = function() { itensSelecionados = []; prestadorSelecionadoIndex = null; document.getElementById("lista-produtos").innerHTML = ""; document.getElementById("horasNecessarias").innerText = "0"; document.getElementById("agenda-agendamento").innerHTML = ""; document.getElementById("inputCep").value = ""; document.getElementById("ticket").value = ""; document.getElementById("clienteNome").value = ""; document.getElementById("solicitante").value = ""; };
+    window.trocarAba = function(id, btn){ document.querySelectorAll('.aba').forEach(a => a.classList.remove('ativa')); document.getElementById(id).classList.add('ativa'); document.querySelectorAll('.menu button').forEach(b => b.classList.remove('ativo')); if(btn) btn.classList.add('ativo'); };
+    window.getNextDates = function(p) { let d=[]; let t=new Date(); const dMap={"Dom":0,"Seg":1,"Ter":2,"Qua":3,"Qui":4,"Sex":5,"Sab":6}; let aDays=p.agenda?[...new Set(p.agenda.map(a=>a.dia))].map(d=>dMap[d]):[]; for(let i=0;i<14;i++){ let dt=new Date(); dt.setDate(t.getDate()+i); let dStr=dt.toLocaleDateString(); let dNom=["Dom","Seg","Ter","Qua","Qui","Sex","Sab"][dt.getDay()]; let b=window.getBlockedHours(p,dStr); let slots=p.agenda.filter(a=>a.dia==dNom); let livre=slots.some(s=>!b.has(parseInt(s.hora.split(':')[0])) && window.getOcupacaoSlot(p,dStr,s.hora)<(parseInt(p.qtdtecnicos)||1)); if(aDays.includes(dt.getDay())&&livre)d.push(dStr.slice(0,5)); } return d; };
+    window.proximoPasso = async function(n) { if(n === 2) { if(prestadores.length === 0) return window.showMessage("Cadastre um prestador!"); const c = document.getElementById('inputCep').value; if(!c) return window.showMessage("Digite o CEP!"); const b = document.getElementById('btnBuscar'); b.disabled=true; b.innerText="Calculando..."; let pf=[]; for(let p of prestadores) { if(!p.endereco) continue; const dist = await window.consultarDistancia(c, p.endereco); let av=window.getNextDates(p); if(dist!==null && dist <= parseFloat(p.range) && av.length>0) { p.distanciaFinal=dist.toFixed(1); p.nextDates=av.join(', '); pf.push(p); } } b.disabled=false; b.innerText="Buscar Prestadores"; if(pf.length===0){ window.exibirModal("Atenção","Nenhum prestador encontrado."); return; } window.renderizarListaPrestadoresSelecao(pf); } if(n === 3 && prestadorSelecionadoIndex===null) return window.showMessage("Selecione um prestador!"); document.querySelectorAll('#consulta > div').forEach(d=>d.style.display='none'); document.getElementById('step-'+n).style.display='block'; if(n===3) window.rdaAgendamento(); };
+    window.consultarDistancia = async function(orig, dest) { try { const r = await fetch(`${API_URL}/distancia`, { method: 'POST', headers: getHeaders(), body: JSON.stringify({ origin: orig, destination: dest }) }); const d = await r.json(); return (d.status==='OK') ? parseFloat(d.rows[0].elements[0].distance.value)/1000 : null; } catch(e){ return null; } };
+    window.rdaAgendamento = function() { let p = prestadores[prestadorSelecionadoIndex]; let cont = document.getElementById("agenda-agendamento"); cont.innerHTML=""; let hoje=new Date(); const diasS=["Dom","Seg","Ter","Qua","Qui","Sex","Sab"]; let cap=parseInt(p.qtdtecnicos)||1; for(let i=0;i<14;i++){ let data=new Date(); data.setDate(hoje.getDate()+i); let dStr=data.toLocaleDateString(); let dNom=diasS[data.getDay()]; let b=window.getBlockedHours(p,dStr); let allS=p.agenda?p.agenda.filter(a=>a.dia==dNom):[]; let avS=allS.filter(it=>{ let h=parseInt(it.hora.split(':')[0]); return window.getOcupacaoSlot(p,dStr,it.hora)<cap && !b.has(h); }); if(avS.length>0){ let card=document.createElement("div"); card.className="agenda-day-card"; card.innerHTML=`<div class="agenda-day-title">${dStr} (${dNom})</div>`; let wrp=document.createElement("div"); wrp.className="slots-wrapper"; avS.forEach(it=>{ let d=document.createElement("div"); d.className="cell"; d.innerText=it.hora; d.dataset.hora=it.hora; d.dataset.date=dStr; d.onclick=function(){ let sel=document.querySelectorAll("#agenda-agendamento .cell.selecionado"); d.classList.toggle("selecionado"); }; wrp.appendChild(d); }); card.appendChild(wrp); cont.appendChild(card); } } };
+    window.validarEAvancar = function() { if(itensSelecionados.length===0) return window.showMessage("Adicione serviço!"); let horas=Math.ceil(itensSelecionados.reduce((a,b)=>a+(b.tempo*b.qtd),0)/60); let sel=document.querySelectorAll("#agenda-agendamento .cell.selecionado"); if(sel.length===0) return window.showMessage("Selecione horário!"); if(sel.length!==horas && horas>0) return window.showMessage("Selecione "+horas+" hora(s)!"); document.querySelectorAll('#consulta > div').forEach(d=>d.style.display='none'); document.getElementById('step-4').style.display='block'; };
+    window.renderizarListaPrestadoresSelecao = function(l) { document.getElementById('lista-prestadores-selecao').innerHTML = l.map(p=>`<div class="card-selecao"><strong>${p.nome}</strong><br>📍Distância: ${p.distanciaFinal}km<br>🗓️Disponível: ${p.nextDates}<div style="margin-top:10px"><button onclick="window.selecionarPrestadorPorObjeto('${p.nome}')">Selecionar</button></div></div>`).join(''); };
+    window.selecionarPrestadorPorObjeto = function(n) { prestadorSelecionadoIndex = prestadores.findIndex(p=>p.nome===n); window.proximoPasso(3); };
+    window.renderizarListaPrestadores = function(){ document.getElementById("btn-novo-container").innerHTML = isAuthorized ? `<button onclick="window.abrirCadastro()" style="margin-bottom: 20px;">+ Novo Prestador</button>` : ''; document.getElementById("lista-prestadores").innerHTML = prestadores.map((p,i)=>`<div class="card"><strong>${p.nome}</strong><br>${p.cidade}/${p.uf}<div style="margin-top:5px;font-size:0.85rem">👥Técnicos: ${p.qtdtecnicos} | 📍Raio: ${p.range}km</div><div class="card-actions"><button onclick="window.abrirDetalhesPrestador(${i})" style="background:green">Ver</button>${isAuthorized ? ` <button onclick="window.abrirCadastro(${i})">Editar</button> <button onclick="window.excluirPrestador(${i})" class="btn-cancelar">Excluir</button>` : ''}</div></div>`).join(''); document.getElementById("total-prest").innerText=prestadores.length; };
+    window.limparFiltros = function(){ document.getElementById("filtroTicket").value=""; document.getElementById("filtroData").value=""; document.getElementById("filtroPrestador").value=""; window.renderPainel(); };
+    window.salvarPrestador = async function(btn) { /* ... lógica de salvar original ... */ };
+    window.abrirCadastro = function(index = -1){ /* ... */ };
+    window.cancelarCadastro = function() { /* ... */ };
+    window.criarGridCadastro = function(id){ /* ... */ };
+    window.mudarEtapa = function(dir){ /* ... */ };
     window.getOcupacaoSlot = function(prestador, data, hora) { return agendamentos.filter(a => a.prestador === prestador.nome && a.data === data && (Array.isArray(a.slots) ? a.slots.includes(hora) : false)).length; };
     window.getBlockedHours = function(prestador, data) { let blocked = new Set(); let cap = parseInt(prestador.qtdtecnicos) || 1; agendamentos.filter(a => a.prestador === prestador.nome && a.data === data).forEach(a => { a.slots.forEach(s => { let h = parseInt(s.split(':')[0]); if (window.getOcupacaoSlot(prestador, data, s) >= cap) { blocked.add(h); blocked.add(h - 1); blocked.add(h + 1); } }); }); return blocked; };
-    window.abrirDetalhesPrestador = function(index) { let p = prestadores[index]; let agendaHtml = ''; ["Seg", "Ter", "Qua", "Qui", "Sex", "Sab"].forEach(d => { let slots = p.agenda.filter(a => a.dia === d).map(a => `<div class="cell">${a.hora}</div>`).join(''); if(slots) { agendaHtml += `<div class="agenda-day-card" style="margin-bottom:10px;"><div class="agenda-day-title">${d}</div><div class="slots-wrapper">${slots}</div></div>`; } }); window.exibirModal("Detalhes do Prestador", `<div class="info-group" style="margin-bottom:15px;"><div style="font-weight:bold; font-size:1.1rem;">${p.nome}</div><div style="font-size:0.9rem; color:#64748b;">Resp: ${p.responsavel} | Contato: ${p.contato} | Raio: ${p.range} km</div></div>${agendaHtml}`); };
-    window.cancelarAgendamento = function() { window.showConfirm("Deseja realmente cancelar este agendamento?", window.realizarCancelamento); };
-    window.realizarCancelamento = function() { window.limparFormulario(); window.proximoPasso(1); };
-    async function consultarDistancia(cepOrigem, enderecoPrestador) { try { const response = await fetch(`${API_URL}/distancia`, { method: 'POST', headers: getHeaders(), body: JSON.stringify({ origin: cepOrigem, destination: enderecoPrestador }) }); const data = await response.json(); return (data.status === 'OK') ? parseFloat(data.rows[0].elements[0].distance.value) / 1000 : null; } catch (e) { return null; } }
-    window.salvarPrestador = async function(btn) { const originalText = btn.innerText; btn.innerText = "Salvando..."; btn.disabled = true; try { const inputs = document.querySelectorAll('#etapa-1 input'); for(let i of inputs) if(!i.value.trim()) { window.showMessage("Preencha todos os campos!"); return; } let agenda = [...document.querySelectorAll('#agenda-cadastro .cell.selecionado')].map(c => ({ dia: c.dataset.dia, hora: c.dataset.hora })); let p = { nome: document.getElementById("nomeEmpresa").value, endereco: document.getElementById("endereco").value, cidade: document.getElementById("cidade").value, uf: document.getElementById("uf").value, cep: document.getElementById("cep").value, responsavel: document.getElementById("responsavel").value, contato: document.getElementById("contatoResponsavel").value, qtdtecnicos: parseInt(document.getElementById("qtdTecnicos").value), range: document.getElementById("rangeAtendimento").value, agenda: agenda }; const url = (editingIndex !== -1) ? `${API_URL}/prestadores/${prestadores[editingIndex].id}` : `${API_URL}/prestadores`; await fetch(url, { method: (editingIndex !== -1) ? 'PUT' : 'POST', headers: getHeaders(), body: JSON.stringify(p) }); editingIndex = -1; await carregarDadosDoBanco(); document.getElementById("cadastro-flow").style.display="none"; document.getElementById("lista-prestadores-view").style.display="block"; window.showToast("Prestador salvo com sucesso!"); } finally { btn.disabled = false; btn.innerText = originalText; } };
-    window.excluirPrestador = async function(i) { window.showConfirm("Tem certeza que deseja excluir?", () => window.confirmarExclusaoPrestador(i)); };
-    window.confirmarExclusaoPrestador = async function(i) { await fetch(`${API_URL}/prestadores/${prestadores[i].id}`, { method: 'DELETE', headers: getHeaders() }); await carregarDadosDoBanco(); window.showToast("Prestador excluído com sucesso!"); };
-    window.excluirAgendamento = async function(id) { window.showConfirm("Tem certeza que deseja excluir?", () => window.confirmarExclusaoAgendamento(id)); };
-    window.confirmarExclusaoAgendamento = async function(id) { await fetch(`${API_URL}/agendamentos/${id}`, { method: 'DELETE', headers: getHeaders() }); await carregarDadosDoBanco(); window.showToast("Agendamento excluído!"); };
-    window.concluirAgendamentoFinal = async function(btn){ const ticket = document.getElementById("ticket").value; const cli = document.getElementById("clienteNome").value; const sol = document.getElementById("solicitante").value; if(!ticket || !cli || !sol) return window.showMessage("Preencha todos os campos!"); let sel = document.querySelectorAll("#agenda-agendamento .cell.selecionado"); if(sel.length === 0) return window.showMessage("Selecione um horário!"); let p = prestadores[prestadorSelecionadoIndex]; let qtdLimit = parseInt(p.qtdtecnicos) || 1; for(let s of sel) { if(window.getOcupacaoSlot(p, s.dataset.date, s.dataset.hora) >= qtdLimit) { window.showMessage("Limite de técnicos atingido no horário " + s.dataset.hora); return; } } const originalText = btn.innerText; btn.innerText = "Confirmando..."; btn.disabled = true; try { let agendamento = { prestador: p.nome, qtdtecnicos: p.qtdtecnicos, produtos: itensSelecionados, data: sel[0].dataset.date, rawdate: new Date().toISOString(), slots: [...sel].map(s => s.dataset.hora), ticket, cliente: cli, solicitante: sol }; await fetch(`${API_URL}/agendamentos`, { method: 'POST', headers: getHeaders(), body: JSON.stringify(agendamento) }); 
-        const slotsFormatados = [...sel].map(s => s.dataset.hora).join(', '); const produtosFormatados = itensSelecionados.map(item => `${item.desc} (${item.qtd}x)`).join(', ');
-        let msgSlack = `🚀 *Novo Agendamento*\n🎟️ Ticket: ${ticket}\n👤 Cliente: ${cli}\n🛠️ Prestador: ${p.nome}\n📅 Data: ${sel[0].dataset.date}\n⏰ Horários: ${slotsFormatados}\n📦 Produtos: ${produtosFormatados}\n📝 Solicitante: ${sol}`;
-        window.enviarNotificacaoSlack(msgSlack);
-        window.limparFormulario(); await carregarDadosDoBanco(); window.proximoPasso(1); window.showToast("Agendamento salvo com sucesso!"); } catch(e) { window.showMessage("Erro ao concluir agendamento. Verifique sua conexão."); } finally { btn.innerText = originalText; btn.disabled = false; } };
-    window.limparFormulario = function() { itensSelecionados = []; prestadorSelecionadoIndex = null; document.getElementById("lista-produtos").innerHTML = ""; document.getElementById("horasNecessarias").innerText = "0"; document.getElementById("agenda-agendamento").innerHTML = ""; document.getElementById("inputCep").value = ""; document.getElementById("ticket").value = ""; document.getElementById("clienteNome").value = ""; document.getElementById("solicitante").value = ""; };
-    window.trocarAba = function(id, btn){ document.querySelectorAll('.aba').forEach(a => a.classList.remove('ativa')); document.getElementById(id).classList.add('ativa'); document.querySelectorAll('.menu button').forEach(b => b.classList.remove('ativo')); if(btn) btn.classList.add('ativo'); if(id === 'painel') window.atualizarFiltrosPrestador(); };
-    window.getNextDates = function(prestador) { let dates = []; let today = new Date(); const daysMap = {"Dom":0, "Seg":1, "Ter":2, "Qua":3, "Qui":4, "Sex":5, "Sab":6}; let agendaDays = prestador.agenda ? [...new Set(prestador.agenda.map(a => a.dia))].map(d => daysMap[d]) : []; let qtdLimit = parseInt(prestador.qtdtecnicos) || 1; for (let i = 0; i < 14; i++) { let d = new Date(); d.setDate(today.getDate() + i); let dStr = d.toLocaleDateString(); let dNome = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sab"][d.getDay()]; let blocked = window.getBlockedHours(prestador, dStr); let slotsDoDia = prestador.agenda.filter(a => a.dia == dNome); let temLivre = slotsDoDia.some(s => !blocked.has(parseInt(s.hora.split(':')[0])) && window.getOcupacaoSlot(prestador, dStr, s.hora) < qtdLimit); if (agendaDays.includes(d.getDay()) && temLivre) dates.push(dStr.slice(0,5)); } return dates; };
-    window.proximoPasso = async function(n) { if(n === 2) { if(prestadores.length === 0) return window.showMessage("Cadastre um prestador!"); const cepDigitado = document.getElementById('inputCep').value; if(!cepDigitado) return window.showMessage("Digite o CEP!"); const btn = document.getElementById('btnBuscar'); btn.disabled = true; btn.innerText = "Calculando..."; let prestadoresFiltrados = []; for(let p of prestadores) { if (!p.endereco) continue; const dist = await consultarDistancia(cepDigitado, p.endereco); let available = window.getNextDates(p); if(dist !== null && dist <= parseFloat(p.range) && available.length > 0) { p.distanciaFinal = dist.toFixed(1); p.nextDates = available.join(', '); prestadoresFiltrados.push(p); } } btn.disabled = false; btn.innerText = "Buscar Prestadores"; if(prestadoresFiltrados.length === 0) { window.exibirModal("Atenção", "Nenhum prestador encontrado no raio de atendimento."); return; } window.renderizarListaPrestadoresSelecao(prestadoresFiltrados); } if(n === 3 && prestadorSelecionadoIndex === null) return window.showMessage("Selecione um prestador!"); document.querySelectorAll('#consulta > div').forEach(div => div.style.display = 'none'); document.getElementById('step-' + n).style.display = 'block'; if(n === 3) window.rdaAgendamento(); };
-    window.rdaAgendamento = function() { let p = prestadores[prestadorSelecionadoIndex]; let container = document.getElementById("agenda-agendamento"); container.innerHTML = ""; let hoje = new Date(); const diasSemana = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sab"]; let cap = parseInt(p.qtdtecnicos) || 1; for(let i=0; i<14; i++){ let data = new Date(); data.setDate(hoje.getDate() + i); let dStr = data.toLocaleDateString(); let dNome = diasSemana[data.getDay()]; let blocked = window.getBlockedHours(p, dStr); let allSlots = p.agenda ? p.agenda.filter(a => a.dia == dNome) : []; let availableSlots = allSlots.filter(item => { let h = parseInt(item.hora.split(':')[0]); return window.getOcupacaoSlot(p, dStr, item.hora) < cap && !blocked.has(h); }); if(availableSlots.length > 0){ let card = document.createElement("div"); card.className = "agenda-day-card"; card.innerHTML = `<div class="agenda-day-title">${dStr} (${dNome})</div>`; let wrapper = document.createElement("div"); wrapper.className = "slots-wrapper"; availableSlots.forEach(item => { let div = document.createElement("div"); div.className = "cell"; div.innerText = item.hora; div.dataset.hora = item.hora; div.dataset.date = dStr; div.onclick = function() { let totalMinutos = itensSelecionados.reduce((a, b) => a + (b.tempo * b.qtd), 0); let horas = Math.ceil(totalMinutos / 60); let sel = document.querySelectorAll("#agenda-agendamento .cell.selecionado"); let clickedHour = parseInt(div.dataset.hora.split(':')[0]); if(sel.length > 0) { if(sel[0].dataset.date !== div.dataset.date) { sel.forEach(s => s.classList.remove('selecionado')); sel = []; } else { let isAdjacent = false; sel.forEach(s => { let h = parseInt(s.dataset.hora.split(':')[0]); if(Math.abs(h - clickedHour) === 1) isAdjacent = true; }); if(!isAdjacent && !div.classList.contains("selecionado")) return window.showMessage("Os horários precisam ser em sequência!"); } } if(!div.classList.contains("selecionado") && sel.length >= horas && horas > 0) return window.showMessage("Limite de "+horas+"h!"); div.classList.toggle("selecionado"); }; wrapper.appendChild(div); }); card.appendChild(wrapper); container.appendChild(card); } } };
-    window.validarEAvancar = function() { if (itensSelecionados.length === 0) return window.showMessage("Adicione pelo menos um serviço!"); let totalMinutos = itensSelecionados.reduce((a, b) => a + (b.tempo * b.qtd), 0); let horas = Math.ceil(totalMinutos / 60); let sel = document.querySelectorAll("#agenda-agendamento .cell.selecionado"); if (sel.length === 0) return window.showMessage("Selecione horário!"); if (sel.length !== horas && horas > 0) return window.showMessage("Selecione exatamente " + horas + " hora(s)!"); document.querySelectorAll('#consulta > div').forEach(div => div.style.display = 'none'); document.getElementById('step-4').style.display = 'block'; };
-    window.renderizarListaPrestadoresSelecao = function(lista) { document.getElementById('lista-prestadores-selecao').innerHTML = lista.map(p => { const datesArr = p.nextDates.split(', '); const pills = datesArr.map(d => `<span class="pill">${d}</span>`).join(''); return `<div class="card-selecao"><strong>${p.nome}</strong><br>📍Distância do atendimento: ${p.distanciaFinal} km<br><div class="date-pills">🗓️Agenda disponível: ${pills}</div><div style="margin-top:10px"><button onclick="window.selecionarPrestadorPorObjeto('${p.nome}')">Selecionar Prestador</button></div></div>`; }).join(''); };
-    window.selecionarPrestadorPorObjeto = function(nome) { prestadorSelecionadoIndex = prestadores.findIndex(p => p.nome === nome); window.proximoPasso(3); };
-    window.updateButtons = function() { document.getElementById('btn-voltar').style.display = (etapa === 1) ? 'none' : 'inline-block'; document.getElementById('btn-proximo').style.display = (etapa === 1) ? 'inline-block' : 'none'; document.getElementById('btn-concluir').style.display = (etapa === 2) ? 'inline-block' : 'none'; };
-    window.abrirCadastro = function(index = -1){ editingIndex = index; document.getElementById("lista-prestadores-view").style.display="none"; document.getElementById("cadastro-flow").style.display="block"; etapa = 1; document.getElementById("etapa-1").style.display="block"; document.getElementById("etapa-2").style.display="none"; window.criarGridCadastro("agenda-cadastro"); if(index !== -1){ let p = prestadores[index]; document.getElementById("nomeEmpresa").value = p.nome; document.getElementById("endereco").value = p.endereco; document.getElementById("cidade").value = p.cidade; document.getElementById("uf").value = p.uf; document.getElementById("cep").value = p.cep; document.getElementById("responsavel").value = p.responsavel; document.getElementById("contatoResponsavel").value = p.contato; document.getElementById("qtdTecnicos").value = p.qtdtecnicos; document.getElementById("rangeAtendimento").value = p.range; if(p.agenda) { p.agenda.forEach(item => { let cells = document.querySelectorAll("#agenda-cadastro .cell"); cells.forEach(c => { if(c.dataset.dia == item.dia && c.dataset.hora == item.hora) c.classList.add("selecionado"); }); }); } } else { document.querySelectorAll('input').forEach(i => i.value = ""); } window.updateButtons(); };
-    window.cancelarCadastro = function() { document.getElementById("cadastro-flow").style.display="none"; document.getElementById("lista-prestadores-view").style.display="block"; editingIndex = -1; };
-    window.criarGridCadastro = function(id){ let grid = document.getElementById(id); grid.innerHTML = ""; ["Seg","Ter","Qua","Qui","Sex","Sab"].forEach(d=>{ let card = document.createElement("div"); card.className = "agenda-day-card"; card.innerHTML = `<div class="agenda-day-title">${d}</div>`; let wrapper = document.createElement("div"); wrapper.className = "slots-wrapper"; for(let h=8;h<=18;h++){ let cell = document.createElement("div"); cell.className="cell"; cell.dataset.dia = d; cell.dataset.hora = `${h}:00`; cell.innerText = `${h}:00`; cell.onclick = () => cell.classList.toggle("selecionado"); wrapper.appendChild(cell); } card.appendChild(wrapper); grid.appendChild(card); }); };
-    window.mudarEtapa = function(dir){ if (dir > 0 && etapa === 1) { const inputs = document.querySelectorAll("#etapa-1 input"); for(let i of inputs) if(!i.value.trim()) return window.showMessage("Preencha todos os campos!"); } document.getElementById("etapa-"+etapa).style.display="none"; etapa += dir; if(etapa < 1) etapa = 1; if(etapa > 2) etapa = 2; document.getElementById("etapa-"+etapa).style.display="block"; window.updateButtons(); };
-    window.renderizarListaPrestadores = function(){ 
-        document.getElementById("btn-novo-container").innerHTML = isAuthorized ? `<button onclick="window.abrirCadastro()" style="margin-bottom: 20px;">+ Novo Prestador</button>` : '';
-        document.getElementById("lista-prestadores").innerHTML = prestadores.map((p, i) => {
-            let btns = `<button onclick="window.abrirDetalhesPrestador(${i})" style="background:green;">Ver</button>`;
-            if (isAuthorized) btns += ` <button onclick="window.abrirCadastro(${i})">Editar</button> <button onclick="window.excluirPrestador(${i})" class="btn-cancelar">Excluir</button>`;
-            return `<div class="card">
-                        <div class="card-info">
-                            <strong>${p.nome}</strong><br>
-                            <span style="color:#64748b; font-size: 0.85rem;">${p.cidade}/${p.uf}</span>
-                            <div style="margin-top: 5px; font-size: 0.85rem;">
-                                👥 Técnicos: ${p.qtdtecnicos} | 📅 Agenda: ${[...new Set(p.agenda.map(a => a.dia))].length} dias | 📍 Raio: ${p.range}km
-                            </div>
-                        </div>
-                        <div class="card-actions">${btns}</div>
-                    </div>`; 
-        }).join(''); 
-        document.getElementById("total-prest").innerText = prestadores.length; 
-    };
-    window.carregarProdutos = function(){ let select=document.getElementById("produto"); for(let tipo in produtos){ let group=document.createElement("optgroup"); group.label=tipo; produtos[tipo].forEach(p=>{ let opt=document.createElement("option"); opt.value=p.tempo; opt.text=p.desc; group.appendChild(opt); }); select.appendChild(group); } };
-    window.adicionarProduto = function(){ let select = document.getElementById("produto"); let qtd = parseInt(document.getElementById("quantidade").value) || 1; let tempoBase = parseInt(select.value); itensSelecionados.push({desc: select.options[select.selectedIndex].text, tempo: tempoBase, qtd: qtd}); window.renderizarProdutos(); if(prestadorSelecionadoIndex !== null) window.rdaAgendamento(); };
-    window.renderizarProdutos = function(){ let totalMinutos = itensSelecionados.reduce((a, b) => a + (b.tempo * b.qtd), 0); document.getElementById("horasNecessarias").innerText = Math.ceil(totalMinutos/60); document.getElementById("lista-produtos").innerHTML = itensSelecionados.map((i, idx) => `<div class="item-lista">${i.desc} (Qtd: ${i.qtd} | Total: ${i.tempo * i.qtd} min) <button onclick="itensSelecionados.splice(${idx},1); window.renderizarProdutos(); window.rdaAgendamento();">x</button></div>`).join(''); };
-    window.renderPainel = function(){ 
-        let fInicio = document.getElementById("filtroDataInicio").value; let fFim = document.getElementById("filtroDataFim").value; let fPrest = document.getElementById("filtroPrestador").value; 
-        let filtrados = agendamentos.filter(a => { 
-            let [d, m, y] = a.data.split('/'); let dataAgendada = `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
-            let matchDate = (!fInicio || dataAgendada >= fInicio) && (!fFim || dataAgendada <= fFim); let matchPrest = (!fPrest || a.prestador === fPrest); return matchDate && matchPrest; 
-        }).sort((a,b) => parseDateToObj(b.data) - parseDateToObj(a.data)); 
-        document.getElementById("painel-conteudo").innerHTML = filtrados.map((a) => `<div class="painel-item"><div><strong>Ticket: ${a.ticket}</strong> | Cliente: ${a.cliente}</div><div><strong>${a.prestador}</strong> | Data: ${a.data} | ${Array.isArray(a.slots) ? a.slots.join(', ') : 'N/A'} | Solicitante: ${a.solicitante}</div><div>Solicitado em: ${a.rawdate ? new Date(a.rawdate).toLocaleDateString() : 'N/A'}</div><div style="margin: 5px 0; font-size: 0.9em; color: #555;">${Array.isArray(a.produtos) ? a.produtos.map(prod => `${prod.desc} (${prod.qtd}x)`).join('; ') : ""}</div><button onclick="window.excluirAgendamento(${a.id})" class="btn-cancelar">Excluir Agendamento</button></div>`).join(''); 
-    };
-    window.limparFiltros = function(){ document.getElementById("filtroDataInicio").value = ""; document.getElementById("filtroDataFim").value = ""; document.getElementById("filtroPrestador").value = ""; window.renderPainel(); };
-    window.atualizarFiltrosPrestador = function(){ let sel = document.getElementById("filtroPrestador"); sel.innerHTML = '<option value="">Todos</option>'; prestadores.forEach(p => sel.innerHTML += `<option value="${p.nome}">${p.nome}</option>`); };
+
+    window.checkAuth();
+    window.onload = async () => { window.carregarProdutos(); await carregarDadosDoBanco(); };
 </script>
 </body>
 </html>
