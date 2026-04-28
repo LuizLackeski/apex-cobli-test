@@ -49,7 +49,8 @@
         .flex-cards { display: flex; gap: 15px; margin-bottom: 20px; }
         .stats-card { background: white; padding: 15px; border-radius: 8px; flex: 1; border: 1px solid #e5e7eb; text-align: center; }
         
-        .painel-item { background: white; margin-bottom: 8px; padding: 12px; border-radius: 8px; border-left: 5px solid var(--primary); box-shadow: 0 1px 3px rgba(0,0,0,0.1); border: 1px solid #e5e7eb; border-left: 5px solid var(--primary); display: flex; justify-content: space-between; align-items: center; }
+        .painel-item { background: white; margin-bottom: 8px; padding: 12px; border-radius: 8px; border-left: 5px solid var(--primary); box-shadow: 0 1px 3px rgba(0,0,0,0.1); border: 1px solid #e5e7eb; cursor: pointer; transition: 0.2s; }
+        .painel-item:hover { background: #f8fafc; border-color: var(--primary); }
         
         .filtros-painel { display: flex; gap: 10px; margin-bottom: 20px; padding: 15px; background: white; border-radius: 8px; border: 1px solid #e5e7eb; align-items: flex-end; flex-wrap: wrap; }
         .filtros-painel > div { flex: 1; min-width: 140px; }
@@ -170,7 +171,7 @@
             <div><label>Início</label><input type="date" id="filtroDataInicio"></div>
             <div><label>Fim</label><input type="date" id="filtroDataFim"></div>
             <div><label>Prestador</label><select id="filtroPrestador"><option value="">Todos</option></select></div>
-            <div><label>Solicitante</label><input type="text" id="filtroSolicitante" placeholder="Pesquisar nome..."></div>
+            <div><label>Solicitante</label><input type="text" id="filtroSolicitante" placeholder="Pesquisar..."></div>
             <button onclick="window.renderPainel()">Filtrar</button>
             <button onclick="window.limparFiltros()" style="background:green;">Limpar</button>
         </div>
@@ -273,7 +274,7 @@
             <div style="font-weight:600; margin-bottom:5px;">Serviços:</div>
             <div style="background: #e2e8f0; padding: 10px; border-radius: 6px; margin-bottom: 10px; font-size: 0.9rem;">${prodHtml}</div>
             <div style="margin-top:20px; text-align:center;">
-                <button onclick="window.excluirAgendamento(${a.id}); window.fecharModal();" class="btn-cancelar">Excluir Agendamento</button>
+                <button onclick="window.confirmarExclusaoAgendamento(${a.id}); window.fecharModal();" class="btn-cancelar">Excluir Agendamento</button>
             </div>
         `;
         window.exibirModal("Detalhes do Agendamento", html);
@@ -346,13 +347,13 @@
             let qtdServicos = Array.isArray(a.produtos) ? a.produtos.length : 0;
             return `
             <div class="painel-item" onclick="window.abrirDetalhesAgendamento(${i})">
-                <div style="display:flex; justify-content:space-between; align-items:center;">
+                <div style="display:flex; justify-content:space-between;">
                     <strong>🎟️ #${a.ticket}</strong>
                     <span style="font-size:0.8rem; color:#64748b;">📅 ${a.data}</span>
                 </div>
-                <div style="margin-top:5px; font-size:0.9rem;">
+                <div style="margin-top:8px; font-size:0.9rem;">
                     <strong>👤 Cliente:</strong> ${a.cliente}<br>
-                    <strong>🛠️ Prestador:</strong> ${a.prestador} (${qtdServicos} serviço${qtdServicos > 1 ? 's' : ''})
+                    <strong>🛠️ Prestador:</strong> ${a.prestador} | ${qtdServicos} serviço(s)
                 </div>
                 <div style="margin-top:10px; text-align:right;">
                     <button style="font-size:0.75rem; padding: 4px 8px; background: #64748b;">Ver detalhes</button>
