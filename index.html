@@ -4,29 +4,62 @@
     <meta charset="UTF-8">
     <title>APEX - Sistema Completo</title>
     <style>
-        :root { --primary: #2F4EA1; --bg: #f0f2f5; --text: #334155; }
+        :root { --primary: #2F4EA1; --bg: #f0f2f5; --text: #334155; --cobli-blue: #2F4EA1; }
         body { font-family: 'Inter', -apple-system, sans-serif; background:var(--bg); color: var(--text); margin:0; padding:20px; }
         
         #toast { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #f0f0f0; color: #334155; padding: 20px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); z-index: 10000; border: 1px solid #e5e7eb; font-weight: 600; text-align: center; }
 
-        /* Estilo Card Compacto */
+        /* Estilo Card Compacto para Painel */
         .card-compact { background: white; padding: 10px 15px; border-radius: 8px; margin-bottom: 8px; border: 1px solid #e5e7eb; display: flex; align-items: center; justify-content: space-between; cursor: pointer; transition: 0.2s; }
         .card-compact:hover { background: #f8fafc; border-color: var(--primary); }
         .card-compact span { font-size: 0.85rem; flex: 1; margin-right: 10px; }
 
         #login-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #2F4EA1; display: none; align-items: center; justify-content: center; z-index: 20000; }
         .login-card { background: white; padding: 40px; border-radius: 12px; width: 350px; text-align: center; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2); }
+        .login-card h2 { color: var(--primary); border-bottom: none; margin-bottom: 20px; }
+        
+        .topo { background: var(--primary); color: white; padding: 15px 30px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
         .menu { background: #1F3C88; padding: 0 30px; display: flex; align-items: center; }
-        .menu button { background: none; border: none; color: #cbd5e1; padding: 15px 20px; cursor: pointer; font-size: 0.9rem; }
+        .menu button { background: none; border: none; color: #cbd5e1; padding: 15px 20px; cursor: pointer; font-size: 0.9rem; transition: 0.3s; }
         .menu button.ativo { color: white; border-bottom: 3px solid #4da3ff; }
+        .menu button:hover { color: white; }
         .menu .user-info { margin-left: auto; color: #ffffff; font-size: 0.8rem; margin-right: 15px; opacity: 0.8; }
+        .menu .btn-sair { color: #ff9999; }
+        button:hover { filter: brightness(1.2); transform: translateY(-1px); box-shadow: 0 2px 4px rgba(0,0,0,0.2); transition: 0.2s; }
+        button:active { transform: translateY(0); filter: brightness(0.9); }
         .conteudo { padding: 30px; max-width: 900px; margin: 0 auto; }
         .aba { display: none; } .aba.ativa { display: block; }
-        .card { background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; border: 1px solid #e5e7eb; }
-        button { cursor: pointer; padding: 8px 16px; background: var(--primary); color: white; border: none; border-radius: 5px; }
+        
+        .card { background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; border: 1px solid #e5e7eb; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); display: flex; flex-direction: column; justify-content: space-between; }
+        .card:hover { border-color: var(--primary); }
+        .card-info { margin-bottom: 15px; }
+        .card-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+        
+        h2 { font-size: 1.1rem; margin-top: 0; color: #1e293b; border-bottom: 1px solid #f1f5f9; padding-bottom: 10px; }
+        input, select { width: 100%; padding: 10px; margin: 8px 0; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; }
+        label { font-size: 0.8rem; color: #64748b; font-weight: 600; text-transform: uppercase; margin-bottom: 2px; }
+        button { cursor: pointer; padding: 8px 16px; background: var(--primary); color: white; border: none; border-radius: 5px; font-weight: 500; }
         .btn-cancelar { background: #ef4444 !important; }
+        .agenda-day-card { background: #fafafa; padding: 10px; border-radius: 6px; margin-bottom: 8px; border: 1px solid #e5e7eb; }
+        .agenda-day-title { font-weight: 600; color: var(--primary); margin-bottom: 6px; font-size: 0.85rem; }
+        .slots-wrapper { display: flex; flex-wrap: wrap; gap: 4px; }
+        .cell { border: 1px solid #cbd5e1; padding: 4px; text-align: center; cursor: pointer; border-radius: 4px; font-size: 0.75rem; width: 45px; height: 22px; display: flex; align-items: center; justify-content: center; }
+        .cell.selecionado { background: var(--primary); color: white; border-color: var(--primary); }
+        .item-lista { display: flex; justify-content: space-between; padding: 6px; border-bottom: 1px solid #f1f5f9; align-items: center; font-size: 0.9rem; }
+        .flex-cards { display: flex; gap: 15px; margin-bottom: 20px; }
+        .stats-card { background: white; padding: 15px; border-radius: 8px; flex: 1; border: 1px solid #e5e7eb; text-align: center; }
+        .painel-item { background: white; margin-bottom: 10px; padding: 12px; border-radius: 6px; border-left: 4px solid var(--primary); box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+        .filtros-painel { display: flex; gap: 10px; margin-bottom: 20px; padding: 15px; background: white; border-radius: 8px; border: 1px solid #e5e7eb; align-items: flex-end; }
+        .filtros-painel > div { flex: 1; }
+        .card-selecao { background: white; padding: 15px; border-radius: 8px; margin-bottom: 10px; border: 1px solid #e5e7eb; }
+        .card-selecao strong { color: var(--primary); font-size: 1.1rem; }
+        .date-pills { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
+        .pill { background: #dbeafe; color: #1e40af; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; border: 1px solid #bfdbfe; }
+
         .modal-overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); justify-content:center; align-items:center; z-index:20001; }
-        .modal-card { background: #f0f0f0; color: #334155; padding: 25px; border-radius: 12px; width: 500px; }
+        .modal-card { background: #f0f0f0; color: #334155; padding: 25px; border-radius: 12px; width: 500px; max-width: 90%; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+        .modal-header { font-size: 1.2rem; font-weight: bold; color: var(--primary); margin-bottom: 15px; }
+        .modal-footer { margin-top:20px; text-align: right; }
     </style>
 </head>
 <body>
@@ -35,12 +68,13 @@
 
 <div id="login-overlay">
     <div class="login-card">
-        <h2>APEX Cobli</h2>
+        <h2 style="border:none;">APEX Cobli</h2>
         <input type="text" id="loginEmail" placeholder="Informe seu E-mail">
-        <button onclick="window.performLogin()">Entrar</button>
+        <button onclick="window.performLogin()" style="width:100%; background: var(--primary); padding: 12px; margin-top:10px;">Entrar</button>
     </div>
 </div>
 
+<div class="topo"><strong>APEX</strong> <span>Agenda Prestadores</span></div>
 <div class="menu">
     <button class="ativo" onclick="window.trocarAba('consulta', this)">Agendamento</button>
     <button onclick="window.trocarAba('cadastro', this)">Prestadores</button>
@@ -51,10 +85,10 @@
 </div>
 
 <div id="modalAviso" class="modal-overlay">
-    <div class="modal-card">
-        <div id="modalHeader"></div>
-        <div id="modalBody"></div>
-        <div id="modalFooter"></div>
+    <div class="modal-card" onclick="event.stopPropagation()">
+        <div id="modalHeader" class="modal-header"></div>
+        <div id="modalBody" class="modal-body" style="margin-bottom: 15px;"></div>
+        <div id="modalFooter" class="modal-footer"></div>
     </div>
 </div>
 
@@ -62,13 +96,14 @@
     <div id="consulta" class="aba ativa">
         <div id="step-1" class="card">
             <h2>Localização</h2>
-            <input type="text" id="inputCep" placeholder="CEP ou Endereço">
-            <button onclick="window.proximoPasso(2)">Buscar Prestadores</button>
+            <input type="text" id="inputCep" placeholder="Insira o endereço no padrão google ou CEP" required>
+            <button onclick="window.proximoPasso(2)" id="btnBuscar">Buscar Prestadores</button>
         </div>
         <div id="step-2" class="card" style="display:none;">
             <h2>Selecione o Prestador</h2>
             <div id="lista-prestadores-selecao"></div>
-            <button onclick="window.proximoPasso(1)">Voltar</button>
+            <button onclick="window.proximoPasso(1)" style="background:gray;">Voltar</button>
+            <button onclick="window.cancelarAgendamento()" class="btn-cancelar">Cancelar</button>
         </div>
         <div id="step-3" class="card" style="display:none;">
             <h2>Serviços e Agenda</h2>
@@ -76,48 +111,72 @@
             <input type="number" id="quantidade" value="1" style="width: 80px;">
             <button onclick="window.adicionarProduto()">Adicionar</button>
             <div id="lista-produtos"></div>
+            <p>Horas Necessárias: <strong><span id="horasNecessarias">0</span></strong></p>
             <h3>Agenda</h3>
             <div id="agenda-agendamento"></div>
-            <button onclick="window.proximoPasso(2)">Voltar</button>
-            <button onclick="window.validarEAvancar()">Próximo</button>
+            <button onclick="window.proximoPasso(2)" style="background:gray;">Voltar</button>
+            <button onclick="window.validarEAvancar()" style="background:green;">Próximo</button>
+            <button onclick="window.cancelarAgendamento()" class="btn-cancelar">Cancelar</button>
         </div>
         <div id="step-4" class="card" style="display:none;">
             <h2>Dados do Cliente</h2>
-            <input id="ticket" placeholder="Nº Ticket">
-            <input id="clienteNome" placeholder="Nome Cliente">
-            <input id="solicitante" placeholder="Solicitante">
-            <button onclick="window.concluirAgendamentoFinal(this)">Confirmar</button>
+            <label>Nº do Ticket</label><input id="ticket" required>
+            <label>Nome do Cliente</label><input id="clienteNome" required>
+            <label>Responsável pela solicitação</label><input id="solicitante" required>
+            <button onclick="window.proximoPasso(3)" style="background:gray;">Voltar</button>
+            <button id="btnConfirmar" onclick="window.concluirAgendamentoFinal(this)" style="background:green;">Confirmar</button>
+            <button onclick="window.cancelarAgendamento()" class="btn-cancelar">Cancelar</button>
         </div>
     </div>
 
     <div id="cadastro" class="aba">
         <div id="lista-prestadores-view" class="card">
-            <div id="btn-novo-container"></div>
+            <div id="btn-novo-container"></div> 
             <div id="lista-prestadores"></div>
         </div>
         <div id="cadastro-flow" class="card" style="display:none;">
-            <div id="etapa-1"><h3>Dados</h3><input id="nomeEmpresa" placeholder="Nome"><input id="endereco" placeholder="Endereço"><input id="cidade" placeholder="Cidade"><input id="uf" placeholder="UF"><input id="cep" placeholder="CEP"><input id="qtdTecnicos" placeholder="Técnicos"><input id="rangeAtendimento" placeholder="Raio Km"></div>
-            <div id="etapa-2" style="display:none;"><h3>Agenda</h3><div id="agenda-cadastro"></div></div>
-            <button id="btn-voltar" onclick="window.mudarEtapa(-1)">Voltar</button>
-            <button id="btn-proximo" onclick="window.mudarEtapa(1)">Próximo</button>
-            <button id="btn-concluir" onclick="window.salvarPrestador(this)">Concluir</button>
+            <div id="etapa-1">
+                <h3>Dados do Prestador</h3>
+                <label>Nome / Empresa</label><input id="nomeEmpresa" required>
+                <label>Endereço</label><input id="endereco" required>
+                <label>Cidade</label><input id="cidade" required>
+                <label>UF</label><input id="uf" required>
+                <label>CEP</label><input id="cep" required>
+                <label>Responsável</label><input id="responsavel" required>
+                <label>Telefone</label><input id="contatoResponsavel" required>
+                <label>Quantidade de Técnicos</label><input id="qtdTecnicos" type="number" required>
+                <label>Range de atendimento (Km)</label><input id="rangeAtendimento" type="number" required>
+            </div>
+            <div id="etapa-2" style="display:none;">
+                <h3>Agenda</h3>
+                <div id="agenda-cadastro"></div>
+            </div>
+            <div style="margin-top:20px;">
+                <button id="btn-voltar" onclick="window.mudarEtapa(-1)">Voltar</button>
+                <button id="btn-proximo" onclick="window.mudarEtapa(1)">Próximo</button>
+                <button id="btn-concluir" onclick="window.salvarPrestador(this)" style="background: green;">Concluir</button>
+                <button onclick="window.cancelarCadastro()" style="background:red;">Cancelar</button>
+            </div>
         </div>
     </div>
 
     <div id="painel" class="aba">
         <div class="filtros-painel">
-            <input type="text" id="filtroTicket" placeholder="Ticket" oninput="window.renderPainel()">
-            <input type="date" id="filtroData" oninput="window.renderPainel()">
-            <select id="filtroPrestador" onchange="window.renderPainel()"><option value="">Todos</option></select>
-            <button onclick="window.limparFiltros()">Limpar</button>
+            <div><label>Ticket</label><input type="text" id="filtroTicket" oninput="window.renderPainel()"></div>
+            <div><label>Data</label><input type="date" id="filtroDataInicio" oninput="window.renderPainel()"></div>
+            <div><label>Fim</label><input type="date" id="filtroDataFim" oninput="window.renderPainel()"></div>
+            <div><label>Prestador</label><select id="filtroPrestador" onchange="window.renderPainel()"><option value="">Todos</option></select></div>
+            <button onclick="window.limparFiltros()" style="background:green;">Limpar</button>
         </div>
         <div id="painel-conteudo"></div>
     </div>
 
     <div id="dashboard" class="aba">
-        <div class="card">
-            <h2>Dashboard</h2>
+        <div class="flex-cards">
             <div class="stats-card">TOTAL<br><strong id="dash-total">0</strong></div>
+        </div>
+        <div class="card">
+            <h3>Distribuição por Prestador</h3>
             <div id="dash-prestadores"></div>
         </div>
     </div>
@@ -126,14 +185,13 @@
 <script>
     const API_URL = 'https://fqaqlofndeihmhkopvan.supabase.co/functions/v1/smart-service';
     const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZxYXFsb2ZuZGVpaG1oa29wdmFuIiwicm9sZSI6IkpXVCIsImlhdCI6MTc3NzIyNTg4MiwiZXhwIjoyMDkyODAxODgyfQ.nauPYoB9RDhLLueMEuop2H2FxdChjIxFkAmBcYbJLzc';
-    let prestadores = [], itensSelecionados = [], agendamentos = [], etapa = 1, editingIndex = -1, prestadorSelecionadoIndex = null, isAuthorized = false;
-    const ADMIN_EMAILS = ["luiz.lackeski@cobli.co", "fernando.souza@cobli.co"]; 
-    const produtos = { "Telemetria": [{desc:"Instalado veículos leves bloqueador", tempo:60}], "Identificador": [{desc:"Instalado veículos leves e pesados identificador", tempo:60}], "Trava de ignição": [{desc:"Instalado veículos leves imobilizador", tempo:80}], "Videotelemetria": [{desc:"CobliCam (2 câmeras)", tempo:90}] };
-
     function getHeaders() { return { 'Content-Type': 'application/json', 'apikey': ANON_KEY, 'Authorization': `Bearer ${ANON_KEY}` }; }
+    let prestadores = [], itensSelecionados = [], agendamentos = [], etapa = 1, editingIndex = -1, prestadorSelecionadoIndex = null, isAuthorized = false;
+    const ADMIN_EMAILS = ["luiz.lackeski@cobli.co", "fernando.souza@cobli.co"];
+    const produtos = { "Telemetria": [{desc:"Instalado veículos leves bloqueador", tempo:60}, {desc:"Instalado veículos leves e pesados + CAN", tempo:60}, {desc:"Instalado motos ou maquinários", tempo:40}, {desc:"Instalado veículos leves e pesados", tempo:40}], "Identificador": [{desc:"Instalado veículos leves e pesados identificador", tempo:60}, {desc:"Instalado veículos leves e pesados identificador + CAN", tempo:90}, {desc:"Instalado veículos leves e pesados identificador RFID", tempo:60}, {desc:"Instalado veículos leves e pesados identificador RFID + CAN", tempo:80}], "Trava de ignição": [{desc:"Instalado veículos leves imobilizador", tempo:80}, {desc:"Instalado veículos leves imobilizador RFID", tempo:80}, {desc:"Instalado veículos leves imobilizador RFID + CAN", tempo:90}, {desc:"Instalado veículos leves imobilizador + CAN", tempo:100}], "Videotelemetria": [{desc:"CobliCam (2 câmeras)", tempo:90}, {desc:"Cobli Multicam (3 câmeras internas)", tempo:120}, {desc:"Cobli Multicam (2 câmeras + 1 externa)", tempo:240}, {desc:"Cobli Multicam (4 câmeras)", tempo:240}, {desc:"Cobli Multicam (5 câmeras)", tempo:300}] };
 
-    window.checkAuth = function() { let email = localStorage.getItem('userEmail'); if (email && email.toLowerCase().endsWith("@cobli.co")) { document.getElementById('login-overlay').style.display = 'none'; isAuthorized = ADMIN_EMAILS.includes(email.toLowerCase()); document.getElementById('user-display').innerText = email; } else { document.getElementById('login-overlay').style.display = 'flex'; } };
-    window.performLogin = function() { let e = document.getElementById('loginEmail').value.trim().toLowerCase(); if(!e.endsWith("@cobli.co")) return window.showMessage("E-mail inválido."); localStorage.setItem('userEmail', e); window.location.reload(); };
+    window.checkAuth = function() { let email = localStorage.getItem('userEmail'); if (email && email.toLowerCase().endsWith("@cobli.co")) { document.getElementById('login-overlay').style.display = 'none'; isAuthorized = ADMIN_EMAILS.includes(email.toLowerCase()); document.getElementById('user-display').innerText = email; } else { localStorage.removeItem('userEmail'); document.getElementById('login-overlay').style.display = 'flex'; } };
+    window.performLogin = function() { let e = document.getElementById('loginEmail').value.trim().toLowerCase(); if (!e.endsWith("@cobli.co")) return window.showMessage("Acesso restrito."); localStorage.setItem('userEmail', e); window.location.reload(); };
     window.logout = function() { localStorage.removeItem('userEmail'); window.location.reload(); };
 
     async function carregarDadosDoBanco() { 
@@ -145,17 +203,29 @@
             prestadores = resP.ok ? await resP.json() : [];
             agendamentos = resA.ok ? await resA.json() : [];
             window.renderizarListaPrestadores(); window.renderPainel(); window.renderDashboard();
+            let sel = document.getElementById("filtroPrestador");
+            sel.innerHTML = '<option value="">Todos</option>' + [...new Set(agendamentos.map(a => a.prestador))].map(p => `<option value="${p}">${p}</option>`).join('');
         } catch(e) { console.error(e); } 
     }
 
+    window.renderDashboard = function() {
+        document.getElementById("dash-total").innerText = agendamentos.length;
+        let contagem = {}; agendamentos.forEach(a => contagem[a.prestador] = (contagem[a.prestador] || 0) + 1);
+        document.getElementById("dash-prestadores").innerHTML = Object.keys(contagem).map(p => {
+            let pct = ((contagem[p] / (agendamentos.length || 1)) * 100).toFixed(0);
+            return `<div style="margin-bottom:10px;"><strong>${p}</strong> (${contagem[p]})<div style="background:#e5e7eb; height:10px;"><div style="background:var(--primary); height:10px; width:${pct}%"></div></div></div>`;
+        }).join('');
+    };
+
     window.renderPainel = function() {
         let ticket = document.getElementById("filtroTicket").value.toLowerCase();
-        let dataFiltro = document.getElementById("filtroData").value;
-        let pFiltro = document.getElementById("filtroPrestador").value;
+        let fInicio = document.getElementById("filtroDataInicio").value;
+        let fFim = document.getElementById("filtroDataFim").value;
+        let fPrest = document.getElementById("filtroPrestador").value;
         let filtrados = agendamentos.filter(a => {
-            let matchTicket = a.ticket.toLowerCase().includes(ticket);
-            let matchPrest = !pFiltro || a.prestador === pFiltro;
-            return matchTicket && matchPrest;
+            let [d, m, y] = a.data.split('/');
+            let dataFormatada = `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
+            return a.ticket.toLowerCase().includes(ticket) && (!fInicio || dataFormatada >= fInicio) && (!fFim || dataFormatada <= fFim) && (!fPrest || a.prestador === fPrest);
         });
         document.getElementById("painel-conteudo").innerHTML = filtrados.map(a => `
             <div class="card-compact" onclick="window.detalharAgendamento(${a.id})">
@@ -166,28 +236,42 @@
         `).join('');
     };
 
-    window.renderDashboard = function() {
-        document.getElementById("dash-total").innerText = agendamentos.length;
-        let contagem = {}; agendamentos.forEach(a => contagem[a.prestador] = (contagem[a.prestador] || 0) + 1);
-        document.getElementById("dash-prestadores").innerHTML = Object.keys(contagem).map(p => `<div>${p}: ${contagem[p]}</div>`).join('');
-    };
-
     window.detalharAgendamento = function(id) {
         let a = agendamentos.find(x => x.id == id);
-        if(a) window.exibirModal("Detalhes", `<p>Ticket: ${a.ticket}</p><p>Cliente: ${a.cliente}</p><p>Prestador: ${a.prestador}</p>`);
+        if(a) window.exibirModal("Detalhes", `<p><strong>Ticket:</strong> ${a.ticket}</p><p><strong>Cliente:</strong> ${a.cliente}</p><p><strong>Prestador:</strong> ${a.prestador}</p>`);
     };
 
     window.exibirModal = function(t, h) { document.getElementById('modalHeader').innerText=t; document.getElementById('modalBody').innerHTML=h; document.getElementById('modalAviso').style.display='flex'; };
     window.fecharModal = function() { document.getElementById('modalAviso').style.display='none'; };
     window.showMessage = function(msg) { window.exibirModal("Aviso", msg); };
     window.showToast = function(msg) { let t=document.getElementById("toast"); t.innerText=msg; t.style.display="block"; setTimeout(()=>t.style.display="none", 3000); };
-
-    window.trocarAba = function(id, btn){ document.querySelectorAll('.aba').forEach(a=>a.classList.remove('ativa')); document.getElementById(id).classList.add('ativa'); document.querySelectorAll('.menu button').forEach(b=>b.classList.remove('ativo')); if(btn) btn.classList.add('ativo'); };
-    window.limparFiltros = function(){ document.getElementById("filtroTicket").value=""; document.getElementById("filtroData").value=""; document.getElementById("filtroPrestador").value=""; window.renderPainel(); };
+    window.showConfirm = function(msg, cb) { window.exibirModal("Confirmação", msg + '<br><button onclick="window.fecharModal()">Não</button><button onclick="window.fecharModal();('+cb.toString()+')()">Sim</button>'); };
     window.excluirAgendamento = async function(id) { await fetch(`${API_URL}/agendamentos/${id}`, { method: 'DELETE', headers: getHeaders() }); await carregarDadosDoBanco(); window.showToast("Excluído"); };
-    
-    // Funções placeholder para manter o fluxo funcionando
-    window.salvarPrestador = async function(btn){}; window.renderizarListaPrestadores = function(){}; window.adicionarProduto = function(){}; window.renderizarProdutos = function(){}; window.concluirAgendamentoFinal = async function(btn){}; window.mudarEtapa = function(d){}; window.rdaAgendamento = function(){}; window.validarEAvancar = function(){}; window.proximoPasso = async function(n){}; window.consultarDistancia = async function(o, d){}; window.getBlockedHours = function(p, d){ return new Set(); }; window.getOcupacaoSlot = function(p, d, h){ return 0; }; window.carregarProdutos = function(){};
+    window.limparFiltros = function(){ document.getElementById("filtroTicket").value=""; document.getElementById("filtroDataInicio").value=""; document.getElementById("filtroDataFim").value=""; document.getElementById("filtroPrestador").value=""; window.renderPainel(); };
+    window.trocarAba = function(id, btn){ document.querySelectorAll('.aba').forEach(a=>a.classList.remove('ativa')); document.getElementById(id).classList.add('ativa'); document.querySelectorAll('.menu button').forEach(b=>b.classList.remove('ativo')); if(btn) btn.classList.add('ativo'); };
+
+    // --- MANTENDO FUNÇÕES DE FLUXO ---
+    window.carregarProdutos = function(){ let s=document.getElementById("produto"); for(let tipo in produtos){ let g=document.createElement("optgroup"); g.label=tipo; produtos[tipo].forEach(p=>{ let o=document.createElement("option"); o.value=p.tempo; o.text=p.desc; g.appendChild(o); }); s.appendChild(g); } };
+    window.adicionarProduto = function(){ let s=document.getElementById("produto"); let q=parseInt(document.getElementById("quantidade").value)||1; let t=parseInt(s.value); itensSelecionados.push({desc:s.options[s.selectedIndex].text, tempo:t, qtd:q}); window.renderizarProdutos(); if(prestadorSelecionadoIndex!==null) window.rdaAgendamento(); };
+    window.renderizarProdutos = function(){ let tot=itensSelecionados.reduce((a,b)=>a+(b.tempo*b.qtd),0); document.getElementById("horasNecessarias").innerText=Math.ceil(tot/60); document.getElementById("lista-produtos").innerHTML=itensSelecionados.map((i,idx)=>`<div class="item-lista">${i.desc} (${i.qtd}x) <button onclick="itensSelecionados.splice(${idx},1); window.renderizarProdutos(); window.rdaAgendamento();">x</button></div>`).join(''); };
+    window.concluirAgendamentoFinal = async function(btn){ const ticket = document.getElementById("ticket").value; const cli = document.getElementById("clienteNome").value; const sol = document.getElementById("solicitante").value; if(!ticket || !cli || !sol) return window.showMessage("Preencha tudo!"); let sel = document.querySelectorAll("#agenda-agendamento .cell.selecionado"); if(sel.length===0) return window.showMessage("Selecione horário!"); let p = prestadores[prestadorSelecionadoIndex]; let qtdLimit = parseInt(p.qtdtecnicos)||1; for(let s of sel) if(window.getOcupacaoSlot(p, s.dataset.date, s.dataset.hora) >= qtdLimit) return window.showMessage("Limite atingido"); let agendamento = { prestador: p.nome, qtdtecnicos: p.qtdtecnicos, produtos: itensSelecionados, data: sel[0].dataset.date, rawdate: new Date().toISOString(), slots: [...sel].map(s => s.dataset.hora), ticket, cliente: cli, solicitante: sol }; await fetch(`${API_URL}/agendamentos`, { method: 'POST', headers: getHeaders(), body: JSON.stringify(agendamento) }); window.limparFormulario(); await carregarDadosDoBanco(); window.showToast("Salvo!"); };
+    window.limparFormulario = function() { itensSelecionados=[]; prestadorSelecionadoIndex=null; document.getElementById("lista-produtos").innerHTML=""; document.getElementById("horasNecessarias").innerText="0"; document.getElementById("agenda-agendamento").innerHTML=""; document.getElementById("inputCep").value=""; document.getElementById("ticket").value=""; document.getElementById("clienteNome").value=""; document.getElementById("solicitante").value=""; };
+    window.getNextDates = function(p) { let d=[]; let t=new Date(); const dMap={"Dom":0,"Seg":1,"Ter":2,"Qua":3,"Qui":4,"Sex":5,"Sab":6}; let aDays=p.agenda?[...new Set(p.agenda.map(a=>a.dia))].map(d=>dMap[d]):[]; for(let i=0;i<14;i++){ let dt=new Date(); dt.setDate(t.getDate()+i); let dStr=dt.toLocaleDateString(); let dNom=["Dom","Seg","Ter","Qua","Qui","Sex","Sab"][dt.getDay()]; let b=window.getBlockedHours(p,dStr); let slots=p.agenda.filter(a=>a.dia==dNom); let livre=slots.some(s=>!b.has(parseInt(s.hora.split(':')[0])) && window.getOcupacaoSlot(p,dStr,s.hora)<(parseInt(p.qtdtecnicos)||1)); if(aDays.includes(dt.getDay())&&livre)d.push(dStr.slice(0,5)); } return d; };
+    window.proximoPasso = async function(n) { if(n===2) { if(prestadores.length===0) return window.showMessage("Cadastre prestador!"); const c=document.getElementById('inputCep').value; if(!c) return window.showMessage("Digite CEP!"); const b=document.getElementById('btnBuscar'); b.disabled=true; b.innerText="Calculando..."; let pf=[]; for(let p of prestadores) { if(!p.endereco) continue; const dist = await window.consultarDistancia(c, p.endereco); let av=window.getNextDates(p); if(dist!==null && dist <= parseFloat(p.range) && av.length>0) { p.distanciaFinal=dist.toFixed(1); p.nextDates=av.join(', '); pf.push(p); } } b.disabled=false; b.innerText="Buscar Prestadores"; if(pf.length===0) return window.showMessage("Nenhum encontrado."); window.renderizarListaPrestadoresSelecao(pf); } if(n===3 && prestadorSelecionadoIndex===null) return window.showMessage("Selecione prestador!"); document.querySelectorAll('#consulta > div').forEach(d=>d.style.display='none'); document.getElementById('step-'+n).style.display='block'; if(n===3) window.rdaAgendamento(); };
+    window.consultarDistancia = async function(orig, dest) { try { const r = await fetch(`${API_URL}/distancia`, { method: 'POST', headers: getHeaders(), body: JSON.stringify({ origin: orig, destination: dest }) }); const d = await r.json(); return (d.status==='OK') ? parseFloat(d.rows[0].elements[0].distance.value)/1000 : null; } catch(e){ return null; } };
+    window.rdaAgendamento = function() { let p = prestadores[prestadorSelecionadoIndex]; let cont = document.getElementById("agenda-agendamento"); cont.innerHTML=""; let hoje=new Date(); const diasS=["Dom","Seg","Ter","Qua","Qui","Sex","Sab"]; let cap=parseInt(p.qtdtecnicos)||1; for(let i=0;i<14;i++){ let data=new Date(); data.setDate(hoje.getDate()+i); let dStr=data.toLocaleDateString(); let dNom=diasS[data.getDay()]; let b=window.getBlockedHours(p,dStr); let allS=p.agenda?p.agenda.filter(a=>a.dia==dNom):[]; let avS=allS.filter(it=>{ let h=parseInt(it.hora.split(':')[0]); return window.getOcupacaoSlot(p,dStr,it.hora)<cap && !b.has(h); }); if(avS.length>0){ let card=document.createElement("div"); card.className="agenda-day-card"; card.innerHTML=`<div class="agenda-day-title">${dStr} (${dNom})</div>`; let wrp=document.createElement("div"); wrp.className="slots-wrapper"; avS.forEach(it=>{ let d=document.createElement("div"); d.className="cell"; d.innerText=it.hora; d.dataset.hora=it.hora; d.dataset.date=dStr; d.onclick=function(){ d.classList.toggle("selecionado"); }; wrp.appendChild(d); }); card.appendChild(wrp); cont.appendChild(card); } } };
+    window.validarEAvancar = function() { if(itensSelecionados.length===0) return window.showMessage("Adicione serviço!"); let horas=Math.ceil(itensSelecionados.reduce((a,b)=>a+(b.tempo*b.qtd),0)/60); let sel=document.querySelectorAll("#agenda-agendamento .cell.selecionado"); if(sel.length===0) return window.showMessage("Selecione horário!"); if(sel.length!==horas && horas>0) return window.showMessage("Selecione "+horas+" hora(s)!"); document.querySelectorAll('#consulta > div').forEach(d=>d.style.display='none'); document.getElementById('step-4').style.display='block'; };
+    window.renderizarListaPrestadoresSelecao = function(l) { document.getElementById('lista-prestadores-selecao').innerHTML = l.map(p=>`<div class="card-selecao"><strong>${p.nome}</strong><br>📍Distância: ${p.distanciaFinal}km<br>🗓️Agenda: ${p.nextDates}<div style="margin-top:10px"><button onclick="window.selecionarPrestadorPorObjeto('${p.nome}')">Selecionar</button></div></div>`).join(''); };
+    window.selecionarPrestadorPorObjeto = function(n) { prestadorSelecionadoIndex = prestadores.findIndex(p=>p.nome===n); window.proximoPasso(3); };
+    window.renderizarListaPrestadores = function(){ document.getElementById("btn-novo-container").innerHTML = isAuthorized ? `<button onclick="window.abrirCadastro()" style="margin-bottom: 20px;">+ Novo Prestador</button>` : ''; document.getElementById("lista-prestadores").innerHTML = prestadores.map((p,i)=>`<div class="card"><strong>${p.nome}</strong><br>${p.cidade}/${p.uf}<div style="margin-top:5px;font-size:0.85rem">👥Técnicos: ${p.qtdtecnicos} | 📍Raio: ${p.range}km</div><div class="card-actions"><button onclick="window.abrirDetalhesPrestador(${i})" style="background:green">Ver</button>${isAuthorized ? ` <button onclick="window.abrirCadastro(${i})">Editar</button> <button onclick="window.excluirPrestador(${i})" class="btn-cancelar">Excluir</button>` : ''}</div></div>`).join(''); document.getElementById("total-prest").innerText=prestadores.length; };
+    window.salvarPrestador = async function(btn) { const o=btn.innerText; btn.innerText="Salvando..."; btn.disabled=true; try { const i=document.querySelectorAll('#etapa-1 input'); for(let f of i) if(!f.value.trim()){window.showMessage("Preencha tudo!"); return;} let ag=[...document.querySelectorAll('#agenda-cadastro .cell.selecionado')].map(c=>({dia:c.dataset.dia, hora:c.dataset.hora})); let p={nome:document.getElementById("nomeEmpresa").value, endereco:document.getElementById("endereco").value, cidade:document.getElementById("cidade").value, uf:document.getElementById("uf").value, cep:document.getElementById("cep").value, responsavel:document.getElementById("responsavel").value, contato:document.getElementById("contatoResponsavel").value, qtdtecnicos:parseInt(document.getElementById("qtdTecnicos").value), range:document.getElementById("rangeAtendimento").value, agenda:ag}; const url=(editingIndex!==-1)?`${API_URL}/prestadores/${prestadores[editingIndex].id}`:`${API_URL}/prestadores`; await fetch(url, {method:(editingIndex!==-1)?'PUT':'POST', headers:getHeaders(), body:JSON.stringify(p)}); editingIndex=-1; await carregarDadosDoBanco(); document.getElementById("cadastro-flow").style.display="none"; document.getElementById("lista-prestadores-view").style.display="block"; window.showToast("Salvo!"); } finally { btn.disabled=false; btn.innerText=o; } };
+    window.abrirCadastro = function(i=-1){ editingIndex=i; document.getElementById("lista-prestadores-view").style.display="none"; document.getElementById("cadastro-flow").style.display="block"; etapa=1; document.getElementById("etapa-1").style.display="block"; document.getElementById("etapa-2").style.display="none"; window.criarGridCadastro("agenda-cadastro"); if(i!==-1){ let p=prestadores[i]; document.getElementById("nomeEmpresa").value=p.nome; document.getElementById("endereco").value=p.endereco; document.getElementById("cidade").value=p.cidade; document.getElementById("uf").value=p.uf; document.getElementById("cep").value=p.cep; document.getElementById("responsavel").value=p.responsavel; document.getElementById("contatoResponsavel").value=p.contato; document.getElementById("qtdTecnicos").value=p.qtdTecnicos; document.getElementById("rangeAtendimento").value=p.range; if(p.agenda) p.agenda.forEach(it=>{ document.querySelectorAll("#agenda-cadastro .cell").forEach(c=>{ if(c.dataset.dia==it.dia && c.dataset.hora==it.hora) c.classList.add("selecionado"); }); }); } else { document.querySelectorAll('input').forEach(i=>i.value=""); } window.updateButtons(); };
+    window.cancelarCadastro = function(){ document.getElementById("cadastro-flow").style.display="none"; document.getElementById("lista-prestadores-view").style.display="block"; editingIndex=-1; };
+    window.criarGridCadastro = function(id){ let grid=document.getElementById(id); grid.innerHTML=""; ["Seg","Ter","Qua","Qui","Sex","Sab"].forEach(d=>{ let card=document.createElement("div"); card.className="agenda-day-card"; card.innerHTML=`<div class="agenda-day-title">${d}</div>`; let wrp=document.createElement("div"); wrp.className="slots-wrapper"; for(let h=8;h<=18;h++){ let cell=document.createElement("div"); cell.className="cell"; cell.dataset.dia=d; cell.dataset.hora=`${h}:00`; cell.innerText=`${h}:00`; cell.onclick=()=>cell.classList.toggle("selecionado"); wrp.appendChild(cell); } card.appendChild(wrp); grid.appendChild(card); }); };
+    window.mudarEtapa = function(d){ if(d>0 && etapa===1){ const i=document.querySelectorAll("#etapa-1 input"); for(let f of i) if(!f.value.trim()) return window.showMessage("Preencha tudo!"); } document.getElementById("etapa-"+etapa).style.display="none"; etapa+=d; if(etapa<1) etapa=1; if(etapa>2) etapa=2; document.getElementById("etapa-"+etapa).style.display="block"; window.updateButtons(); };
+    window.updateButtons = function() { document.getElementById('btn-voltar').style.display=(etapa===1)?'none':'inline-block'; document.getElementById('btn-proximo').style.display=(etapa===1)?'inline-block':'none'; document.getElementById('btn-concluir').style.display=(etapa===2)?'inline-block':'none'; };
+    window.getOcupacaoSlot = function(prestador, data, hora) { return agendamentos.filter(a => a.prestador === prestador.nome && a.data === data && (Array.isArray(a.slots) ? a.slots.includes(hora) : false)).length; };
+    window.getBlockedHours = function(prestador, data) { let blocked = new Set(); let cap = parseInt(prestador.qtdtecnicos) || 1; agendamentos.filter(a => a.prestador === prestador.nome && a.data === data).forEach(a => { a.slots.forEach(s => { let h = parseInt(s.split(':')[0]); if (window.getOcupacaoSlot(prestador, data, s) >= cap) { blocked.add(h); blocked.add(h - 1); blocked.add(h + 1); } }); }); return blocked; };
 
     window.checkAuth();
     window.onload = async () => { window.carregarProdutos(); await carregarDadosDoBanco(); };
