@@ -8,20 +8,10 @@
         body { font-family: 'Inter', -apple-system, sans-serif; background:var(--bg); color: var(--text); margin:0; padding:20px; }
         
         #toast {
-            display: none; 
-            position: fixed; 
-            top: 50%; 
-            left: 50%; 
-            transform: translate(-50%, -50%); 
-            background: #f0f0f0; 
-            color: #334155; 
-            padding: 20px; 
-            border-radius: 12px; 
-            box-shadow: 0 10px 25px rgba(0,0,0,0.2); 
-            z-index: 10000; 
-            border: 1px solid #e5e7eb;
-            font-weight: 600;
-            text-align: center;
+            display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); 
+            background: #f0f0f0; color: #334155; padding: 20px; border-radius: 12px; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2); z-index: 10000; border: 1px solid #e5e7eb;
+            font-weight: 600; text-align: center;
         }
 
         #login-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #2F4EA1; display: none; align-items: center; justify-content: center; z-index: 20000; }
@@ -59,8 +49,9 @@
         .flex-cards { display: flex; gap: 15px; margin-bottom: 20px; }
         .stats-card { background: white; padding: 15px; border-radius: 8px; flex: 1; border: 1px solid #e5e7eb; text-align: center; }
         
-        .painel-item { background: white; margin-bottom: 10px; padding: 15px; border-radius: 8px; border-left: 5px solid var(--primary); box-shadow: 0 2px 4px rgba(0,0,0,0.05); cursor: pointer; transition: 0.2s; border: 1px solid #e5e7eb; border-left: 5px solid var(--primary); }
-        .painel-item:hover { transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        /* Layout Painel Ajustado */
+        .painel-item { background: white; margin-bottom: 8px; padding: 12px; border-radius: 8px; border: 1px solid #e5e7eb; border-left: 5px solid var(--primary); box-shadow: 0 1px 3px rgba(0,0,0,0.1); display: flex; align-items: center; justify-content: space-between; cursor: pointer; transition: 0.2s; }
+        .painel-item:hover { background: #f8fafc; }
         
         .filtros-painel { display: flex; gap: 10px; margin-bottom: 20px; padding: 15px; background: white; border-radius: 8px; border: 1px solid #e5e7eb; align-items: flex-end; flex-wrap: wrap; }
         .filtros-painel > div { flex: 1; min-width: 140px; }
@@ -181,7 +172,7 @@
             <div><label>Início</label><input type="date" id="filtroDataInicio"></div>
             <div><label>Fim</label><input type="date" id="filtroDataFim"></div>
             <div><label>Prestador</label><select id="filtroPrestador"><option value="">Todos</option></select></div>
-            <div><label>Solicitante</label><input type="text" id="filtroSolicitante" placeholder="Pesquisar nome..."></div>
+            <div><label>Solicitante</label><input type="text" id="filtroSolicitante" placeholder="Pesquisar..."></div>
             <button onclick="window.renderPainel()">Filtrar</button>
             <button onclick="window.limparFiltros()" style="background:green;">Limpar</button>
         </div>
@@ -290,13 +281,14 @@
         window.exibirModal("Detalhes do Agendamento", html);
     };
 
+    window.excluirAgendamento = function(id) { window.showConfirm("Tem certeza que deseja excluir?", () => window.confirmarExclusaoAgendamento(id)); };
+    
     window.cancelarAgendamento = function() { window.showConfirm("Deseja realmente cancelar este agendamento?", window.realizarCancelamento); };
     window.realizarCancelamento = function() { window.limparFormulario(); window.proximoPasso(1); };
     async function consultarDistancia(cepOrigem, enderecoPrestador) { try { const response = await fetch(`${API_URL}/distancia`, { method: 'POST', headers: getHeaders(), body: JSON.stringify({ origin: cepOrigem, destination: enderecoPrestador }) }); const data = await response.json(); return (data.status === 'OK') ? parseFloat(data.rows[0].elements[0].distance.value) / 1000 : null; } catch (e) { return null; } }
     window.salvarPrestador = async function(btn) { const originalText = btn.innerText; btn.innerText = "Salvando..."; btn.disabled = true; try { const inputs = document.querySelectorAll('#etapa-1 input'); for(let i of inputs) if(!i.value.trim()) { window.showMessage("Preencha todos os campos!"); return; } let agenda = [...document.querySelectorAll('#agenda-cadastro .cell.selecionado')].map(c => ({ dia: c.dataset.dia, hora: c.dataset.hora })); let p = { nome: document.getElementById("nomeEmpresa").value, endereco: document.getElementById("endereco").value, cidade: document.getElementById("cidade").value, uf: document.getElementById("uf").value, cep: document.getElementById("cep").value, responsavel: document.getElementById("responsavel").value, contato: document.getElementById("contatoResponsavel").value, qtdtecnicos: parseInt(document.getElementById("qtdTecnicos").value), range: document.getElementById("rangeAtendimento").value, agenda: agenda }; const url = (editingIndex !== -1) ? `${API_URL}/prestadores/${prestadores[editingIndex].id}` : `${API_URL}/prestadores`; await fetch(url, { method: (editingIndex !== -1) ? 'PUT' : 'POST', headers: getHeaders(), body: JSON.stringify(p) }); editingIndex = -1; await carregarDadosDoBanco(); document.getElementById("cadastro-flow").style.display="none"; document.getElementById("lista-prestadores-view").style.display="block"; window.showToast("Prestador salvo com sucesso!"); } finally { btn.disabled = false; btn.innerText = originalText; } };
     window.excluirPrestador = async function(i) { window.showConfirm("Tem certeza que deseja excluir?", () => window.confirmarExclusaoPrestador(i)); };
     window.confirmarExclusaoPrestador = async function(i) { await fetch(`${API_URL}/prestadores/${prestadores[i].id}`, { method: 'DELETE', headers: getHeaders() }); await carregarDadosDoBanco(); window.showToast("Prestador excluído com sucesso!"); };
-    window.excluirAgendamento = async function(id) { window.showConfirm("Tem certeza que deseja excluir?", () => window.confirmarExclusaoAgendamento(id)); };
     window.confirmarExclusaoAgendamento = async function(id) { await fetch(`${API_URL}/agendamentos/${id}`, { method: 'DELETE', headers: getHeaders() }); await carregarDadosDoBanco(); window.showToast("Agendamento excluído!"); };
     window.concluirAgendamentoFinal = async function(btn){ const ticket = document.getElementById("ticket").value; const cli = document.getElementById("clienteNome").value; const sol = document.getElementById("solicitante").value; if(!ticket || !cli || !sol) return window.showMessage("Preencha todos os campos!"); let sel = document.querySelectorAll("#agenda-agendamento .cell.selecionado"); if(sel.length === 0) return window.showMessage("Selecione um horário!"); let p = prestadores[prestadorSelecionadoIndex]; let qtdLimit = parseInt(p.qtdtecnicos) || 1; for(let s of sel) { if(window.getOcupacaoSlot(p, s.dataset.date, s.dataset.hora) >= qtdLimit) { window.showMessage("Limite de técnicos atingido no horário " + s.dataset.hora); return; } } const originalText = btn.innerText; btn.innerText = "Confirmando..."; btn.disabled = true; try { let agendamento = { prestador: p.nome, qtdtecnicos: p.qtdtecnicos, produtos: itensSelecionados, data: sel[0].dataset.date, rawdate: new Date().toISOString(), slots: [...sel].map(s => s.dataset.hora), ticket, cliente: cli, solicitante: sol }; await fetch(`${API_URL}/agendamentos`, { method: 'POST', headers: getHeaders(), body: JSON.stringify(agendamento) }); 
         const slotsFormatados = [...sel].map(s => s.dataset.hora).join(', '); const produtosFormatados = itensSelecionados.map(item => `${item.desc} (${item.qtd}x)`).join(', ');
@@ -354,18 +346,17 @@
         }).sort((a,b) => parseDateToObj(b.data) - parseDateToObj(a.data)); 
         
         document.getElementById("painel-conteudo").innerHTML = filtradosPainel.map((a, i) => {
-            let descServico = Array.isArray(a.produtos) && a.produtos.length > 0 ? a.produtos[0].desc : "Serviço";
+            let qtdServicos = Array.isArray(a.produtos) ? a.produtos.length : 0;
             return `
-            <div class="painel-item" onclick="window.abrirDetalhesAgendamento(${i})">
-                <div style="display:flex; justify-content:space-between;">
-                    <strong>🎟️ #${a.ticket}</strong>
-                    <span style="font-size:0.8rem; color:#64748b;">📅 ${a.data}</span>
+            <div class="painel-item">
+                <div style="flex-grow: 1; font-size: 0.95rem;">
+                    <strong>🎟️ #${a.ticket}</strong> &nbsp; 📅 ${a.data}<br>
+                    <div style="margin-top:5px;">
+                        👤 <strong>Cliente:</strong> ${a.cliente}<br>
+                        🛠️ <strong>Prestador:</strong> ${a.prestador} | (${qtdServicos} serviços) | <strong>Solicitante:</strong> ${a.solicitante}
+                    </div>
                 </div>
-                <div style="margin-top:8px; font-size:0.9rem;">
-                    <strong>👤 Cliente:</strong> ${a.cliente}<br>
-                    <strong>🛠️ Prestador:</strong> ${a.prestador} | <strong>Solicitante:</strong> ${a.solicitante}<br>
-                    <small style="color:#64748b;">${descServico}</small>
-                </div>
+                <button style="background:var(--primary); padding: 5px 10px; font-size: 0.8rem; margin-left: 10px;" onclick="window.abrirDetalhesAgendamento(${i})">Ver detalhes</button>
             </div>`;
         }).join(''); 
     };
@@ -375,5 +366,3 @@
 </script>
 </body>
 </html>
-
-APEX TESTE NOVOS DADOS E LAYOUT
