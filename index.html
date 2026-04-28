@@ -49,7 +49,6 @@
         .flex-cards { display: flex; gap: 15px; margin-bottom: 20px; }
         .stats-card { background: white; padding: 15px; border-radius: 8px; flex: 1; border: 1px solid #e5e7eb; text-align: center; }
         
-        /* Layout Painel Ajustado */
         .painel-item { background: white; margin-bottom: 8px; padding: 12px; border-radius: 8px; border: 1px solid #e5e7eb; border-left: 5px solid var(--primary); box-shadow: 0 1px 3px rgba(0,0,0,0.1); display: flex; align-items: center; justify-content: space-between; }
         
         .filtros-painel { display: flex; gap: 10px; margin-bottom: 20px; padding: 15px; background: white; border-radius: 8px; border: 1px solid #e5e7eb; align-items: flex-end; flex-wrap: wrap; }
@@ -281,7 +280,7 @@
                 ${prodHtml}
             </div>
             <div style="text-align:center;">
-                <button onclick="window.excluirAgendamento(${a.id}); window.fecharModal();" class="btn-cancelar" style="width: 100%;">Excluir Agendamento</button>
+                <button onclick="window.excluirAgendamento(${a.id})" class="btn-cancelar" style="width: 100%;">Excluir Agendamento</button>
             </div>
         `;
         window.exibirModal("Detalhes do Agendamento", html);
