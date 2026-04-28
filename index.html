@@ -8,10 +8,20 @@
         body { font-family: 'Inter', -apple-system, sans-serif; background:var(--bg); color: var(--text); margin:0; padding:20px; }
         
         #toast {
-            display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); 
-            background: #f0f0f0; color: #334155; padding: 20px; border-radius: 12px; 
-            box-shadow: 0 10px 25px rgba(0,0,0,0.2); z-index: 10000; border: 1px solid #e5e7eb;
-            font-weight: 600; text-align: center;
+            display: none; 
+            position: fixed; 
+            top: 50%; 
+            left: 50%; 
+            transform: translate(-50%, -50%); 
+            background: #f0f0f0; 
+            color: #334155; 
+            padding: 20px; 
+            border-radius: 12px; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2); 
+            z-index: 10000; 
+            border: 1px solid #e5e7eb;
+            font-weight: 600;
+            text-align: center;
         }
 
         #login-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #2F4EA1; display: none; align-items: center; justify-content: center; z-index: 20000; }
@@ -49,7 +59,8 @@
         .flex-cards { display: flex; gap: 15px; margin-bottom: 20px; }
         .stats-card { background: white; padding: 15px; border-radius: 8px; flex: 1; border: 1px solid #e5e7eb; text-align: center; }
         
-        .painel-item { background: white; margin-bottom: 8px; padding: 12px; border-radius: 8px; border-left: 5px solid var(--primary); box-shadow: 0 1px 3px rgba(0,0,0,0.1); border: 1px solid #e5e7eb; display: flex; align-items: center; justify-content: space-between; }
+        .painel-item { background: white; margin-bottom: 10px; padding: 15px; border-radius: 8px; border-left: 5px solid var(--primary); box-shadow: 0 2px 4px rgba(0,0,0,0.05); cursor: pointer; transition: 0.2s; border: 1px solid #e5e7eb; border-left: 5px solid var(--primary); }
+        .painel-item:hover { transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
         
         .filtros-painel { display: flex; gap: 10px; margin-bottom: 20px; padding: 15px; background: white; border-radius: 8px; border: 1px solid #e5e7eb; align-items: flex-end; flex-wrap: wrap; }
         .filtros-painel > div { flex: 1; min-width: 140px; }
@@ -170,7 +181,7 @@
             <div><label>Início</label><input type="date" id="filtroDataInicio"></div>
             <div><label>Fim</label><input type="date" id="filtroDataFim"></div>
             <div><label>Prestador</label><select id="filtroPrestador"><option value="">Todos</option></select></div>
-            <div><label>Solicitante</label><input type="text" id="filtroSolicitante" placeholder="Pesquisar..."></div>
+            <div><label>Solicitante</label><input type="text" id="filtroSolicitante" placeholder="Pesquisar nome..."></div>
             <button onclick="window.renderPainel()">Filtrar</button>
             <button onclick="window.limparFiltros()" style="background:green;">Limpar</button>
         </div>
@@ -343,13 +354,18 @@
         }).sort((a,b) => parseDateToObj(b.data) - parseDateToObj(a.data)); 
         
         document.getElementById("painel-conteudo").innerHTML = filtradosPainel.map((a, i) => {
-            let qtdServicos = Array.isArray(a.produtos) ? a.produtos.length : 0;
+            let descServico = Array.isArray(a.produtos) && a.produtos.length > 0 ? a.produtos[0].desc : "Serviço";
             return `
-            <div class="painel-item">
-                <div style="flex-grow: 1;">
-                    <strong>#${a.ticket}</strong> | ${a.cliente} | ${a.prestador} (${qtdServicos} serviços) | ${a.solicitante}
+            <div class="painel-item" onclick="window.abrirDetalhesAgendamento(${i})">
+                <div style="display:flex; justify-content:space-between;">
+                    <strong>🎟️ #${a.ticket}</strong>
+                    <span style="font-size:0.8rem; color:#64748b;">📅 ${a.data}</span>
                 </div>
-                <button style="background:var(--primary); padding: 5px 10px; font-size: 0.8rem;" onclick="window.abrirDetalhesAgendamento(${i})">Ver detalhes</button>
+                <div style="margin-top:8px; font-size:0.9rem;">
+                    <strong>👤 Cliente:</strong> ${a.cliente}<br>
+                    <strong>🛠️ Prestador:</strong> ${a.prestador} | <strong>Solicitante:</strong> ${a.solicitante}<br>
+                    <small style="color:#64748b;">${descServico}</small>
+                </div>
             </div>`;
         }).join(''); 
     };
@@ -359,3 +375,5 @@
 </script>
 </body>
 </html>
+
+APEX TESTE NOVOS DADOS E LAYOUT
