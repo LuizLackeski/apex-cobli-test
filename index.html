@@ -234,16 +234,19 @@
     const ADMIN_EMAILS = ["luiz.lackeski@cobli.co", "fernando.souza@cobli.co"]; 
     let isAuthorized = false;
     function checkAuth() {
-        let email = localStorage.getItem('userEmail');
-        if (email) {
-            document.getElementById('login-overlay').style.display = 'none';
-            isAuthorized = ADMIN_EMAILS.includes(email);
-            document.getElementById('user-display').innerText = email;
-            if(window.renderizarListaPrestadores) window.renderizarListaPrestadores();
-        } else {
-            document.getElementById('login-overlay').style.display = 'flex';
-        }
+    let email = localStorage.getItem('userEmail');
+    if (email) {
+        document.getElementById('login-overlay').style.display = 'none';
+        
+        // AQUI ESTÁ O AJUSTE: .toLowerCase() garante que a comparação ignore maiúsculas
+        isAuthorized = ADMIN_EMAILS.includes(email.toLowerCase()); 
+        
+        document.getElementById('user-display').innerText = email;
+        if(window.renderizarListaPrestadores) window.renderizarListaPrestadores();
+    } else {
+        document.getElementById('login-overlay').style.display = 'flex';
     }
+}
     window.performLogin = function() {
         let email = document.getElementById('loginEmail').value;
         if (!email || email.trim() === "") return window.showMessage("Por favor, digite uma identificação.");
