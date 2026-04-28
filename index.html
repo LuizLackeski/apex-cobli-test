@@ -7,7 +7,7 @@
         :root { --primary: #2F4EA1; --bg: #f0f2f5; --text: #334155; --cobli-blue: #2F4EA1; }
         body { font-family: 'Inter', -apple-system, sans-serif; background:var(--bg); color: var(--text); margin:0; padding:20px; }
         
-        /* Toast centralizado - Corrigido para fundo cinza claro e texto escuro */
+        /* Toast centralizado */
         #toast {
             display: none; 
             position: fixed; 
@@ -41,8 +41,8 @@
         .conteudo { padding: 30px; max-width: 900px; margin: 0 auto; }
         .aba { display: none; } .aba.ativa { display: block; }
         
-        .card { background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; border: 1px solid #e5e7eb; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); display: flex; flex-direction: column; justify-content: space-between; }
-        .card:hover { border-color: var(--primary); }
+        .card { background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; border: 1px solid #e5e7eb; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); display: flex; flex-direction: column; justify-content: space-between; cursor: pointer; transition: 0.2s; }
+        .card:hover { border-color: var(--primary); background: #fafafa; }
         .card-info { margin-bottom: 15px; }
         .card-actions { display: flex; gap: 8px; flex-wrap: wrap; }
         
@@ -60,12 +60,8 @@
         .flex-cards { display: flex; gap: 15px; margin-bottom: 20px; }
         .stats-card { background: white; padding: 15px; border-radius: 8px; flex: 1; border: 1px solid #e5e7eb; text-align: center; }
         
-        .painel-item { background: white; margin-bottom: 8px; padding: 10px 15px; border-radius: 6px; border: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center; cursor: pointer; transition: 0.2s; }
-        .painel-item:hover { border-color: var(--primary); background: #f8fafc; }
-        .painel-item-info { display: flex; gap: 20px; font-size: 0.9rem; align-items: center; }
-        
-        .filtros-painel { display: flex; gap: 10px; margin-bottom: 20px; padding: 15px; background: white; border-radius: 8px; border: 1px solid #e5e7eb; align-items: flex-end; }
-        .filtros-painel > div { flex: 1; }
+        .filtros-painel { display: flex; gap: 10px; margin-bottom: 20px; padding: 15px; background: white; border-radius: 8px; border: 1px solid #e5e7eb; align-items: flex-end; flex-wrap: wrap; }
+        .filtros-painel > div { flex: 1; min-width: 150px; }
         .card-selecao { background: white; padding: 15px; border-radius: 8px; margin-bottom: 10px; border: 1px solid #e5e7eb; }
         .card-selecao strong { color: var(--primary); font-size: 1.1rem; }
         .date-pills { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
@@ -183,7 +179,7 @@
             <div><label>Início</label><input type="date" id="filtroDataInicio"></div>
             <div><label>Fim</label><input type="date" id="filtroDataFim"></div>
             <div><label>Prestador</label><select id="filtroPrestador"><option value="">Todos</option></select></div>
-            <div><label>Solicitante</label><input type="text" id="filtroSolicitante" placeholder="Nome..."></div>
+            <div><label>Solicitante</label><input type="text" id="filtroSolicitante" placeholder="Digite p/ filtrar..."></div>
             <button onclick="window.renderPainel()">Filtrar</button>
             <button onclick="window.limparFiltros()" style="background:green;">Limpar</button>
         </div>
@@ -192,7 +188,7 @@
 </div>
 
 <script>
-    let filtradosPainel = []; // Guardar filtrados para exibir detalhes
+    let filtradosPainel = []; 
 
     window.exibirModal = function(titulo, htmlBody) {
         document.getElementById('modalHeader').innerText = titulo;
@@ -275,7 +271,6 @@
     window.getBlockedHours = function(prestador, data) { let blocked = new Set(); let cap = parseInt(prestador.qtdtecnicos) || 1; agendamentos.filter(a => a.prestador === prestador.nome && a.data === data).forEach(a => { a.slots.forEach(s => { let h = parseInt(s.split(':')[0]); if (window.getOcupacaoSlot(prestador, data, s) >= cap) { blocked.add(h); blocked.add(h - 1); blocked.add(h + 1); } }); }); return blocked; };
     window.abrirDetalhesPrestador = function(index) { let p = prestadores[index]; let agendaHtml = ''; ["Seg", "Ter", "Qua", "Qui", "Sex", "Sab"].forEach(d => { let slots = p.agenda.filter(a => a.dia === d).map(a => `<div class="cell">${a.hora}</div>`).join(''); if(slots) { agendaHtml += `<div class="agenda-day-card" style="margin-bottom:10px;"><div class="agenda-day-title">${d}</div><div class="slots-wrapper">${slots}</div></div>`; } }); window.exibirModal("Detalhes do Prestador", `<div class="info-group" style="margin-bottom:15px;"><div style="font-weight:bold; font-size:1.1rem;">${p.nome}</div><div style="font-size:0.9rem; color:#64748b;">Resp: ${p.responsavel} | Contato: ${p.contato} | Raio: ${p.range} km</div></div>${agendaHtml}`); };
     
-    // NOVO: Detalhes do Agendamento (seguindo padrão do modal prestador)
     window.abrirDetalhesAgendamento = function(index) {
         let a = filtradosPainel[index];
         let prodHtml = Array.isArray(a.produtos) ? a.produtos.map(p => `<div>• ${p.desc} (${p.qtd}x)</div>`).join('') : 'Sem produtos';
@@ -288,7 +283,7 @@
                 <p><strong>Data:</strong> ${a.data}</p>
                 <p><strong>Horários:</strong> ${Array.isArray(a.slots) ? a.slots.join(', ') : 'N/A'}</p>
                 <p><strong>Serviços:</strong></p>
-                <div style="background: #e2e8f0; padding: 10px; border-radius: 6px;">${prodHtml}</div>
+                <div style="background: #e2e8f0; padding: 10px; border-radius: 6px; margin-bottom: 10px;">${prodHtml}</div>
             </div>
             <div style="margin-top:20px; text-align:center;">
                 <button onclick="window.excluirAgendamento(${a.id}); window.fecharModal();" class="btn-cancelar">Excluir Agendamento</button>
@@ -345,7 +340,6 @@
     window.adicionarProduto = function(){ let select = document.getElementById("produto"); let qtd = parseInt(document.getElementById("quantidade").value) || 1; let tempoBase = parseInt(select.value); itensSelecionados.push({desc: select.options[select.selectedIndex].text, tempo: tempoBase, qtd: qtd}); window.renderizarProdutos(); if(prestadorSelecionadoIndex !== null) window.rdaAgendamento(); };
     window.renderizarProdutos = function(){ let totalMinutos = itensSelecionados.reduce((a, b) => a + (b.tempo * b.qtd), 0); document.getElementById("horasNecessarias").innerText = Math.ceil(totalMinutos/60); document.getElementById("lista-produtos").innerHTML = itensSelecionados.map((i, idx) => `<div class="item-lista">${i.desc} (Qtd: ${i.qtd} | Total: ${i.tempo * i.qtd} min) <button onclick="itensSelecionados.splice(${idx},1); window.renderizarProdutos(); window.rdaAgendamento();">x</button></div>`).join(''); };
     
-    // ATUALIZADO: Filtro por Solicitante e Cards Simplificados
     window.renderPainel = function(){ 
         let fInicio = document.getElementById("filtroDataInicio").value; 
         let fFim = document.getElementById("filtroDataFim").value; 
@@ -357,19 +351,19 @@
             let dataAgendada = `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
             let matchDate = (!fInicio || dataAgendada >= fInicio) && (!fFim || dataAgendada <= fFim); 
             let matchPrest = (!fPrest || a.prestador === fPrest); 
-            let matchSol = (!fSol || a.solicitante.toLowerCase().includes(fSol));
+            let matchSol = (!fSol || (a.solicitante && a.solicitante.toLowerCase().includes(fSol)));
             return matchDate && matchPrest && matchSol; 
         }).sort((a,b) => parseDateToObj(b.data) - parseDateToObj(a.data)); 
         
         document.getElementById("painel-conteudo").innerHTML = filtradosPainel.map((a, i) => `
-            <div class="painel-item" onclick="window.abrirDetalhesAgendamento(${i})">
-                <div class="painel-item-info">
-                    <span style="font-weight:bold; width: 80px;">#${a.ticket}</span>
-                    <span style="width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${a.cliente}</span>
-                    <span style="color:#64748b; width: 150px;">${a.prestador}</span>
-                    <span>${a.data}</span>
+            <div class="card" onclick="window.abrirDetalhesAgendamento(${i})">
+                <div class="card-info">
+                    <strong>Ticket: ${a.ticket}</strong> | Cliente: ${a.cliente}<br>
+                    <span style="color:#64748b; font-size: 0.85rem;">Prestador: ${a.prestador} | Data: ${a.data}</span><br>
+                    <div style="margin-top: 5px; font-size: 0.85rem;">
+                        👤 Solicitante: ${a.solicitante}
+                    </div>
                 </div>
-                <div style="font-size:0.8rem; color:var(--primary);">Ver Detalhes</div>
             </div>
         `).join(''); 
     };
