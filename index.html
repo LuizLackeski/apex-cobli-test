@@ -164,7 +164,7 @@
 
 <script>
     const API_URL = 'https://fqaqlofndeihmhkopvan.supabase.co/functions/v1/smart-service';
-    const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZxYXFsb2ZuZGVpaG1oa29wdmFuIiwicm9sZSI6IkpXVCIsImlhdCI6MTc3NzIyNTg4MiwiZXhwIjoyMDkyODAxODgyfQ.nauPYoB9RDhLLueMEuop2H2FxdChjIxFkAmBcYbJLzc';
+    const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZxYXFsb2ZuZGVpaG1oa29wdmFuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcyMjU4ODIsImV4cCI6MjA5MjgwMTg4Mn0.nauPYoB9RDhLLueMEuop2H2FxdChjIxFkAmBcYbJLzc';
     function getHeaders() { return { 'Content-Type': 'application/json', 'apikey': ANON_KEY, 'Authorization': `Bearer ${ANON_KEY}` }; }
     let prestadores = [], itensSelecionados = [], agendamentos = [], etapa = 1, editingIndex = -1, prestadorSelecionadoIndex = null, isAuthorized = false;
     const ADMIN_EMAILS = ["luiz.lackeski@cobli.co", "fernando.souza@cobli.co", "anni.torrecilhas@cobli.co"];
