@@ -7,15 +7,19 @@
         :root { --primary: #2F4EA1; --bg: #f0f2f5; --text: #334155; --cobli-blue: #2F4EA1; }
         body { font-family: 'Inter', -apple-system, sans-serif; background:var(--bg); color: var(--text); margin:0; padding:20px; }
         
-        /* Toast centralizado */
+<style>
+        :root { --primary: #2F4EA1; --bg: #f0f2f5; --text: #334155; --cobli-blue: #2F4EA1; }
+        body { font-family: 'Inter', -apple-system, sans-serif; background:var(--bg); color: var(--text); margin:0; padding:20px; }
+        
+        /* Toast centralizado - Corrigido para fundo cinza claro e texto escuro */
         #toast {
             display: none; 
             position: fixed; 
             top: 50%; 
             left: 50%; 
             transform: translate(-50%, -50%); 
-            background: #e6e6ed; 
-            color: #f0f0f0; 
+            background: #f0f0f0; 
+            color: #334155; 
             padding: 20px; 
             border-radius: 12px; 
             box-shadow: 0 10px 25px rgba(0,0,0,0.2); 
@@ -68,7 +72,8 @@
         .pill { background: #dbeafe; color: #1e40af; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; border: 1px solid #bfdbfe; }
 
         .modal-overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); justify-content:center; align-items:center; z-index:20001; }
-        .modal-card { background: #f0f0f0;     color: #334155; padding: 25px; border-radius: 12px; width: 500px; max-width: 90%;  box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+        /* Modal Corrigido para fundo cinza claro e texto escuro */
+        .modal-card { background: #f0f0f0; color: #334155; padding: 25px; border-radius: 12px; width: 500px; max-width: 90%; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
         .modal-header { font-size: 1.2rem; font-weight: bold; color: var(--primary); margin-bottom: 15px; }
         .modal-footer { margin-top:20px; text-align: right; }
     </style>
