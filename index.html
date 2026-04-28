@@ -9,6 +9,11 @@
         
         #toast { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #f0f0f0; color: #334155; padding: 20px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); z-index: 10000; border: 1px solid #e5e7eb; font-weight: 600; text-align: center; }
 
+        /* Estilo Card Compacto para Painel (Ajustado) */
+        .card-compact { background: white; padding: 8px 12px; border-radius: 6px; margin-bottom: 5px; border: 1px solid #e5e7eb; display: flex; align-items: center; justify-content: space-between; cursor: pointer; transition: 0.2s; font-size: 0.85rem; }
+        .card-compact:hover { background: #f8fafc; border-color: var(--primary); }
+        .card-compact span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
         #login-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #2F4EA1; display: none; align-items: center; justify-content: center; z-index: 20000; }
         .login-card { background: white; padding: 40px; border-radius: 12px; width: 350px; text-align: center; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2); }
         .login-card h2 { color: var(--primary); border-bottom: none; margin-bottom: 20px; }
@@ -20,32 +25,30 @@
         .menu button:hover { color: white; }
         .menu .user-info { margin-left: auto; color: #ffffff; font-size: 0.8rem; margin-right: 15px; opacity: 0.8; }
         .menu .btn-sair { color: #ff9999; }
+        
         button:hover { filter: brightness(1.2); transform: translateY(-1px); box-shadow: 0 2px 4px rgba(0,0,0,0.2); transition: 0.2s; }
         button:active { transform: translateY(0); filter: brightness(0.9); }
         .conteudo { padding: 30px; max-width: 900px; margin: 0 auto; }
         .aba { display: none; } .aba.ativa { display: block; }
         
-        .card { background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; border: 1px solid #e5e7eb; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); display: flex; flex-direction: column; justify-content: space-between; }
+        .card { background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; border: 1px solid #e5e7eb; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
         .card:hover { border-color: var(--primary); }
-        
-        /* Card Simplificado Painel */
-        .card-painel { background: white; padding: 10px 15px; border-radius: 6px; margin-bottom: 5px; border: 1px solid #e5e7eb; display: flex; align-items: center; justify-content: space-between; cursor: pointer; font-size: 0.85rem; }
-        .card-painel:hover { border-color: var(--primary); background: #f8fafc; }
         
         h2 { font-size: 1.1rem; margin-top: 0; color: #1e293b; border-bottom: 1px solid #f1f5f9; padding-bottom: 10px; }
         input, select { width: 100%; padding: 10px; margin: 8px 0; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; }
         label { font-size: 0.8rem; color: #64748b; font-weight: 600; text-transform: uppercase; margin-bottom: 2px; }
         button { cursor: pointer; padding: 8px 16px; background: var(--primary); color: white; border: none; border-radius: 5px; font-weight: 500; }
         .btn-cancelar { background: #ef4444 !important; }
+        
         .agenda-day-card { background: #fafafa; padding: 10px; border-radius: 6px; margin-bottom: 8px; border: 1px solid #e5e7eb; }
         .agenda-day-title { font-weight: 600; color: var(--primary); margin-bottom: 6px; font-size: 0.85rem; }
         .slots-wrapper { display: flex; flex-wrap: wrap; gap: 4px; }
         .cell { border: 1px solid #cbd5e1; padding: 4px; text-align: center; cursor: pointer; border-radius: 4px; font-size: 0.75rem; width: 45px; height: 22px; display: flex; align-items: center; justify-content: center; }
         .cell.selecionado { background: var(--primary); color: white; border-color: var(--primary); }
         .item-lista { display: flex; justify-content: space-between; padding: 6px; border-bottom: 1px solid #f1f5f9; align-items: center; font-size: 0.9rem; }
+        
         .flex-cards { display: flex; gap: 15px; margin-bottom: 20px; }
         .stats-card { background: white; padding: 15px; border-radius: 8px; flex: 1; border: 1px solid #e5e7eb; text-align: center; }
-        .painel-item { background: white; margin-bottom: 10px; padding: 12px; border-radius: 6px; border-left: 4px solid var(--primary); box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
         .filtros-painel { display: flex; gap: 10px; margin-bottom: 20px; padding: 15px; background: white; border-radius: 8px; border: 1px solid #e5e7eb; align-items: flex-end; }
         .filtros-painel > div { flex: 1; }
         
@@ -72,6 +75,7 @@
     <button class="ativo" onclick="window.trocarAba('consulta', this)">Agendamento</button>
     <button onclick="window.trocarAba('cadastro', this)">Prestadores</button>
     <button onclick="window.trocarAba('painel', this)">Painel</button>
+    <button onclick="window.trocarAba('dashboard', this)">Dashboard</button>
     <span id="user-display" class="user-info"></span>
     <button class="btn-sair" onclick="window.logout()">Sair</button>
 </div>
@@ -130,7 +134,7 @@
             <div id="etapa-1">
                 <h3>Dados do Prestador</h3>
                 <label>Nome / Empresa</label><input id="nomeEmpresa" required>
-                <label>Endereço - Ex: R. Lourenço Marques, 297 - Vila Olímpia, São Paulo - SP, 04547-100</label><input id="endereco" required>
+                <label>Endereço</label><input id="endereco" required>
                 <label>Cidade</label><input id="cidade" required>
                 <label>UF</label><input id="uf" required>
                 <label>CEP</label><input id="cep" required>
@@ -139,10 +143,7 @@
                 <label>Quantidade de Técnicos</label><input id="qtdTecnicos" type="number" required>
                 <label>Range de atendimento (Km)</label><input id="rangeAtendimento" type="number" required>
             </div>
-            <div id="etapa-2" style="display:none;">
-                <h3>Agenda</h3>
-                <div id="agenda-cadastro"></div>
-            </div>
+            <div id="etapa-2" style="display:none;"><h3>Agenda</h3><div id="agenda-cadastro"></div></div>
             <div style="margin-top:20px;">
                 <button id="btn-voltar" onclick="window.mudarEtapa(-1)">Voltar</button>
                 <button id="btn-proximo" onclick="window.mudarEtapa(1)">Próximo</button>
@@ -163,6 +164,17 @@
         </div>
         <div id="painel-conteudo"></div>
     </div>
+
+    <div id="dashboard" class="aba">
+        <div class="flex-cards">
+            <div class="stats-card">TOTAL<br><strong id="dash-total">0</strong></div>
+            <div class="stats-card">PRESTADORES<br><strong id="total-prest">0</strong></div>
+        </div>
+        <div class="card">
+            <h3>Distribuição por Prestador (%)</h3>
+            <div id="dash-prest-dist"></div>
+        </div>
+    </div>
 </div>
 
 <script>
@@ -173,20 +185,32 @@
     const ADMIN_EMAILS = ["luiz.lackeski@cobli.co", "fernando.souza@cobli.co", "anni.torrecilhas@cobli.co"];
     const produtos = { "Telemetria": [{desc:"Instalado veículos leves bloqueador", tempo:60}, {desc:"Instalado veículos leves e pesados + CAN", tempo:60}, {desc:"Instalado motos ou maquinários", tempo:40}, {desc:"Instalado veículos leves e pesados", tempo:40}], "Identificador": [{desc:"Instalado veículos leves e pesados identificador", tempo:60}, {desc:"Instalado veículos leves e pesados identificador + CAN", tempo:90}, {desc:"Instalado veículos leves e pesados identificador RFID", tempo:60}, {desc:"Instalado veículos leves e pesados identificador RFID + CAN", tempo:80}], "Trava de ignição": [{desc:"Instalado veículos leves imobilizador", tempo:80}, {desc:"Instalado veículos leves imobilizador RFID", tempo:80}, {desc:"Instalado veículos leves imobilizador RFID + CAN", tempo:90}, {desc:"Instalado veículos leves imobilizador + CAN", tempo:100}], "Videotelemetria": [{desc:"CobliCam (2 câmeras)", tempo:90}, {desc:"Cobli Multicam (3 câmeras internas)", tempo:120}, {desc:"Cobli Multicam (2 câmeras + 1 externa)", tempo:240}, {desc:"Cobli Multicam (4 câmeras)", tempo:240}, {desc:"Cobli Multicam (5 câmeras)", tempo:300}] };
 
+    // --- MANTENDO FUNÇÕES ---
     window.checkAuth = function() { let email = localStorage.getItem('userEmail'); if (email && email.toLowerCase().endsWith("@cobli.co")) { document.getElementById('login-overlay').style.display = 'none'; isAuthorized = ADMIN_EMAILS.includes(email.toLowerCase()); document.getElementById('user-display').innerText = email; } else { localStorage.removeItem('userEmail'); document.getElementById('login-overlay').style.display = 'flex'; } };
     window.performLogin = function() { let e = document.getElementById('loginEmail').value.trim().toLowerCase(); if (!e.endsWith("@cobli.co")) return window.showMessage("Acesso restrito."); localStorage.setItem('userEmail', e); window.location.reload(); };
     window.logout = function() { localStorage.removeItem('userEmail'); window.location.reload(); };
-
+    
     async function carregarDadosDoBanco() { 
         try { 
             const [resP, resA] = await Promise.all([fetch(`${API_URL}/prestadores`, { headers: getHeaders() }), fetch(`${API_URL}/agendamentos`, { headers: getHeaders() })]);
             prestadores = resP.ok ? await resP.json() : [];
             agendamentos = resA.ok ? await resA.json() : [];
-            window.renderizarListaPrestadores(); window.renderPainel();
+            window.renderizarListaPrestadores(); window.renderPainel(); window.renderDashboard();
             let sel = document.getElementById("filtroPrestador");
             if(sel) sel.innerHTML = '<option value="">Todos</option>' + [...new Set(agendamentos.map(a => a.prestador))].map(p => `<option value="${p}">${p}</option>`).join('');
         } catch(e) { console.error(e); } 
     }
+
+    window.renderDashboard = function() {
+        let dashTotal = document.getElementById("dash-total");
+        if(dashTotal) dashTotal.innerText = agendamentos.length;
+        let contagem = {}; agendamentos.forEach(a => contagem[a.prestador] = (contagem[a.prestador] || 0) + 1);
+        let dist = document.getElementById("dash-prest-dist");
+        if(dist) dist.innerHTML = Object.keys(contagem).map(p => {
+            let pct = ((contagem[p] / (agendamentos.length || 1)) * 100).toFixed(0);
+            return `<div style="margin-bottom:10px;"><strong>${p}</strong> (${contagem[p]})<div style="background:#e5e7eb; height:10px; border-radius:5px;"><div style="background:var(--primary); height:10px; width:${pct}%"></div></div></div>`;
+        }).join('');
+    };
 
     window.renderPainel = function() {
         let ticket = document.getElementById("filtroTicket").value.toLowerCase();
@@ -200,10 +224,10 @@
             let [d, m, y] = a.data.split('/');
             let dataAgendada = `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
             return a.ticket.toLowerCase().includes(ticket) && (a.solicitante || '').toLowerCase().includes(sol) && (!fInicio || dataAgendada >= fInicio) && (!fFim || dataAgendada <= fFim) && (!fPrest || a.prestador === fPrest);
-        }).sort((a,b) => parseDateToObj(b.data) - parseDateToObj(a.data));
+        });
         cont.innerHTML = filtrados.map(a => `
-            <div class="card-painel" onclick="window.detalharAgendamento(${a.id})">
-                <span><strong>${a.ticket}</strong> | ${a.cliente} | ${a.prestador} | ${a.data}</span>
+            <div class="card-compact" onclick="window.detalharAgendamento(${a.id})">
+                <span>Ticket: ${a.ticket} | Cliente: ${a.cliente} | Prestador: ${a.prestador} | Data: ${a.data}</span>
                 <button onclick="event.stopPropagation(); window.excluirAgendamento(${a.id})" class="btn-cancelar">Excluir</button>
             </div>
         `).join('');
@@ -211,7 +235,7 @@
 
     window.detalharAgendamento = function(id) {
         let a = agendamentos.find(x => x.id == id);
-        if(a) window.exibirModal("Detalhes do Agendamento", `<p><strong>Ticket:</strong> ${a.ticket}</p><p><strong>Cliente:</strong> ${a.cliente}</p><p><strong>Solicitante:</strong> ${a.solicitante}</p><p><strong>Prestador:</strong> ${a.prestador}</p><p><strong>Data:</strong> ${a.data}</p><p><strong>Horários:</strong> ${(a.slots || []).join(', ')}</p><p><strong>Produtos:</strong> ${(a.produtos || []).map(p => p.desc).join(', ')}</p>`);
+        if(a) window.exibirModal("Detalhes do Agendamento", `<p><strong>Ticket:</strong> ${a.ticket}</p><p><strong>Cliente:</strong> ${a.cliente}</p><p><strong>Solicitante:</strong> ${a.solicitante}</p><p><strong>Prestador:</strong> ${a.prestador}</p><p><strong>Data:</strong> ${a.data}</p><p><strong>Horários:</strong> ${a.slots ? a.slots.join(', ') : ''}</p><p><strong>Produtos:</strong> ${Array.isArray(a.produtos) ? a.produtos.map(p => p.desc).join(', ') : ''}</p>`);
     };
 
     // --- FUNÇÕES DE APOIO ---
@@ -244,6 +268,7 @@
     window.updateButtons = function() { let v=document.getElementById('btn-voltar'), p=document.getElementById('btn-proximo'), c=document.getElementById('btn-concluir'); if(v) v.style.display=(etapa===1)?'none':'inline-block'; if(p) p.style.display=(etapa===1)?'inline-block':'none'; if(c) c.style.display=(etapa===2)?'inline-block':'none'; };
     window.getOcupacaoSlot = function(prestador, data, hora) { return agendamentos.filter(a => a.prestador === prestador.nome && a.data === data && (Array.isArray(a.slots) ? a.slots.includes(hora) : false)).length; };
     window.getBlockedHours = function(prestador, data) { let blocked = new Set(); let cap = parseInt(prestador.qtdtecnicos) || 1; agendamentos.filter(a => a.prestador === prestador.nome && a.data === data).forEach(a => { a.slots.forEach(s => { let h = parseInt(s.split(':')[0]); if (window.getOcupacaoSlot(prestador, data, s) >= cap) { blocked.add(h); blocked.add(h - 1); blocked.add(h + 1); } }); }); return blocked; };
+    window.parseDateToObj = function(dateStr) { const [d, m, y] = dateStr.split('/'); return new Date(y, m - 1, d); };
 
     window.checkAuth();
     window.onload = async () => { window.carregarProdutos(); await carregarDadosDoBanco(); };
