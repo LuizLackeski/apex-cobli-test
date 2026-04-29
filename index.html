@@ -192,6 +192,7 @@
     let filtradosPainel = []; 
     let myChart = null; 
 
+    // --- Funções de UI ---
     window.exibirModal = function(titulo, htmlBody) {
         document.getElementById('modalHeader').innerText = titulo;
         document.getElementById('modalBody').innerHTML = htmlBody;
@@ -223,6 +224,7 @@
         setTimeout(() => { t.style.display = "none"; }, 3000); 
     };
 
+    // --- Lógica de Dados ---
     window.enviarNotificacaoSlack = async function(msg) {
         const SUPABASE_URL = "https://fqaqlofndeihmhkopvan.supabase.co/functions/v1/notificar-slack";
         try {
@@ -336,7 +338,18 @@
     
     window.abrirDetalhesAgendamento = function(index) {
         let a = filtradosPainel[index];
-        let prodHtml = Array.isArray(a.produtos) ? a.produtos.map(p => `<div style="margin-bottom:5px;">• ${p.desc} <strong>(${p.qtd}x)</strong></div>`).join('') : 'Sem produtos';
+        // Calculando total e listando produtos de forma robusta
+        let totalServicos = 0;
+        let prodHtml = "";
+        if (Array.isArray(a.produtos)) {
+            prodHtml = a.produtos.map(p => {
+                totalServicos += p.qtd;
+                return `<div style="margin-bottom:5px;">• ${p.desc} <strong>(${p.qtd}x)</strong></div>`;
+            }).join('');
+        } else {
+            prodHtml = 'Sem produtos';
+        }
+        
         let html = `
             <div style="background: white; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 15px;">
                 <div style="font-weight:bold; font-size:1.1rem; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px; margin-bottom: 8px;">🎟️ Ticket: ${a.ticket}</div>
@@ -348,7 +361,7 @@
                     ⏰ <strong>Horários:</strong> ${Array.isArray(a.slots) ? a.slots.join(', ') : 'N/A'}
                 </div>
             </div>
-            <div style="font-weight:600; margin-bottom:5px;">📦 Serviços Solicitados:</div>
+            <div style="font-weight:600; margin-bottom:5px;">📦 Serviços Solicitados (Total: ${totalServicos}):</div>
             <div style="background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0; margin-bottom: 15px; font-size: 0.9rem;">
                 ${prodHtml}
             </div>
@@ -369,7 +382,10 @@
     window.confirmarExclusaoPrestador = async function(i) { await fetch(`${API_URL}/prestadores/${prestadores[i].id}`, { method: 'DELETE', headers: getHeaders() }); await carregarDadosDoBanco(); window.showToast("Prestador excluído com sucesso!"); };
     window.confirmarExclusaoAgendamento = async function(id) { await fetch(`${API_URL}/agendamentos/${id}`, { method: 'DELETE', headers: getHeaders() }); await carregarDadosDoBanco(); window.showToast("Agendamento excluído!"); window.fecharModal(); };
     window.concluirAgendamentoFinal = async function(btn){ const ticket = document.getElementById("ticket").value; const cli = document.getElementById("clienteNome").value; const sol = document.getElementById("solicitante").value; if(!ticket || !cli || !sol) return window.showMessage("Preencha todos os campos!"); let sel = document.querySelectorAll("#agenda-agendamento .cell.selecionado"); if(sel.length === 0) return window.showMessage("Selecione um horário!"); let p = prestadores[prestadorSelecionadoIndex]; let qtdLimit = parseInt(p.qtdtecnicos) || 1; for(let s of sel) { if(window.getOcupacaoSlot(p, s.dataset.date, s.dataset.hora) >= qtdLimit) { window.showMessage("Limite de técnicos atingido no horário " + s.dataset.hora); return; } } const originalText = btn.innerText; btn.innerText = "Confirmando..."; btn.disabled = true; try { let agendamento = { prestador: p.nome, qtdtecnicos: p.qtdtecnicos, produtos: itensSelecionados, data: sel[0].dataset.date, rawdate: new Date().toISOString(), slots: [...sel].map(s => s.dataset.hora), ticket, cliente: cli, solicitante: sol }; await fetch(`${API_URL}/agendamentos`, { method: 'POST', headers: getHeaders(), body: JSON.stringify(agendamento) }); 
-        const slotsFormatados = [...sel].map(s => s.dataset.hora).join(', '); const produtosFormatados = itensSelecionados.map(item => `${item.desc} (${item.qtd}x)`).join(', ');
+        
+        const slotsFormatados = [...sel].map(s => s.dataset.hora).join(', '); 
+        const produtosFormatados = itensSelecionados.map(item => `${item.desc} (${item.qtd}x)`).join(', ');
+        
         let msgSlack = `🚀 *Novo Agendamento*\n🎟️ Ticket: ${ticket}\n👤 Cliente: ${cli}\n🛠️ Prestador: ${p.nome}\n📅 Data: ${sel[0].dataset.date}\n⏰ Horários: ${slotsFormatados}\n📦 Produtos: ${produtosFormatados}\n📝 Solicitante: ${sol}`;
         window.enviarNotificacaoSlack(msgSlack);
         window.limparFormulario(); await carregarDadosDoBanco(); window.proximoPasso(1); window.showToast("Agendamento salvo com sucesso!"); } catch(e) { window.showMessage("Erro ao concluir agendamento. Verifique sua conexão."); } finally { btn.innerText = originalText; btn.disabled = false; } };
@@ -409,7 +425,6 @@
 
         for(let i=0; i<14; i++){ let data = new Date(); data.setDate(hoje.getDate() + i); let dStr = data.toLocaleDateString(); let dNome = diasSemana[data.getDay()]; let blocked = window.getBlockedHours(p, dStr); let allSlots = (p.agenda && Array.isArray(p.agenda)) ? p.agenda.filter(a => a.dia == dNome) : []; let availableSlots = allSlots.filter(item => { if(!item.hora) return false; let h = parseInt(item.hora.split(':')[0]); return window.getOcupacaoSlot(p, dStr, item.hora) < cap && !blocked.has(h); }); 
         
-        // --- NOVO AJUSTE: VERIFICA SE HÁ SEQUÊNCIA ---
         let hours = availableSlots.map(s => parseInt(s.hora.split(':')[0])).sort((a, b) => a - b);
         let hasConsecutive = false;
         if (hours.length >= horasNecessarias) {
