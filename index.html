@@ -164,10 +164,6 @@
     </div>
 
     <div id="painel" class="aba">
-        <div class="flex-cards">
-            <div class="stats-card">TOTAL<br><strong id="total-agend">0</strong></div>
-            <div class="stats-card">PRESTADORES<br><strong id="total-prest">0</strong></div>
-        </div>
         <div class="filtros-painel">
             <div><label>Início</label><input type="date" id="filtroDataInicio"></div>
             <div><label>Fim</label><input type="date" id="filtroDataFim"></div>
@@ -193,9 +189,8 @@
 
 <script>
     let filtradosPainel = []; 
-    let myChart = null; // Instância do gráfico
+    let myChart = null; 
 
-    // -- Funções existentes e lógica inalterada --
     window.exibirModal = function(titulo, htmlBody) {
         document.getElementById('modalHeader').innerText = titulo;
         document.getElementById('modalBody').innerHTML = htmlBody;
@@ -270,42 +265,39 @@
     const produtos = { "Telemetria": [{desc:"Instalado veículos leves bloqueador", tempo:60}, {desc:"Instalado veículos leves e pesados + CAN", tempo:60}, {desc:"Instalado motos ou maquinários", tempo:40}, {desc:"Instalado veículos leves e pesados", tempo:40}], "Identificador": [{desc:"Instalado veículos leves e pesados identificador", tempo:60}, {desc:"Instalado veículos leves e pesados identificador + CAN", tempo:90}, {desc:"Instalado veículos leves e pesados identificador RFID", tempo:60}, {desc:"Instalado veículos leves e pesados identificador RFID + CAN", tempo:80}], "Trava de ignição": [{desc:"Instalado veículos leves imobilizador", tempo:80}, {desc:"Instalado veículos leves imobilizador RFID", tempo:80}, {desc:"Instalado veículos leves imobilizador RFID + CAN", tempo:90}, {desc:"Instalado veículos leves imobilizador + CAN", tempo:100}], "Videotelemetria": [{desc:"CobliCam (2 câmeras)", tempo:90}, {desc:"Cobli Multicam (3 câmeras internas)", tempo:120}, {desc:"Cobli Multicam (2 câmeras + 1 externa)", tempo:240}, {desc:"Cobli Multicam (4 câmeras)", tempo:240}, {desc:"Cobli Multicam (5 câmeras)", tempo:300}] };
     
     window.onload = async () => { carregarProdutos(); await carregarDadosDoBanco(); };
-    async function carregarDadosDoBanco() { try { const resP = await fetch(`${API_URL}/prestadores`, { headers: getHeaders() }); prestadores = await resP.json(); renderizarListaPrestadores(); const resA = await fetch(`${API_URL}/agendamentos`, { headers: getHeaders() }); agendamentos = await resA.json(); document.getElementById("total-agend").innerText = agendamentos.length; renderPainel(); renderDashboard(); } catch(e) { console.error("Erro ao carregar dados:", e); } }
+    async function carregarDadosDoBanco() { try { const resP = await fetch(`${API_URL}/prestadores`, { headers: getHeaders() }); prestadores = await resP.json(); renderizarListaPrestadores(); const resA = await fetch(`${API_URL}/agendamentos`, { headers: getHeaders() }); agendamentos = await resA.json(); renderPainel(); renderDashboard(); } catch(e) { console.error("Erro ao carregar dados:", e); } }
     
-    // --- Lógica da Dashboard ---
     window.renderDashboard = function() {
         let totalAgend = agendamentos.length;
         let totalServ = 0;
         let distPrest = {};
         
         agendamentos.forEach(a => {
-            if(Array.isArray(a.produtos)) {
-                a.produtos.forEach(p => totalServ += p.qtd);
-            }
+            if(Array.isArray(a.produtos)) a.produtos.forEach(p => totalServ += p.qtd);
             distPrest[a.prestador] = (distPrest[a.prestador] || 0) + 1;
         });
         
         document.getElementById("dash-agend").innerText = totalAgend;
         document.getElementById("dash-serv").innerText = totalServ;
         
-        // Gráfico
+        let labels = Object.keys(distPrest).map(prestador => {
+            let count = distPrest[prestador];
+            let percent = totalAgend > 0 ? Math.round((count / totalAgend) * 100) : 0;
+            return `${prestador} (${String(count).padStart(2, '0')} | ${percent}%)`;
+        });
+        
         const ctx = document.getElementById('chartPrestadores').getContext('2d');
         if(myChart) myChart.destroy();
         myChart = new Chart(ctx, {
             type: 'bar',
             data: {
-                labels: Object.keys(distPrest),
-                datasets: [{
-                    label: 'Qtd de Agendamentos',
-                    data: Object.values(distPrest),
-                    backgroundColor: '#2F4EA1'
-                }]
+                labels: labels,
+                datasets: [{ label: 'Agendamentos', data: Object.values(distPrest), backgroundColor: '#2F4EA1' }]
             },
-            options: { responsive: true, scales: { y: { beginAtZero: true } } }
+            options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
         });
     };
 
-    // --- Lógica existente ---
     function parseDateToObj(dateStr) { const [d, m, y] = dateStr.split('/'); return new Date(y, m - 1, d); }
     window.getOcupacaoSlot = function(prestador, data, hora) { return agendamentos.filter(a => a.prestador === prestador.nome && a.data === data && (Array.isArray(a.slots) ? a.slots.includes(hora) : false)).length; };
     window.getBlockedHours = function(prestador, data) { let blocked = new Set(); let cap = parseInt(prestador.qtdtecnicos) || 1; agendamentos.filter(a => a.prestador === prestador.nome && a.data === data).forEach(a => { a.slots.forEach(s => { let h = parseInt(s.split(':')[0]); if (window.getOcupacaoSlot(prestador, data, s) >= cap) { blocked.add(h); blocked.add(h - 1); blocked.add(h + 1); } }); }); return blocked; };
