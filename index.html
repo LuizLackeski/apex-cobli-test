@@ -226,27 +226,15 @@
 
     // --- Lógica de Dados ---
    window.enviarNotificacaoSlack = async function(msg) {
-    const SUPABASE_URL = "https://fqaqlofndeihmhkopvan.supabase.co/functions/v1/notificar-slack";
-    try {
-        const response = await fetch(SUPABASE_URL, {
-            method: 'POST',
-            headers: getHeaders(), 
-            body: JSON.stringify({ text: msg })
-        });
-        
-        if (!response.ok) {
-            throw new Error(`Erro HTTP: ${response.status}`);
-        }
-        
-        // Se deu tudo certo, mostra o toast
-        window.showToast("Notificação enviada ao Slack!");
-        
-    } catch (e) { 
-        console.error("Erro completo ao enviar para o Slack:", e);
-        // Agora, se der erro, ele vai abrir uma caixa de aviso para você ler o erro
-        window.showMessage("Erro ao notificar o Slack: " + e.message);
-    }
-};
+        const SUPABASE_URL = "https://fqaqlofndeihmhkopvan.supabase.co/functions/v1/notificar-slack";
+        try {
+            await fetch(SUPABASE_URL, {
+                method: 'POST',
+                headers: getHeaders(), 
+                body: JSON.stringify({ text: msg })
+            });
+        } catch (e) { console.error("Erro ao enviar para o Slack:", e); }
+    };
 
     const ADMIN_EMAILS = ["luiz.lackeski@cobli.co", "fernando.souza@cobli.co", "anni.torrecilhas@cobli.co"]; 
     let isAuthorized = false;
