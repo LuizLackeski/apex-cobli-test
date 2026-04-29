@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <title>APEX - Sistema Completo</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
     <style>
         :root { --primary: #2F4EA1; --bg: #f0f2f5; --text: #334155; --cobli-blue: #2F4EA1; }
         body { font-family: 'Inter', -apple-system, sans-serif; background:var(--bg); color: var(--text); margin:0; padding:20px; }
@@ -280,21 +281,39 @@
         document.getElementById("dash-agend").innerText = totalAgend;
         document.getElementById("dash-serv").innerText = totalServ;
         
-        let labels = Object.keys(distPrest).map(prestador => {
-            let count = distPrest[prestador];
-            let percent = totalAgend > 0 ? Math.round((count / totalAgend) * 100) : 0;
-            return `${prestador} | ${String(count).padStart(2, '0')} | ${percent}%`;
-        });
+        const labels = Object.keys(distPrest);
+        const data = Object.values(distPrest);
         
         const ctx = document.getElementById('chartPrestadores').getContext('2d');
         if(myChart) myChart.destroy();
+        
         myChart = new Chart(ctx, {
             type: 'bar',
             data: {
                 labels: labels,
-                datasets: [{ label: 'Agendamentos', data: Object.values(distPrest), backgroundColor: '#2F4EA1' }]
+                datasets: [{ 
+                    label: 'Agendamentos', 
+                    data: data, 
+                    backgroundColor: '#2F4EA1' 
+                }]
             },
-            options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
+            options: { 
+                responsive: true, 
+                plugins: { 
+                    legend: { display: false },
+                    datalabels: {
+                        anchor: 'center',
+                        align: 'center',
+                        color: 'white',
+                        formatter: function(value, context) {
+                            let percent = totalAgend > 0 ? Math.round((value / totalAgend) * 100) : 0;
+                            return `${String(value).padStart(2, '0')} | ${percent}%`;
+                        }
+                    }
+                },
+                scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+            },
+            plugins: [ChartDataLabels]
         });
     };
 
