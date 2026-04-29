@@ -225,7 +225,7 @@
     };
 
     // --- Lógica de Dados ---
-   window.enviarNotificacaoSlack = async function(msg) {
+    window.enviarNotificacaoSlack = async function(msg) {
         const SUPABASE_URL = "https://fqaqlofndeihmhkopvan.supabase.co/functions/v1/notificar-slack";
         try {
             await fetch(SUPABASE_URL, {
@@ -338,7 +338,6 @@
     
     window.abrirDetalhesAgendamento = function(index) {
         let a = filtradosPainel[index];
-        // Calculando total e listando produtos de forma robusta
         let totalServicos = 0;
         let prodHtml = "";
         if (Array.isArray(a.produtos)) {
@@ -464,7 +463,24 @@
         }).join(''); 
     };
     window.carregarProdutos = function(){ let select=document.getElementById("produto"); for(let tipo in produtos){ let group=document.createElement("optgroup"); group.label=tipo; produtos[tipo].forEach(p=>{ let opt=document.createElement("option"); opt.value=p.tempo; opt.text=p.desc; group.appendChild(opt); }); select.appendChild(group); } };
-    window.adicionarProduto = function(){ let select = document.getElementById("produto"); let qtd = parseInt(document.getElementById("quantidade").value) || 1; let tempoBase = parseInt(select.value); itensSelecionados.push({desc: select.options[select.selectedIndex].text, tempo: tempoBase, qtd: qtd}); window.renderizarProdutos(); if(prestadorSelecionadoIndex !== null) window.rdaAgendamento(); };
+    window.adicionarProduto = function(){ 
+        let select = document.getElementById("produto"); 
+        let desc = select.options[select.selectedIndex].text;
+        let qtd = parseInt(document.getElementById("quantidade").value) || 1; 
+        let tempoBase = parseInt(select.value); 
+        
+        // Verifica se o item já existe na lista
+        let index = itensSelecionados.findIndex(item => item.desc === desc);
+        
+        if (index !== -1) {
+            itensSelecionados[index].qtd += qtd;
+        } else {
+            itensSelecionados.push({desc: desc, tempo: tempoBase, qtd: qtd});
+        }
+        
+        window.renderizarProdutos(); 
+        if(prestadorSelecionadoIndex !== null) window.rdaAgendamento(); 
+    };
     window.renderizarProdutos = function(){ let totalMinutos = itensSelecionados.reduce((a, b) => a + (b.tempo * b.qtd), 0); document.getElementById("horasNecessarias").innerText = Math.ceil(totalMinutos/60); document.getElementById("lista-produtos").innerHTML = itensSelecionados.map((i, idx) => `<div class="item-lista">${i.desc} (Qtd: ${i.qtd} | Total: ${i.tempo * i.qtd} min) <button onclick="itensSelecionados.splice(${idx},1); window.renderizarProdutos(); window.rdaAgendamento();">x</button></div>`).join(''); };
     
     window.renderPainel = function(){ 
