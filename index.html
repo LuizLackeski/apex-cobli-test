@@ -173,7 +173,7 @@
             <button onclick="window.renderPainel()">Filtrar</button>
             <button onclick="window.limparFiltros()" style="background:green;">Limpar</button>
         </div>
-        <div id="painel-conteudo"></div>
+        <div id="painel-conteudo" style="max-height: 500px; overflow-y: auto;"></div>
     </div>
 
     <div id="dashboard" class="aba">
@@ -447,7 +447,13 @@
     };
 
     window.limparFiltros = function(){ document.getElementById("filtroDataInicio").value = ""; document.getElementById("filtroDataFim").value = ""; document.getElementById("filtroPrestador").value = ""; document.getElementById("filtroSolicitante").value = ""; window.renderPainel(); };
-    window.atualizarFiltrosPrestador = function(){ let sel = document.getElementById("filtroPrestador"); sel.innerHTML = '<option value="">Todos</option>'; prestadores.forEach(p => sel.innerHTML += `<option value="${p.nome}">${p.nome}</option>`); };
+    window.atualizarFiltrosPrestador = function(){ 
+        let sel = document.getElementById("filtroPrestador");
+        // Filtra prestadores para mostrar apenas aqueles que possuem agendamentos
+        let providersWithAgend = [...new Set(agendamentos.map(a => a.prestador))];
+        sel.innerHTML = '<option value="">Todos</option>';
+        providersWithAgend.forEach(p => sel.innerHTML += `<option value="${p}">${p}</option>`);
+    };
 </script>
 </body>
 </html>
