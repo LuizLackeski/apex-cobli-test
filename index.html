@@ -283,7 +283,7 @@
         let labels = Object.keys(distPrest).map(prestador => {
             let count = distPrest[prestador];
             let percent = totalAgend > 0 ? Math.round((count / totalAgend) * 100) : 0;
-            return `${prestador} (${String(count).padStart(2, '0')} | ${percent}%)`;
+            return `${prestador} | ${String(count).padStart(2, '0')} | ${percent}%`;
         });
         
         const ctx = document.getElementById('chartPrestadores').getContext('2d');
@@ -391,7 +391,6 @@
                         <div class="card-actions">${btns}</div>
                     </div>`; 
         }).join(''); 
-        document.getElementById("total-prest").innerText = prestadores.length; 
     };
     window.carregarProdutos = function(){ let select=document.getElementById("produto"); for(let tipo in produtos){ let group=document.createElement("optgroup"); group.label=tipo; produtos[tipo].forEach(p=>{ let opt=document.createElement("option"); opt.value=p.tempo; opt.text=p.desc; group.appendChild(opt); }); select.appendChild(group); } };
     window.adicionarProduto = function(){ let select = document.getElementById("produto"); let qtd = parseInt(document.getElementById("quantidade").value) || 1; let tempoBase = parseInt(select.value); itensSelecionados.push({desc: select.options[select.selectedIndex].text, tempo: tempoBase, qtd: qtd}); window.renderizarProdutos(); if(prestadorSelecionadoIndex !== null) window.rdaAgendamento(); };
