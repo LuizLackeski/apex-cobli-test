@@ -107,40 +107,40 @@
 </div>
 
 <div class="conteudo">
-    <div id="consulta" class="aba ativa">
-        <div id="step-1" class="card">
-            <h2>Localização</h2>
-            <input type="text" id="inputCep" placeholder="Insira o endereço no padrão google ou CEP" required>
-            <button onclick="window.proximoPasso(2)" id="btnBuscar">Buscar Prestadores</button>
+<div id="consulta" class="aba ativa">
+    <div id="step-1" class="card">
+        <h2>Localização do Atendimento</h2>
+        
+        <div style="display: flex; gap: 10px;">
+            <div style="flex: 3;">
+                <label>Endereço (Rua/Av)</label>
+                <input type="text" id="inputRua" placeholder="Ex: Av. Paulista" required>
+            </div>
+            <div style="flex: 1;">
+                <label>Nº</label>
+                <input type="text" id="inputNumero" placeholder="123" required>
+            </div>
         </div>
-        <div id="step-2" class="card" style="display:none;">
-            <h2>Selecione o Prestador</h2>
-            <div id="lista-prestadores-selecao"></div>
-            <button onclick="window.proximoPasso(1)" style="background:gray;">Voltar</button>
-            <button onclick="window.cancelarAgendamento()" class="btn-cancelar">Cancelar</button>
+
+        <div style="display: flex; gap: 10px;">
+            <div style="flex: 2;">
+                <label>Bairro</label>
+                <input type="text" id="inputBairro" placeholder="Ex: Centro" required>
+            </div>
+            <div style="flex: 2;">
+                <label>Cidade</label>
+                <input type="text" id="inputCidade" placeholder="Ex: São Paulo" required>
+            </div>
+            <div style="flex: 1;">
+                <label>UF</label>
+                <input type="text" id="inputUf" placeholder="SP" maxlength="2" required>
+            </div>
         </div>
-        <div id="step-3" class="card" style="display:none;">
-            <h2>Serviços e Agenda</h2>
-            <div id="header-prestador-info" style="font-size: 0.95rem; color: var(--primary); font-weight: 600; margin-bottom: 15px; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px;"></div>
-            <select id="produto"></select>
-            <input type="number" id="quantidade" value="1" style="width: 80px;">
-            <button onclick="window.adicionarProduto()">Adicionar</button>
-            <div id="lista-produtos"></div>
-            <p>Horas Necessárias: <strong><span id="horasNecessarias">0</span></strong></p>
-            <div id="agenda-agendamento"></div>
-            <button onclick="window.proximoPasso(2)" style="background:gray; margin-top:10px;">Voltar</button>
-            <button onclick="window.validarEAvancar()" style="background:green; margin-top:10px;">Próximo</button>
-            <button onclick="window.cancelarAgendamento()" class="btn-cancelar" style="margin-top:10px;">Cancelar</button>
-        </div>
-        <div id="step-4" class="card" style="display:none;">
-            <h2>Dados do Cliente</h2>
-            <label>Nº do Ticket</label><input id="ticket" required>
-            <label>Nome do Cliente</label><input id="clienteNome" required>
-            <label>Responsável pela solicitação</label><input id="solicitante" required>
-            <button onclick="window.proximoPasso(3)" style="background:gray;">Voltar</button>
-            <button id="btnConfirmar" onclick="window.concluirAgendamentoFinal(this)" style="background:green;">Confirmar</button>
-            <button onclick="window.cancelarAgendamento()" class="btn-cancelar">Cancelar</button>
-        </div>
+
+        <label>CEP</label>
+        <input type="text" id="inputCepNovo" placeholder="00000-000" required>
+
+        <button onclick="window.proximoPasso(2)" id="btnBuscar" style="margin-top: 10px;">Buscar Prestadores</button>
     </div>
 
     <div id="cadastro" class="aba">
@@ -412,7 +412,52 @@
         } 
         return dates; 
     };
-    window.proximoPasso = async function(n) { if(n === 2) { if(prestadores.length === 0) return window.showMessage("Cadastre um prestador!"); const cepDigitado = document.getElementById('inputCep').value; if(!cepDigitado) return window.showMessage("Digite o CEP!"); const btn = document.getElementById('btnBuscar'); btn.disabled = true; btn.innerText = "Calculando..."; let prestadoresFiltrados = []; for(let p of prestadores) { if (!p.endereco) continue; const dist = await consultarDistancia(cepDigitado, p.endereco); let available = window.getNextDates(p); if(dist !== null && dist <= parseFloat(p.range) && available.length > 0) { p.distanciaFinal = dist.toFixed(1); p.nextDates = available.join(', '); prestadoresFiltrados.push(p); } } btn.disabled = false; btn.innerText = "Buscar Prestadores"; if(prestadoresFiltrados.length === 0) { window.exibirModal("Atenção", "Nenhum prestador encontrado no raio de atendimento."); return; } window.renderizarListaPrestadoresSelecao(prestadoresFiltrados); } if(n === 3 && prestadorSelecionadoIndex === null) return window.showMessage("Selecione um prestador!"); document.querySelectorAll('#consulta > div').forEach(div => div.style.display = 'none'); document.getElementById('step-' + n).style.display = 'block'; if (n === 3) { let p = prestadores[prestadorSelecionadoIndex]; document.getElementById("header-prestador-info").innerText = `Prestador: ${p.nome} | Distância: ${p.distanciaFinal} km`; window.rdaAgendamento(); } };
+    window.proximoPasso = async function(n) {
+    if(n === 2) {
+        if(prestadores.length === 0) return window.showMessage("Cadastre um prestador!");
+        
+        // Coleta os novos campos
+        const rua = document.getElementById('inputRua').value;
+        const num = document.getElementById('inputNumero').value;
+        const bairro = document.getElementById('inputBairro').value;
+        const cidade = document.getElementById('inputCidade').value;
+        const uf = document.getElementById('inputUf').value;
+        const cep = document.getElementById('inputCepNovo').value;
+
+        if(!rua || !num || !cidade || !uf || !cep) {
+            return window.showMessage("Por favor, preencha o endereço completo para continuar.");
+        }
+
+        // Concatena tudo para o Google entender e calcular a distância
+        const enderecoCompleto = `${rua}, ${num} - ${bairro}, ${cidade} - ${uf}, ${cep}`;
+        
+        const btn = document.getElementById('btnBuscar');
+        btn.disabled = true;
+        btn.innerText = "Calculando...";
+        
+        let prestadoresFiltrados = [];
+        for(let p of prestadores) {
+            if (!p.endereco) continue;
+            // Usa o endereço concatenado para a busca
+            const dist = await consultarDistancia(enderecoCompleto, p.endereco);
+            let available = window.getNextDates(p);
+            
+            if(dist !== null && dist <= parseFloat(p.range) && available.length > 0) {
+                p.distanciaFinal = dist.toFixed(1);
+                p.nextDates = available.join(', ');
+                prestadoresFiltrados.push(p);
+            }
+        }
+        
+        btn.disabled = false;
+        btn.innerText = "Buscar Prestadores";
+        
+        if(prestadoresFiltrados.length === 0) {
+            window.exibirModal("Atenção", "Nenhum prestador encontrado no raio de atendimento para este endereço.");
+            return;
+        }
+        window.renderizarListaPrestadoresSelecao(prestadoresFiltrados);
+    }
     window.rdaAgendamento = function() { 
         let p = prestadores[prestadorSelecionadoIndex]; 
         let container = document.getElementById("agenda-agendamento"); 
