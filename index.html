@@ -29,7 +29,7 @@
         .menu .btn-sair { color: #ff9999; }
         button:hover { filter: brightness(1.2); transform: translateY(-1px); box-shadow: 0 2px 4px rgba(0,0,0,0.2); transition: 0.2s; }
         button:active { transform: translateY(0); filter: brightness(0.9); }
-        .conteudo { padding: 30px; max-width: 1000px; margin: 0 auto; }
+        .conteudo { padding: 30px; max-width: 900px; margin: 0 auto; }
         .aba { display: none; } .aba.ativa { display: block; }
         
         .card { background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; border: 1px solid #e5e7eb; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); display: flex; flex-direction: column; justify-content: space-between; }
@@ -39,15 +39,9 @@
         
         h2 { font-size: 1.1rem; margin-top: 0; color: #1e293b; border-bottom: 1px solid #f1f5f9; padding-bottom: 10px; }
         input, select { width: 100%; padding: 10px; margin: 8px 0; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; }
-        label { font-size: 0.75rem; color: #64748b; font-weight: 600; text-transform: uppercase; margin-bottom: 2px; }
+        label { font-size: 0.8rem; color: #64748b; font-weight: 600; text-transform: uppercase; margin-bottom: 2px; }
         button { cursor: pointer; padding: 8px 16px; background: var(--primary); color: white; border: none; border-radius: 5px; font-weight: 500; }
         .btn-cancelar { background: #ef4444 !important; }
-        
-        /* Filtros em linha */
-        .filtros-painel { display: flex; gap: 8px; margin-bottom: 20px; padding: 15px; background: white; border-radius: 8px; border: 1px solid #e5e7eb; align-items: flex-end; flex-wrap: nowrap; overflow-x: auto; }
-        .filtros-painel > div { flex: 1; min-width: 100px; }
-        .filtros-painel button { white-space: nowrap; height: 38px; }
-
         .agenda-day-card { background: #fafafa; padding: 10px; border-radius: 6px; margin-bottom: 8px; border: 1px solid #e5e7eb; }
         .agenda-day-title { font-weight: 600; color: var(--primary); margin-bottom: 6px; font-size: 0.85rem; }
         .slots-wrapper { display: flex; flex-wrap: wrap; gap: 4px; }
@@ -59,15 +53,17 @@
         
         .painel-item { background: white; margin-bottom: 8px; padding: 12px; border-radius: 8px; border: 1px solid #e5e7eb; border-left: 5px solid var(--primary); box-shadow: 0 1px 3px rgba(0,0,0,0.1); display: flex; align-items: center; justify-content: space-between; }
         
-        .modal-overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); justify-content:center; align-items:center; z-index:20001; }
-        .modal-card { background: #f0f0f0; color: #334155; padding: 25px; border-radius: 12px; width: 500px; max-width: 90%; max-height: 70vh; overflow-y: auto; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
-        .modal-header { font-size: 1.2rem; font-weight: bold; color: var(--primary); margin-bottom: 15px; }
-        .modal-footer { margin-top:20px; text-align: right; }
-
+        .filtros-painel { display: flex; gap: 10px; margin-bottom: 20px; padding: 15px; background: white; border-radius: 8px; border: 1px solid #e5e7eb; align-items: flex-end; flex-wrap: wrap; }
+        .filtros-painel > div { flex: 1; min-width: 140px; }
         .card-selecao { background: white; padding: 15px; border-radius: 8px; margin-bottom: 10px; border: 1px solid #e5e7eb; }
         .card-selecao strong { color: var(--primary); font-size: 1.1rem; }
         .date-pills { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
         .pill { background: #dbeafe; color: #1e40af; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; border: 1px solid #bfdbfe; }
+
+        .modal-overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); justify-content:center; align-items:center; z-index:20001; }
+        .modal-card { background: #f0f0f0; color: #334155; padding: 25px; border-radius: 12px; width: 500px; max-width: 90%; max-height: 70vh; overflow-y: auto; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+        .modal-header { font-size: 1.2rem; font-weight: bold; color: var(--primary); margin-bottom: 15px; }
+        .modal-footer { margin-top:20px; text-align: right; }
     </style>
 </head>
 <body>
@@ -104,28 +100,46 @@
     <div id="consulta" class="aba ativa">
         <div id="step-1" class="card">
             <h2>Localização do Atendimento</h2>
+            
             <div style="display: flex; gap: 10px;">
-                <div style="flex: 3;"><label>Endereço (Rua/Av)</label><input type="text" id="inputRua" placeholder="Ex: Av. Paulista"></div>
-                <div style="flex: 1;"><label>Nº</label><input type="text" id="inputNumero" placeholder="123"></div>
+                <div style="flex: 3;">
+                    <label>Endereço (Rua/Av)</label>
+                    <input type="text" id="inputRua" placeholder="Ex: Av. Paulista">
+                </div>
+                <div style="flex: 1;">
+                    <label>Nº</label>
+                    <input type="text" id="inputNumero" placeholder="123">
+                </div>
             </div>
+
             <div style="display: flex; gap: 10px;">
-                <div style="flex: 2;"><label>Bairro</label><input type="text" id="inputBairro" placeholder="Ex: Centro"></div>
-                <div style="flex: 2;"><label>Cidade</label><input type="text" id="inputCidade" placeholder="Ex: São Paulo"></div>
-                <div style="flex: 1;"><label>UF</label><input type="text" id="inputUf" placeholder="SP" maxlength="2"></div>
+                <div style="flex: 2;">
+                    <label>Bairro</label>
+                    <input type="text" id="inputBairro" placeholder="Ex: Centro">
+                </div>
+                <div style="flex: 2;">
+                    <label>Cidade</label>
+                    <input type="text" id="inputCidade" placeholder="Ex: São Paulo">
+                </div>
+                <div style="flex: 1;">
+                    <label>UF</label>
+                    <input type="text" id="inputUf" placeholder="SP" maxlength="2">
+                </div>
             </div>
-            <label>CEP</label><input type="text" id="inputCepNovo" placeholder="00000-000">
+
+            <label>CEP</label>
+            <input type="text" id="inputCep" placeholder="00000-000">
+
             <button onclick="window.proximoPasso(2)" id="btnBuscar" style="margin-top: 10px;">Buscar Prestadores</button>
         </div>
         
         <div id="step-2" class="card" style="display:none;">
             <h2>Selecione o Prestador</h2>
             <div id="lista-prestadores-selecao"></div>
-            <div style="margin-top: 15px;">
-                <button onclick="window.proximoPasso(1)" style="background:gray;">Voltar</button>
-                <button onclick="window.cancelarAgendamento()" class="btn-cancelar">Cancelar</button>
-            </div>
+            <button onclick="window.proximoPasso(1)" style="background:gray;">Voltar</button>
+            <button onclick="window.cancelarAgendamento()" class="btn-cancelar">Cancelar</button>
         </div>
-
+        
         <div id="step-3" class="card" style="display:none;">
             <h2>Serviços e Agenda</h2>
             <div id="header-prestador-info" style="font-size: 0.95rem; color: var(--primary); font-weight: 600; margin-bottom: 15px; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px;"></div>
@@ -139,7 +153,7 @@
             <button onclick="window.validarEAvancar()" style="background:green; margin-top:10px;">Próximo</button>
             <button onclick="window.cancelarAgendamento()" class="btn-cancelar" style="margin-top:10px;">Cancelar</button>
         </div>
-
+        
         <div id="step-4" class="card" style="display:none;">
             <h2>Dados do Cliente</h2>
             <label>Nº do Ticket</label><input id="ticket" required>
@@ -160,7 +174,7 @@
             <div id="etapa-1">
                 <h3>Dados do Prestador</h3>
                 <label>Nome / Empresa</label><input id="nomeEmpresa" required>
-                <label>Endereço Completo</label><input id="endereco" required>
+                <label>Endereço - Ex: R. Lourenço Marques, 297 - Vila Olímpia, São Paulo - SP, 04547-100</label><input id="endereco" required>
                 <label>Cidade</label><input id="cidade" required>
                 <label>UF</label><input id="uf" required>
                 <label>CEP</label><input id="cep" required>
@@ -186,7 +200,6 @@
         <div class="filtros-painel">
             <div><label>Início</label><input type="date" id="filtroDataInicio"></div>
             <div><label>Fim</label><input type="date" id="filtroDataFim"></div>
-            <div><label>Ticket</label><input type="text" id="filtroTicket" placeholder="Nº Ticket"></div>
             <div><label>Prestador</label><select id="filtroPrestador"><option value="">Todos</option></select></div>
             <div><label>Solicitante</label><input type="text" id="filtroSolicitante" placeholder="Pesquisar..."></div>
             <button onclick="window.renderPainel()">Filtrar</button>
@@ -208,19 +221,51 @@
 </div>
 
 <script>
-    // --- VARIÁVEIS GLOBAIS ---
-    let prestadores = [], itensSelecionados = [], agendamentos = [], filtradosPainel = [];
-    let etapa = 1, editingIndex = -1, prestadorSelecionadoIndex = null, myChart = null;
-    const API_URL = 'https://fqaqlofndeihmhkopvan.supabase.co/functions/v1/smart-service';
-    const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZxYXFsb2ZuZGVpaG1oa29wdmFuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcyMjU4ODIsImV4cCI6MjA5MjgwMTg4Mn0.nauPYoB9RDhLLueMEuop2H2FxdChjIxFkAmBcYbJLzc';
-    function getHeaders() { return { 'Content-Type': 'application/json', 'apikey': ANON_KEY, 'Authorization': `Bearer ${ANON_KEY}` }; }
-    
-    const produtos = { "Telemetria": [{desc:"Instalado veículos leves bloqueador", tempo:60}, {desc:"Instalado veículos leves e pesados + CAN", tempo:60}, {desc:"Instalado motos ou maquinários", tempo:40}, {desc:"Instalado veículos leves e pesados", tempo:40}], "Identificador": [{desc:"Instalado veículos leves e pesados identificador", tempo:60}, {desc:"Instalado veículos leves e pesados identificador + CAN", tempo:90}, {desc:"Instalado veículos leves e pesados identificador RFID", tempo:60}, {desc:"Instalado veículos leves e pesados identificador RFID + CAN", tempo:80}], "Trava de ignição": [{desc:"Instalado veículos leves imobilizador", tempo:80}, {desc:"Instalado veículos leves imobilizador RFID", tempo:80}, {desc:"Instalado veículos leves imobilizador RFID + CAN", tempo:90}, {desc:"Instalado veículos leves imobilizador + CAN", tempo:100}], "Videotelemetria": [{desc:"CobliCam (2 câmeras)", tempo:90}, {desc:"Cobli Multicam (3 câmeras internas)", tempo:120}, {desc:"Cobli Multicam (2 câmeras + 1 externa)", tempo:240}, {desc:"Cobli Multicam (4 câmeras)", tempo:240}, {desc:"Cobli Multicam (5 câmeras)", tempo:300}] };
+    let filtradosPainel = []; 
+    let myChart = null; 
 
-    // --- INICIALIZAÇÃO ---
-    window.onload = async () => { checkAuth(); carregarProdutos(); await carregarDadosDoBanco(); };
+    window.exibirModal = function(titulo, htmlBody) {
+        document.getElementById('modalHeader').innerText = titulo;
+        document.getElementById('modalBody').innerHTML = htmlBody;
+        document.getElementById('modalFooter').innerHTML = '<button onclick="window.fecharModal()" style="background:var(--primary)">Fechar</button>';
+        document.getElementById('modalAviso').style.display = 'flex';
+    };
+    window.fecharModal = function() { document.getElementById('modalAviso').style.display = 'none'; };
+    window.showMessage = function(msg) {
+        document.getElementById('modalHeader').innerText = "Aviso";
+        document.getElementById('modalBody').innerHTML = `<p>${msg}</p>`;
+        document.getElementById('modalFooter').innerHTML = '<button onclick="window.fecharModal()" style="background:var(--primary)">OK</button>';
+        document.getElementById('modalAviso').style.display = 'flex';
+    };
+    window.showConfirm = function(msg, callbackFn) {
+        document.getElementById('modalHeader').innerText = "Confirmação";
+        document.getElementById('modalBody').innerHTML = `<p>${msg}</p>`;
+        const footer = document.getElementById('modalFooter');
+        footer.innerHTML = '';
+        let btnNao = document.createElement('button'); btnNao.innerText = "Não"; btnNao.style.background = "gray"; btnNao.onclick = window.fecharModal;
+        let btnSim = document.createElement('button'); btnSim.innerText = "Sim"; btnSim.style.background = "var(--primary)"; btnSim.style.marginLeft = "10px"; btnSim.onclick = () => { window.fecharModal(); callbackFn(); };
+        footer.appendChild(btnNao); footer.appendChild(btnSim);
+        document.getElementById('modalAviso').style.display = 'flex';
+    };
+    window.showToast = function(msg) { 
+        let t = document.getElementById("toast"); 
+        if(!t) return;
+        t.innerText = msg; 
+        t.style.display = "block"; 
+        setTimeout(() => { t.style.display = "none"; }, 3000); 
+    };
 
-    // --- AUTENTICAÇÃO ---
+    window.enviarNotificacaoSlack = async function(msg) {
+        const SUPABASE_URL = "https://fqaqlofndeihmhkopvan.supabase.co/functions/v1/notificar-slack";
+        try {
+            await fetch(SUPABASE_URL, {
+                method: 'POST',
+                headers: getHeaders(), 
+                body: JSON.stringify({ text: msg })
+            });
+        } catch (e) { console.error("Erro ao enviar para o Slack:", e); }
+    };
+
     const ADMIN_EMAILS = ["luiz.lackeski@cobli.co", "fernando.souza@cobli.co", "anni.torrecilhas@cobli.co"]; 
     let isAuthorized = false;
     function checkAuth() {
@@ -230,35 +275,180 @@
             isAuthorized = ADMIN_EMAILS.includes(email.toLowerCase());
             document.getElementById('user-display').innerText = email;
             if(window.renderizarListaPrestadores) window.renderizarListaPrestadores();
-        } else { document.getElementById('login-overlay').style.display = 'flex'; }
+        } else {
+            localStorage.removeItem('userEmail');
+            document.getElementById('login-overlay').style.display = 'flex';
+        }
     }
     window.performLogin = function() {
-        let email = document.getElementById('loginEmail').value.trim().toLowerCase();
-        if (!email.endsWith("@cobli.co")) return window.showMessage("Acesso restrito.");
+        let emailInput = document.getElementById('loginEmail');
+        let email = emailInput.value.trim().toLowerCase();
+        if (!email) return window.showMessage("Por favor, digite sua identificação.");
+        if (!email.endsWith("@cobli.co")) return window.showMessage("Acesso restrito. Por favor, informe seu e-mail corporativo (@cobli.co).");
         localStorage.setItem('userEmail', email);
         window.location.reload();
-    };
-    window.logout = function() { localStorage.removeItem('userEmail'); window.location.reload(); };
-
-    // --- CARREGAMENTO ---
-    async function carregarDadosDoBanco() { 
-        try { 
-            const resP = await fetch(`${API_URL}/prestadores`, { headers: getHeaders() }); prestadores = await resP.json(); 
-            const resA = await fetch(`${API_URL}/agendamentos`, { headers: getHeaders() }); agendamentos = await resA.json(); 
-            renderizarListaPrestadores(); renderPainel(); renderDashboard(); 
-        } catch(e) { console.error("Erro dados:", e); } 
     }
+    window.logout = function() { localStorage.removeItem('userEmail'); window.location.reload(); };
+    checkAuth();
 
-    // --- LOGICA DE ENDEREÇO E BUSCA (STEP 1) ---
+    const API_URL = 'https://fqaqlofndeihmhkopvan.supabase.co/functions/v1/smart-service';
+    const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZxYXFsb2ZuZGVpaG1oa29wdmFuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcyMjU4ODIsImV4cCI6MjA5MjgwMTg4Mn0.nauPYoB9RDhLLueMEuop2H2FxdChjIxFkAmBcYbJLzc';
+    function getHeaders() { return { 'Content-Type': 'application/json', 'apikey': ANON_KEY, 'Authorization': `Bearer ${ANON_KEY}` }; }
+    let prestadores = [], itensSelecionados = [], agendamentos = [], etapa = 1, editingIndex = -1, prestadorSelecionadoIndex = null;
+    const produtos = { "Telemetria": [{desc:"Instalado veículos leves bloqueador", tempo:60}, {desc:"Instalado veículos leves e pesados + CAN", tempo:60}, {desc:"Instalado motos ou maquinários", tempo:40}, {desc:"Instalado veículos leves e pesados", tempo:40}], "Identificador": [{desc:"Instalado veículos leves e pesados identificador", tempo:60}, {desc:"Instalado veículos leves e pesados identificador + CAN", tempo:90}, {desc:"Instalado veículos leves e pesados identificador RFID", tempo:60}, {desc:"Instalado veículos leves e pesados identificador RFID + CAN", tempo:80}], "Trava de ignição": [{desc:"Instalado veículos leves imobilizador", tempo:80}, {desc:"Instalado veículos leves imobilizador RFID", tempo:80}, {desc:"Instalado veículos leves imobilizador RFID + CAN", tempo:90}, {desc:"Instalado veículos leves imobilizador + CAN", tempo:100}], "Videotelemetria": [{desc:"CobliCam (2 câmeras)", tempo:90}, {desc:"Cobli Multicam (3 câmeras internas)", tempo:120}, {desc:"Cobli Multicam (2 câmeras + 1 externa)", tempo:240}, {desc:"Cobli Multicam (4 câmeras)", tempo:240}, {desc:"Cobli Multicam (5 câmeras)", tempo:300}] };
+    
+    window.onload = async () => { carregarProdutos(); await carregarDadosDoBanco(); };
+    async function carregarDadosDoBanco() { try { const resP = await fetch(`${API_URL}/prestadores`, { headers: getHeaders() }); prestadores = await resP.json(); renderizarListaPrestadores(); const resA = await fetch(`${API_URL}/agendamentos`, { headers: getHeaders() }); agendamentos = await resA.json(); renderPainel(); renderDashboard(); } catch(e) { console.error("Erro ao carregar dados:", e); } }
+    
+    window.renderDashboard = function() {
+        let totalAgend = agendamentos.length;
+        let totalServ = 0;
+        let distPrest = {};
+        
+        agendamentos.forEach(a => {
+            if(Array.isArray(a.produtos)) a.produtos.forEach(p => totalServ += p.qtd);
+            distPrest[a.prestador] = (distPrest[a.prestador] || 0) + 1;
+        });
+        
+        document.getElementById("dash-agend").innerText = totalAgend;
+        document.getElementById("dash-serv").innerText = totalServ;
+        
+        const labels = Object.keys(distPrest);
+        const data = Object.values(distPrest);
+        
+        const ctx = document.getElementById('chartPrestadores').getContext('2d');
+        if(myChart) myChart.destroy();
+        
+        myChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{ 
+                    label: 'Agendamentos', 
+                    data: data, 
+                    backgroundColor: '#2F4EA1' 
+                }]
+            },
+            options: { 
+                responsive: true, 
+                plugins: { 
+                    legend: { display: false },
+                    datalabels: {
+                        anchor: 'center',
+                        align: 'center',
+                        color: 'white',
+                        formatter: function(value, context) {
+                            let percent = totalAgend > 0 ? Math.round((value / totalAgend) * 100) : 0;
+                            return `${String(value).padStart(2, '0')} | ${percent}%`;
+                        }
+                    }
+                },
+                scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+            },
+            plugins: [ChartDataLabels]
+        });
+    };
+
+    function parseDateToObj(dateStr) { const [d, m, y] = dateStr.split('/'); return new Date(y, m - 1, d); }
+    window.getOcupacaoSlot = function(prestador, data, hora) { return agendamentos.filter(a => a.prestador === prestador.nome && a.data === data && (Array.isArray(a.slots) ? a.slots.includes(hora) : false)).length; };
+    window.getBlockedHours = function(prestador, data) {
+        let blocked = new Set();
+        let cap = parseInt(prestador.qtdtecnicos) || 1;
+        agendamentos.filter(a => a.prestador === prestador.nome && a.data === data).forEach(a => {
+            if (Array.isArray(a.slots)) {
+                a.slots.forEach(s => {
+                    let h = parseInt(s.split(':')[0]);
+                    if (window.getOcupacaoSlot(prestador, data, s) >= cap) { blocked.add(h); blocked.add(h - 1); blocked.add(h + 1); }
+                });
+            }
+        });
+        return blocked;
+    };
+    window.abrirDetalhesPrestador = function(index) { let p = prestadores[index]; let agendaHtml = ''; ["Seg", "Ter", "Qua", "Qui", "Sex", "Sab"].forEach(d => { let slots = p.agenda.filter(a => a.dia === d).map(a => `<div class="cell">${a.hora}</div>`).join(''); if(slots) { agendaHtml += `<div class="agenda-day-card" style="margin-bottom:10px;"><div class="agenda-day-title">${d}</div><div class="slots-wrapper">${slots}</div></div>`; } }); window.exibirModal("Detalhes do Prestador", `<div class="info-group" style="margin-bottom:15px;"><div style="font-weight:bold; font-size:1.1rem;">${p.nome}</div><div style="font-size:0.9rem; color:#64748b;">Resp: ${p.responsavel} | Contato: ${p.contato} | Raio: ${p.range} km</div></div>${agendaHtml}`); };
+    
+    window.abrirDetalhesAgendamento = function(index) {
+        let a = filtradosPainel[index];
+        let totalServicos = 0;
+        let prodHtml = "";
+        if (Array.isArray(a.produtos)) {
+            prodHtml = a.produtos.map(p => {
+                totalServicos += p.qtd;
+                return `<div style="margin-bottom:5px;">• ${p.desc} <strong>(${p.qtd}x)</strong></div>`;
+            }).join('');
+        } else {
+            prodHtml = 'Sem produtos';
+        }
+        
+        let html = `
+            <div style="background: white; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 15px;">
+                <div style="font-weight:bold; font-size:1.1rem; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px; margin-bottom: 8px;">🎟️ Ticket: ${a.ticket}</div>
+                <div style="font-size:0.9rem;">
+                    👤 <strong>Cliente:</strong> ${a.cliente}<br>
+                    👔 <strong>Solicitante:</strong> ${a.solicitante}<br>
+                    🛠️ <strong>Prestador:</strong> ${a.prestador}<br>
+                    📅 <strong>Data:</strong> ${a.data}<br>
+                    ⏰ <strong>Horários:</strong> ${Array.isArray(a.slots) ? a.slots.join(', ') : 'N/A'}
+                </div>
+            </div>
+            <div style="font-weight:600; margin-bottom:5px;">📦 Serviços Solicitados (Total: ${totalServicos}):</div>
+            <div style="background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0; margin-bottom: 15px; font-size: 0.9rem;">
+                ${prodHtml}
+            </div>
+            <div style="text-align:center;">
+                <button onclick="window.excluirAgendamento(${a.id})" class="btn-cancelar" style="width: 100%;">Excluir Agendamento</button>
+            </div>
+        `;
+        window.exibirModal("Detalhes do Agendamento", html);
+    };
+
+    window.excluirAgendamento = function(id) { window.showConfirm("Tem certeza que deseja excluir?", () => window.confirmarExclusaoAgendamento(id)); };
+    
+    window.cancelarAgendamento = function() { window.showConfirm("Deseja realmente cancelar este agendamento?", window.realizarCancelamento); };
+    window.realizarCancelamento = function() { window.limparFormulario(); window.proximoPasso(1); };
+    async function consultarDistancia(cepOrigem, enderecoPrestador) { try { const response = await fetch(`${API_URL}/distancia`, { method: 'POST', headers: getHeaders(), body: JSON.stringify({ origin: cepOrigem, destination: enderecoPrestador }) }); const data = await response.json(); return (data.status === 'OK') ? parseFloat(data.rows[0].elements[0].distance.value) / 1000 : null; } catch (e) { return null; } }
+    window.salvarPrestador = async function(btn) { const originalText = btn.innerText; btn.innerText = "Salvando..."; btn.disabled = true; try { const inputs = document.querySelectorAll('#etapa-1 input'); for(let i of inputs) if(!i.value.trim()) { window.showMessage("Preencha todos os campos!"); return; } let agenda = [...document.querySelectorAll('#agenda-cadastro .cell.selecionado')].map(c => ({ dia: c.dataset.dia, hora: c.dataset.hora })); let p = { nome: document.getElementById("nomeEmpresa").value, endereco: document.getElementById("endereco").value, cidade: document.getElementById("cidade").value, uf: document.getElementById("uf").value, cep: document.getElementById("cep").value, responsavel: document.getElementById("responsavel").value, contato: document.getElementById("contatoResponsavel").value, qtdtecnicos: parseInt(document.getElementById("qtdTecnicos").value), range: document.getElementById("rangeAtendimento").value, agenda: agenda }; const url = (editingIndex !== -1) ? `${API_URL}/prestadores/${prestadores[editingIndex].id}` : `${API_URL}/prestadores`; await fetch(url, { method: (editingIndex !== -1) ? 'PUT' : 'POST', headers: getHeaders(), body: JSON.stringify(p) }); editingIndex = -1; await carregarDadosDoBanco(); document.getElementById("cadastro-flow").style.display="none"; document.getElementById("lista-prestadores-view").style.display="block"; window.showToast("Prestador salvo com sucesso!"); } finally { btn.disabled = false; btn.innerText = originalText; } };
+    window.excluirPrestador = async function(i) { window.showConfirm("Tem certeza que deseja excluir?", () => window.confirmarExclusaoPrestador(i)); };
+    window.confirmarExclusaoPrestador = async function(i) { await fetch(`${API_URL}/prestadores/${prestadores[i].id}`, { method: 'DELETE', headers: getHeaders() }); await carregarDadosDoBanco(); window.showToast("Prestador excluído com sucesso!"); };
+    window.confirmarExclusaoAgendamento = async function(id) { await fetch(`${API_URL}/agendamentos/${id}`, { method: 'DELETE', headers: getHeaders() }); await carregarDadosDoBanco(); window.showToast("Agendamento excluído!"); window.fecharModal(); };
+    window.concluirAgendamentoFinal = async function(btn){ const ticket = document.getElementById("ticket").value; const cli = document.getElementById("clienteNome").value; const sol = document.getElementById("solicitante").value; if(!ticket || !cli || !sol) return window.showMessage("Preencha todos os campos!"); let sel = document.querySelectorAll("#agenda-agendamento .cell.selecionado"); if(sel.length === 0) return window.showMessage("Selecione um horário!"); let p = prestadores[prestadorSelecionadoIndex]; let qtdLimit = parseInt(p.qtdtecnicos) || 1; for(let s of sel) { if(window.getOcupacaoSlot(p, s.dataset.date, s.dataset.hora) >= qtdLimit) { window.showMessage("Limite de técnicos atingido no horário " + s.dataset.hora); return; } } const originalText = btn.innerText; btn.innerText = "Confirmando..."; btn.disabled = true; try { let agendamento = { prestador: p.nome, qtdtecnicos: p.qtdtecnicos, produtos: itensSelecionados, data: sel[0].dataset.date, rawdate: new Date().toISOString(), slots: [...sel].map(s => s.dataset.hora), ticket, cliente: cli, solicitante: sol }; await fetch(`${API_URL}/agendamentos`, { method: 'POST', headers: getHeaders(), body: JSON.stringify(agendamento) }); 
+        
+        const slotsFormatados = [...sel].map(s => s.dataset.hora).join(', '); 
+        const produtosFormatados = itensSelecionados.map(item => `${item.desc} (${item.qtd}x)`).join(', ');
+        
+        let msgSlack = `🚀 *Novo Agendamento*\n🎟️ Ticket: ${ticket}\n👤 Cliente: ${cli}\n🛠️ Prestador: ${p.nome}\n📅 Data: ${sel[0].dataset.date}\n⏰ Horários: ${slotsFormatados}\n📦 Produtos: ${produtosFormatados}\n📝 Solicitante: ${sol}`;
+        window.enviarNotificacaoSlack(msgSlack);
+        window.limparFormulario(); await carregarDadosDoBanco(); window.proximoPasso(1); window.showToast("Agendamento salvo com sucesso!"); } catch(e) { window.showMessage("Erro ao concluir agendamento. Verifique sua conexão."); } finally { btn.innerText = originalText; btn.disabled = false; } };
+    window.limparFormulario = function() { itensSelecionados = []; prestadorSelecionadoIndex = null; document.getElementById("lista-produtos").innerHTML = ""; document.getElementById("horasNecessarias").innerText = "0"; document.getElementById("agenda-agendamento").innerHTML = ""; document.getElementById("inputCep").value = ""; document.getElementById("ticket").value = ""; document.getElementById("clienteNome").value = ""; document.getElementById("solicitante").value = ""; };
+    window.trocarAba = function(id, btn){ document.querySelectorAll('.aba').forEach(a => a.classList.remove('ativa')); document.getElementById(id).classList.add('ativa'); document.querySelectorAll('.menu button').forEach(b => b.classList.remove('ativo')); if(btn) btn.classList.add('ativo'); if(id === 'painel') window.atualizarFiltrosPrestador(); if(id === 'dashboard') window.renderDashboard(); };
+    window.getNextDates = function(prestador) { 
+        let dates = []; let today = new Date(); const daysMap = {"Dom":0, "Seg":1, "Ter":2, "Qua":3, "Qui":4, "Sex":5, "Sab":6}; 
+        let agendaDays = (prestador.agenda && Array.isArray(prestador.agenda)) ? [...new Set(prestador.agenda.map(a => a.dia))].map(d => daysMap[d]) : []; 
+        let qtdLimit = parseInt(prestador.qtdtecnicos) || 1; 
+        for (let i = 0; i < 14; i++) { 
+            let d = new Date(); d.setDate(today.getDate() + i); let dStr = d.toLocaleDateString(); let dNome = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sab"][d.getDay()]; 
+            let blocked = window.getBlockedHours(prestador, dStr); 
+            let slotsDoDia = (prestador.agenda && Array.isArray(prestador.agenda)) ? prestador.agenda.filter(a => a.dia == dNome) : []; 
+            let temLivre = slotsDoDia.some(s => (s.hora && !blocked.has(parseInt(s.hora.split(':')[0])) && window.getOcupacaoSlot(prestador, dStr, s.hora) < qtdLimit)); 
+            if (agendaDays.includes(d.getDay()) && temLivre) dates.push(dStr.slice(0,5)); 
+        } 
+        return dates; 
+    };
+    
+    // --- LOGICA DE BUSCA COM CAMPOS ESTRUTURADOS ---
     window.proximoPasso = async function(n) {
         if(n === 2) {
+            if(prestadores.length === 0) return window.showMessage("Cadastre um prestador!");
+            
             const rua = document.getElementById('inputRua').value;
             const num = document.getElementById('inputNumero').value;
             const bairro = document.getElementById('inputBairro').value;
             const cidade = document.getElementById('inputCidade').value;
             const uf = document.getElementById('inputUf').value;
-            const cep = document.getElementById('inputCepNovo').value;
-            if(!rua || !num || !cidade || !uf || !cep) return window.showMessage("Preencha o endereço completo!");
+            const cep = document.getElementById('inputCep').value;
+
+            if(!rua || !num || !cidade || !uf || !cep) {
+                return window.showMessage("Por favor, preencha o endereço completo para buscar prestadores.");
+            }
 
             const enderecoBusca = `${rua}, ${num} - ${bairro}, ${cidade} - ${uf}, ${cep}`;
             const btn = document.getElementById('btnBuscar');
@@ -266,6 +456,7 @@
             
             let prestadoresFiltrados = [];
             for(let p of prestadores) {
+                if (!p.endereco) continue;
                 const dist = await consultarDistancia(enderecoBusca, p.endereco);
                 let available = window.getNextDates(p);
                 if(dist !== null && dist <= parseFloat(p.range) && available.length > 0) {
@@ -275,116 +466,74 @@
                 }
             }
             btn.disabled = false; btn.innerText = "Buscar Prestadores";
-            if(prestadoresFiltrados.length === 0) return window.showMessage("Nenhum prestador no raio de atendimento.");
-            renderizarListaPrestadoresSelecao(prestadoresFiltrados);
+            if(prestadoresFiltrados.length === 0) {
+                return window.exibirModal("Atenção", "Nenhum prestador encontrado no raio de atendimento.");
+            }
+            window.renderizarListaPrestadoresSelecao(prestadoresFiltrados);
         }
+        
         document.querySelectorAll('#consulta > div').forEach(div => div.style.display = 'none');
         document.getElementById('step-' + n).style.display = 'block';
-        if(n === 3) {
+        
+        if (n === 3) {
             let p = prestadores[prestadorSelecionadoIndex];
             document.getElementById("header-prestador-info").innerText = `Prestador: ${p.nome} | Distância: ${p.distanciaFinal} km`;
             window.rdaAgendamento();
         }
     };
 
-    async function consultarDistancia(origin, dest) {
-        try {
-            const res = await fetch(`${API_URL}/distancia`, { method: 'POST', headers: getHeaders(), body: JSON.stringify({ origin, destination: dest }) });
-            const data = await res.json();
-            return (data.status === 'OK') ? parseFloat(data.rows[0].elements[0].distance.value) / 1000 : null;
-        } catch(e) { return null; }
-    }
+    window.rdaAgendamento = function() { 
+        let p = prestadores[prestadorSelecionadoIndex]; 
+        let container = document.getElementById("agenda-agendamento"); 
+        container.innerHTML = ""; 
+        let hoje = new Date(); 
+        const diasSemana = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sab"]; 
+        let cap = parseInt(p.qtdtecnicos) || 1; 
+        
+        let totalMinutos = itensSelecionados.reduce((a, b) => a + (b.tempo * b.qtd), 0);
+        let horasNecessarias = Math.ceil(totalMinutos / 60);
+        
+        if (itensSelecionados.length === 0) {
+            container.innerHTML = `<div style="font-weight:600; color:var(--primary); margin-bottom: 10px;">Inclua o serviço para verificar a agenda disponível.</div>`;
+            return;
+        }
 
-    // --- AGENDA E DISPONIBILIDADE ---
-    window.getNextDates = function(p) {
-        let dates = [], today = new Date();
-        const daysMap = {"Dom":0, "Seg":1, "Ter":2, "Qua":3, "Qui":4, "Sex":5, "Sab":6};
-        let agendaDays = (p.agenda || []).map(a => daysMap[a.dia]);
-        for (let i = 0; i < 14; i++) {
-            let d = new Date(); d.setDate(today.getDate() + i);
-            let dStr = d.toLocaleDateString(), dNome = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sab"][d.getDay()];
-            let blocked = window.getBlockedHours(p, dStr);
-            if (agendaDays.includes(d.getDay())) {
-                let slotsLivre = p.agenda.filter(a => a.dia == dNome && !blocked.has(parseInt(a.hora.split(':')[0])) && window.getOcupacaoSlot(p, dStr, a.hora) < (parseInt(p.qtdtecnicos)||1));
-                if(slotsLivre.length > 0) dates.push(dStr.slice(0,5));
+        container.innerHTML = `<div style="font-weight:600; color:var(--primary); margin-bottom: 10px;">Agenda disponível para o serviço selecionado:</div>`;
+
+        let diasEncontrados = 0;
+
+        for(let i=0; i<14; i++){ let data = new Date(); data.setDate(hoje.getDate() + i); let dStr = data.toLocaleDateString(); let dNome = diasSemana[data.getDay()]; let blocked = window.getBlockedHours(p, dStr); let allSlots = (p.agenda && Array.isArray(p.agenda)) ? p.agenda.filter(a => a.dia == dNome) : []; let availableSlots = allSlots.filter(item => { if(!item.hora) return false; let h = parseInt(item.hora.split(':')[0]); return window.getOcupacaoSlot(p, dStr, item.hora) < cap && !blocked.has(h); }); 
+        
+        let hours = availableSlots.map(s => parseInt(s.hora.split(':')[0])).sort((a, b) => a - b);
+        let hasConsecutive = false;
+        if (hours.length >= horasNecessarias) {
+            let count = 1;
+            for (let j = 0; j < hours.length - 1; j++) {
+                if (hours[j+1] === hours[j] + 1) {
+                    count++;
+                    if (count >= horasNecessarias) { hasConsecutive = true; break; }
+                } else { count = 1; }
             }
         }
-        return dates;
-    };
 
-    window.getBlockedHours = function(p, data) {
-        let blocked = new Set(), cap = parseInt(p.qtdtecnicos) || 1;
-        agendamentos.filter(a => a.prestador === p.nome && a.data === data).forEach(a => {
-            (a.slots || []).forEach(s => {
-                let h = parseInt(s.split(':')[0]);
-                if (window.getOcupacaoSlot(p, data, s) >= cap) { blocked.add(h); blocked.add(h - 1); blocked.add(h + 1); }
-            });
-        });
-        return blocked;
-    };
-
-    window.getOcupacaoSlot = function(p, data, hora) { return agendamentos.filter(a => a.prestador === p.nome && a.data === data && (a.slots||[]).includes(hora)).length; };
-
-    window.rdaAgendamento = function() {
-        let p = prestadores[prestadorSelecionadoIndex], container = document.getElementById("agenda-agendamento");
-        container.innerHTML = "";
-        if (itensSelecionados.length === 0) return container.innerHTML = "Inclua o serviço para verificar agenda.";
-        let totalMin = itensSelecionados.reduce((a, b) => a + (b.tempo * b.qtd), 0), horasNec = Math.ceil(totalMin / 60), diasEncontrados = 0;
-
-        for(let i=0; i<14; i++){
-            let d = new Date(); d.setDate(new Date().getDate() + i);
-            let dStr = d.toLocaleDateString(), dNome = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sab"][d.getDay()];
-            let blocked = window.getBlockedHours(p, dStr);
-            let slotsLivre = (p.agenda||[]).filter(a => a.dia == dNome && !blocked.has(parseInt(a.hora.split(':')[0])) && window.getOcupacaoSlot(p, dStr, a.hora) < (parseInt(p.qtdtecnicos)||1));
-            
-            let hours = slotsLivre.map(s => parseInt(s.hora.split(':')[0])).sort((a,b)=>a-b);
-            let hasSeq = false;
-            if(hours.length >= horasNec) {
-                let count = 1;
-                for(let j=0; j<hours.length-1; j++) {
-                    if(hours[j+1] === hours[j]+1) { count++; if(count >= horasNec) { hasSeq = true; break; } } else count = 1;
-                }
-            }
-
-            if(hasSeq) {
-                diasEncontrados++;
-                let card = document.createElement("div"); card.className = "agenda-day-card";
-                card.innerHTML = `<div class="agenda-day-title">${dStr} (${dNome})</div>`;
-                let wrapper = document.createElement("div"); wrapper.className = "slots-wrapper";
-                slotsLivre.forEach(s => {
-                    let div = document.createElement("div"); div.className = "cell"; div.innerText = s.hora;
-                    div.onclick = () => {
-                        let sel = document.querySelectorAll("#agenda-agendamento .cell.selecionado");
-                        if(sel.length > 0 && sel[0].parentNode.parentNode.firstChild.innerText !== card.firstChild.innerText) sel.forEach(x => x.classList.remove('selecionado'));
-                        if(!div.classList.contains("selecionado") && document.querySelectorAll(".cell.selecionado").length >= horasNec) return window.showMessage(`Limite de ${horasNec}h`);
-                        div.classList.toggle("selecionado");
-                    };
-                    wrapper.appendChild(div);
-                });
-                card.appendChild(wrapper); container.appendChild(card);
-            }
+        if(hasConsecutive){ 
+            diasEncontrados++;
+            let card = document.createElement("div"); card.className = "agenda-day-card"; card.innerHTML = `<div class="agenda-day-title">${dStr} (${dNome})</div>`; let wrapper = document.createElement("div"); wrapper.className = "slots-wrapper"; availableSlots.forEach(item => { let div = document.createElement("div"); div.className = "cell"; div.innerText = item.hora; div.dataset.hora = item.hora; div.dataset.date = dStr; div.onclick = function() { let totalMinutos = itensSelecionados.reduce((a, b) => a + (b.tempo * b.qtd), 0); let horas = Math.ceil(totalMinutos / 60); let sel = document.querySelectorAll("#agenda-agendamento .cell.selecionado"); let clickedHour = parseInt(div.dataset.hora.split(':')[0]); if(sel.length > 0) { if(sel[0].dataset.date !== div.dataset.date) { sel.forEach(s => s.classList.remove('selecionado')); sel = []; } else { let isAdjacent = false; sel.forEach(s => { let h = parseInt(s.dataset.hora.split(':')[0]); if(Math.abs(h - clickedHour) === 1) isAdjacent = true; }); if(!isAdjacent && !div.classList.contains("selecionado")) return window.showMessage("Os horários precisam ser em sequência!"); } } if(!div.classList.contains("selecionado") && sel.length >= horas && horas > 0) return window.showMessage("Limite de "+horas+"h!"); div.classList.toggle("selecionado"); }; wrapper.appendChild(div); }); card.appendChild(wrapper); container.appendChild(card); 
+        } } 
+        
+        if (diasEncontrados === 0) {
+            window.showMessage("Sem horários disponíveis para a quantidade ou tipo de serviço selecionado, verifique outro prestador disponível ou siga o fluxo convencional.");
         }
-        if(diasEncontrados === 0) window.showMessage("Sem horários sequenciais.");
     };
 
-    // --- FINALIZAÇÃO ---
-    window.concluirAgendamentoFinal = async function(btn) {
-        let sel = document.querySelectorAll(".cell.selecionado");
-        let totalMin = itensSelecionados.reduce((a, b) => a + (b.tempo * b.qtd), 0), horasNec = Math.ceil(totalMin / 60);
-        if(sel.length !== horasNec) return window.showMessage(`Selecione ${horasNec} horas seguidas!`);
-        btn.disabled = true; btn.innerText = "Salvando...";
-        let p = prestadores[prestadorSelecionadoIndex];
-        let agend = {
-            prestador: p.nome, ticket: document.getElementById("ticket").value, cliente: document.getElementById("clienteNome").value,
-            solicitante: document.getElementById("solicitante").value, data: sel[0].parentNode.parentNode.firstChild.innerText.split(' ')[0],
-            slots: [...sel].map(s => s.innerText), produtos: JSON.parse(JSON.stringify(itensSelecionados))
-        };
-        await fetch(`${API_URL}/agendamentos`, { method: 'POST', headers: getHeaders(), body: JSON.stringify(agend) });
-        window.enviarNotificacaoSlack(`🚀 *Novo Agendamento*\n🎟️ Ticket: ${agend.ticket}\n🛠️ Prestador: ${p.nome}\n📅 Data: ${agend.data}`);
-        window.location.reload();
-    };
-
-    // --- RENDERIZADORES DE LAYOUT ORIGINAL ---
+    window.validarEAvancar = function() { if (itensSelecionados.length === 0) return window.showMessage("Adicione pelo menos um serviço!"); let totalMinutos = itensSelecionados.reduce((a, b) => a + (b.tempo * b.qtd), 0); let horas = Math.ceil(totalMinutos / 60); let sel = document.querySelectorAll("#agenda-agendamento .cell.selecionado"); if (sel.length === 0) return window.showMessage("Selecione horário!"); if (sel.length !== horas && horas > 0) return window.showMessage("Selecione exatamente " + horas + " hora(s)!"); document.querySelectorAll('#consulta > div').forEach(div => div.style.display = 'none'); document.getElementById('step-4').style.display = 'block'; };
+    window.renderizarListaPrestadoresSelecao = function(lista) { document.getElementById('lista-prestadores-selecao').innerHTML = lista.map(p => { const datesArr = p.nextDates.split(', '); const pills = datesArr.map(d => `<span class="pill">${d}</span>`).join(''); return `<div class="card-selecao"><strong>${p.nome}</strong><br>📍Distância do atendimento: ${p.distanciaFinal} km<br><div class="date-pills">🗓️Agenda disponível: ${pills}</div><div style="margin-top:10px"><button onclick="window.selecionarPrestadorPorObjeto('${p.nome}')">Selecionar Prestador</button></div></div>`; }).join(''); };
+    window.selecionarPrestadorPorObjeto = function(nome) { prestadorSelecionadoIndex = prestadores.findIndex(p => p.nome === nome); window.proximoPasso(3); };
+    window.updateButtons = function() { document.getElementById('btn-voltar').style.display = (etapa === 1) ? 'none' : 'inline-block'; document.getElementById('btn-proximo').style.display = (etapa === 1) ? 'inline-block' : 'none'; document.getElementById('btn-concluir').style.display = (etapa === 2) ? 'inline-block' : 'none'; };
+    window.abrirCadastro = function(index = -1){ editingIndex = index; document.getElementById("lista-prestadores-view").style.display="none"; document.getElementById("cadastro-flow").style.display="block"; etapa = 1; document.getElementById("etapa-1").style.display="block"; document.getElementById("etapa-2").style.display="none"; window.criarGridCadastro("agenda-cadastro"); if(index !== -1){ let p = prestadores[index]; document.getElementById("nomeEmpresa").value = p.nome; document.getElementById("endereco").value = p.endereco; document.getElementById("cidade").value = p.cidade; document.getElementById("uf").value = p.uf; document.getElementById("cep").value = p.cep; document.getElementById("responsavel").value = p.responsavel; document.getElementById("contatoResponsavel").value = p.contato; document.getElementById("qtdTecnicos").value = p.qtdtecnicos; document.getElementById("rangeAtendimento").value = p.range; if(p.agenda) { p.agenda.forEach(item => { let cells = document.querySelectorAll("#agenda-cadastro .cell"); cells.forEach(c => { if(c.dataset.dia == item.dia && c.dataset.hora == item.hora) c.classList.add("selecionado"); }); }); } } else { document.querySelectorAll('input').forEach(i => i.value = ""); } window.updateButtons(); };
+    window.cancelarCadastro = function() { document.getElementById("cadastro-flow").style.display="none"; document.getElementById("lista-prestadores-view").style.display="block"; editingIndex = -1; };
+    window.criarGridCadastro = function(id){ let grid = document.getElementById(id); grid.innerHTML = ""; ["Seg","Ter","Qua","Qui","Sex","Sab"].forEach(d=>{ let card = document.createElement("div"); card.className = "agenda-day-card"; card.innerHTML = `<div class="agenda-day-title">${d}</div>`; let wrapper = document.createElement("div"); wrapper.className = "slots-wrapper"; for(let h=8;h<=18;h++){ let cell = document.createElement("div"); cell.className="cell"; cell.dataset.dia = d; cell.dataset.hora = `${h}:00`; cell.innerText = `${h}:00`; cell.onclick = () => cell.classList.toggle("selecionado"); wrapper.appendChild(cell); } card.appendChild(wrapper); grid.appendChild(card); }); };
+    window.mudarEtapa = function(dir){ if (dir > 0 && etapa === 1) { const inputs = document.querySelectorAll("#etapa-1 input"); for(let i of inputs) if(!i.value.trim()) return window.showMessage("Preencha todos os campos!"); } document.getElementById("etapa-"+etapa).style.display="none"; etapa += dir; if(etapa < 1) etapa = 1; if(etapa > 2) etapa = 2; document.getElementById("etapa-"+etapa).style.display="block"; window.updateButtons(); };
     window.renderizarListaPrestadores = function(){ 
         document.getElementById("btn-novo-container").innerHTML = isAuthorized ? `<button onclick="window.abrirCadastro()" style="margin-bottom: 20px;">+ Novo Prestador</button>` : '';
         document.getElementById("lista-prestadores").innerHTML = prestadores.map((p, i) => {
@@ -392,110 +541,74 @@
             if (isAuthorized) btns += ` <button onclick="window.abrirCadastro(${i})">Editar</button> <button onclick="window.excluirPrestador(${i})" class="btn-cancelar">Excluir</button>`;
             return `<div class="card">
                         <div class="card-info">
-                            <strong>${p.nome}</strong><br><span style="color:#64748b; font-size: 0.85rem;">${p.cidade}/${p.uf}</span>
-                            <div style="margin-top: 5px; font-size: 0.85rem;">👥 Técnicos: ${p.qtdtecnicos} | 📍 Raio: ${p.range}km</div>
+                            <strong>${p.nome}</strong><br>
+                            <span style="color:#64748b; font-size: 0.85rem;">${p.cidade}/${p.uf}</span>
+                            <div style="margin-top: 5px; font-size: 0.85rem;">
+                                👥 Técnicos: ${p.qtdtecnicos} | 📅 Agenda: ${[...new Set(p.agenda.map(a => a.dia))].length} dias | 📍 Raio: ${p.range}km
+                            </div>
                         </div>
                         <div class="card-actions">${btns}</div>
                     </div>`; 
         }).join(''); 
     };
-
-    window.renderPainel = function(){ 
-        let fIni = document.getElementById("filtroDataInicio").value, fFim = document.getElementById("filtroDataFim").value; 
-        let fPre = document.getElementById("filtroPrestador").value, fTic = document.getElementById("filtroTicket").value.toLowerCase();
-        let fSol = document.getElementById("filtroSolicitante").value.toLowerCase();
-        filtradosPainel = agendamentos.filter(a => { 
-            let dArr = a.data.split('/'), dAg = `${dArr[2]}-${dArr[1].padStart(2,'0')}-${dArr[0].padStart(2,'0')}`;
-            return (!fIni || dAg >= fIni) && (!fFim || dAg <= fFim) && (!fPre || a.prestador === fPre) && (!fTic || a.ticket.toLowerCase().includes(fTic)) && (!fSol || (a.solicitante||"").toLowerCase().includes(fSol));
-        }).sort((a,b) => b.id - a.id); 
-        document.getElementById("painel-conteudo").innerHTML = filtradosPainel.map((a, i) => `
-            <div class="painel-item">
-                <div style="flex-grow: 1; font-size: 0.95rem;"><strong>🎟️ #${a.ticket}</strong> | 📅 ${a.data} | ⏰ ${a.slots.join(', ')}<br>👤 ${a.cliente} | 🛠️ ${a.prestador}</div>
-                <button onclick="window.abrirDetalhesAgendamento(${i})">Detalhes</button>
-            </div>`).join(''); 
-    };
-
-    // --- DASHBOARD ---
-    window.renderDashboard = function() {
-        let totalAgend = agendamentos.length, totalServ = 0, dist = {};
-        agendamentos.forEach(a => { (a.produtos||[]).forEach(p => totalServ += p.qtd); dist[a.prestador] = (dist[a.prestador] || 0) + 1; });
-        document.getElementById("dash-agend").innerText = totalAgend;
-        document.getElementById("dash-serv").innerText = totalServ;
-        const ctx = document.getElementById('chartPrestadores').getContext('2d');
-        if(myChart) myChart.destroy();
-        myChart = new Chart(ctx, {
-            type: 'bar',
-            data: { labels: Object.keys(dist), datasets: [{ data: Object.values(dist), backgroundColor: '#2F4EA1' }] },
-            options: { plugins: { legend: {display:false}, datalabels: { color:'white', formatter: v => `${String(v).padStart(2,'0')} | ${Math.round((v/totalAgend)*100)}%` } }, scales: { y: { beginAtZero:true, ticks: {stepSize:1} } } },
-            plugins: [ChartDataLabels]
-        });
-    };
-
-    // --- OUTRAS FUNÇÕES ---
-    window.adicionarProduto = function() {
-        let sel = document.getElementById("produto"), desc = sel.options[sel.selectedIndex].text, qtd = parseInt(document.getElementById("quantidade").value) || 1;
-        let item = itensSelecionados.find(i => i.desc === desc);
-        if(item) item.qtd += qtd; else itensSelecionados.push({desc, tempo: parseInt(sel.value), qtd});
-        window.renderizarProdutos();
-    };
-    window.renderizarProdutos = function() {
-        let totalMin = itensSelecionados.reduce((a, b) => a + (b.tempo * b.qtd), 0);
-        document.getElementById("horasNecessarias").innerText = Math.ceil(totalMin/60);
-        document.getElementById("lista-produtos").innerHTML = itensSelecionados.map((i, idx) => `<div class="item-lista">${i.desc} (x${i.qtd}) <button onclick="itensSelecionados.splice(${idx},1); window.renderizarProdutos();">x</button></div>`).join('');
-        if(prestadorSelecionadoIndex !== null) window.rdaAgendamento();
-    };
-    window.renderizarListaPrestadoresSelecao = function(lista) {
-        document.getElementById('lista-prestadores-selecao').innerHTML = lista.map(p => `
-            <div class="card-selecao"><strong>${p.nome}</strong> (${p.distanciaFinal} km)<br><div class="date-pills">${p.nextDates.split(', ').map(d => `<span class="pill">${d}</span>`).join('')}</div>
-            <button onclick="prestadorSelecionadoIndex=prestadores.findIndex(x=>x.nome==='${p.nome}'); window.proximoPasso(3)" style="margin-top:10px">Selecionar</button></div>`).join('');
-    };
-    window.atualizarFiltrosPrestador = function() {
-        let sel = document.getElementById("filtroPrestador"), names = [...new Set(agendamentos.map(a => a.prestador))];
-        sel.innerHTML = '<option value="">Todos</option>' + names.map(n => `<option value="${n}">${n}</option>`).join('');
-    };
-    window.abrirDetalhesAgendamento = function(idx) {
-        let a = filtradosPainel[idx], t = 0, p = (a.produtos||[]).map(x=>{t+=x.qtd; return `• ${x.desc} (x${x.qtd})`}).join('<br>');
-        window.exibirModal("Detalhes do Agendamento", `<strong>Ticket:</strong> ${a.ticket}<br><strong>Cliente:</strong> ${a.cliente}<br><strong>Data:</strong> ${a.data}<br><strong>Horas:</strong> ${a.slots.join(', ')}<hr><strong>Serviços (${t} itens):</strong><br>${p}`);
-    };
-    window.abrirDetalhesPrestador = function(idx) {
-        let p = prestadores[idx], ag = '';
-        ["Seg","Ter","Qua","Qui","Sex","Sab"].forEach(d => { let slots = p.agenda.filter(a => a.dia === d).map(a => `<div class="cell">${a.hora}</div>`).join(''); if(slots) ag += `<div class="agenda-day-card"><div class="agenda-day-title">${d}</div><div class="slots-wrapper">${slots}</div></div>`; });
-        window.exibirModal("Prestador", `<strong>${p.nome}</strong><br>Resp: ${p.responsavel}<br>Tel: ${p.contato}<hr>${ag}`);
-    };
-    window.carregarProdutos = function() {
-        let s = document.getElementById("produto");
-        for(let t in produtos) {
-            let g = document.createElement("optgroup"); g.label = t;
-            produtos[t].forEach(p => { let o = document.createElement("option"); o.value = p.tempo; o.text = p.desc; g.appendChild(o); });
-            s.appendChild(g);
+    window.carregarProdutos = function(){ let select=document.getElementById("produto"); for(let tipo in produtos){ let group=document.createElement("optgroup"); group.label=tipo; produtos[tipo].forEach(p=>{ let opt=document.createElement("option"); opt.value=p.tempo; opt.text=p.desc; group.appendChild(opt); }); select.appendChild(group); } };
+    window.adicionarProduto = function(){ 
+        let select = document.getElementById("produto"); 
+        let desc = select.options[select.selectedIndex].text;
+        let qtd = parseInt(document.getElementById("quantidade").value) || 1; 
+        let tempoBase = parseInt(select.value); 
+        
+        let index = itensSelecionados.findIndex(item => item.desc === desc);
+        
+        if (index !== -1) {
+            itensSelecionados[index].qtd += qtd;
+        } else {
+            itensSelecionados.push({desc: desc, tempo: tempoBase, qtd: qtd});
         }
+        
+        window.renderizarProdutos(); 
+        if(prestadorSelecionadoIndex !== null) window.rdaAgendamento(); 
     };
-    window.salvarPrestador = async function(btn) {
-        btn.disabled = true;
-        let agenda = [...document.querySelectorAll('#agenda-cadastro .cell.selecionado')].map(c => ({ dia: c.dataset.dia, hora: c.dataset.hora }));
-        let p = { nome: document.getElementById("nomeEmpresa").value, endereco: document.getElementById("endereco").value, cidade: document.getElementById("cidade").value, uf: document.getElementById("uf").value, cep: document.getElementById("cep").value, responsavel: document.getElementById("responsavel").value, contato: document.getElementById("contatoResponsavel").value, qtdtecnicos: parseInt(document.getElementById("qtdTecnicos").value), range: document.getElementById("rangeAtendimento").value, agenda: agenda };
-        const url = (editingIndex !== -1) ? `${API_URL}/prestadores/${prestadores[editingIndex].id}` : `${API_URL}/prestadores`;
-        await fetch(url, { method: (editingIndex !== -1) ? 'PUT' : 'POST', headers: getHeaders(), body: JSON.stringify(p) });
-        window.location.reload();
+    window.renderizarProdutos = function(){ let totalMinutos = itensSelecionados.reduce((a, b) => a + (b.tempo * b.qtd), 0); document.getElementById("horasNecessarias").innerText = Math.ceil(totalMinutos/60); document.getElementById("lista-produtos").innerHTML = itensSelecionados.map((i, idx) => `<div class="item-lista">${i.desc} (Qtd: ${i.qtd} | Total: ${i.tempo * i.qtd} min) <button onclick="itensSelecionados.splice(${idx},1); window.renderizarProdutos(); window.rdaAgendamento();">x</button></div>`).join(''); };
+    
+    window.renderPainel = function(){ 
+        let fInicio = document.getElementById("filtroDataInicio").value; 
+        let fFim = document.getElementById("filtroDataFim").value; 
+        let fPrest = document.getElementById("filtroPrestador").value; 
+        let fSol = document.getElementById("filtroSolicitante").value.toLowerCase();
+        
+        filtradosPainel = agendamentos.filter(a => { 
+            let [d, m, y] = a.data.split('/'); 
+            let dataAgendada = `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
+            let matchDate = (!fInicio || dataAgendada >= fInicio) && (!fFim || dataAgendada <= fFim); 
+            let matchPrest = (!fPrest || a.prestador === fPrest); 
+            let matchSol = (!fSol || (a.solicitante && a.solicitante.toLowerCase().includes(fSol)));
+            return matchDate && matchPrest && matchSol; 
+        }).sort((a,b) => parseDateToObj(b.data) - parseDateToObj(a.data)); 
+        
+        document.getElementById("painel-conteudo").innerHTML = filtradosPainel.map((a, i) => {
+            let qtdTotal = Array.isArray(a.produtos) ? a.produtos.reduce((sum, p) => sum + p.qtd, 0) : 0;
+            return `
+            <div class="painel-item">
+                <div style="flex-grow: 1; font-size: 0.95rem;">
+                    <strong>🎟️ #${a.ticket}</strong> &nbsp; 📅 ${a.data} &nbsp; ⏰ ${Array.isArray(a.slots) ? a.slots.join(', ') : 'N/A'}<br>
+                    <div style="margin-top:5px;">
+                        👤 <strong>Cliente:</strong> ${a.cliente}<br>
+                        🛠️ <strong>Prestador:</strong> ${a.prestador} | <strong>Qtd Serviços:</strong> ${qtdTotal} | <strong>Solicitante:</strong> ${a.solicitante}
+                    </div>
+                </div>
+                <button style="background:var(--primary); padding: 5px 10px; font-size: 0.8rem; margin-left: 10px;" onclick="window.abrirDetalhesAgendamento(${i})">Ver detalhes</button>
+            </div>`;
+        }).join(''); 
     };
-    window.criarGridCadastro = (id) => {
-        let grid = document.getElementById(id); grid.innerHTML = "";
-        ["Seg","Ter","Qua","Qui","Sex","Sab"].forEach(d => {
-            let card = document.createElement("div"); card.className = "agenda-day-card"; card.innerHTML = `<div class="agenda-day-title">${d}</div>`;
-            let w = document.createElement("div"); w.className = "slots-wrapper";
-            for(let h=8;h<=18;h++){ let c = document.createElement("div"); c.className="cell"; c.dataset.dia=d; c.dataset.hora=`${h}:00`; c.innerText=`${h}:00`; c.onclick=()=>c.classList.toggle("selecionado"); w.appendChild(c); }
-            card.appendChild(w); grid.appendChild(card);
-        });
+
+    window.limparFiltros = function(){ document.getElementById("filtroDataInicio").value = ""; document.getElementById("filtroDataFim").value = ""; document.getElementById("filtroPrestador").value = ""; document.getElementById("filtroSolicitante").value = ""; window.renderPainel(); };
+    window.atualizarFiltrosPrestador = function(){ 
+        let sel = document.getElementById("filtroPrestador");
+        let providersWithAgend = [...new Set(agendamentos.map(a => a.prestador))];
+        sel.innerHTML = '<option value="">Todos</option>';
+        providersWithAgend.forEach(p => sel.innerHTML += `<option value="${p}">${p}</option>`);
     };
-    window.mudarEtapa = (dir) => { document.getElementById("etapa-"+etapa).style.display="none"; etapa+=dir; document.getElementById("etapa-"+etapa).style.display="block"; document.getElementById('btn-voltar').style.display = etapa==1?'none':'inline'; document.getElementById('btn-proximo').style.display = etapa==1?'inline':'none'; document.getElementById('btn-concluir').style.display = etapa==2?'inline':'none'; };
-    window.abrirCadastro = (idx=-1) => { editingIndex=idx; document.getElementById("lista-prestadores-view").style.display="none"; document.getElementById("cadastro-flow").style.display="block"; window.criarGridCadastro("agenda-cadastro"); if(idx!==-1){ let p=prestadores[idx]; document.getElementById("nomeEmpresa").value=p.nome; document.getElementById("endereco").value=p.endereco; document.getElementById("cidade").value=p.cidade; document.getElementById("uf").value=p.uf; document.getElementById("cep").value=p.cep; document.getElementById("responsavel").value=p.responsavel; document.getElementById("contatoResponsavel").value=p.contato; document.getElementById("qtdTecnicos").value=p.qtdtecnicos; document.getElementById("rangeAtendimento").value=p.range; (p.agenda||[]).forEach(a=>{ document.querySelectorAll("#agenda-cadastro .cell").forEach(c=>{ if(c.dataset.dia==a.dia && c.dataset.hora==a.hora) c.classList.add("selecionado"); }); }); } window.mudarEtapa(0); };
-    window.validarEAvancar = () => { let totalMin = itensSelecionados.reduce((a, b) => a + (b.tempo * b.qtd), 0), horasNec = Math.ceil(totalMin / 60), sel = document.querySelectorAll("#agenda-agendamento .cell.selecionado"); if(sel.length !== horasNec) return window.showMessage(`Selecione ${horasNec} horas!`); document.getElementById('step-3').style.display='none'; document.getElementById('step-4').style.display='block'; };
-    window.cancelarCadastro = () => window.location.reload();
-    window.trocarAba = (id, btn) => { document.querySelectorAll('.aba').forEach(a => a.classList.remove('ativa')); document.getElementById(id).classList.add('ativa'); document.querySelectorAll('.menu button').forEach(b => b.classList.remove('ativo')); btn.classList.add('ativo'); if(id=='painel') window.atualizarFiltrosPrestador(); if(id=='dashboard') window.renderDashboard(); };
-    window.enviarNotificacaoSlack = async (t) => { fetch("https://fqaqlofndeihmhkopvan.supabase.co/functions/v1/notificar-slack", { method:'POST', headers:getHeaders(), body:JSON.stringify({text:t}) }); };
-    window.showMessage = (m) => { document.getElementById('modalHeader').innerText="Aviso"; document.getElementById('modalBody').innerText=m; document.getElementById('modalFooter').innerHTML='<button onclick="window.fecharModal()">OK</button>'; document.getElementById('modalAviso').style.display='flex'; };
-    window.fecharModal = () => document.getElementById('modalAviso').style.display='none';
-    window.limparFiltros = () => { document.getElementById("filtroDataInicio").value=""; document.getElementById("filtroDataFim").value=""; document.getElementById("filtroPrestador").value=""; document.getElementById("filtroTicket").value=""; document.getElementById("filtroSolicitante").value=""; window.renderPainel(); };
 </script>
 </body>
 </html>
