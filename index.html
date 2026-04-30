@@ -29,7 +29,7 @@
         .menu .btn-sair { color: #ff9999; }
         button:hover { filter: brightness(1.2); transform: translateY(-1px); box-shadow: 0 2px 4px rgba(0,0,0,0.2); transition: 0.2s; }
         button:active { transform: translateY(0); filter: brightness(0.9); }
-        .conteudo { padding: 30px; max-width: 900px; margin: 0 auto; }
+        .conteudo { padding: 30px; max-width: 1000px; margin: 0 auto; }
         .aba { display: none; } .aba.ativa { display: block; }
         
         .card { background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; border: 1px solid #e5e7eb; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); display: flex; flex-direction: column; justify-content: space-between; }
@@ -39,9 +39,26 @@
         
         h2 { font-size: 1.1rem; margin-top: 0; color: #1e293b; border-bottom: 1px solid #f1f5f9; padding-bottom: 10px; }
         input, select { width: 100%; padding: 10px; margin: 8px 0; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; }
-        label { font-size: 0.8rem; color: #64748b; font-weight: 600; text-transform: uppercase; margin-bottom: 2px; }
+        label { font-size: 0.75rem; color: #64748b; font-weight: 600; text-transform: uppercase; margin-bottom: 2px; }
         button { cursor: pointer; padding: 8px 16px; background: var(--primary); color: white; border: none; border-radius: 5px; font-weight: 500; }
         .btn-cancelar { background: #ef4444 !important; }
+        
+        /* Ajuste dos Filtros para uma única linha */
+        .filtros-painel { 
+            display: flex; 
+            gap: 8px; 
+            margin-bottom: 20px; 
+            padding: 15px; 
+            background: white; 
+            border-radius: 8px; 
+            border: 1px solid #e5e7eb; 
+            align-items: flex-end; 
+            flex-wrap: nowrap; /* Garante que não quebre linha */
+            overflow-x: auto; /* Caso a tela seja muito pequena, gera scroll horizontal interno */
+        }
+        .filtros-painel > div { flex: 1; min-width: 100px; }
+        .filtros-painel button { white-space: nowrap; height: 38px; margin-bottom: 8px; }
+
         .agenda-day-card { background: #fafafa; padding: 10px; border-radius: 6px; margin-bottom: 8px; border: 1px solid #e5e7eb; }
         .agenda-day-title { font-weight: 600; color: var(--primary); margin-bottom: 6px; font-size: 0.85rem; }
         .slots-wrapper { display: flex; flex-wrap: wrap; gap: 4px; }
@@ -53,13 +70,6 @@
         
         .painel-item { background: white; margin-bottom: 8px; padding: 12px; border-radius: 8px; border: 1px solid #e5e7eb; border-left: 5px solid var(--primary); box-shadow: 0 1px 3px rgba(0,0,0,0.1); display: flex; align-items: center; justify-content: space-between; }
         
-        .filtros-painel { display: flex; gap: 10px; margin-bottom: 20px; padding: 15px; background: white; border-radius: 8px; border: 1px solid #e5e7eb; align-items: flex-end; flex-wrap: wrap; }
-        .filtros-painel > div { flex: 1; min-width: 140px; }
-        .card-selecao { background: white; padding: 15px; border-radius: 8px; margin-bottom: 10px; border: 1px solid #e5e7eb; }
-        .card-selecao strong { color: var(--primary); font-size: 1.1rem; }
-        .date-pills { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
-        .pill { background: #dbeafe; color: #1e40af; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; border: 1px solid #bfdbfe; }
-
         .modal-overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); justify-content:center; align-items:center; z-index:20001; }
         .modal-card { background: #f0f0f0; color: #334155; padding: 25px; border-radius: 12px; width: 500px; max-width: 90%; max-height: 70vh; overflow-y: auto; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
         .modal-header { font-size: 1.2rem; font-weight: bold; color: var(--primary); margin-bottom: 15px; }
@@ -168,9 +178,9 @@
         <div class="filtros-painel">
             <div><label>Início</label><input type="date" id="filtroDataInicio"></div>
             <div><label>Fim</label><input type="date" id="filtroDataFim"></div>
-            <div><label>Ticket</label><input type="text" id="filtroTicket" placeholder="Nº Ticket"></div>
+            <div><label>Ticket</label><input type="text" id="filtroTicket" placeholder="Ticket"></div>
             <div><label>Prestador</label><select id="filtroPrestador"><option value="">Todos</option></select></div>
-            <div><label>Solicitante</label><input type="text" id="filtroSolicitante" placeholder="Pesquisar..."></div>
+            <div><label>Solicitante</label><input type="text" id="filtroSolicitante" placeholder="Nome..."></div>
             <button onclick="window.renderPainel()">Filtrar</button>
             <button onclick="window.limparFiltros()" style="background:green;">Limpar</button>
         </div>
