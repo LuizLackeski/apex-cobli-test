@@ -168,6 +168,7 @@
         <div class="filtros-painel">
             <div><label>Início</label><input type="date" id="filtroDataInicio"></div>
             <div><label>Fim</label><input type="date" id="filtroDataFim"></div>
+            <div><label>Ticket</label><input type="text" id="filtroTicket" placeholder="Nº Ticket"></div>
             <div><label>Prestador</label><select id="filtroPrestador"><option value="">Todos</option></select></div>
             <div><label>Solicitante</label><input type="text" id="filtroSolicitante" placeholder="Pesquisar..."></div>
             <button onclick="window.renderPainel()">Filtrar</button>
@@ -234,7 +235,7 @@
         } catch (e) { console.error("Erro ao enviar para o Slack:", e); }
     };
 
-    const ADMIN_EMAILS = ["luiz.lackeski@cobli.co", "fernando.souza@cobli.co", "anni.torrecilhas@cobli.co","igor.moreira@cobli.co"]; 
+    const ADMIN_EMAILS = ["luiz.lackeski@cobli.co", "fernando.souza@cobli.co", "anni.torrecilhas@cobli.co"]; 
     let isAuthorized = false;
     function checkAuth() {
         let email = localStorage.getItem('userEmail');
@@ -494,6 +495,7 @@
         let fInicio = document.getElementById("filtroDataInicio").value; 
         let fFim = document.getElementById("filtroDataFim").value; 
         let fPrest = document.getElementById("filtroPrestador").value; 
+        let fTicket = document.getElementById("filtroTicket").value.toLowerCase();
         let fSol = document.getElementById("filtroSolicitante").value.toLowerCase();
         
         filtradosPainel = agendamentos.filter(a => { 
@@ -501,12 +503,16 @@
             let dataAgendada = `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
             let matchDate = (!fInicio || dataAgendada >= fInicio) && (!fFim || dataAgendada <= fFim); 
             let matchPrest = (!fPrest || a.prestador === fPrest); 
+            let matchTicket = (!fTicket || a.ticket.toLowerCase().includes(fTicket));
             let matchSol = (!fSol || (a.solicitante && a.solicitante.toLowerCase().includes(fSol)));
-            return matchDate && matchPrest && matchSol; 
+            return matchDate && matchPrest && matchTicket && matchSol; 
         }).sort((a,b) => parseDateToObj(b.data) - parseDateToObj(a.data)); 
         
         document.getElementById("painel-conteudo").innerHTML = filtradosPainel.map((a, i) => {
-            let qtdTotal = Array.isArray(a.produtos) ? a.produtos.reduce((sum, p) => sum + p.qtd, 0) : 0;
+            let qtdTotal = 0;
+            if (Array.isArray(a.produtos)) {
+                qtdTotal = a.produtos.reduce((sum, p) => sum + p.qtd, 0);
+            }
             return `
             <div class="painel-item">
                 <div style="flex-grow: 1; font-size: 0.95rem;">
@@ -521,7 +527,14 @@
         }).join(''); 
     };
 
-    window.limparFiltros = function(){ document.getElementById("filtroDataInicio").value = ""; document.getElementById("filtroDataFim").value = ""; document.getElementById("filtroPrestador").value = ""; document.getElementById("filtroSolicitante").value = ""; window.renderPainel(); };
+    window.limparFiltros = function(){ 
+        document.getElementById("filtroDataInicio").value = ""; 
+        document.getElementById("filtroDataFim").value = ""; 
+        document.getElementById("filtroPrestador").value = ""; 
+        document.getElementById("filtroTicket").value = "";
+        document.getElementById("filtroSolicitante").value = ""; 
+        window.renderPainel(); 
+    };
     window.atualizarFiltrosPrestador = function(){ 
         let sel = document.getElementById("filtroPrestador");
         let providersWithAgend = [...new Set(agendamentos.map(a => a.prestador))];
