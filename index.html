@@ -488,10 +488,10 @@ window.concluirAgendamentoFinal = async function(btn){
             prestador: p.nome, field_id: p.field_id, qtdtecnicos: p.qtdtecnicos, produtos: itensSelecionados, data: sel[0].dataset.date, rawdate: new Date().toISOString(), slots: [...sel].map(s => s.dataset.hora), ticket, cliente: cli, solicitante: sol, rua, numero: num, bairro, cidade, uf, cep: cepAtend, acompanhamento: rAcomp, telefone_responsavel: tResp, segmento: document.getElementById("tipoManutencao").value, tipo_servico: itensSelecionados.map(i => i.desc).join(', '), col3: "", col4: "", col5: ""
         }; 
 
-        // 1. SALVA NO BANCO PRIMEIRO (Prioridade APEX)
+        // 1. SALVA NO BANCO APEX (Sempre primeiro para garantir o registro interno)
         await fetch(`${API_URL}/agendamentos`, { method: 'POST', headers: getHeaders(), body: JSON.stringify(agendamento) }); 
 
-        // 2. TENTA A FIELD CONTROL (Se falhar, o agendamento já está salvo no banco)
+        // 2. DISPARA PARA A FIELD CONTROL (Edge Function)
         fetch("https://fqaqlofndeihmhkopvan.supabase.co/functions/v1/integracao-field", { 
             method: 'POST', 
             headers: getHeaders(), 
@@ -509,11 +509,9 @@ window.concluirAgendamentoFinal = async function(btn){
 
     } catch(e) { 
         window.showMessage("Erro ao salvar no banco APEX."); 
-        btn.disabled = false; 
-        btn.innerText = "Confirmar";
+        btn.disabled = false; btn.innerText = "Confirmar";
     } 
 };
-
     window.limparFormulario = function() { itensSelecionados = []; prestadorSelecionadoIndex = null; document.getElementById("lista-produtos").innerHTML = ""; document.getElementById("horasNecessarias").innerText = "0"; document.getElementById("agenda-agendamento").innerHTML = ""; document.getElementById("inputCep").value = ""; document.getElementById("ticket").value = ""; document.getElementById("clienteNome").value = ""; document.getElementById("solicitante").value = ""; document.getElementById("respAcompanhamento").value = ""; document.getElementById("telResponsavel").value = ""; };
     window.trocarAba = function(id, btn){ document.querySelectorAll('.aba').forEach(a => a.classList.remove('ativa')); document.getElementById(id).classList.add('ativa'); document.querySelectorAll('.menu button').forEach(b => b.classList.remove('ativo')); if(btn) btn.classList.add('ativo'); if(id === 'painel') window.atualizarFiltrosPrestador(); if(id === 'dashboard') window.renderDashboard(); };
     window.getNextDates = function(prestador) { let dates = []; let today = new Date(); const daysMap = {"Dom":0, "Seg":1, "Ter":2, "Qua":3, "Qui":4, "Sex":5, "Sab":6}; let agendaDays = (prestador.agenda && Array.isArray(prestador.agenda)) ? [...new Set(prestador.agenda.map(a => a.dia))].map(d => daysMap[d]) : []; let qtdLimit = parseInt(prestador.qtdtecnicos) || 1; for (let i = 0; i < 14; i++) { let d = new Date(); d.setDate(today.getDate() + i); let dStr = d.toLocaleDateString(); let dNome = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sab"][d.getDay()]; let blocked = window.getBlockedHours(prestador, dStr); let slotsDoDia = (prestador.agenda && Array.isArray(prestador.agenda)) ? prestador.agenda.filter(a => a.dia == dNome) : []; let temLivre = slotsDoDia.some(s => (s.hora && !blocked.has(parseInt(s.hora.split(':')[0])) && window.getOcupacaoSlot(prestador, dStr, s.hora) < qtdLimit)); if (agendaDays.includes(d.getDay()) && temLivre) dates.push(dStr.slice(0,5)); } return dates; };
