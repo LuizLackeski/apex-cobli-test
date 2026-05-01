@@ -27,8 +27,8 @@
         .menu button:hover { color: white; }
         .menu .user-info { margin-left: auto; color: #ffffff; font-size: 0.8rem; margin-right: 15px; opacity: 0.8; }
         .menu .btn-sair { color: #ff9999; }
-
-        /* Estilo Botão Slack Admin */
+        
+        /* Estilo Switch Slack Admin */
         .slack-adm-panel { display: none; align-items: center; background: rgba(255,255,255,0.1); padding: 5px 12px; border-radius: 20px; margin-right: 15px; border: 1px solid rgba(255,255,255,0.2); }
         .slack-adm-panel span { color: white; font-size: 0.7rem; font-weight: bold; margin-right: 8px; }
         .slack-adm-panel select { width: 60px; height: 22px; padding: 0; font-size: 0.7rem; margin: 0; border-radius: 4px; }
@@ -124,7 +124,6 @@
     <div id="consulta" class="aba ativa">
         <div id="step-1" class="card">
             <h2>Localização do Atendimento</h2>
-            
             <label>CEP</label>
             <div style="display: flex; gap: 10px;">
                 <input type="text" id="inputCep" placeholder="00000-000">
@@ -133,31 +132,14 @@
 
             <div id="camposEndereco" style="display: none; margin-top: 15px; border-top: 1px solid #eee; padding-top: 15px;">
                 <div style="display: flex; gap: 10px;">
-                    <div style="flex: 3;">
-                        <label>Endereço (Rua/Av)</label>
-                        <input type="text" id="inputRua" placeholder="Ex: Av. Paulista">
-                    </div>
-                    <div style="flex: 1;">
-                        <label>Nº</label>
-                        <input type="text" id="inputNumero" placeholder="123">
-                    </div>
+                    <div style="flex: 3;"><label>Endereço (Rua/Av)</label><input type="text" id="inputRua"></div>
+                    <div style="flex: 1;"><label>Nº</label><input type="text" id="inputNumero" placeholder="123"></div>
                 </div>
-
                 <div style="display: flex; gap: 10px;">
-                    <div style="flex: 2;">
-                        <label>Bairro</label>
-                        <input type="text" id="inputBairro" placeholder="Ex: Centro">
-                    </div>
-                    <div style="flex: 2;">
-                        <label>Cidade</label>
-                        <input type="text" id="inputCidade" placeholder="Ex: São Paulo">
-                    </div>
-                    <div style="flex: 1;">
-                        <label>UF</label>
-                        <input type="text" id="inputUf" placeholder="SP" maxlength="2">
-                    </div>
+                    <div style="flex: 2;"><label>Bairro</label><input type="text" id="inputBairro"></div>
+                    <div style="flex: 2;"><label>Cidade</label><input type="text" id="inputCidade"></div>
+                    <div style="flex: 1;"><label>UF</label><input type="text" id="inputUf" maxlength="2"></div>
                 </div>
-
                 <button onclick="window.proximoPasso(2)" id="btnBuscar" style="margin-top: 10px; width: 100%;">Buscar Prestadores</button>
             </div>
         </div>
@@ -213,7 +195,7 @@
             <label>Nº do Ticket</label><input id="ticket" required>
             <label>Nome do Cliente</label><input id="clienteNome" required>
             <label>Responsável pela solicitação (APEX)</label><input id="solicitante" required>
-            <label>Responsável acompanhamento (Local)</label><input id="respAcompanhamento" required>
+            <label>Responsável pelo acompanhamento (Local)</label><input id="respAcompanhamento" required>
             <label>Telefone do responsável</label><input id="telResponsavel" placeholder="(00) 00000-0000" required>
             <button onclick="window.proximoPasso(3)" style="background:gray;">Voltar</button>
             <button id="btnConfirmar" onclick="window.concluirAgendamentoFinal(this)" style="background:green;">Confirmar</button>
@@ -256,9 +238,9 @@
         <div class="filtros-painel">
             <div><label>Início</label><input type="date" id="filtroDataInicio"></div>
             <div><label>Fim</label><input type="date" id="filtroDataFim"></div>
-            <div><label>Ticket</label><input type="text" id="filtroTicket" placeholder="Nº Ticket"></div>
+            <div><label>Ticket</label><input type="text" id="filtroTicket" placeholder="Ticket"></div>
             <div><label>Prestador</label><select id="filtroPrestador"><option value="">Todos</option></select></div>
-            <div><label>Solicitante</label><input type="text" id="filtroSolicitante" placeholder="Pesquisar..."></div>
+            <div><label>Solicitante</label><input type="text" id="filtroSolicitante" placeholder="Nome..."></div>
             <button onclick="window.renderPainel()">Filtrar</button>
             <button onclick="window.limparFiltros()" style="background:green;">Limpar</button>
         </div>
@@ -278,13 +260,14 @@
 </div>
 
 <script>
-    let filtradosPainel = []; let myChart = null; 
-    const ADMIN_EMAILS = ["luiz.lackeski@cobli.co", "fernando.souza@cobli.co", "anni.torrecilhas@cobli.co"]; let isAuthorized = false;
+    let filtradosPainel = [], prestadores = [], itensSelecionados = [], agendamentos = [], etapa = 1, editingIndex = -1, prestadorSelecionadoIndex = null, myChart = null, isAuthorized = false;
+    const ADMIN_EMAILS = ["luiz.lackeski@cobli.co", "fernando.souza@cobli.co", "anni.torrecilhas@cobli.co"]; 
     const API_URL = 'https://fqaqlofndeihmhkopvan.supabase.co/functions/v1/smart-service';
     const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZxYXFsb2ZuZGVpaG1oa29wdmFuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcyMjU4ODIsImV4cCI6MjA5MjgwMTg4Mn0.nauPYoB9RDhLLueMEuop2H2FxdChjIxFkAmBcYbJLzc';
+    const produtos = { "Telemetria": [{desc:"Instalado veículos leves bloqueador", tempo:60}, {desc:"Leves e pesados + CAN", tempo:60}, {desc:"Motos", tempo:40}, {desc:"Leves e pesados", tempo:40}], "Identificador": [{desc:"Identificador", tempo:60}, {desc:"RFID", tempo:60}], "Videotelemetria": [{desc:"CobliCam", tempo:90}, {desc:"Multicam", tempo:120}] };
+
     function getHeaders() { return { 'Content-Type': 'application/json', 'apikey': ANON_KEY, 'Authorization': `Bearer ${ANON_KEY}` }; }
-    let prestadores = [], itensSelecionados = [], agendamentos = [], etapa = 1, editingIndex = -1, prestadorSelecionadoIndex = null;
-    const produtos = { "Telemetria": [{desc:"Instalado veículos leves bloqueador", tempo:60}, {desc:"Leves/Pesados + CAN", tempo:60}, {desc:"Motos", tempo:40}], "Identificador": [{desc:"Identificador", tempo:60}], "Videotelemetria": [{desc:"CobliCam", tempo:90}] };
+    function parseDateToObj(dateStr) { if(!dateStr) return new Date(0); const [d, m, y] = dateStr.split('/'); return new Date(y, m - 1, d); }
 
     window.onload = async () => { checkAuth(); carregarProdutos(); await carregarDadosDoBanco(); };
 
@@ -294,7 +277,13 @@
     window.showToast = (msg) => { let t = document.getElementById("toast"); t.innerText = msg; t.style.display = "block"; setTimeout(() => { t.style.display = "none"; }, 3000); };
     window.showConfirm = (msg, callbackFn) => { document.getElementById('modalHeader').innerText = "Confirmação"; document.getElementById('modalBody').innerHTML = `<p>${msg}</p>`; const footer = document.getElementById('modalFooter'); footer.innerHTML = ''; let btnNao = document.createElement('button'); btnNao.innerText = "Não"; btnNao.style.background = "gray"; btnNao.onclick = window.fecharModal; let btnSim = document.createElement('button'); btnSim.innerText = "Sim"; btnSim.style.background = "var(--primary)"; btnSim.style.marginLeft = "10px"; btnSim.onclick = () => { window.fecharModal(); callbackFn(); }; footer.appendChild(btnNao); footer.appendChild(btnSim); document.getElementById('modalAviso').style.display = 'flex'; };
 
-    async function carregarDadosDoBanco() { try { const resP = await fetch(`${API_URL}/prestadores`, { headers: getHeaders() }); prestadores = await resP.json(); const resA = await fetch(`${API_URL}/agendamentos`, { headers: getHeaders() }); agendamentos = await resA.json(); renderizarListaPrestadores(); renderPainel(); renderDashboard(); } catch(e) { console.error(e); } }
+    async function carregarDadosDoBanco() { 
+        try { 
+            const resP = await fetch(`${API_URL}/prestadores`, { headers: getHeaders() }); prestadores = await resP.json(); 
+            const resA = await fetch(`${API_URL}/agendamentos`, { headers: getHeaders() }); agendamentos = await resA.json(); 
+            renderizarListaPrestadores(); renderPainel(); renderDashboard(); 
+        } catch(e) { console.error(e); } 
+    }
 
     window.buscarEnderecoPorCep = async function() {
         const cep = document.getElementById('inputCep').value.replace(/\D/g, '');
@@ -309,18 +298,34 @@
             document.getElementById('inputCidade').value = data.localidade;
             document.getElementById('inputUf').value = data.uf;
             document.getElementById('camposEndereco').style.display = 'block';
-            window.showToast("CEP Validado!");
+            window.showToast("CEP OK!");
         } catch (e) { window.showMessage("CEP não encontrado."); document.getElementById('camposEndereco').style.display = 'block'; }
         finally { document.getElementById('btnValidarCep').innerText = "Validar CEP"; }
     };
 
-    window.getNextDates = (p) => { let dates = []; let today = new Date(); for (let i = 0; i < 14; i++) { let d = new Date(); d.setDate(today.getDate() + i); let dStr = d.toLocaleDateString(), dNome = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sab"][d.getDay()]; if ((p.agenda||[]).some(a => a.dia == dNome)) dates.push(dStr.slice(0,5)); } return dates; };
+    window.getOcupacaoSlot = (p, d, h) => agendamentos.filter(a => a.prestador === p.nome && a.data === d && (Array.isArray(a.slots) ? a.slots.includes(h) : false)).length;
+    window.getBlockedHours = (p, data) => { 
+        let blocked = new Set(); let cap = parseInt(p.qtdtecnicos) || 1; 
+        agendamentos.filter(a => a.prestador === p.nome && a.data === data).forEach(a => { 
+            if (Array.isArray(a.slots)) a.slots.forEach(s => { if (window.getOcupacaoSlot(p, data, s) >= cap) { let h = parseInt(s.split(':')[0]); blocked.add(h); blocked.add(h-1); blocked.add(h+1); } }); 
+        }); return blocked; 
+    };
+
+    window.getNextDates = function(p) {
+        let dates = []; let today = new Date(); const dMap = {"Dom":0, "Seg":1, "Ter":2, "Qua":3, "Qui":4, "Sex":5, "Sab":6}; 
+        let agendaDays = (p.agenda && Array.isArray(p.agenda)) ? [...new Set(p.agenda.map(a => a.dia))].map(d => dMap[d]) : []; 
+        for (let i = 0; i < 14; i++) { 
+            let d = new Date(); d.setDate(today.getDate() + i); let dStr = d.toLocaleDateString(), dNome = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sab"][d.getDay()]; 
+            if (agendaDays.includes(d.getDay())) dates.push(dStr.slice(0,5));
+        } return dates; 
+    };
 
     window.proximoPasso = async function(n) {
         if(n === 2) {
-            if(!document.getElementById('inputRua').value) return window.showMessage("Valide o CEP!");
+            const rua = document.getElementById('inputRua').value;
+            if(!rua) return window.showMessage("Valide o CEP!");
             const btn = document.getElementById('btnBuscar'); btn.disabled = true; btn.innerText = "Calculando...";
-            const endBusca = `${document.getElementById('inputRua').value}, ${document.getElementById('inputNumero').value} - ${document.getElementById('inputCidade').value}`;
+            const endBusca = `${rua}, ${document.getElementById('inputNumero').value} - ${document.getElementById('inputCidade').value}`;
             let filtrados = [];
             for(let p of prestadores) { const dist = await consultarDistancia(endBusca, p.endereco); if(dist !== null && dist <= parseFloat(p.range)) { p.distanciaFinal = dist.toFixed(1); p.nextDates = window.getNextDates(p).join(', '); if(p.nextDates) filtrados.push(p); } }
             btn.disabled = false; btn.innerText = "Buscar Prestadores";
@@ -329,7 +334,11 @@
         }
         document.querySelectorAll('#consulta > div').forEach(div => div.style.display = 'none');
         document.getElementById('step-' + n).style.display = 'block';
-        if (n === 3) { let p = prestadores[prestadorSelecionadoIndex]; document.getElementById("header-prestador-info").innerText = `Prestador: ${p.nome} | Distância: ${p.distanciaFinal} km`; window.rdaAgendamento(); }
+        if (n === 3) {
+            let p = prestadores[prestadorSelecionadoIndex];
+            document.getElementById("header-prestador-info").innerText = `Prestador: ${p.nome} | Distância: ${p.distanciaFinal} km`;
+            window.rdaAgendamento();
+        }
     };
 
     async function consultarDistancia(o, d) { try { const res = await fetch(`${API_URL}/distancia`, { method: 'POST', headers: getHeaders(), body: JSON.stringify({ origin: o, destination: d }) }); const data = await res.json(); return (data.status === 'OK') ? parseFloat(data.rows[0].elements[0].distance.value) / 1000 : null; } catch (e) { return null; } }
@@ -341,11 +350,11 @@
         for(let i=0; i<14; i++){
             let d = new Date(); d.setDate(new Date().getDate() + i); let dStr = d.toLocaleDateString(), dNome = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sab"][d.getDay()];
             let blocked = window.getBlockedHours(p, dStr);
-            let slots = (p.agenda || []).filter(a => a.dia == dNome && !blocked.has(parseInt(a.hora.split(':')[0])));
-            if(slots.length >= hNec){
+            let availableSlots = (p.agenda || []).filter(a => a.dia == dNome && !blocked.has(parseInt(a.hora.split(':')[0])));
+            if(availableSlots.length >= hNec){
                 let card = document.createElement("div"); card.className = "agenda-day-card"; card.innerHTML = `<div class="agenda-day-title">${dStr} (${dNome})</div>`;
                 let w = document.createElement("div"); w.className = "slots-wrapper";
-                slots.forEach(s => {
+                availableSlots.forEach(s => {
                     let div = document.createElement("div"); div.className = "cell"; div.innerText = s.hora; div.dataset.hora = s.hora; div.dataset.date = dStr;
                     div.onclick = () => {
                         let sel = document.querySelectorAll("#agenda-agendamento .cell.selecionado");
@@ -359,9 +368,24 @@
         }
     };
 
+    window.adicionarProduto = () => {
+        let sel = document.getElementById("produto"), seg = document.getElementById("tipoManutencao").value;
+        let desc = `[${seg.toUpperCase()}] ${sel.options[sel.selectedIndex].text}`;
+        itensSelecionados.push({desc, tempo: parseInt(sel.value), qtd: parseInt(document.getElementById("quantidade").value)||1, segmento: seg});
+        window.renderizarProdutos(); if(prestadorSelecionadoIndex!==null) window.rdaAgendamento();
+    };
+
+    window.renderizarProdutos = () => {
+        let t = itensSelecionados.reduce((a,b)=>a+(b.tempo*b.qtd),0);
+        document.getElementById("horasNecessarias").innerText = Math.ceil(t/60);
+        document.getElementById("lista-produtos").innerHTML = itensSelecionados.map((i,idx) => 
+            `<div class="item-lista"><span>${i.desc} (x${i.qtd})</span> <button onclick="itensSelecionados.splice(${idx},1); window.renderizarProdutos();" style="background:red; padding:2px 8px;">x</button></div>`
+        ).join('');
+    };
+
     window.concluirAgendamentoFinal = async function(btn){
         const ticket = document.getElementById("ticket").value, cli = document.getElementById("clienteNome").value;
-        if(!ticket || !cli) return window.showMessage("Campos obrigatórios!");
+        if(!ticket || !cli) return window.showMessage("Ticket e Cliente obrigatórios!"); 
         let sel = document.querySelectorAll("#agenda-agendamento .cell.selecionado");
         btn.disabled = true; btn.innerText = "Salvando...";
         try {
@@ -370,8 +394,6 @@
                 ticket, cliente: cli, solicitante: document.getElementById("solicitante").value, acompanhamento: document.getElementById("respAcompanhamento").value, tel_resp: document.getElementById("telResponsavel").value
             };
             await fetch(`${API_URL}/agendamentos`, { method: 'POST', headers: getHeaders(), body: JSON.stringify(agendamento) });
-            
-            // Lógica Slack Admin
             if(!(isAuthorized && document.getElementById('slackSwitch').value === 'OFF')){
                 await fetch("https://fqaqlofndeihmhkopvan.supabase.co/functions/v1/notificar-slack", { method:'POST', headers:getHeaders(), body:JSON.stringify({text:`🚀 Agendamento: ${ticket} - ${cli}`}) });
             }
@@ -379,32 +401,39 @@
         } catch(e) { window.showMessage("Erro."); btn.disabled = false; }
     };
 
-    // --- RENDERIZADORES ---
+    window.renderPainel = () => {
+        let fTic = document.getElementById("filtroTicket").value.toLowerCase();
+        filtradosPainel = agendamentos.filter(a => !fTic || (a.ticket && a.ticket.toLowerCase().includes(fTic))).sort((a,b) => parseDateToObj(b.data) - parseDateToObj(a.data));
+        document.getElementById("painel-conteudo").innerHTML = filtradosPainel.map((a, i) => {
+            let qtdT = (a.produtos||[]).reduce((sum, p) => sum + p.qtd, 0);
+            return `<div class="painel-item"><div style="flex-grow: 1; font-size: 0.95rem;"><strong>🎟️ #${a.ticket}</strong> &nbsp; 📅 ${a.data} &nbsp; ⏰ ${Array.isArray(a.slots)?a.slots.join(', '):'N/A'}<br><div style="margin-top:5px;">👤 <strong>Cliente:</strong> ${a.cliente}<br>🛠️ <strong>Prestador:</strong> ${a.prestador} | <strong>Qtd:</strong> ${qtdT}</div></div><button style="background:var(--primary); padding: 5px 10px; font-size: 0.8rem; margin-left: 10px;" onclick="window.abrirDetalhesAgendamento(${i})">Ver detalhes</button></div>`;
+        }).join('');
+    };
+
+    window.abrirDetalhesAgendamento = (idx) => {
+        let a = filtradosPainel[idx], t = (a.produtos||[]).reduce((s,p)=>s+p.qtd,0), pHtml = (a.produtos||[]).map(x=>`<div style="margin-bottom:5px;">• ${x.desc} <strong>(${x.qtd}x)</strong></div>`).join('');
+        let html = `<div style="background: white; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 15px;"><div style="font-weight:bold; font-size:1.1rem; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px; margin-bottom: 8px;">🎟️ Ticket: ${a.ticket}</div><div style="font-size:0.9rem;">👤 <strong>Cliente:</strong> ${a.cliente}<br>🛠️ <strong>Prestador:</strong> ${a.prestador}<br>📅 <strong>Data:</strong> ${a.data}<br>⏰ <strong>Horários:</strong> ${Array.isArray(a.slots)?a.slots.join(', '):'N/A'}</div></div><div style="font-weight:600; margin-bottom:5px;">📦 Serviços (Total: ${t}):</div><div style="background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0; margin-bottom: 15px; font-size: 0.9rem;">${pHtml}</div><div style="text-align:center;"><button onclick="window.excluirAgendamento(${a.id})" class="btn-cancelar" style="width:100%;">Excluir Agendamento</button></div>`;
+        window.exibirModal("Detalhes do Agendamento", html);
+    };
+
     window.renderizarListaPrestadoresSelecao = (lista) => { document.getElementById('lista-prestadores-selecao').innerHTML = lista.map(p => `<div class="card-selecao"><strong>${p.nome}</strong><br>📍Distância: ${p.distanciaFinal} km<br><div class="date-pills">${p.nextDates.split(', ').map(d => `<span class="pill">${d}</span>`).join('')}</div><div style="margin-top:10px"><button onclick="prestadorSelecionadoIndex=prestadores.findIndex(x=>x.nome==='${p.nome}'); window.proximoPasso(3)">Selecionar</button></div></div>`).join(''); };
-    window.renderizarListaPrestadores = () => { document.getElementById("btn-novo-container").innerHTML = isAuthorized ? `<button onclick="window.abrirCadastro()" style="margin-bottom: 20px;">+ Novo Prestador</button>` : ''; document.getElementById("lista-prestadores").innerHTML = prestadores.map((p, i) => `<div class="card"><div class="card-info"><strong>${p.nome}</strong><br>${p.cidade}/${p.uf}</div><div class="card-actions"><button onclick="window.abrirDetalhesPrestador(${i})" style="background:green;">Ver</button>${isAuthorized ? ` <button onclick="window.abrirCadastro(${i})">Editar</button> <button onclick="window.excluirPrestador(${i})" class="btn-cancelar">Excluir</button>` : ''}</div></div>`).join(''); };
-    window.renderPainel = () => { let fTic = document.getElementById("filtroTicket").value.toLowerCase(); filtradosPainel = agendamentos.filter(a => !fTic || (a.ticket && a.ticket.toLowerCase().includes(fTic))).sort((a,b) => parseDateToObj(b.data) - parseDateToObj(a.data)); document.getElementById("painel-conteudo").innerHTML = filtradosPainel.map((a, i) => `<div class="painel-item"><div style="flex-grow: 1; font-size: 0.95rem;"><strong>🎟️ #${a.ticket}</strong> &nbsp; 📅 ${a.data}<br>👤 ${a.cliente} | 🛠️ ${a.prestador}</div><button onclick="window.abrirDetalhesAgendamento(${i})">Ver detalhes</button></div>`).join(''); };
-    window.abrirDetalhesAgendamento = (idx) => { let a = filtradosPainel[idx]; window.exibirModal("Detalhes", `Ticket: ${a.ticket}<br>Cliente: ${a.cliente}<br>Prestador: ${a.prestador}<hr><button onclick="window.confirmarExclusaoAgendamento(${a.id})" class="btn-cancelar">Excluir Agendamento</button>`); };
+    window.renderizarListaPrestadores = () => { document.getElementById("btn-novo-container").innerHTML = isAuthorized ? `<button onclick="window.abrirCadastro()" style="margin-bottom: 20px;">+ Novo Prestador</button>` : ''; document.getElementById("lista-prestadores").innerHTML = prestadores.map((p, i) => `<div class="card"><div class="card-info"><strong>${p.nome}</strong><br><span style="color:#64748b; font-size: 0.85rem;">${p.cidade}/${p.uf}</span><div style="margin-top: 5px; font-size: 0.85rem;">👥 Técnicos: ${p.qtdtecnicos} | Raio: ${p.range}km</div></div><div class="card-actions"><button onclick="window.abrirDetalhesPrestador(${i})" style="background:green;">Ver</button>${isAuthorized ? ` <button onclick="window.abrirCadastro(${i})">Editar</button> <button onclick="window.excluirPrestador(${i})" class="btn-cancelar">Excluir</button>` : ''}</div></div>`).join(''); };
     window.abrirDetalhesPrestador = (idx) => { let p = prestadores[idx], ag = ''; ["Seg","Ter","Qua","Qui","Sex","Sab"].forEach(d => { let slots = p.agenda.filter(a => a.dia === d).map(a => `<div class="cell">${a.hora}</div>`).join(''); if(slots) ag += `<div class="agenda-day-card"><div class="agenda-day-title">${d}</div><div class="slots-wrapper">${slots}</div></div>`; }); window.exibirModal("Prestador", `<div style="margin-bottom:10px;"><strong>${p.nome}</strong><br>Resp: ${p.responsavel} | Tel: ${p.contato}</div>${ag}`); };
     window.renderDashboard = () => { let t = agendamentos.length, d = {}; agendamentos.forEach(a => d[a.prestador] = (d[a.prestador]||0)+1); document.getElementById("dash-agend").innerText = t; const ctx = document.getElementById('chartPrestadores').getContext('2d'); if(myChart) myChart.destroy(); myChart = new Chart(ctx, { type: 'bar', data: { labels: Object.keys(d), datasets: [{ data: Object.values(d), backgroundColor: '#2F4EA1' }] }, options: { plugins: { legend: { display: false } } } }); };
-    
-    // --- AUX ---
-    window.checkAuth = () => { let e = localStorage.getItem('userEmail'); if (e && e.endsWith("@cobli.co")) { document.getElementById('login-overlay').style.display = 'none'; isAuthorized = ADMIN_EMAILS.includes(e.toLowerCase()); document.getElementById('user-display').innerText = e; if(isAuthorized) document.getElementById('slack-adm-toggle').style.display='flex'; } else { document.getElementById('login-overlay').style.display = 'flex'; } };
+    window.excluirPrestador = (i) => window.showConfirm("Excluir prestador?", async () => { await fetch(`${API_URL}/prestadores/${prestadores[i].id}`,{method:'DELETE',headers:getHeaders()}); window.location.reload(); });
+    window.excluirAgendamento = (id) => window.showConfirm("Excluir agendamento?", async () => { await fetch(`${API_URL}/agendamentos/${id}`,{method:'DELETE',headers:getHeaders()}); window.location.reload(); });
+
+    function checkAuth() { let e = localStorage.getItem('userEmail'); if (e && e.endsWith("@cobli.co")) { document.getElementById('login-overlay').style.display = 'none'; isAuthorized = ADMIN_EMAILS.includes(e.toLowerCase()); document.getElementById('user-display').innerText = e; if(isAuthorized) document.getElementById('slack-adm-toggle').style.display='flex'; } else { document.getElementById('login-overlay').style.display = 'flex'; } }
     window.performLogin = () => { let e = document.getElementById('loginEmail').value.trim().toLowerCase(); if (e.endsWith("@cobli.co")) { localStorage.setItem('userEmail', e); window.location.reload(); } };
     window.logout = () => { localStorage.removeItem('userEmail'); window.location.reload(); };
     window.carregarProdutos = () => { let s=document.getElementById("produto"); for(let t in produtos){ let g=document.createElement("optgroup"); g.label=t; produtos[t].forEach(p=>{ let o=document.createElement("option"); o.value=p.tempo; o.text=p.desc; g.appendChild(o); }); s.appendChild(g); } };
-    window.adicionarProduto = () => { let sel = document.getElementById("produto"), seg = document.getElementById("tipoManutencao").value; let desc = `[${seg.toUpperCase()}] ${sel.options[sel.selectedIndex].text}`; itensSelecionados.push({desc, tempo: parseInt(sel.value), qtd: parseInt(document.getElementById("quantidade").value)||1, segmento: seg}); window.renderizarProdutos(); if(prestadorSelecionadoIndex!==null) window.rdaAgendamento(); };
-    window.renderizarProdutos = () => { let t=itensSelecionados.reduce((a,b)=>a+(b.tempo*b.qtd),0); document.getElementById("horasNecessarias").innerText=Math.ceil(t/60); document.getElementById("lista-produtos").innerHTML=itensSelecionados.map((i,idx)=>`<div class="item-lista"><span>${i.desc} (x${i.qtd})</span> <button onclick="itensSelecionados.splice(${idx},1); window.renderizarProdutos();" style="background:red; padding:2px 8px;">x</button></div>`).join(''); };
     window.validarEAvancar = () => { let sel = document.querySelectorAll("#agenda-agendamento .cell.selecionado"); let tMin = itensSelecionados.reduce((a,b)=>a+(b.tempo*b.qtd),0), hNec = Math.ceil(tMin/60); if(sel.length !== hNec) return window.showMessage(`Selecione ${hNec}h!`); document.getElementById('step-3').style.display='none'; document.getElementById('step-4').style.display='block'; };
     window.trocarAba = (id, btn) => { document.querySelectorAll('.aba').forEach(a => a.classList.remove('ativa')); document.getElementById(id).classList.add('ativa'); document.querySelectorAll('.menu button').forEach(b => b.classList.remove('ativo')); btn.classList.add('ativo'); if(id === 'painel') window.renderPainel(); if(id === 'dashboard') window.renderDashboard(); };
-    window.confirmarExclusaoAgendamento = (id) => window.showConfirm("Excluir?", async () => { await fetch(`${API_URL}/agendamentos/${id}`,{method:'DELETE',headers:getHeaders()}); window.location.reload(); });
-    window.excluirPrestador = (i) => window.showConfirm("Excluir?", async () => { await fetch(`${API_URL}/prestadores/${prestadores[i].id}`,{method:'DELETE',headers:getHeaders()}); window.location.reload(); });
     window.abrirCadastro = (idx = -1) => { editingIndex = idx; document.getElementById("lista-prestadores-view").style.display="none"; document.getElementById("cadastro-flow").style.display="block"; etapa = 1; window.criarGridCadastro("agenda-cadastro"); if(idx !== -1){ let p=prestadores[idx]; document.getElementById("nomeEmpresa").value=p.nome; document.getElementById("endereco").value=p.endereco; document.getElementById("cidade").value=p.cidade; document.getElementById("uf").value=p.uf; document.getElementById("cep").value=p.cep; document.getElementById("responsavel").value=p.responsavel; document.getElementById("contatoResponsavel").value=p.contato; document.getElementById("qtdTecnicos").value=p.qtdtecnicos; document.getElementById("rangeAtendimento").value=p.range; (p.agenda||[]).forEach(a=>{ document.querySelectorAll("#agenda-cadastro .cell").forEach(c=>{ if(c.dataset.dia==a.dia && c.dataset.hora==a.hora) c.classList.add("selecionado"); }); }); } };
     window.mudarEtapa = (dir) => { document.getElementById("etapa-"+etapa).style.display="none"; etapa+=dir; document.getElementById("etapa-"+etapa).style.display="block"; };
     window.criarGridCadastro = (id) => { let grid = document.getElementById(id); grid.innerHTML = ""; ["Seg","Ter","Qua","Qui","Sex","Sab"].forEach(d=>{ let card = document.createElement("div"); card.className="agenda-day-card"; card.innerHTML=`<div class="agenda-day-title">${d}</div>`; let w=document.createElement("div"); w.className="slots-wrapper"; for(let h=8;h<=18;h++){ let c=document.createElement("div"); c.className="cell"; c.dataset.dia=d; c.dataset.hora=`${h}:00`; c.innerText=`${h}:00`; c.onclick=()=>c.classList.toggle("selecionado"); w.appendChild(c); } card.appendChild(w); grid.appendChild(card); }); };
-    window.cancelarAgendamento = () => window.location.reload();
     window.limparFiltros = () => { document.querySelectorAll('.filtros-painel input').forEach(i=>i.value=""); window.renderPainel(); };
-    window.getOcupacaoSlot = (p,d,h) => agendamentos.filter(a => a.prestador === p.nome && a.data === d && (Array.isArray(a.slots) ? a.slots.includes(h) : false)).length;
-    window.getBlockedHours = (p,d) => { let b = new Set(), cap = parseInt(p.qtdtecnicos)||1; agendamentos.filter(a => a.prestador === p.nome && a.data === d).forEach(a => { if (Array.isArray(a.slots)) a.slots.forEach(s => { if (window.getOcupacaoSlot(p,d,s) >= cap) { let h = parseInt(s.split(':')[0]); b.add(h); b.add(h-1); b.add(h+1); } }); }); return b; };
+    window.cancelarAgendamento = () => window.location.reload();
 </script>
 </body>
 </html>
