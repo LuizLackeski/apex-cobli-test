@@ -475,29 +475,43 @@
 window.concluirAgendamentoFinal = async function(btn){ 
     const ticket = document.getElementById("ticket").value, cli = document.getElementById("clienteNome").value, sol = document.getElementById("solicitante").value; 
     const rAcomp = document.getElementById("respAcompanhamento").value, tResp = document.getElementById("telResponsavel").value;
+    const rua = document.getElementById('inputRua').value, num = document.getElementById('inputNumero').value, bairro = document.getElementById('inputBairro').value, cidade = document.getElementById('inputCidade').value, uf = document.getElementById('inputUf').value, cepAtend = document.getElementById('inputCep').value;
+    
     if(!ticket || !cli || !sol || !rAcomp || !tResp) return window.showMessage("Preencha tudo!"); 
     let sel = document.querySelectorAll("#agenda-agendamento .cell.selecionado"); if(sel.length === 0) return window.showMessage("Horário?"); 
+    
     let p = prestadores[prestadorSelecionadoIndex]; 
     btn.disabled = true; btn.innerText = "Salvando...";
+
     try { 
         let agendamento = { 
-            prestador: p.nome, field_id: p.field_id, produtos: itensSelecionados, data: sel[0].dataset.date, rawdate: new Date().toISOString(), slots: [...sel].map(s => s.dataset.hora), ticket, cliente: cli, solicitante: sol, 
-            rua: document.getElementById('inputRua').value, numero: document.getElementById('inputNumero').value, bairro: document.getElementById('inputBairro').value, cidade: document.getElementById('inputCidade').value, uf: document.getElementById('inputUf').value, cep: document.getElementById('inputCep').value,
-            acompanhamento: rAcomp, telefone_responsavel: tResp, segmento: document.getElementById("tipoManutencao").value, tipo_servico: itensSelecionados.map(i => i.desc).join(', '),
-            col3: "", col4: "", col5: ""
+            prestador: p.nome, field_id: p.field_id, qtdtecnicos: p.qtdtecnicos, produtos: itensSelecionados, data: sel[0].dataset.date, rawdate: new Date().toISOString(), slots: [...sel].map(s => s.dataset.hora), ticket, cliente: cli, solicitante: sol, rua, numero: num, bairro, cidade, uf, cep: cepAtend, acompanhamento: rAcomp, telefone_responsavel: tResp, segmento: document.getElementById("tipoManutencao").value, tipo_servico: itensSelecionados.map(i => i.desc).join(', '), col3: "", col4: "", col5: ""
         }; 
-        // Salva no Supabase
-        await fetch(`${API_URL}/agendamentos`, { method: 'POST', headers: getHeaders(), body: JSON.stringify(agendamento) }); 
-        
-        // DISPARO PARA A FIELD CONTROL (Edge Function)
-        await fetch("https://fqaqlofndeihmhkopvan.supabase.co/functions/v1/integracao-field", { method: 'POST', headers: getHeaders(), body: JSON.stringify(agendamento) });
 
+        // 1. SALVA NO BANCO PRIMEIRO (Prioridade APEX)
+        await fetch(`${API_URL}/agendamentos`, { method: 'POST', headers: getHeaders(), body: JSON.stringify(agendamento) }); 
+
+        // 2. TENTA A FIELD CONTROL (Se falhar, o agendamento já está salvo no banco)
+        fetch("https://fqaqlofndeihmhkopvan.supabase.co/functions/v1/integracao-field", { 
+            method: 'POST', 
+            headers: getHeaders(), 
+            body: JSON.stringify(agendamento) 
+        }).catch(err => console.error("Erro integração Field:", err));
+
+        // 3. NOTIFICAÇÃO SLACK
         if(!(isAuthorized && document.getElementById('slackSwitch').value === 'OFF')){
             const slotsF = [...sel].map(s => s.dataset.hora).join(', '); 
-            window.enviarNotificacaoSlack(`🚀 *Novo Agendamento*\n🎟️ Ticket: ${ticket}\n👤 Cliente: ${cli}\n🛠️ Prestador: ${p.nome}\n📅 Data: ${sel[0].dataset.date}`);
+            window.enviarNotificacaoSlack(`🚀 *Novo Agendamento*\n🎟️ Ticket: ${ticket}\n🛠️ Prestador: ${p.nome}\n📅 Data: ${sel[0].dataset.date}`);
         }
-        window.location.reload(); 
-    } catch(e) { window.showMessage("Erro ao salvar."); btn.disabled = false; } 
+
+        window.showToast("Agendamento Salvo!");
+        setTimeout(() => { window.location.reload(); }, 1000); 
+
+    } catch(e) { 
+        window.showMessage("Erro ao salvar no banco APEX."); 
+        btn.disabled = false; 
+        btn.innerText = "Confirmar";
+    } 
 };
 
     window.limparFormulario = function() { itensSelecionados = []; prestadorSelecionadoIndex = null; document.getElementById("lista-produtos").innerHTML = ""; document.getElementById("horasNecessarias").innerText = "0"; document.getElementById("agenda-agendamento").innerHTML = ""; document.getElementById("inputCep").value = ""; document.getElementById("ticket").value = ""; document.getElementById("clienteNome").value = ""; document.getElementById("solicitante").value = ""; document.getElementById("respAcompanhamento").value = ""; document.getElementById("telResponsavel").value = ""; };
