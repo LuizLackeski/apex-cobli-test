@@ -92,7 +92,7 @@
     </div>
 </div>
 
-<div class="topo"><strong>APEX</strong> <span>Agenda Prestadores</span></div>
+<div class="topo"><strong>APEX</strong> <span>Agenda Prestadores'</span></div>
 <div class="menu">
     <button class="ativo" onclick="window.trocarAba('consulta', this)">Agendamento</button>
     <button onclick="window.trocarAba('cadastro', this)">Prestadores</button>
@@ -509,17 +509,13 @@ window.concluirAgendamentoFinal = async function(btn){
         // 2. DISPARA PARA A FIELD CONTROL (Edge Function)
         // Não usamos 'await' aqui para não travar a tela se a Field demorar
         fetch("https://fqaqlofndeihmhkopvan.supabase.co/functions/v1/integracao-field", { 
-    method: 'POST', 
-    headers: {
-        'Content-Type': 'application/json'
-    }, 
-    body: JSON.stringify(agendamento) 
-})
-.then(async res => {
-    const data = await res.json();
-    console.log("Retorno Real da Field:", data);
-})
-.catch(err => console.error("Erro no Fetch:", err)); 
+            method: 'POST', 
+            headers: getHeaders(), 
+            body: JSON.stringify(agendamento) 
+        }).catch(err => console.error("Erro Field:", err));
+
+        window.showToast("Agendamento Realizado!");
+        setTimeout(() => { window.location.reload(); }, 1200); 
 
     } catch(e) { 
         console.error(e);
