@@ -59,7 +59,7 @@
         .cell.selecionado { background: var(--primary); color: white; border-color: var(--primary); }
         
         /* Ajuste Serviços mesma linha */
-        .item-lista { display: flex; justify-content: space-between; padding: 6px; border-bottom: 1px solid #f1f5f9; align-items: center; font-size: 0.9rem; }
+        .item-lista { display: flex; justify-content: space-between; padding: 8px; border-bottom: 1px solid #f1f5f9; align-items: center; font-size: 0.9rem; background: #fff; margin-bottom: 2px; border-radius: 4px; }
         .item-lista span { flex-grow: 1; }
         
         .flex-cards { display: flex; gap: 15px; margin-bottom: 20px; }
@@ -265,7 +265,7 @@
     const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZxYXFsb2ZuZGVpaG1oa29wdmFuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcyMjU4ODIsImV4cCI6MjA5MjgwMTg4Mn0.nauPYoB9RDhLLueMEuop2H2FxdChjIxFkAmBcYbJLzc';
     function getHeaders() { return { 'Content-Type': 'application/json', 'apikey': ANON_KEY, 'Authorization': `Bearer ${ANON_KEY}` }; }
     let prestadores = [], itensSelecionados = [], agendamentos = [], etapa = 1, editingIndex = -1, prestadorSelecionadoIndex = null;
-    const produtos = { "Telemetria": [{desc:"Instalado veículos leves bloqueador", tempo:60}, {desc:"Leves/Pesados + CAN", tempo:60}, {desc:"Motos", tempo:40}], "Identificador": [{desc:"Identificador", tempo:60}], "Videotelemetria": [{desc:"CobliCam", tempo:90}] };
+    const produtos = { "Telemetria": [{desc:"Instalado veículos leves bloqueador", tempo:60}, {desc:"Leves e pesados + CAN", tempo:60}, {desc:"Motos", tempo:40}, {desc:"Leves e pesados", tempo:40}], "Identificador": [{desc:"Identificador", tempo:60}, {desc:"RFID", tempo:60}], "Videotelemetria": [{desc:"CobliCam", tempo:90}, {desc:"Multicam", tempo:120}] };
 
     window.onload = async () => { checkAuth(); carregarProdutos(); await carregarDadosDoBanco(); };
 
@@ -340,24 +340,15 @@
             let d = new Date(); d.setDate(new Date().getDate() + i); let dStr = d.toLocaleDateString(), dNome = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sab"][d.getDay()];
             let blocked = window.getBlockedHours(p, dStr);
             let availableSlots = (p.agenda || []).filter(a => a.dia == dNome && !blocked.has(parseInt(a.hora.split(':')[0])) && window.getOcupacaoSlot(p, dStr, a.hora) < (parseInt(p.qtdtecnicos)||1));
-            let hours = availableSlots.map(s => parseInt(s.hora.split(':')[0])).sort((a,b)=>a-b);
-            let seq = false; if(hours.length >= hNec) { let c = 1; for(let j=0; j<hours.length-1; j++) { if(hours[j+1]===hours[j]+1) { c++; if(c>=hNec) seq=true; } else c=1; } }
-            if(seq){
+            if(availableSlots.length >= hNec){
                 let card = document.createElement("div"); card.className = "agenda-day-card"; card.innerHTML = `<div class="agenda-day-title">${dStr} (${dNome})</div>`;
                 let w = document.createElement("div"); w.className = "slots-wrapper";
                 availableSlots.forEach(s => {
                     let div = document.createElement("div"); div.className = "cell"; div.innerText = s.hora; div.dataset.hora = s.hora; div.dataset.date = dStr;
                     div.onclick = () => {
                         let sel = document.querySelectorAll("#agenda-agendamento .cell.selecionado");
-                        let clickedH = parseInt(s.hora.split(':')[0]);
                         if(sel.length > 0 && sel[0].dataset.date !== dStr) { sel.forEach(x => x.classList.remove('selecionado')); sel = []; }
-                        if(!div.classList.contains("selecionado")){
-                            if(sel.length > 0){
-                                let hList = [...sel].map(x => parseInt(x.dataset.hora.split(':')[0]));
-                                if(clickedH !== Math.max(0, ...hList) + 1 && clickedH !== Math.min(100, ...hList) - 1) return window.showMessage("Selecione horários seguidos!");
-                            }
-                            if(sel.length >= hNec) return;
-                        }
+                        if(!div.classList.contains("selecionado") && sel.length >= hNec) return;
                         div.classList.toggle("selecionado");
                     };
                     w.appendChild(div);
