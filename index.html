@@ -27,6 +27,12 @@
         .menu button:hover { color: white; }
         .menu .user-info { margin-left: auto; color: #ffffff; font-size: 0.8rem; margin-right: 15px; opacity: 0.8; }
         .menu .btn-sair { color: #ff9999; }
+        
+        /* Estilo para o Botão Slack Admin */
+        .slack-adm-panel { display: none; align-items: center; background: rgba(255,255,255,0.1); padding: 5px 12px; border-radius: 20px; margin-right: 15px; border: 1px solid rgba(255,255,255,0.2); }
+        .slack-adm-panel span { color: white; font-size: 0.7rem; font-weight: bold; margin-right: 8px; }
+        .slack-adm-panel select { width: 60px; height: 22px; padding: 0; font-size: 0.7rem; margin: 0; border-radius: 4px; }
+
         button:hover { filter: brightness(1.2); transform: translateY(-1px); box-shadow: 0 2px 4px rgba(0,0,0,0.2); transition: 0.2s; }
         button:active { transform: translateY(0); filter: brightness(0.9); }
         .conteudo { padding: 30px; max-width: 1000px; margin: 0 auto; }
@@ -43,18 +49,8 @@
         button { cursor: pointer; padding: 8px 16px; background: var(--primary); color: white; border: none; border-radius: 5px; font-weight: 500; }
         .btn-cancelar { background: #ef4444 !important; }
         
-        /* Ajuste do Painel de Filtros para 1 linha */
         .filtros-painel { 
-            display: flex; 
-            gap: 10px; 
-            margin-bottom: 20px; 
-            padding: 12px; 
-            background: white; 
-            border-radius: 8px; 
-            border: 1px solid #e5e7eb; 
-            align-items: flex-end; 
-            flex-wrap: nowrap; 
-            overflow-x: auto;
+            display: flex; gap: 10px; margin-bottom: 20px; padding: 12px; background: white; border-radius: 8px; border: 1px solid #e5e7eb; align-items: flex-end; flex-wrap: nowrap; overflow-x: auto;
         }
         .filtros-painel > div { flex: 1; min-width: 80px; }
         .filtros-painel label { font-size: 0.65rem; }
@@ -82,7 +78,6 @@
         .date-pills { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
         .pill { background: #dbeafe; color: #1e40af; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; border: 1px solid #bfdbfe; }
         
-        /* Novo estilo para o bloco de serviço */
         .bloco-servico { background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #cbd5e1; margin-bottom: 15px; }
     </style>
 </head>
@@ -104,6 +99,15 @@
     <button onclick="window.trocarAba('cadastro', this)">Prestadores</button>
     <button onclick="window.trocarAba('painel', this)">Painel</button>
     <button onclick="window.trocarAba('dashboard', this)">Dashboard</button>
+    
+    <div id="slack-adm-toggle" class="slack-adm-panel">
+        <span>NOTIFICAR SLACK</span>
+        <select id="slackSwitch">
+            <option value="ON">ON</option>
+            <option value="OFF">OFF</option>
+        </select>
+    </div>
+
     <span id="user-display" class="user-info"></span>
     <button class="btn-sair" onclick="window.logout()">Sair</button>
 </div>
@@ -327,7 +331,6 @@
             const btn = document.getElementById('btnValidarCep');
             const originalText = btn.innerText;
             btn.innerText = "Buscando..."; btn.disabled = true;
-            
             const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
             const data = await response.json();
             
@@ -339,13 +342,12 @@
                 document.getElementById('inputBairro').value = data.bairro;
                 document.getElementById('inputCidade').value = data.localidade;
                 document.getElementById('inputUf').value = data.uf;
-                
                 document.getElementById('camposEndereco').style.display = 'block';
                 window.showToast("CEP Validado!");
             }
             btn.innerText = originalText; btn.disabled = false;
         } catch (e) {
-            window.showMessage("Erro ao buscar CEP. Verifique sua conexão.");
+            window.showMessage("Erro ao buscar CEP.");
             document.getElementById('camposEndereco').style.display = 'block';
             document.getElementById('btnValidarCep').disabled = false;
         }
@@ -359,6 +361,9 @@
             document.getElementById('login-overlay').style.display = 'none';
             isAuthorized = ADMIN_EMAILS.includes(email.toLowerCase());
             document.getElementById('user-display').innerText = email;
+            if(isAuthorized) {
+                document.getElementById('slack-adm-toggle').style.display = 'flex';
+            }
             if(window.renderizarListaPrestadores) window.renderizarListaPrestadores();
         } else {
             localStorage.removeItem('userEmail');
@@ -369,7 +374,7 @@
         let emailInput = document.getElementById('loginEmail');
         let email = emailInput.value.trim().toLowerCase();
         if (!email) return window.showMessage("Por favor, digite sua identificação.");
-        if (!email.endsWith("@cobli.co")) return window.showMessage("Acesso restrito. Por favor, informe seu e-mail corporativo (@cobli.co).");
+        if (!email.endsWith("@cobli.co")) return window.showMessage("Acesso restrito.");
         localStorage.setItem('userEmail', email);
         window.location.reload();
     }
@@ -380,10 +385,10 @@
     const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZxYXFsb2ZuZGVpaG1oa29wdmFuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcyMjU4ODIsImV4cCI6MjA5MjgwMTg4Mn0.nauPYoB9RDhLLueMEuop2H2FxdChjIxFkAmBcYbJLzc';
     function getHeaders() { return { 'Content-Type': 'application/json', 'apikey': ANON_KEY, 'Authorization': `Bearer ${ANON_KEY}` }; }
     let prestadores = [], itensSelecionados = [], agendamentos = [], etapa = 1, editingIndex = -1, prestadorSelecionadoIndex = null;
-    const produtos = { "Telemetria": [{desc:"Instalado veículos leves bloqueador", tempo:60}, {desc:"Instalado veículos leves e pesados + CAN", tempo:60}, {desc:"Instalado motos ou maquinários", tempo:40}, {desc:"Instalado veículos leves e pesados", tempo:40}], "Identificador": [{desc:"Instalado veículos leves e pesados identificador", tempo:60}, {desc:"Instalado veículos leves e pesados identificador + CAN", tempo:90}, {desc:"Instalado veículos leves e pesados identificador RFID", tempo:60}, {desc:"Instalado veículos leves e pesados identificador RFID + CAN", tempo:80}], "Trava de ignição": [{desc:"Instalado veículos leves imobilizador", tempo:80}, {desc:"Instalado veículos leves imobilizador RFID", tempo:80}, {desc:"Instalado veículos leves imobilizador RFID + CAN", tempo:90}, {desc:"Instalado veículos leves imobilizador + CAN", tempo:100}], "Videotelemetria": [{desc:"CobliCam (2 câmeras)", tempo:90}, {desc:"Cobli Multicam (3 câmeras internas)", tempo:120}, {desc:"Cobli Multicam (2 câmeras + 1 externa)", tempo:240}, {desc:"Cobli Multicam (4 câmeras)", tempo:240}, {desc:"Cobli Multicam (5 câmeras)", tempo:300}] };
+    const produtos = { "Telemetria": [{desc:"Instalado veículos leves bloqueador", tempo:60}, {desc:"Instalado veículos leves e pesados + CAN", tempo:60}, {desc:"Instalado motos", tempo:40}], "Identificador": [{desc:"RFID", tempo:60}], "Videotelemetria": [{desc:"CobliCam (2 câmeras)", tempo:90}] };
     
     window.onload = async () => { carregarProdutos(); await carregarDadosDoBanco(); };
-    async function carregarDadosDoBanco() { try { const resP = await fetch(`${API_URL}/prestadores`, { headers: getHeaders() }); prestadores = await resP.json(); renderizarListaPrestadores(); const resA = await fetch(`${API_URL}/agendamentos`, { headers: getHeaders() }); agendamentos = await resA.json(); renderPainel(); renderDashboard(); } catch(e) { console.error("Erro ao carregar dados:", e); } }
+    async function carregarDadosDoBanco() { try { const resP = await fetch(`${API_URL}/prestadores`, { headers: getHeaders() }); prestadores = await resP.json(); renderizarListaPrestadores(); const resA = await fetch(`${API_URL}/agendamentos`, { headers: getHeaders() }); agendamentos = await resA.json(); renderPainel(); renderDashboard(); } catch(e) { console.error("Erro dados:", e); } }
     
     window.renderDashboard = function() {
         let totalAgend = agendamentos.length;
@@ -448,11 +453,10 @@
         const ticket = document.getElementById("ticket").value; 
         const cli = document.getElementById("clienteNome").value; 
         const sol = document.getElementById("solicitante").value; 
-        const respAcompanhamento = document.getElementById("respAcompanhamento").value;
-        const telResponsavel = document.getElementById("telResponsavel").value;
+        const respAcomp = document.getElementById("respAcompanhamento").value;
+        const telResp = document.getElementById("telResponsavel").value;
 
-        if(!ticket || !cli || !sol || !respAcompanhamento || !telResponsavel) return window.showMessage("Preencha todos os campos!"); 
-        
+        if(!ticket || !cli || !sol || !respAcomp || !telResp) return window.showMessage("Preencha todos os campos!"); 
         let sel = document.querySelectorAll("#agenda-agendamento .cell.selecionado"); 
         if(sel.length === 0) return window.showMessage("Selecione um horário!"); 
         
@@ -463,30 +467,29 @@
         const originalText = btn.innerText; btn.innerText = "Confirmando..."; btn.disabled = true; 
         try { 
             let agendamento = { 
-                prestador: p.nome, 
-                qtdtecnicos: p.qtdtecnicos, 
-                produtos: itensSelecionados, 
-                data: sel[0].dataset.date, 
-                rawdate: new Date().toISOString(), 
-                slots: [...sel].map(s => s.dataset.hora), 
-                ticket, 
-                cliente: cli, 
-                solicitante: sol,
-                responsavel_acompanhamento: respAcompanhamento,
-                telefone_responsavel: telResponsavel
+                prestador: p.nome, qtdtecnicos: p.qtdtecnicos, produtos: itensSelecionados, data: sel[0].dataset.date, 
+                rawdate: new Date().toISOString(), slots: [...sel].map(s => s.dataset.hora), ticket, cliente: cli, 
+                solicitante: sol, acompanhamento: respAcomp, telefone_resp: telResp 
             }; 
             await fetch(`${API_URL}/agendamentos`, { method: 'POST', headers: getHeaders(), body: JSON.stringify(agendamento) }); 
-            const slotsFormatados = [...sel].map(s => s.dataset.hora).join(', '); 
-            const produtosFormatados = itensSelecionados.map(item => `${item.desc} (${item.qtd}x)`).join(', '); 
-            let msgSlack = `🚀 *Novo Agendamento*\n🎟️ Ticket: ${ticket}\n👤 Cliente: ${cli}\n🛠️ Prestador: ${p.nome}\n📅 Data: ${sel[0].dataset.date}\n⏰ Horários: ${slotsFormatados}\n📦 Produtos: ${produtosFormatados}\n📝 Solicitante: ${sol}\n📞 Resp. Local: ${respAcompanhamento} (${telResponsavel})`;
-            window.enviarNotificacaoSlack(msgSlack);
-            window.limparFormulario(); await carregarDadosDoBanco(); window.proximoPasso(1); window.showToast("Agendamento salvo com sucesso!"); 
-        } catch(e) { window.showMessage("Erro ao concluir agendamento."); } finally { btn.innerText = originalText; btn.disabled = false; } 
+            
+            // Verifica se deve notificar o Slack
+            let notifySlack = true;
+            if(isAuthorized && document.getElementById("slackSwitch").value === "OFF") notifySlack = false;
+            
+            if(notifySlack) {
+                const slotsFormatados = [...sel].map(s => s.dataset.hora).join(', '); 
+                const produtosFormatados = itensSelecionados.map(item => `${item.desc} (${item.qtd}x)`).join(', '); 
+                let msgSlack = `🚀 *Novo Agendamento*\n🎟️ Ticket: ${ticket}\n👤 Cliente: ${cli}\n🛠️ Prestador: ${p.nome}\n📅 Data: ${sel[0].dataset.date}\n⏰ Horários: ${slotsFormatados}\n📦 Produtos: ${produtosFormatados}\n📝 Solicitante: ${sol}`;
+                window.enviarNotificacaoSlack(msgSlack);
+            }
+            
+            window.limparFormulario(); await carregarDadosDoBanco(); window.proximoPasso(1); window.showToast("Agendamento salvo!"); 
+        } catch(e) { window.showMessage("Erro ao salvar."); } finally { btn.innerText = originalText; btn.disabled = false; } 
     };
 
     window.limparFormulario = function() { itensSelecionados = []; prestadorSelecionadoIndex = null; document.getElementById("lista-produtos").innerHTML = ""; document.getElementById("horasNecessarias").innerText = "0"; document.getElementById("agenda-agendamento").innerHTML = ""; document.getElementById("inputCep").value = ""; document.getElementById("ticket").value = ""; document.getElementById("clienteNome").value = ""; document.getElementById("solicitante").value = ""; document.getElementById("respAcompanhamento").value = ""; document.getElementById("telResponsavel").value = ""; };
     window.trocarAba = function(id, btn){ document.querySelectorAll('.aba').forEach(a => a.classList.remove('ativa')); document.getElementById(id).classList.add('ativa'); document.querySelectorAll('.menu button').forEach(b => b.classList.remove('ativo')); if(btn) btn.classList.add('ativo'); if(id === 'painel') window.atualizarFiltrosPrestador(); if(id === 'dashboard') window.renderDashboard(); };
-    window.getNextDates = function(prestador) { let dates = []; let today = new Date(); const daysMap = {"Dom":0, "Seg":1, "Ter":2, "Qua":3, "Qui":4, "Sex":5, "Sab":6}; let agendaDays = (prestador.agenda && Array.isArray(prestador.agenda)) ? [...new Set(prestador.agenda.map(a => a.dia))].map(d => daysMap[d]) : []; let qtdLimit = parseInt(prestador.qtdtecnicos) || 1; for (let i = 0; i < 14; i++) { let d = new Date(); d.setDate(today.getDate() + i); let dStr = d.toLocaleDateString(); let dNome = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sab"][d.getDay()]; let blocked = window.getBlockedHours(prestador, dStr); let slotsDoDia = (prestador.agenda && Array.isArray(prestador.agenda)) ? prestador.agenda.filter(a => a.dia == dNome) : []; let temLivre = slotsDoDia.some(s => (s.hora && !blocked.has(parseInt(s.hora.split(':')[0])) && window.getOcupacaoSlot(prestador, dStr, s.hora) < qtdLimit)); if (agendaDays.includes(d.getDay()) && temLivre) dates.push(dStr.slice(0,5)); } return dates; };
     window.proximoPasso = async function(n) { if(n === 2) { if(prestadores.length === 0) return window.showMessage("Cadastre um prestador!"); const rua = document.getElementById('inputRua').value; const num = document.getElementById('inputNumero').value; const cidade = document.getElementById('inputCidade').value; if(!rua || !num || !cidade) return window.showMessage("Preencha o endereço completo!"); const btn = document.getElementById('btnBuscar'); btn.disabled = true; btn.innerText = "Calculando..."; const enderecoBusca = `${rua}, ${num} - ${cidade}`; let prestadoresFiltrados = []; for(let p of prestadores) { if (!p.endereco) continue; const dist = await consultarDistancia(enderecoBusca, p.endereco); let available = window.getNextDates(p); if(dist !== null && dist <= parseFloat(p.range) && available.length > 0) { p.distanciaFinal = dist.toFixed(1); p.nextDates = available.join(', '); prestadoresFiltrados.push(p); } } btn.disabled = false; btn.innerText = "Buscar Prestadores"; if(prestadoresFiltrados.length === 0) { window.exibirModal("Atenção", "Nenhum prestador encontrado no raio de atendimento."); return; } window.renderizarListaPrestadoresSelecao(prestadoresFiltrados); } if(n === 3 && prestadorSelecionadoIndex === null) return window.showMessage("Selecione um prestador!"); document.querySelectorAll('#consulta > div').forEach(div => div.style.display = 'none'); document.getElementById('step-' + n).style.display = 'block'; if (n === 3) { let p = prestadores[prestadorSelecionadoIndex]; document.getElementById("header-prestador-info").innerText = `Prestador: ${p.nome} | Distância: ${p.distanciaFinal} km`; window.rdaAgendamento(); } };
     window.rdaAgendamento = function() { 
         let p = prestadores[prestadorSelecionadoIndex]; let container = document.getElementById("agenda-agendamento"); container.innerHTML = ""; let hoje = new Date(); const diasSemana = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sab"]; let cap = parseInt(p.qtdtecnicos) || 1; let totalMinutos = itensSelecionados.reduce((a, b) => a + (b.tempo * b.qtd), 0); let horasNecessarias = Math.ceil(totalMinutos / 60);
@@ -500,7 +503,7 @@
         if (diasEncontrados === 0) { window.showMessage("Sem horários disponíveis para a quantidade selecionada."); }
     };
     window.validarEAvancar = function() { if (itensSelecionados.length === 0) return window.showMessage("Adicione pelo menos um serviço!"); let totalMinutos = itensSelecionados.reduce((a, b) => a + (b.tempo * b.qtd), 0); let horas = Math.ceil(totalMinutos / 60); let sel = document.querySelectorAll("#agenda-agendamento .cell.selecionado"); if (sel.length === 0) return window.showMessage("Selecione horário!"); if (sel.length !== horas && horas > 0) return window.showMessage("Selecione exatamente " + horas + " hora(s)!"); document.querySelectorAll('#consulta > div').forEach(div => div.style.display = 'none'); document.getElementById('step-4').style.display = 'block'; };
-    window.renderizarListaPrestadoresSelecao = function(lista) { document.getElementById('lista-prestadores-selecao').innerHTML = lista.map(p => { const datesArr = p.nextDates.split(', '); const pills = datesArr.map(d => `<span class="pill">${d}</span>`).join(''); return `<div class="card-selecao"><strong>${p.nome}</strong><br>📍Distância do atendimento: ${p.distanciaFinal} km<br><div class="date-pills">🗓️Agenda disponível: ${pills}</div><div style="margin-top:10px"><button onclick="window.selecionarPrestadorPorObjeto('${p.nome}')">Selecionar Prestador</button></div></div>`; }).join(''); };
+    window.renderizarListaPrestadoresSelecao = function(lista) { document.getElementById('lista-prestadores-selecao').innerHTML = lista.map(p => { const pills = (p.nextDates || "").split(', ').map(d => `<span class="pill">${d}</span>`).join(''); return `<div class="card-selecao"><strong>${p.nome}</strong><br>📍Distância: ${p.distanciaFinal} km<br><div class="date-pills">🗓️Agenda: ${pills}</div><div style="margin-top:10px"><button onclick="window.selecionarPrestadorPorObjeto('${p.nome}')">Selecionar Prestador</button></div></div>`; }).join(''); };
     window.selecionarPrestadorPorObjeto = function(nome) { prestadorSelecionadoIndex = prestadores.findIndex(p => p.nome === nome); window.proximoPasso(3); };
     window.updateButtons = function() { document.getElementById('btn-voltar').style.display = (etapa === 1) ? 'none' : 'inline-block'; document.getElementById('btn-proximo').style.display = (etapa === 1) ? 'inline-block' : 'none'; document.getElementById('btn-concluir').style.display = (etapa === 2) ? 'inline-block' : 'none'; };
     window.abrirCadastro = function(index = -1){ editingIndex = index; document.getElementById("lista-prestadores-view").style.display="none"; document.getElementById("cadastro-flow").style.display="block"; etapa = 1; document.getElementById("etapa-1").style.display="block"; document.getElementById("etapa-2").style.display="none"; window.criarGridCadastro("agenda-cadastro"); if(index !== -1){ let p = prestadores[index]; document.getElementById("nomeEmpresa").value = p.nome; document.getElementById("endereco").value = p.endereco; document.getElementById("cidade").value = p.cidade; document.getElementById("uf").value = p.uf; document.getElementById("cep").value = p.cep; document.getElementById("responsavel").value = p.responsavel; document.getElementById("contatoResponsavel").value = p.contato; document.getElementById("qtdTecnicos").value = p.qtdtecnicos; document.getElementById("rangeAtendimento").value = p.range; if(p.agenda) { p.agenda.forEach(item => { let cells = document.querySelectorAll("#agenda-cadastro .cell"); cells.forEach(c => { if(c.dataset.dia == item.dia && c.dataset.hora == item.hora) c.classList.add("selecionado"); }); }); } } else { document.querySelectorAll('input').forEach(i => i.value = ""); } window.updateButtons(); };
@@ -517,45 +520,32 @@
     };
     window.carregarProdutos = function(){ let select=document.getElementById("produto"); for(let tipo in produtos){ let group=document.createElement("optgroup"); group.label=tipo; produtos[tipo].forEach(p=>{ let opt=document.createElement("option"); opt.value=p.tempo; opt.text=p.desc; group.appendChild(opt); }); select.appendChild(group); } };
     window.adicionarProduto = function(){ 
-        let select = document.getElementById("produto"); 
-        let segmento = document.getElementById("tipoManutencao").value;
+        let select = document.getElementById("produto"); let segmento = document.getElementById("tipoManutencao").value;
         let descBase = select.options[select.selectedIndex].text;
         let descComSegmento = `[${segmento.toUpperCase()}] ${descBase}`;
         let qtd = parseInt(document.getElementById("quantidade").value) || 1; 
         let tempoBase = parseInt(select.value); 
-        
         let index = itensSelecionados.findIndex(item => item.desc === descComSegmento);
         if (index !== -1) { itensSelecionados[index].qtd += qtd; } else {
             itensSelecionados.push({desc: descComSegmento, tempo: tempoBase, qtd: qtd, segmento: segmento});
         }
-        window.renderizarProdutos(); 
-        if(prestadorSelecionadoIndex !== null) window.rdaAgendamento(); 
+        window.renderizarProdutos(); if(prestadorSelecionadoIndex !== null) window.rdaAgendamento(); 
     };
     window.renderizarProdutos = function(){ let totalMinutos = itensSelecionados.reduce((a, b) => a + (b.tempo * b.qtd), 0); document.getElementById("horasNecessarias").innerText = Math.ceil(totalMinutos/60); document.getElementById("lista-produtos").innerHTML = itensSelecionados.map((i, idx) => `<div class="item-lista">${i.desc} (Qtd: ${i.qtd} | Total: ${i.tempo * i.qtd} min) <button onclick="itensSelecionados.splice(${idx},1); window.renderizarProdutos(); window.rdaAgendamento();">x</button></div>`).join(''); };
-    
     window.renderPainel = function(){ 
-        let fInicio = document.getElementById("filtroDataInicio").value; 
-        let fFim = document.getElementById("filtroDataFim").value; 
-        let fTicket = document.getElementById("filtroTicket").value.toLowerCase();
-        let fSol = document.getElementById("filtroSolicitante").value.toLowerCase();
+        let fInicio = document.getElementById("filtroDataInicio").value; let fFim = document.getElementById("filtroDataFim").value; let fTicket = document.getElementById("filtroTicket").value.toLowerCase(); let fPrest = document.getElementById("filtroPrestador").value; let fSol = document.getElementById("filtroSolicitante").value.toLowerCase();
         filtradosPainel = agendamentos.filter(a => { 
             let [d, m, y] = a.data.split('/'); let dataAgendada = `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
-            let matchDate = (!fInicio || dataAgendada >= fInicio) && (!fFim || dataAgendada <= fFim); 
-            let matchTicket = (!fTicket || (a.ticket && a.ticket.toLowerCase().includes(fTicket)));
-            let matchSol = (!fSol || (a.solicitante && a.solicitante.toLowerCase().includes(fSol)));
-            return matchDate && matchTicket && matchSol; 
+            let matchDate = (!fInicio || dataAgendada >= fInicio) && (!fFim || dataAgendada <= fFim); let matchTicket = (!fTicket || (a.ticket && a.ticket.toLowerCase().includes(fTicket))); let matchPrest = (!fPrest || a.prestador === fPrest); let matchSol = (!fSol || (a.solicitante && a.solicitante.toLowerCase().includes(fSol)));
+            return matchDate && matchTicket && matchPrest && matchSol; 
         }).sort((a,b) => parseDateToObj(b.data) - parseDateToObj(a.data)); 
         document.getElementById("painel-conteudo").innerHTML = filtradosPainel.map((a, i) => {
             let qtdTotal = Array.isArray(a.produtos) ? a.produtos.reduce((sum, p) => sum + p.qtd, 0) : 0;
             return `<div class="painel-item"><div style="flex-grow: 1; font-size: 0.95rem;"><strong>🎟️ #${a.ticket}</strong> &nbsp; 📅 ${a.data} &nbsp; ⏰ ${Array.isArray(a.slots) ? a.slots.join(', ') : 'N/A'}<br><div style="margin-top:5px;">👤 <strong>Cliente:</strong> ${a.cliente}<br>🛠️ <strong>Prestador:</strong> ${a.prestador} | <strong>Qtd Serviços:</strong> ${qtdTotal} | <strong>Solicitante:</strong> ${a.solicitante}</div></div><button style="background:var(--primary); padding: 5px 10px; font-size: 0.8rem; margin-left: 10px;" onclick="window.abrirDetalhesAgendamento(${i})">Ver detalhes</button></div>`;
         }).join(''); 
     };
-
     window.limparFiltros = function(){ document.getElementById("filtroDataInicio").value = ""; document.getElementById("filtroDataFim").value = ""; document.getElementById("filtroTicket").value = ""; document.getElementById("filtroPrestador").value = ""; document.getElementById("filtroSolicitante").value = ""; window.renderPainel(); };
-    window.atualizarFiltrosPrestador = function(){ 
-        let sel = document.getElementById("filtroPrestador"); let providersWithAgend = [...new Set(agendamentos.map(a => a.prestador))];
-        sel.innerHTML = '<option value="">Todos</option>'; providersWithAgend.forEach(p => sel.innerHTML += `<option value="${p}">${p}</option>`);
-    };
+    window.atualizarFiltrosPrestador = function(){ let sel = document.getElementById("filtroPrestador"); let providersWithAgend = [...new Set(agendamentos.map(a => a.prestador))]; sel.innerHTML = '<option value="">Todos</option>'; providersWithAgend.forEach(p => sel.innerHTML += `<option value="${p}">${p}</option>`); };
 </script>
 </body>
 </html>
