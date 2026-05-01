@@ -481,34 +481,45 @@ window.concluirAgendamentoFinal = async function(btn){
     let sel = document.querySelectorAll("#agenda-agendamento .cell.selecionado"); if(sel.length === 0) return window.showMessage("Horário?"); 
     
     let p = prestadores[prestadorSelecionadoIndex]; 
+    // GARANTIA: Se o prestador tiver o campo field_id, nós usamos ele.
+    const fieldIdTecnico = p.field_id || "";
+
     btn.disabled = true; btn.innerText = "Salvando...";
 
     try { 
         let agendamento = { 
-            prestador: p.nome, field_id: p.field_id, qtdtecnicos: p.qtdtecnicos, produtos: itensSelecionados, data: sel[0].dataset.date, rawdate: new Date().toISOString(), slots: [...sel].map(s => s.dataset.hora), ticket, cliente: cli, solicitante: sol, rua, numero: num, bairro, cidade, uf, cep: cepAtend, acompanhamento: rAcomp, telefone_responsavel: tResp, segmento: document.getElementById("tipoManutencao").value, tipo_servico: itensSelecionados.map(i => i.desc).join(', '), col3: "", col4: "", col5: ""
+            prestador: p.nome, 
+            field_id: fieldIdTecnico, // Agora salva na nova coluna do Supabase
+            qtdtecnicos: p.qtdtecnicos, 
+            produtos: itensSelecionados, 
+            data: sel[0].dataset.date, 
+            rawdate: new Date().toISOString(), 
+            slots: [...sel].map(s => s.dataset.hora), 
+            ticket, cliente: cli, solicitante: sol, rua, numero: num, bairro, cidade, uf, cep: cepAtend, acompanhamento: rAcomp, telefone_responsavel: tResp, segmento: document.getElementById("tipoManutencao").value, tipo_servico: itensSelecionados.map(i => i.desc).join(', '), col3: "", col4: "", col5: ""
         }; 
 
-        // 1. SALVA NO BANCO APEX (Sempre primeiro para garantir o registro interno)
-        await fetch(`${API_URL}/agendamentos`, { method: 'POST', headers: getHeaders(), body: JSON.stringify(agendamento) }); 
+        // 1. SALVA NO BANCO APEX (Agora com a coluna field_id pronta)
+        const responseApex = await fetch(`${API_URL}/agendamentos`, { method: 'POST', headers: getHeaders(), body: JSON.stringify(agendamento) }); 
+        
+        if(!responseApex.ok) {
+            const erroTxt = await responseApex.text();
+            throw new Error("Erro no banco Supabase: " + erroTxt);
+        }
 
         // 2. DISPARA PARA A FIELD CONTROL (Edge Function)
+        // Não usamos 'await' aqui para não travar a tela se a Field demorar
         fetch("https://fqaqlofndeihmhkopvan.supabase.co/functions/v1/integracao-field", { 
             method: 'POST', 
             headers: getHeaders(), 
             body: JSON.stringify(agendamento) 
-        }).catch(err => console.error("Erro integração Field:", err));
+        }).catch(err => console.error("Erro Field:", err));
 
-        // 3. NOTIFICAÇÃO SLACK
-        if(!(isAuthorized && document.getElementById('slackSwitch').value === 'OFF')){
-            const slotsF = [...sel].map(s => s.dataset.hora).join(', '); 
-            window.enviarNotificacaoSlack(`🚀 *Novo Agendamento*\n🎟️ Ticket: ${ticket}\n🛠️ Prestador: ${p.nome}\n📅 Data: ${sel[0].dataset.date}`);
-        }
-
-        window.showToast("Agendamento Salvo!");
-        setTimeout(() => { window.location.reload(); }, 1000); 
+        window.showToast("Agendamento Realizado!");
+        setTimeout(() => { window.location.reload(); }, 1200); 
 
     } catch(e) { 
-        window.showMessage("Erro ao salvar no banco APEX."); 
+        console.error(e);
+        window.showMessage("Falha ao salvar: " + e.message); 
         btn.disabled = false; btn.innerText = "Confirmar";
     } 
 };
