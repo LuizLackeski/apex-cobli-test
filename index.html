@@ -8,45 +8,28 @@
     <style>
         :root { --primary: #2F4EA1; --bg: #f0f2f5; --text: #334155; --cobli-blue: #2F4EA1; }
         body { font-family: 'Inter', -apple-system, sans-serif; background:var(--bg); color: var(--text); margin:0; padding:20px; }
-        
-        #toast {
-            display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); 
-            background: #f0f0f0; color: #334155; padding: 20px; border-radius: 12px; 
-            box-shadow: 0 10px 25px rgba(0,0,0,0.2); z-index: 10000; border: 1px solid #e5e7eb;
-            font-weight: 600; text-align: center;
-        }
-
+        #toast { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #f0f0f0; color: #334155; padding: 20px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); z-index: 10000; border: 1px solid #e5e7eb; font-weight: 600; text-align: center; }
         #login-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #2F4EA1; display: none; align-items: center; justify-content: center; z-index: 20000; }
         .login-card { background: white; padding: 40px; border-radius: 12px; width: 350px; text-align: center; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2); }
         .login-card h2 { color: var(--primary); border-bottom: none; margin-bottom: 20px; }
-        
         .topo { background: var(--primary); color: white; padding: 15px 30px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
         .menu { background: #1F3C88; padding: 0 30px; display: flex; align-items: center; }
         .menu button { background: none; border: none; color: #cbd5e1; padding: 15px 20px; cursor: pointer; font-size: 0.9rem; transition: 0.3s; }
         .menu button.ativo { color: white; border-bottom: 3px solid #4da3ff; }
-        .menu button:hover { color: white; }
         .menu .user-info { margin-left: auto; color: #ffffff; font-size: 0.8rem; margin-right: 15px; opacity: 0.8; }
         .menu .btn-sair { color: #ff9999; }
-        
         .slack-toggle { display: none; align-items: center; background: #0e2a5e; padding: 5px 10px; border-radius: 20px; margin-right: 15px; border: 1px solid #4da3ff; }
         .slack-toggle span { color: white; font-size: 0.7rem; font-weight: bold; margin-right: 8px; }
-
         .conteudo { padding: 30px; max-width: 900px; margin: 0 auto; }
         .aba { display: none; } .aba.ativa { display: block; }
-        
         .card { background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; border: 1px solid #e5e7eb; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
-        .card-info { margin-bottom: 15px; }
-        .card-actions { display: flex; gap: 8px; flex-wrap: wrap; }
-        
         h2 { font-size: 1.1rem; margin-top: 0; color: #1e293b; border-bottom: 1px solid #f1f5f9; padding-bottom: 10px; }
         input, select { width: 100%; padding: 10px; margin: 8px 0; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; }
         label { font-size: 0.8rem; color: #64748b; font-weight: 600; text-transform: uppercase; margin-bottom: 2px; }
         button { cursor: pointer; padding: 8px 16px; background: var(--primary); color: white; border: none; border-radius: 5px; font-weight: 500; }
         .btn-cancelar { background: #ef4444 !important; }
-        
         .filtros-painel { display: flex; gap: 10px; margin-bottom: 20px; padding: 15px; background: white; border-radius: 8px; border: 1px solid #e5e7eb; align-items: flex-end; flex-wrap: nowrap; overflow-x: auto; }
-        .filtros-painel > div { flex: 1; min-width: 100px; }
-
+        .filtros-painel > div { flex: 1; min-width: 80px; }
         .agenda-day-card { background: #fafafa; padding: 10px; border-radius: 6px; margin-bottom: 8px; border: 1px solid #e5e7eb; }
         .agenda-day-title { font-weight: 600; color: var(--primary); margin-bottom: 6px; font-size: 0.85rem; }
         .slots-wrapper { display: flex; flex-wrap: wrap; gap: 4px; }
@@ -54,11 +37,13 @@
         .cell.selecionado { background: var(--primary); color: white; border-color: var(--primary); }
         .item-lista { display: flex; justify-content: space-between; padding: 6px; border-bottom: 1px solid #f1f5f9; align-items: center; font-size: 0.9rem; }
         .painel-item { background: white; margin-bottom: 8px; padding: 12px; border-radius: 8px; border: 1px solid #e5e7eb; border-left: 5px solid var(--primary); display: flex; align-items: center; justify-content: space-between; }
-        
         .modal-overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); justify-content:center; align-items:center; z-index:20001; }
         .modal-card { background: #f0f0f0; color: #334155; padding: 25px; border-radius: 12px; width: 500px; max-width: 90%; max-height: 70vh; overflow-y: auto; }
         .modal-header { font-size: 1.2rem; font-weight: bold; color: var(--primary); margin-bottom: 15px; }
         .bloco-servico { background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #cbd5e1; margin-bottom: 15px; }
+        .card-selecao { background: white; padding: 15px; border-radius: 8px; margin-bottom: 10px; border: 1px solid #e5e7eb; }
+        .card-selecao strong { color: var(--primary); font-size: 1.1rem; }
+        .date-pills { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
         .pill { background: #dbeafe; color: #1e40af; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; border: 1px solid #bfdbfe; }
     </style>
 </head>
@@ -80,7 +65,6 @@
     <button onclick="window.trocarAba('cadastro', this)">Prestadores</button>
     <button onclick="window.trocarAba('painel', this)">Painel</button>
     <button onclick="window.trocarAba('dashboard', this)">Dashboard</button>
-    
     <div id="slack-toggle-container" class="slack-toggle">
         <span>TESTE SLACK</span>
         <select id="slackSwitch" style="width: 65px; margin: 0; padding: 2px; font-size: 0.7rem; height: 22px;">
@@ -88,7 +72,6 @@
             <option value="OFF">OFF</option>
         </select>
     </div>
-
     <span id="user-display" class="user-info"></span>
     <button class="btn-sair" onclick="window.logout()">Sair</button>
 </div>
@@ -112,7 +95,7 @@
             </div>
             <div id="camposEndereco" style="display: none; margin-top: 15px; border-top: 1px solid #eee; padding-top: 15px;">
                 <div style="display: flex; gap: 10px;">
-                    <div style="flex: 3;"><label>Rua/Av</label><input type="text" id="inputRua"></div>
+                    <div style="flex: 3;"><label>Endereço (Rua/Av)</label><input type="text" id="inputRua"></div>
                     <div style="flex: 1;"><label>Nº</label><input type="text" id="inputNumero"></div>
                 </div>
                 <div style="display: flex; gap: 10px;">
@@ -133,22 +116,14 @@
 
         <div id="step-3" class="card" style="display:none;">
             <h2>Serviços e Agenda</h2>
-            <div id="header-prestador-info" style="font-size: 0.95rem; color: var(--primary); font-weight: 600; margin-bottom: 15px;"></div>
+            <div id="header-prestador-info" style="font-size: 0.95rem; color: var(--primary); font-weight: 600; margin-bottom: 15px; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px;"></div>
             <div class="bloco-servico">
                 <div style="display: flex; gap: 10px;">
-                    <div style="flex:1;"><label>Tipo de Manutenção</label>
-                        <select id="tipoManutencao">
-                            <option value="instalação">Instalação</option>
-                            <option value="desinstalação">Desinstalação</option>
-                            <option value="troca">Troca</option>
-                            <option value="upgrade">Upgrade</option>
-                            <option value="visita técnica">Visita técnica</option>
-                        </select>
-                    </div>
-                    <div style="flex:1;"><label>Tipo de Serviço</label><select id="produto"></select></div>
+                    <div style="flex:1;"><label>Manutenção</label><select id="tipoManutencao"><option value="instalação">Instalação</option><option value="desinstalação">Desinstalação</option><option value="troca">Troca</option><option value="upgrade">Upgrade</option><option value="visita técnica">Visita técnica</option></select></div>
+                    <div style="flex:1;"><label>Serviço</label><select id="produto"></select></div>
                 </div>
                 <div style="display: flex; gap: 10px; align-items: flex-end;">
-                    <div style="flex:1;"><label>Quantidade</label><input type="number" id="quantidade" value="1"></div>
+                    <div style="flex:1;"><label>Qtd</label><input type="number" id="quantidade" value="1"></div>
                     <button onclick="window.adicionarProduto()" style="height: 42px; margin-bottom: 8px;">Adicionar</button>
                 </div>
             </div>
@@ -164,9 +139,9 @@
             <h2>Dados do Cliente</h2>
             <label>Nº do Ticket</label><input id="ticket">
             <label>Nome do Cliente</label><input id="clienteNome">
-            <label>Solicitante APEX</label><input id="solicitante">
-            <label>Acompanhamento Local</label><input id="respAcompanhamento">
-            <label>Telefone Responsável</label><input id="telResponsavel" placeholder="(00) 00000-0000">
+            <label>Responsável solicitação</label><input id="solicitante">
+            <label>Acompanhamento local</label><input id="respAcompanhamento">
+            <label>Telefone responsável</label><input id="telResponsavel" placeholder="(00) 00000-0000">
             <button onclick="window.proximoPasso(3)" style="background:gray;">Voltar</button>
             <button id="btnConfirmar" onclick="window.concluirAgendamentoFinal(this)" style="background:green;">Confirmar</button>
             <button onclick="window.cancelarAgendamento()" class="btn-cancelar">Cancelar</button>
@@ -174,21 +149,8 @@
     </div>
 
     <div id="cadastro" class="aba"><div id="lista-prestadores-view" class="card"><div id="btn-novo-container"></div><div id="lista-prestadores"></div></div><div id="cadastro-flow" class="card" style="display:none;"><div id="etapa-1"><h3>Dados do Prestador</h3><label>Nome / Empresa</label><input id="nomeEmpresa"><label>Endereço Completo</label><input id="endereco"><label>Cidade</label><input id="cidade"><label>UF</label><input id="uf"><label>CEP</label><input id="cep"><label>Responsável</label><input id="responsavel"><label>Telefone</label><input id="contatoResponsavel"><label>Técnicos</label><input id="qtdTecnicos" type="number"><label>Raio (Km)</label><input id="rangeAtendimento" type="number"></div><div id="etapa-2" style="display:none;"><h3>Agenda</h3><div id="agenda-cadastro"></div></div><div style="margin-top:20px;"><button id="btn-voltar" onclick="window.mudarEtapa(-1)">Voltar</button><button id="btn-proximo" onclick="window.mudarEtapa(1)">Próximo</button><button id="btn-concluir" onclick="window.salvarPrestador(this)" style="background: green;">Concluir</button><button onclick="window.cancelarCadastro()" style="background:red;">Cancelar</button></div></div></div>
-
-    <div id="painel" class="aba">
-        <div class="filtros-painel">
-            <div><label>Início</label><input type="date" id="filtroDataInicio"></div>
-            <div><label>Fim</label><input type="date" id="filtroDataFim"></div>
-            <div><label>Ticket</label><input type="text" id="filtroTicket" placeholder="Nº Ticket"></div>
-            <div><label>Prestador</label><select id="filtroPrestador"><option value="">Todos</option></select></div>
-            <div><label>Solicitante</label><input type="text" id="filtroSolicitante" placeholder="Nome..."></div>
-            <button onclick="window.renderPainel()">Filtrar</button>
-            <button onclick="window.limparFiltros()" style="background:green;">Limpar</button>
-        </div>
-        <div id="painel-conteudo" style="max-height: 500px; overflow-y: auto;"></div>
-    </div>
-
-    <div id="dashboard" class="aba"><div class="flex-cards"><div class="stats-card">Agendamentos<br><strong id="dash-agend">0</strong></div><div class="stats-card">Serviços Programados<br><strong id="dash-serv">0</strong></div></div><div class="card"><h2>Distribuição</h2><canvas id="chartPrestadores" style="max-height: 300px;"></canvas></div></div>
+    <div id="painel" class="aba"><div class="filtros-painel"><div><label>Início</label><input type="date" id="filtroDataInicio"></div><div><label>Fim</label><input type="date" id="filtroDataFim"></div><div><label>Ticket</label><input type="text" id="filtroTicket"></div><div><label>Prestador</label><select id="filtroPrestador"><option value="">Todos</option></select></div><button onclick="window.renderPainel()">Filtrar</button><button onclick="window.limparFiltros()" style="background:green;">Limpar</button></div><div id="painel-conteudo" style="max-height: 500px; overflow-y: auto;"></div></div>
+    <div id="dashboard" class="aba"><div class="flex-cards"><div class="stats-card">Agendamentos<br><strong id="dash-agend">0</strong></div><div class="stats-card">Serviços<br><strong id="dash-serv">0</strong></div></div><div class="card"><h2>Distribuição</h2><canvas id="chartPrestadores" style="max-height: 300px;"></canvas></div></div>
 </div>
 
 <script>
@@ -198,31 +160,25 @@
     const API_URL = 'https://fqaqlofndeihmhkopvan.supabase.co/functions/v1/smart-service';
     const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZxYXFsb2ZuZGVpaG1oa29wdmFuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcyMjU4ODIsImV4cCI6MjA5MjgwMTg4Mn0.nauPYoB9RDhLLueMEuop2H2FxdChjIxFkAmBcYbJLzc';
     function getHeaders() { return { 'Content-Type': 'application/json', 'apikey': ANON_KEY, 'Authorization': `Bearer ${ANON_KEY}` }; }
-    
-    const produtos = { "Telemetria": [{desc:"Leves bloqueador", tempo:60}, {desc:"Leves pesados + CAN", tempo:60}, {desc:"Motos", tempo:40}], "Identificador": [{desc:"RFID", tempo:60}], "Videotelemetria": [{desc:"CobliCam (2 câmeras)", tempo:90}] };
+    const produtos = { "Telemetria": [{desc:"Instalado veículos leves bloqueador", tempo:60}, {desc:"Instalado veículos leves e pesados + CAN", tempo:60}, {desc:"Instalado motos ou maquinários", tempo:40}], "Identificador": [{desc:"Identificador", tempo:60}], "Videotelemetria": [{desc:"CobliCam (2 câmeras)", tempo:90}] };
 
-    // --- CARGA DE DADOS (RESTAURADA) ---
+    window.onload = async () => { checkAuth(); carregarProdutos(); await carregarDadosDoBanco(); };
+
     async function carregarDadosDoBanco() {
         try {
             const resP = await fetch(`${API_URL}/prestadores`, { headers: getHeaders() }); prestadores = await resP.json();
             const resA = await fetch(`${API_URL}/agendamentos`, { headers: getHeaders() }); agendamentos = await resA.json();
             renderizarListaPrestadores(); renderPainel(); renderDashboard();
-        } catch(e) { console.error("Erro ao carregar banco:", e); }
+        } catch(e) { console.error(e); }
     }
 
-    window.onload = async () => { checkAuth(); carregarProdutos(); await carregarDadosDoBanco(); };
-
-    // --- APOIO E UI ---
     function parseDateToObj(dateStr) { if(!dateStr) return new Date(0); const [d, m, y] = dateStr.split('/'); return new Date(y, m - 1, d); }
-    window.exibirModal = (t, html) => { document.getElementById('modalHeader').innerText = t; document.getElementById('modalBody').innerHTML = html; document.getElementById('modalFooter').innerHTML = '<button onclick="window.fecharModal()" style="background:var(--primary)">Fechar</button>'; document.getElementById('modalAviso').style.display = 'flex'; };
-    window.fecharModal = () => document.getElementById('modalAviso').style.display = 'none';
-    window.showMessage = (msg) => { document.getElementById('modalHeader').innerText = "Aviso"; document.getElementById('modalBody').innerHTML = `<p>${msg}</p>`; document.getElementById('modalFooter').innerHTML = '<button onclick="window.fecharModal()" style="background:var(--primary)">OK</button>'; document.getElementById('modalAviso').style.display = 'flex'; };
-    window.showToast = (msg) => { let t = document.getElementById("toast"); t.innerText = msg; t.style.display = "block"; setTimeout(() => { t.style.display = "none"; }, 3000); };
+    window.getOcupacaoSlot = (p, d, h) => agendamentos.filter(a => a.prestador === p.nome && a.data === d && (Array.isArray(a.slots) ? a.slots.includes(h) : false)).length;
+    window.getBlockedHours = (p, d) => { let b = new Set(), cap = parseInt(p.qtdtecnicos) || 1; agendamentos.filter(a => a.prestador === p.nome && a.data === d).forEach(a => { if (Array.isArray(a.slots)) a.slots.forEach(s => { if (window.getOcupacaoSlot(p, d, s) >= cap) { let h = parseInt(s.split(':')[0]); b.add(h); b.add(h-1); b.add(h+1); } }); }); return b; };
 
-    // --- CEP ---
     window.buscarEnderecoPorCep = async function() {
         const cep = document.getElementById('inputCep').value.replace(/\D/g, '');
-        if (cep.length !== 8) return window.showMessage("CEP Inválido.");
+        if (cep.length !== 8) return window.showMessage("CEP inválido.");
         try {
             const btn = document.getElementById('btnValidarCep'); btn.innerText = "Buscando..."; btn.disabled = true;
             const res = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
@@ -237,13 +193,9 @@
         finally { document.getElementById('btnValidarCep').innerText = "Validar CEP"; document.getElementById('btnValidarCep').disabled = false; }
     };
 
-    // --- AGENDAMENTO E LOGICA DE HORA ---
-    window.getOcupacaoSlot = (p, d, h) => agendamentos.filter(a => a.prestador === p.nome && a.data === d && (Array.isArray(a.slots) ? a.slots.includes(h) : false)).length;
-    window.getBlockedHours = (p, d) => { let b = new Set(), cap = parseInt(p.qtdtecnicos) || 1; agendamentos.filter(a => a.prestador === p.nome && a.data === d).forEach(a => { if (Array.isArray(a.slots)) a.slots.forEach(s => { if (window.getOcupacaoSlot(p, d, s) >= cap) { let h = parseInt(s.split(':')[0]); b.add(h); b.add(h-1); b.add(h+1); } }); }); return b; };
-
     window.proximoPasso = async function(n) {
         if(n === 2) {
-            if(!document.getElementById('inputRua').value) return window.showMessage("Preencha o endereço!");
+            if(!document.getElementById('inputRua').value) return window.showMessage("Valide o endereço!");
             const btn = document.getElementById('btnBuscar'); btn.disabled = true; btn.innerText = "Calculando...";
             const endBusca = `${document.getElementById('inputRua').value}, ${document.getElementById('inputNumero').value} - ${document.getElementById('inputCidade').value}`;
             let filtrados = [];
@@ -255,6 +207,21 @@
         document.querySelectorAll('#consulta > div').forEach(div => div.style.display = 'none');
         document.getElementById('step-' + n).style.display = 'block';
         if(n === 3) window.rdaAgendamento();
+    };
+
+    async function consultarDistancia(o, d) { try { const res = await fetch(`${API_URL}/distancia`, { method: 'POST', headers: getHeaders(), body: JSON.stringify({ origin: o, destination: d }) }); const data = await res.json(); return (data.status === 'OK') ? parseFloat(data.rows[0].elements[0].distance.value) / 1000 : null; } catch (e) { return null; } }
+
+    window.getNextDates = (prestador) => { 
+        let dates = []; let today = new Date(); const daysMap = {"Dom":0, "Seg":1, "Ter":2, "Qua":3, "Qui":4, "Sex":5, "Sab":6}; 
+        let agendaDays = (prestador.agenda && Array.isArray(prestador.agenda)) ? [...new Set(prestador.agenda.map(a => a.dia))].map(d => daysMap[d]) : []; 
+        let cap = parseInt(prestador.qtdtecnicos) || 1; 
+        for (let i = 0; i < 14; i++) { 
+            let d = new Date(); d.setDate(today.getDate() + i); let dStr = d.toLocaleDateString(); let dNome = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sab"][d.getDay()]; 
+            let blocked = window.getBlockedHours(prestador, dStr); 
+            let slotsDoDia = (prestador.agenda && Array.isArray(prestador.agenda)) ? prestador.agenda.filter(a => a.dia == dNome) : []; 
+            let temLivre = slotsDoDia.some(s => (s.hora && !blocked.has(parseInt(s.hora.split(':')[0])) && window.getOcupacaoSlot(prestador, dStr, s.hora) < cap)); 
+            if (agendaDays.includes(d.getDay()) && temLivre) dates.push(dStr.slice(0,5)); 
+        } return dates; 
     };
 
     window.rdaAgendamento = function() {
@@ -292,56 +259,58 @@
         }
     };
 
-    // --- SALVAMENTO E NOTIFICAÇÃO ---
     window.concluirAgendamentoFinal = async function(btn) {
         const ticket = document.getElementById("ticket").value, cli = document.getElementById("clienteNome").value;
-        if(!ticket || !cli) return window.showMessage("Ticket e Cliente são obrigatórios!");
+        if(!ticket || !cli) return window.showMessage("Ticket e Cliente obrigatórios!");
         let sel = document.querySelectorAll("#agenda-agendamento .cell.selecionado");
         let tMin = itensSelecionados.reduce((a, b) => a + (b.tempo * b.qtd), 0), hNec = Math.ceil(tMin / 60);
         if(sel.length !== hNec) return window.showMessage(`Selecione ${hNec} horas seguidas!`);
-        
         btn.disabled = true; btn.innerText = "Salvando...";
         try {
             let agend = {
                 prestador: prestadores[prestadorSelecionadoIndex].nome, produtos: itensSelecionados,
                 data: sel[0].dataset.date, slots: [...sel].map(s => s.dataset.hora),
                 ticket, cliente: cli, solicitante: document.getElementById("solicitante").value
-                // campos novos ignorados para o banco antigo aceitar:
-                // acompanhamento: document.getElementById("respAcompanhamento").value,
-                // tel_responsavel: document.getElementById("telResponsavel").value
             };
             await fetch(`${API_URL}/agendamentos`, { method: 'POST', headers: getHeaders(), body: JSON.stringify(agend) });
-            
             if(!(isAuthorized && document.getElementById('slackSwitch').value === 'OFF')){
-                await fetch("https://fqaqlofndeihmhkopvan.supabase.co/functions/v1/notificar-slack", { 
-                    method:'POST', headers:getHeaders(), body:JSON.stringify({text:`🚀 *Novo Agendamento*\n🎟️ Ticket: ${ticket}\n🛠️ Prestador: ${agend.prestador}\n📅 Data: ${agend.data}`}) 
-                });
+                await fetch("https://fqaqlofndeihmhkopvan.supabase.co/functions/v1/notificar-slack", { method:'POST', headers:getHeaders(), body:JSON.stringify({text:`🚀 *Novo Agendamento*\n🎟️ Ticket: ${ticket}\n🛠️ Prestador: ${agend.prestador}\n📅 Data: ${agend.data}`}) });
             }
-            window.showToast("Agendamento salvo!");
-            setTimeout(() => window.location.reload(), 1500);
-        } catch(e) { window.showMessage("Erro ao salvar."); btn.disabled = false; }
+            window.location.reload();
+        } catch(e) { window.showMessage("Erro."); btn.disabled = false; }
     };
 
-    // --- RENDERIZADORES ORIGINAIS ---
+    // --- RESTAURAÇÃO DA VISUALIZAÇÃO DE BUSCA ---
+    window.renderizarListaPrestadoresSelecao = (lista) => {
+        document.getElementById('lista-prestadores-selecao').innerHTML = lista.map(p => {
+            const pills = p.nextDates.split(', ').map(d => `<span class="pill">${d}</span>`).join('');
+            return `<div class="card-selecao">
+                <strong>${p.nome}</strong><br>
+                <span style="font-size:0.85rem; color:#64748b;">📍 Distância: ${p.distanciaFinal} km</span><br>
+                <div class="date-pills">🗓️ Agenda: ${pills}</div>
+                <div style="margin-top:10px">
+                    <button onclick="window.selecionarPrestadorPorObjeto('${p.nome}')">Selecionar Prestador</button>
+                </div>
+            </div>`;
+        }).join('');
+    };
+
+    window.selecionarPrestadorPorObjeto = (nome) => { prestadorSelecionadoIndex = prestadores.findIndex(p => p.nome === nome); window.proximoPasso(3); };
+
+    // --- RESTO DO CÓDIGO (RESTAURADO) ---
     window.renderPainel = () => {
         let fTic = document.getElementById("filtroTicket").value.toLowerCase();
         let fIni = document.getElementById("filtroDataInicio").value, fFim = document.getElementById("filtroDataFim").value;
-        let fPre = document.getElementById("filtroPrestador").value, fSol = document.getElementById("filtroSolicitante").value.toLowerCase();
-        
         filtradosPainel = agendamentos.filter(a => {
             let [d, m, y] = a.data.split('/'), dA = `${y}-${m.padStart(2,'0')}-${d.padStart(2,'0')}`;
-            return (!fIni || dA >= fIni) && (!fFim || dA <= fFim) && (!fTic || a.ticket.toLowerCase().includes(fTic)) && (!fPre || a.prestador === fPre) && (!fSol || (a.solicitante||'').toLowerCase().includes(fSol));
+            return (!fIni || dA >= fIni) && (!fFim || dA <= fFim) && (!fTic || a.ticket.toLowerCase().includes(fTic));
         }).sort((a,b) => parseDateToObj(b.data) - parseDateToObj(a.data));
-
-        document.getElementById("painel-conteudo").innerHTML = filtradosPainel.map((a, i) => {
-            let qtdT = (a.produtos||[]).reduce((sum, p) => sum + p.qtd, 0);
-            return `<div class="painel-item"><div style="flex-grow:1; font-size:0.9rem;"><strong>🎟️ #${a.ticket}</strong> | 📅 ${a.data}<br>👤 ${a.cliente} | 🛠️ ${a.prestador} (${qtdT})</div><button onclick="window.abrirDetalhesAgendamento(${i})">Ver detalhes</button></div>`;
-        }).join('');
+        document.getElementById("painel-conteudo").innerHTML = filtradosPainel.map((a, i) => `<div class="painel-item"><div style="flex-grow:1; font-size:0.9rem;"><strong>🎟️ #${a.ticket}</strong> | 📅 ${a.data}<br>👤 ${a.cliente} | 🛠️ ${a.prestador}</div><button onclick="window.abrirDetalhesAgendamento(${i})">Ver detalhes</button></div>`).join('');
     };
 
     window.abrirDetalhesAgendamento = (idx) => {
         let a = filtradosPainel[idx], t = (a.produtos||[]).reduce((s,p)=>s+p.qtd,0), pHtml = (a.produtos||[]).map(x=>`<div style="margin-bottom:5px;">• ${x.desc} <strong>(${x.qtd}x)</strong></div>`).join('');
-        let html = `<div style="background: white; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 15px;"><div style="font-weight:bold; font-size:1.1rem; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px; margin-bottom: 8px;">🎟️ Ticket: ${a.ticket}</div><div style="font-size:0.9rem;">👤 <strong>Cliente:</strong> ${a.cliente}<br>🛠️ <strong>Prestador:</strong> ${a.prestador}<br>📅 <strong>Data:</strong> ${a.data}<br>⏰ <strong>Horários:</strong> ${Array.isArray(a.slots)?a.slots.join(', '):'N/A'}</div></div><div style="font-weight:600; margin-bottom:5px;">📦 Serviços Solicitados (Total: ${t}):</div><div style="background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0; margin-bottom: 15px; font-size: 0.9rem;">${pHtml}</div><div style="text-align:center;"><button onclick="window.excluirAgendamento(${a.id})" class="btn-cancelar" style="width:100%;">Excluir Agendamento</button></div>`;
+        let html = `<div style="background: white; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 15px;"><div style="font-weight:bold; font-size:1.1rem; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px; margin-bottom: 8px;">🎟️ Ticket: ${a.ticket}</div><div style="font-size:0.9rem;">👤 <strong>Cliente:</strong> ${a.cliente}<br>🛠️ <strong>Prestador:</strong> ${a.prestador}<br>📅 <strong>Data:</strong> ${a.data}<br>⏰ <strong>Horários:</strong> ${Array.isArray(a.slots)?a.slots.join(', '):'N/A'}</div></div><div style="font-weight:600; margin-bottom:5px;">📦 Serviços (Total: ${t}):</div><div style="background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0; margin-bottom: 15px; font-size: 0.9rem;">${pHtml}</div><div style="text-align:center;"><button onclick="window.excluirAgendamento(${a.id})" class="btn-cancelar" style="width:100%;">Excluir Agendamento</button></div>`;
         window.exibirModal("Detalhes do Agendamento", html);
     };
 
@@ -350,20 +319,15 @@
         window.exibirModal("Prestador", `<div style="margin-bottom:10px;"><strong>${p.nome}</strong><br>Resp: ${p.responsavel} | Tel: ${p.contato}</div>${ag}`);
     };
 
-    window.renderizarListaPrestadores = () => { document.getElementById("btn-novo-container").innerHTML = isAuthorized ? `<button onclick="window.abrirCadastro()" style="margin-bottom: 20px;">+ Novo Prestador</button>` : ''; document.getElementById("lista-prestadores").innerHTML = prestadores.map((p, i) => `<div class="card"><div class="card-info"><strong>${p.nome}</strong><br>${p.cidade}/${p.uf}<div style="margin-top:5px; font-size:0.85rem;">Técnicos: ${p.qtdtecnicos} | Raio: ${p.range}km</div></div><div class="card-actions"><button onclick="window.abrirDetalhesPrestador(${i})" style="background:green;">Ver</button>${isAuthorized ? ` <button onclick="window.abrirCadastro(${i})">Editar</button> <button onclick="window.excluirPrestador(${i})" class="btn-cancelar">Excluir</button>` : ''}</div></div>`).join(''); };
-    window.renderizarListaPrestadoresSelecao = (lista) => { document.getElementById('lista-prestadores-selecao').innerHTML = lista.map(p => `<div class="card-selecao"><strong>${p.nome}</strong><br>📍Distância: ${p.distanciaFinal} km<br><div style="margin-top:10px"><button onclick="prestadorSelecionadoIndex=prestadores.findIndex(x=>x.nome==='${p.nome}'); window.proximoPasso(3)">Selecionar</button></div></div>`).join(''); };
+    window.renderizarListaPrestadores = () => { document.getElementById("btn-novo-container").innerHTML = isAuthorized ? `<button onclick="window.abrirCadastro()" style="margin-bottom: 20px;">+ Novo Prestador</button>` : ''; document.getElementById("lista-prestadores").innerHTML = prestadores.map((p, i) => `<div class="card"><div class="card-info"><strong>${p.nome}</strong><br><span style="color:#64748b; font-size: 0.85rem;">${p.cidade}/${p.uf}</span><div style="margin-top: 5px; font-size: 0.85rem;">👥 Técnicos: ${p.qtdtecnicos} | Raio: ${p.range}km</div></div><div class="card-actions"><button onclick="window.abrirDetalhesPrestador(${i})" style="background:green;">Ver</button>${isAuthorized ? ` <button onclick="window.abrirCadastro(${i})">Editar</button> <button onclick="window.excluirPrestador(${i})" class="btn-cancelar">Excluir</button>` : ''}</div></div>`).join(''); };
     window.renderDashboard = () => { let tA = agendamentos.length, d = {}; agendamentos.forEach(a => d[a.prestador] = (d[a.prestador] || 0) + 1); document.getElementById("dash-agend").innerText = tA; const ctx = document.getElementById('chartPrestadores').getContext('2d'); if(myChart) myChart.destroy(); myChart = new Chart(ctx, { type: 'bar', data: { labels: Object.keys(d), datasets: [{ data: Object.values(d), backgroundColor: '#2F4EA1' }] }, options: { plugins: { legend: { display: false } } } }); };
-
-    // --- OUTRAS ---
     window.adicionarProduto = () => { let sel = document.getElementById("produto"), tipoM = document.getElementById("tipoManutencao").value; let desc = `[${tipoM.toUpperCase()}] ` + sel.options[sel.selectedIndex].text; let qtd = parseInt(document.getElementById("quantidade").value) || 1; let item = itensSelecionados.find(i => i.desc === desc); if(item) item.qtd += qtd; else itensSelecionados.push({desc, tempo: parseInt(sel.value), qtd, manutencao: tipoM}); window.renderizarProdutos(); if(prestadorSelecionadoIndex !== null) window.rdaAgendamento(); };
     window.renderizarProdutos = () => { let tMin = itensSelecionados.reduce((a, b) => a + (b.tempo * b.qtd), 0); document.getElementById("horasNecessarias").innerText = Math.ceil(tMin/60); document.getElementById("lista-produtos").innerHTML = itensSelecionados.map((i, idx) => `<div class="item-lista">${i.desc} (x${i.qtd}) <button onclick="itensSelecionados.splice(${idx},1); window.renderizarProdutos(); window.rdaAgendamento();">x</button></div>`).join(''); };
-    window.validarEAvancar = () => { let sel = document.querySelectorAll("#agenda-agendamento .cell.selecionado"); let tMin = itensSelecionados.reduce((a,b)=>a+(b.tempo*b.qtd),0), hNec = Math.ceil(tMin/60); if(sel.length !== hNec) return window.showMessage(`Selecione ${hNec} horas sequenciais!`); document.getElementById('step-3').style.display='none'; document.getElementById('step-4').style.display='block'; };
+    window.validarEAvancar = () => { let sel = document.querySelectorAll("#agenda-agendamento .cell.selecionado"); let tMin = itensSelecionados.reduce((a,b)=>a+(b.tempo*b.qtd),0), hNec = Math.ceil(tMin/60); if(sel.length !== hNec) return window.showMessage(`Selecione ${hNec} horas!`); document.getElementById('step-3').style.display='none'; document.getElementById('step-4').style.display='block'; };
     window.checkAuth = () => { let e = localStorage.getItem('userEmail'); if (e && e.endsWith("@cobli.co")) { document.getElementById('login-overlay').style.display = 'none'; isAuthorized = ["luiz.lackeski@cobli.co", "fernando.souza@cobli.co", "anni.torrecilhas@cobli.co"].includes(e.toLowerCase()); document.getElementById('user-display').innerText = e; if(isAuthorized) document.getElementById('slack-toggle-container').style.display = 'flex'; } else { document.getElementById('login-overlay').style.display = 'flex'; } };
     window.performLogin = () => { let e = document.getElementById('loginEmail').value.trim().toLowerCase(); if (e.endsWith("@cobli.co")) { localStorage.setItem('userEmail', e); window.location.reload(); } };
     window.logout = () => { localStorage.removeItem('userEmail'); window.location.reload(); };
     window.carregarProdutos = () => { let s=document.getElementById("produto"); for(let t in produtos){ let g=document.createElement("optgroup"); g.label=t; produtos[t].forEach(p=>{ let o=document.createElement("option"); o.value=p.tempo; o.text=p.desc; g.appendChild(o); }); s.appendChild(g); } };
-    async function consultarDistancia(o, d) { try { const res = await fetch(`${API_URL}/distancia`, { method: 'POST', headers: getHeaders(), body: JSON.stringify({ origin: o, destination: d }) }); const data = await res.json(); return (data.status === 'OK') ? parseFloat(data.rows[0].elements[0].distance.value) / 1000 : null; } catch (e) { return null; } }
-    window.getNextDates = (p) => { let dates = []; for (let i = 0; i < 14; i++) { let d = new Date(); d.setDate(new Date().getDate() + i); let dStr = d.toLocaleDateString(), dNome = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sab"][d.getDay()]; if ((p.agenda||[]).some(a => a.dia == dNome)) dates.push(dStr.slice(0,5)); } return dates; };
     window.trocarAba = (id, btn) => { document.querySelectorAll('.aba').forEach(a => a.classList.remove('ativa')); document.getElementById(id).classList.add('ativa'); document.querySelectorAll('.menu button').forEach(b => b.classList.remove('ativo')); btn.classList.add('ativo'); if(id === 'painel') { window.renderPainel(); let s = document.getElementById("filtroPrestador"); s.innerHTML = '<option value="">Todos</option>' + [...new Set(agendamentos.map(a => a.prestador))].map(n => `<option value="${n}">${n}</option>`).join(''); } if(id === 'dashboard') window.renderDashboard(); };
     window.limparFiltros = () => { document.querySelectorAll('.filtros-painel input').forEach(i=>i.value=""); document.getElementById("filtroPrestador").value=""; window.renderPainel(); };
     window.excluirAgendamento = (id) => window.showConfirm("Deseja realmente excluir?", async () => { await fetch(`${API_URL}/agendamentos/${id}`, { method: 'DELETE', headers: getHeaders() }); window.location.reload(); });
