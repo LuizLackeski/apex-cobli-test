@@ -29,7 +29,7 @@
         .menu .btn-sair { color: #ff9999; }
         button:hover { filter: brightness(1.2); transform: translateY(-1px); box-shadow: 0 2px 4px rgba(0,0,0,0.2); transition: 0.2s; }
         button:active { transform: translateY(0); filter: brightness(0.9); }
-        .conteudo { padding: 30px; max-width: 1000px; margin: 0 auto; }
+        .conteudo { padding: 30px; max-width: 900px; margin: 0 auto; }
         .aba { display: none; } .aba.ativa { display: block; }
         
         .card { background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; border: 1px solid #e5e7eb; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); display: flex; flex-direction: column; justify-content: space-between; }
@@ -39,17 +39,13 @@
         
         h2 { font-size: 1.1rem; margin-top: 0; color: #1e293b; border-bottom: 1px solid #f1f5f9; padding-bottom: 10px; }
         input, select { width: 100%; padding: 10px; margin: 8px 0; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; }
-        label { font-size: 0.75rem; color: #64748b; font-weight: 600; text-transform: uppercase; margin-bottom: 2px; }
+        label { font-size: 0.8rem; color: #64748b; font-weight: 600; text-transform: uppercase; margin-bottom: 2px; }
         button { cursor: pointer; padding: 8px 16px; background: var(--primary); color: white; border: none; border-radius: 5px; font-weight: 500; }
         .btn-cancelar { background: #ef4444 !important; }
         
-        .filtros-painel { 
-            display: flex; gap: 10px; margin-bottom: 20px; padding: 12px; background: white; border-radius: 8px; border: 1px solid #e5e7eb; align-items: flex-end; flex-wrap: nowrap; overflow-x: auto;
-        }
+        .filtros-painel { display: flex; gap: 10px; margin-bottom: 20px; padding: 15px; background: white; border-radius: 8px; border: 1px solid #e5e7eb; align-items: flex-end; flex-wrap: nowrap; overflow-x: auto; }
         .filtros-painel > div { flex: 1; min-width: 80px; }
         .filtros-painel label { font-size: 0.65rem; }
-        .filtros-painel input, .filtros-painel select { padding: 6px; font-size: 0.85rem; margin: 4px 0; }
-        .filtros-painel button { height: 34px; padding: 0 12px; font-size: 0.8rem; margin-bottom: 4px; white-space: nowrap; }
 
         .agenda-day-card { background: #fafafa; padding: 10px; border-radius: 6px; margin-bottom: 8px; border: 1px solid #e5e7eb; }
         .agenda-day-title { font-weight: 600; color: var(--primary); margin-bottom: 6px; font-size: 0.85rem; }
@@ -59,7 +55,6 @@
         .item-lista { display: flex; justify-content: space-between; padding: 6px; border-bottom: 1px solid #f1f5f9; align-items: center; font-size: 0.9rem; }
         .flex-cards { display: flex; gap: 15px; margin-bottom: 20px; }
         .stats-card { background: white; padding: 15px; border-radius: 8px; flex: 1; border: 1px solid #e5e7eb; text-align: center; font-weight: bold; }
-        
         .painel-item { background: white; margin-bottom: 8px; padding: 12px; border-radius: 8px; border: 1px solid #e5e7eb; border-left: 5px solid var(--primary); box-shadow: 0 1px 3px rgba(0,0,0,0.1); display: flex; align-items: center; justify-content: space-between; }
         
         .modal-overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); justify-content:center; align-items:center; z-index:20001; }
@@ -71,8 +66,6 @@
         .card-selecao strong { color: var(--primary); font-size: 1.1rem; }
         .date-pills { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
         .pill { background: #dbeafe; color: #1e40af; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; border: 1px solid #bfdbfe; }
-        
-        /* Bloco de serviço Step 3 */
         .bloco-servico { background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #cbd5e1; margin-bottom: 15px; }
     </style>
 </head>
@@ -126,7 +119,7 @@
                     <div style="flex: 2;"><label>Cidade</label><input type="text" id="inputCidade" placeholder="Ex: São Paulo"></div>
                     <div style="flex: 1;"><label>UF</label><input type="text" id="inputUf" placeholder="SP" maxlength="2"></div>
                 </div>
-                <button onclick="window.proximoPasso(2)" id="btnBuscar" style="margin-top: 10px; width: 100%;">Buscar Prestadores Disponíveis</button>
+                <button onclick="window.proximoPasso(2)" id="btnBuscar" style="margin-top: 10px; width: 100%;">Buscar Prestadores</button>
             </div>
         </div>
 
@@ -164,7 +157,7 @@
                         <label>Quantidade</label>
                         <input type="number" id="quantidade" value="1">
                     </div>
-                    <button onclick="window.adicionarProduto()" style="height: 42px; margin-bottom: 8px;">Adicionar à Lista</button>
+                    <button onclick="window.adicionarProduto()" style="height: 42px; margin-bottom: 8px;">Adicionar</button>
                 </div>
             </div>
 
@@ -199,7 +192,7 @@
             <div id="etapa-1">
                 <h3>Dados do Prestador</h3>
                 <label>Nome / Empresa</label><input id="nomeEmpresa" required>
-                <label>Endereço - Ex: R. Lourenço Marques, 297 - Vila Olímpia, São Paulo - SP, 04547-100</label><input id="endereco" required>
+                <label>Endereço Completo</label><input id="endereco" required>
                 <label>Cidade</label><input id="cidade" required>
                 <label>UF</label><input id="uf" required>
                 <label>CEP</label><input id="cep" required>
@@ -227,7 +220,7 @@
             <div><label>Fim</label><input type="date" id="filtroDataFim"></div>
             <div><label>Ticket</label><input type="text" id="filtroTicket" placeholder="Nº Ticket"></div>
             <div><label>Prestador</label><select id="filtroPrestador"><option value="">Todos</option></select></div>
-            <div><label>Solicitante</label><input type="text" id="filtroSolicitante" placeholder="Pesquisar..."></div>
+            <div><label>Solicitante</label><input type="text" id="filtroSolicitante" placeholder="Nome..."></div>
             <button onclick="window.renderPainel()">Filtrar</button>
             <button onclick="window.limparFiltros()" style="background:green;">Limpar</button>
         </div>
@@ -247,68 +240,45 @@
 </div>
 
 <script>
-    let filtradosPainel = []; 
-    let myChart = null; 
+    let prestadores = [], itensSelecionados = [], agendamentos = [], filtradosPainel = [];
+    let etapa = 1, editingIndex = -1, prestadorSelecionadoIndex = null, myChart = null;
+
+    const API_URL = 'https://fqaqlofndeihmhkopvan.supabase.co/functions/v1/smart-service';
+    const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZxYXFsb2ZuZGVpaG1oa29wdmFuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcyMjU4ODIsImV4cCI6MjA5MjgwMTg4Mn0.nauPYoB9RDhLLueMEuop2H2FxdChjIxFkAmBcYbJLzc';
+    function getHeaders() { return { 'Content-Type': 'application/json', 'apikey': ANON_KEY, 'Authorization': `Bearer ${ANON_KEY}` }; }
+
+    const produtos = { "Telemetria": [{desc:"Instalado veículos leves bloqueador", tempo:60}, {desc:"Instalado veículos leves e pesados + CAN", tempo:60}, {desc:"Instalado motos ou maquinários", tempo:40}, {desc:"Instalado veículos leves e pesados", tempo:40}], "Identificador": [{desc:"Instalado veículos leves e pesados identificador", tempo:60}, {desc:"Instalado veículos leves e pesados identificador + CAN", tempo:90}, {desc:"Instalado veículos leves e pesados identificador RFID", tempo:60}, {desc:"Instalado veículos leves e pesados identificador RFID + CAN", tempo:80}], "Trava de ignição": [{desc:"Instalado veículos leves imobilizador", tempo:80}, {desc:"Instalado veículos leves imobilizador RFID", tempo:80}, {desc:"Instalado veículos leves imobilizador RFID + CAN", tempo:90}, {desc:"Instalado veículos leves imobilizador + CAN", tempo:100}], "Videotelemetria": [{desc:"CobliCam (2 câmeras)", tempo:90}, {desc:"Cobli Multicam (3 câmeras internas)", tempo:120}, {desc:"Cobli Multicam (2 câmeras + 1 externa)", tempo:240}, {desc:"Cobli Multicam (4 câmeras)", tempo:240}, {desc:"Cobli Multicam (5 câmeras)", tempo:300}] };
+
+    window.onload = async () => { checkAuth(); carregarProdutos(); await carregarDadosDoBanco(); };
+
+    // --- AUXILIARES DATA ---
+    function parseDateToObj(dateStr) { if(!dateStr) return new Date(0); const [d, m, y] = dateStr.split('/'); return new Date(y, m - 1, d); }
 
     // --- UI HELPERS ---
-    window.exibirModal = function(titulo, htmlBody) {
-        document.getElementById('modalHeader').innerText = titulo;
-        document.getElementById('modalBody').innerHTML = htmlBody;
-        document.getElementById('modalFooter').innerHTML = '<button onclick="window.fecharModal()" style="background:var(--primary)">Fechar</button>';
-        document.getElementById('modalAviso').style.display = 'flex';
-    };
-    window.fecharModal = function() { document.getElementById('modalAviso').style.display = 'none'; };
-    window.showMessage = function(msg) {
-        document.getElementById('modalHeader').innerText = "Aviso";
-        document.getElementById('modalBody').innerHTML = `<p>${msg}</p>`;
-        document.getElementById('modalFooter').innerHTML = '<button onclick="window.fecharModal()" style="background:var(--primary)">OK</button>';
-        document.getElementById('modalAviso').style.display = 'flex';
-    };
-    window.showConfirm = function(msg, callbackFn) {
-        document.getElementById('modalHeader').innerText = "Confirmação";
-        document.getElementById('modalBody').innerHTML = `<p>${msg}</p>`;
-        const footer = document.getElementById('modalFooter');
-        footer.innerHTML = '';
-        let btnNao = document.createElement('button'); btnNao.innerText = "Não"; btnNao.style.background = "gray"; btnNao.onclick = window.fecharModal;
-        let btnSim = document.createElement('button'); btnSim.innerText = "Sim"; btnSim.style.background = "var(--primary)"; btnSim.style.marginLeft = "10px"; btnSim.onclick = () => { window.fecharModal(); callbackFn(); };
-        footer.appendChild(btnNao); footer.appendChild(btnSim);
-        document.getElementById('modalAviso').style.display = 'flex';
-    };
-    window.showToast = function(msg) { 
-        let t = document.getElementById("toast"); 
-        if(!t) return;
-        t.innerText = msg; t.style.display = "block"; 
-        setTimeout(() => { t.style.display = "none"; }, 3000); 
-    };
+    window.exibirModal = (titulo, htmlBody) => { document.getElementById('modalHeader').innerText = titulo; document.getElementById('modalBody').innerHTML = htmlBody; document.getElementById('modalFooter').innerHTML = '<button onclick="window.fecharModal()" style="background:var(--primary)">Fechar</button>'; document.getElementById('modalAviso').style.display = 'flex'; };
+    window.fecharModal = () => document.getElementById('modalAviso').style.display = 'none';
+    window.showMessage = (msg) => { document.getElementById('modalHeader').innerText = "Aviso"; document.getElementById('modalBody').innerHTML = `<p>${msg}</p>`; document.getElementById('modalFooter').innerHTML = '<button onclick="window.fecharModal()" style="background:var(--primary)">OK</button>'; document.getElementById('modalAviso').style.display = 'flex'; };
+    window.showToast = (msg) => { let t = document.getElementById("toast"); t.innerText = msg; t.style.display = "block"; setTimeout(() => { t.style.display = "none"; }, 3000); };
 
     // --- BUSCA CEP ---
     window.buscarEnderecoPorCep = async function() {
         const cep = document.getElementById('inputCep').value.replace(/\D/g, '');
-        if (cep.length !== 8) return window.showMessage("Digite um CEP válido com 8 dígitos.");
-        
+        if (cep.length !== 8) return window.showMessage("Digite um CEP válido.");
         try {
-            const btn = document.getElementById('btnValidarCep');
-            btn.innerText = "Buscando..."; btn.disabled = true;
-            
-            const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
-            const data = await response.json();
-            
+            const btn = document.getElementById('btnValidarCep'); btn.innerText = "Buscando..."; btn.disabled = true;
+            const res = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+            const data = await res.json();
             if (data.erro) throw new Error();
-            
             document.getElementById('inputRua').value = data.logradouro;
             document.getElementById('inputBairro').value = data.bairro;
             document.getElementById('inputCidade').value = data.localidade;
             document.getElementById('inputUf').value = data.uf;
-            
             document.getElementById('camposEndereco').style.display = 'block';
-            window.showToast("CEP Validado!");
+            window.showToast("Endereço carregado!");
         } catch (e) {
-            window.showMessage("CEP não encontrado. Por favor, preencha manualmente.");
+            window.showMessage("CEP não localizado. Preencha manualmente.");
             document.getElementById('camposEndereco').style.display = 'block';
-        } finally {
-            const btn = document.getElementById('btnValidarCep');
-            btn.innerText = "Validar CEP"; btn.disabled = false;
-        }
+        } finally { document.getElementById('btnValidarCep').innerText = "Validar CEP"; document.getElementById('btnValidarCep').disabled = false; }
     };
 
     // --- AUTH ---
@@ -320,118 +290,93 @@
             document.getElementById('login-overlay').style.display = 'none';
             isAuthorized = ADMIN_EMAILS.includes(email.toLowerCase());
             document.getElementById('user-display').innerText = email;
-            if(window.renderizarListaPrestadores) window.renderizarListaPrestadores();
-        } else {
-            localStorage.removeItem('userEmail');
-            document.getElementById('login-overlay').style.display = 'flex';
-        }
+        } else { document.getElementById('login-overlay').style.display = 'flex'; }
     }
-    window.performLogin = function() {
-        let email = document.getElementById('loginEmail').value.trim().toLowerCase();
-        if (!email.endsWith("@cobli.co")) return window.showMessage("Use seu e-mail @cobli.co");
-        localStorage.setItem('userEmail', email); window.location.reload();
-    }
-    window.logout = function() { localStorage.removeItem('userEmail'); window.location.reload(); };
-    checkAuth();
+    window.performLogin = () => { let email = document.getElementById('loginEmail').value.trim().toLowerCase(); if (!email.endsWith("@cobli.co")) return window.showMessage("Acesso restrito."); localStorage.setItem('userEmail', email); window.location.reload(); };
+    window.logout = () => { localStorage.removeItem('userEmail'); window.location.reload(); };
 
-    // --- DATABASE ---
-    const API_URL = 'https://fqaqlofndeihmhkopvan.supabase.co/functions/v1/smart-service';
-    const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZxYXFsb2ZuZGVpaG1oa29wdmFuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcyMjU4ODIsImV4cCI6MjA5MjgwMTg4Mn0.nauPYoB9RDhLLueMEuop2H2FxdChjIxFkAmBcYbJLzc';
-    function getHeaders() { return { 'Content-Type': 'application/json', 'apikey': ANON_KEY, 'Authorization': `Bearer ${ANON_KEY}` }; }
-    
-    let prestadores = [], itensSelecionados = [], agendamentos = [], etapa = 1, editingIndex = -1, prestadorSelecionadoIndex = null;
-    const produtos = { "Telemetria": [{desc:"Instalado veículos leves bloqueador", tempo:60}, {desc:"Instalado veículos leves e pesados + CAN", tempo:60}, {desc:"Instalado motos ou maquinários", tempo:40}, {desc:"Instalado veículos leves e pesados", tempo:40}], "Identificador": [{desc:"Instalado veículos leves e pesados identificador", tempo:60}, {desc:"Instalado veículos leves e pesados identificador + CAN", tempo:90}, {desc:"Instalado veículos leves e pesados identificador RFID", tempo:60}, {desc:"Instalado veículos leves e pesados identificador RFID + CAN", tempo:80}], "Trava de ignição": [{desc:"Instalado veículos leves imobilizador", tempo:80}, {desc:"Instalado veículos leves imobilizador RFID", tempo:80}, {desc:"Instalado veículos leves imobilizador RFID + CAN", tempo:90}, {desc:"Instalado veículos leves imobilizador + CAN", tempo:100}], "Videotelemetria": [{desc:"CobliCam (2 câmeras)", tempo:90}, {desc:"Cobli Multicam (3 câmeras internas)", tempo:120}, {desc:"Cobli Multicam (2 câmeras + 1 externa)", tempo:240}, {desc:"Cobli Multicam (4 câmeras)", tempo:240}, {desc:"Cobli Multicam (5 câmeras)", tempo:300}] };
-
-    window.onload = async () => { carregarProdutos(); await carregarDadosDoBanco(); };
-    async function carregarDadosDoBanco() { 
-        try { 
-            const resP = await fetch(`${API_URL}/prestadores`, { headers: getHeaders() }); prestadores = await resP.json(); 
-            const resA = await fetch(`${API_URL}/agendamentos`, { headers: getHeaders() }); agendamentos = await resA.json(); 
-            renderizarListaPrestadores(); renderPainel(); renderDashboard(); 
-        } catch(e) { console.error(e); } 
+    // --- DB ---
+    async function carregarDadosDoBanco() {
+        try {
+            const resP = await fetch(`${API_URL}/prestadores`, { headers: getHeaders() }); prestadores = await resP.json();
+            const resA = await fetch(`${API_URL}/agendamentos`, { headers: getHeaders() }); agendamentos = await resA.json();
+            renderizarListaPrestadores(); renderPainel(); renderDashboard();
+        } catch(e) { console.error(e); }
     }
 
-    // --- LOGICA DE AGENDAMENTO ---
+    // --- LOGICA AGENDAMENTO ---
     window.proximoPasso = async function(n) {
         if(n === 2) {
             const rua = document.getElementById('inputRua').value;
-            const cep = document.getElementById('inputCep').value;
-            if(!rua || !cep) return window.showMessage("Valide o endereço primeiro!");
-            
+            if(!rua) return window.showMessage("Valide o endereço primeiro!");
             const enderecoBusca = `${rua}, ${document.getElementById('inputNumero').value} - ${document.getElementById('inputCidade').value}`;
-            const btn = document.getElementById('btnBuscar');
-            btn.disabled = true; btn.innerText = "Calculando...";
-            
-            let prestadoresFiltrados = [];
+            const btn = document.getElementById('btnBuscar'); btn.disabled = true; btn.innerText = "Calculando...";
+            let filtrados = [];
             for(let p of prestadores) {
                 const dist = await consultarDistancia(enderecoBusca, p.endereco);
                 let available = window.getNextDates(p);
                 if(dist !== null && dist <= parseFloat(p.range) && available.length > 0) {
-                    p.distanciaFinal = dist.toFixed(1); p.nextDates = available.join(', ');
-                    prestadoresFiltrados.push(p);
+                    p.distanciaFinal = dist.toFixed(1); p.nextDates = available.join(', '); filtrados.push(p);
                 }
             }
-            btn.disabled = false; btn.innerText = "Buscar Prestadores Disponíveis";
-            if(prestadoresFiltrados.length === 0) return window.showMessage("Nenhum prestador encontrado no raio.");
-            window.renderizarListaPrestadoresSelecao(prestadoresFiltrados);
+            btn.disabled = false; btn.innerText = "Buscar Prestadores";
+            if(filtrados.length === 0) return window.showMessage("Nenhum prestador no raio.");
+            window.renderizarListaPrestadoresSelecao(filtrados);
         }
         document.querySelectorAll('#consulta > div').forEach(div => div.style.display = 'none');
         document.getElementById('step-' + n).style.display = 'block';
-        if (n === 3) {
-            let p = prestadores[prestadorSelecionadoIndex];
-            document.getElementById("header-prestador-info").innerText = `Prestador: ${p.nome} | Distância: ${p.distanciaFinal} km`;
-            window.rdaAgendamento();
-        }
+        if (n === 3) window.rdaAgendamento();
     };
 
-    window.adicionarProduto = function(){ 
-        let select = document.getElementById("produto");
-        let tipoM = document.getElementById("tipoManutencao").value;
-        let desc = `[${tipoM.toUpperCase()}] ` + select.options[select.selectedIndex].text;
-        let qtd = parseInt(document.getElementById("quantidade").value) || 1;
-        let tempoBase = parseInt(select.value); 
-        
-        let index = itensSelecionados.findIndex(item => item.desc === desc);
-        if (index !== -1) { itensSelecionados[index].qtd += qtd; } 
-        else { itensSelecionados.push({desc: desc, tempo: tempoBase, qtd: qtd, manutencao: tipoM}); }
-        
-        window.renderizarProdutos();
-        if(prestadorSelecionadoIndex !== null) window.rdaAgendamento(); 
-    };
-
-    window.concluirAgendamentoFinal = async function(btn){
-        const ticket = document.getElementById("ticket").value;
-        const cli = document.getElementById("clienteNome").value;
-        if(!ticket || !cli || !document.getElementById("telResponsavel").value) return window.showMessage("Preencha todos os campos!");
-        
-        let sel = document.querySelectorAll("#agenda-agendamento .cell.selecionado");
-        if(sel.length === 0) return window.showMessage("Selecione um horário!");
-        
-        btn.innerText = "Confirmando..."; btn.disabled = true;
-        try {
-            let agendamento = {
-                prestador: prestadores[prestadorSelecionadoIndex].nome,
-                produtos: itensSelecionados,
-                data: sel[0].dataset.date,
-                slots: [...sel].map(s => s.dataset.hora),
-                ticket, cliente: cli,
-                solicitante: document.getElementById("solicitante").value,
-                acompanhamento: document.getElementById("respAcompanhamento").value,
-                telefone_resp: document.getElementById("telResponsavel").value,
-                endereco_atendimento: `${document.getElementById('inputRua').value}, ${document.getElementById('inputNumero').value} - ${document.getElementById('inputCidade').value}`
-            };
-            
-            await fetch(`${API_URL}/agendamentos`, { method: 'POST', headers: getHeaders(), body: JSON.stringify(agendamento) });
-            window.enviarNotificacaoSlack(`🚀 *Novo Agendamento APEX*\n🎟️ Ticket: ${ticket}\n👤 Cliente: ${cli}\n🛠️ Prestador: ${agendamento.prestador}\n📅 Data: ${agendamento.data}\n📞 Contato: ${agendamento.telefone_resp}`);
-            window.showToast("Agendamento Concluído!");
-            setTimeout(() => window.location.reload(), 2000);
-        } catch(e) { window.showMessage("Erro ao salvar."); btn.disabled = false; }
-    };
-
-    // --- RENDERIZAÇÃO E LOGICAS ORIGINAIS ---
-    window.renderizarProdutos = function(){ let totalMinutos = itensSelecionados.reduce((a, b) => a + (b.tempo * b.qtd), 0); document.getElementById("horasNecessarias").innerText = Math.ceil(totalMinutos/60); document.getElementById("lista-produtos").innerHTML = itensSelecionados.map((i, idx) => `<div class="item-lista">${i.desc} (Qtd: ${i.qtd}) <button onclick="itensSelecionados.splice(${idx},1); window.renderizarProdutos(); window.rdaAgendamento();">x</button></div>`).join(''); };
-    
     async function consultarDistancia(origin, dest) { try { const res = await fetch(`${API_URL}/distancia`, { method: 'POST', headers: getHeaders(), body: JSON.stringify({ origin, destination: dest }) }); const data = await res.json(); return (data.status === 'OK') ? parseFloat(data.rows[0].elements[0].distance.value) / 1000 : null; } catch (e) { return null; } }
+
+    window.getNextDates = (p) => { 
+        let dates = [], today = new Date();
+        const dMap = {"Dom":0, "Seg":1, "Ter":2, "Qua":3, "Qui":4, "Sex":5, "Sab":6};
+        let agendaDays = (p.agenda || []).map(a => dMap[a.dia]);
+        for (let i = 0; i < 14; i++) {
+            let d = new Date(); d.setDate(today.getDate() + i);
+            let dStr = d.toLocaleDateString(), dNome = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sab"][d.getDay()];
+            if (agendaDays.includes(d.getDay())) {
+                let slotsLivre = p.agenda.filter(a => a.dia == dNome && window.getOcupacaoSlot(p, dStr, a.hora) < (parseInt(p.qtdtecnicos)||1));
+                if(slotsLivre.length > 0) dates.push(dStr.slice(0,5));
+            }
+        }
+        return dates;
+    };
+
+    window.getOcupacaoSlot = (p, d, h) => agendamentos.filter(a => a.prestador === p.nome && a.data === d && (a.slots||[]).includes(h)).length;
+
+    window.rdaAgendamento = function() {
+        let p = prestadores[prestadorSelecionadoIndex]; let container = document.getElementById("agenda-agendamento"); container.innerHTML = "";
+        if (itensSelecionados.length === 0) return;
+        let totalMin = itensSelecionados.reduce((a, b) => a + (b.tempo * b.qtd), 0), horasNec = Math.ceil(totalMin / 60);
+        let diasEnc = 0;
+        for(let i=0; i<14; i++){
+            let d = new Date(); d.setDate(new Date().getDate() + i); let dStr = d.toLocaleDateString(), dNome = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sab"][d.getDay()];
+            let blocked = window.getBlockedHours(p, dStr);
+            let availableSlots = (p.agenda || []).filter(a => a.dia == dNome && !blocked.has(parseInt(a.hora.split(':')[0])) && window.getOcupacaoSlot(p, dStr, a.hora) < (parseInt(p.qtdtecnicos)||1));
+            let hours = availableSlots.map(s => parseInt(s.hora.split(':')[0])).sort((a,b)=>a-b);
+            let seq = false; if(hours.length >= horasNec) { let c = 1; for(let j=0; j<hours.length-1; j++) { if(hours[j+1]===hours[j]+1) { c++; if(c>=horasNec) seq=true; } else c=1; } }
+            if(seq){
+                diasEnc++;
+                let card = document.createElement("div"); card.className = "agenda-day-card"; card.innerHTML = `<div class="agenda-day-title">${dStr} (${dNome})</div>`;
+                let wrapper = document.createElement("div"); wrapper.className = "slots-wrapper";
+                availableSlots.forEach(s => {
+                    let div = document.createElement("div"); div.className = "cell"; div.innerText = s.hora; div.dataset.hora = s.hora; div.dataset.date = dStr;
+                    div.onclick = function() {
+                        let sel = document.querySelectorAll("#agenda-agendamento .cell.selecionado");
+                        if(sel.length > 0 && sel[0].dataset.date !== dStr) sel.forEach(x => x.classList.remove('selecionado'));
+                        if(!div.classList.contains("selecionado") && document.querySelectorAll(".cell.selecionado").length >= horasNec) return window.showMessage(`Limite de ${horasNec}h`);
+                        div.classList.toggle("selecionado");
+                    };
+                    wrapper.appendChild(div);
+                });
+                card.appendChild(wrapper); container.appendChild(card);
+            }
+        }
+        if(diasEnc === 0) window.showMessage("Sem horários sequenciais para este serviço.");
+    };
 
     window.getBlockedHours = function(p, data) {
         let blocked = new Set(), cap = parseInt(p.qtdtecnicos) || 1;
@@ -440,64 +385,78 @@
         });
         return blocked;
     };
-    window.getOcupacaoSlot = (p, d, h) => agendamentos.filter(a => a.prestador === p.nome && a.data === d && (a.slots||[]).includes(h)).length;
 
-    window.rdaAgendamento = function() { 
-        let p = prestadores[prestadorSelecionadoIndex], container = document.getElementById("agenda-agendamento"); container.innerHTML = "";
+    window.adicionarProduto = function() {
+        let sel = document.getElementById("produto"), tipoM = document.getElementById("tipoManutencao").value;
+        let desc = `[${tipoM.toUpperCase()}] ` + sel.options[sel.selectedIndex].text;
+        let qtd = parseInt(document.getElementById("quantidade").value) || 1;
+        let item = itensSelecionados.find(i => i.desc === desc);
+        if(item) item.qtd += qtd; else itensSelecionados.push({desc, tempo: parseInt(sel.value), qtd, manutencao: tipoM});
+        window.renderizarProdutos(); if(prestadorSelecionadoIndex !== null) window.rdaAgendamento();
+    };
+
+    window.renderizarProdutos = function() {
+        let totalMin = itensSelecionados.reduce((a, b) => a + (b.tempo * b.qtd), 0);
+        document.getElementById("horasNecessarias").innerText = Math.ceil(totalMin/60);
+        document.getElementById("lista-produtos").innerHTML = itensSelecionados.map((i, idx) => `<div class="item-lista">${i.desc} (x${i.qtd}) <button onclick="itensSelecionados.splice(${idx},1); window.renderizarProdutos(); window.rdaAgendamento();">x</button></div>`).join('');
+    };
+
+    window.validarEAvancar = () => {
         let totalMin = itensSelecionados.reduce((a, b) => a + (b.tempo * b.qtd), 0), horasNec = Math.ceil(totalMin / 60);
-        if (itensSelecionados.length === 0) return;
-        let diasEncontrados = 0;
-        for(let i=0; i<14; i++){
-            let data = new Date(); data.setDate(new Date().getDate() + i); let dStr = data.toLocaleDateString(), dNome = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sab"][data.getDay()];
-            let blocked = window.getBlockedHours(p, dStr);
-            let availableSlots = (p.agenda || []).filter(a => a.dia == dNome && !blocked.has(parseInt(a.hora.split(':')[0])) && window.getOcupacaoSlot(p, dStr, a.hora) < (parseInt(p.qtdtecnicos)||1));
-            
-            let hours = availableSlots.map(s => parseInt(s.hora.split(':')[0])).sort((a,b)=>a-b);
-            let seq = false; if(hours.length >= horasNec) { let c = 1; for(let j=0; j<hours.length-1; j++) { if(hours[j+1]===hours[j]+1) { c++; if(c>=horasNec) seq=true; } else c=1; } }
-            
-            if(seq){
-                diasEncontrados++;
-                let card = document.createElement("div"); card.className = "agenda-day-card"; card.innerHTML = `<div class="agenda-day-title">${dStr} (${dNome})</div>`;
-                let wrapper = document.createElement("div"); wrapper.className = "slots-wrapper";
-                availableSlots.forEach(s => {
-                    let div = document.createElement("div"); div.className = "cell"; div.innerText = s.hora; div.dataset.hora = s.hora; div.dataset.date = dStr;
-                    div.onclick = function() {
-                        let sel = document.querySelectorAll("#agenda-agendamento .cell.selecionado");
-                        if(sel.length > 0 && sel[0].dataset.date !== dStr) sel.forEach(x => x.classList.remove('selecionado'));
-                        if(!div.classList.contains("selecionado") && document.querySelectorAll(".cell.selecionado").length >= horasNec) return window.showMessage("Limite atingido");
-                        div.classList.toggle("selecionado");
-                    };
-                    wrapper.appendChild(div);
-                });
-                card.appendChild(wrapper); container.appendChild(card);
-            }
-        }
-        if(diasEncontrados === 0) window.showMessage("Sem horários sequenciais.");
+        let sel = document.querySelectorAll(".cell.selecionado");
+        if(sel.length !== horasNec) return window.showMessage(`Selecione ${horasNec} horas!`);
+        document.getElementById('step-3').style.display='none'; document.getElementById('step-4').style.display='block';
     };
 
-    window.renderPainel = function(){ 
+    window.concluirAgendamentoFinal = async function(btn) {
+        btn.disabled = true; btn.innerText = "Confirmando...";
+        let sel = document.querySelectorAll(".cell.selecionado");
+        let agend = {
+            prestador: prestadores[prestadorSelecionadoIndex].nome,
+            produtos: itensSelecionados, data: sel[0].dataset.date, slots: [...sel].map(s => s.dataset.hora),
+            ticket: document.getElementById("ticket").value, cliente: document.getElementById("clienteNome").value,
+            solicitante: document.getElementById("solicitante").value, acompanhamento: document.getElementById("respAcompanhamento").value,
+            telefone_resp: document.getElementById("telResponsavel").value,
+            endereco_atendimento: `${document.getElementById('inputRua').value}, ${document.getElementById('inputNumero').value} - ${document.getElementById('inputCidade').value}`
+        };
+        await fetch(`${API_URL}/agendamentos`, { method: 'POST', headers: getHeaders(), body: JSON.stringify(agend) });
+        window.enviarNotificacaoSlack(`🚀 *Novo Agendamento*\n🎟️ Ticket: ${agend.ticket}\n🛠️ Prestador: ${agend.prestador}\n📅 Data: ${agend.data}`);
+        window.location.reload();
+    };
+
+    // --- RENDERIZADORES LAYOUT ORIGINAL ---
+    window.renderizarListaPrestadores = () => {
+        document.getElementById("btn-novo-container").innerHTML = isAuthorized ? `<button onclick="window.abrirCadastro()" style="margin-bottom: 20px;">+ Novo Prestador</button>` : '';
+        document.getElementById("lista-prestadores").innerHTML = prestadores.map((p, i) => {
+            let btns = `<button onclick="window.abrirDetalhesPrestador(${i})" style="background:green;">Ver</button>`;
+            if (isAuthorized) btns += ` <button onclick="window.abrirCadastro(${i})">Editar</button>`;
+            return `<div class="card"><div class="card-info"><strong>${p.nome}</strong><br>${p.cidade}/${p.uf}<div style="margin-top:5px; font-size:0.85rem;">Técnicos: ${p.qtdtecnicos} | Raio: ${p.range}km</div></div><div class="card-actions">${btns}</div></div>`;
+        }).join('');
+    };
+
+    window.renderizarListaPrestadoresSelecao = (lista) => {
+        document.getElementById('lista-prestadores-selecao').innerHTML = lista.map(p => `<div class="card-selecao"><strong>${p.nome}</strong><br>📍Distância: ${p.distanciaFinal} km<br><button onclick="prestadorSelecionadoIndex=prestadores.findIndex(x=>x.nome==='${p.nome}'); window.proximoPasso(3)">Selecionar</button></div>`).join('');
+    };
+
+    window.renderPainel = () => {
         let fTic = document.getElementById("filtroTicket").value.toLowerCase();
-        filtradosPainel = agendamentos.filter(a => { 
-            let matchDate = (!document.getElementById("filtroDataInicio").value || a.data >= document.getElementById("filtroDataInicio").value); 
-            let matchTicket = (!fTic || (a.ticket && a.ticket.toLowerCase().includes(fTic)));
-            return matchDate && matchTicket;
-        }).sort((a,b) => parseDateToObj(b.data) - parseDateToObj(a.data)); 
-        document.getElementById("painel-conteudo").innerHTML = filtradosPainel.map((a, i) => `<div class="painel-item"><div style="flex-grow: 1;"><strong>🎟️ #${a.ticket}</strong> | 📅 ${a.data}<br>👤 ${a.cliente} | 🛠️ ${a.prestador}</div><button onclick="window.abrirDetalhesAgendamento(${i})">Ver detalhes</button></div>`).join(''); 
+        filtradosPainel = agendamentos.filter(a => !fTic || (a.ticket && a.ticket.toLowerCase().includes(fTic))).sort((a,b) => parseDateToObj(b.data) - parseDateToObj(a.data));
+        document.getElementById("painel-conteudo").innerHTML = filtradosPainel.map((a, i) => `<div class="painel-item"><div style="flex-grow: 1;"><strong>🎟️ #${a.ticket}</strong> | 📅 ${a.data}<br>👤 ${a.cliente} | 🛠️ ${a.prestador}</div><button onclick="window.abrirDetalhesAgendamento(${i})">Ver detalhes</button></div>`).join('');
     };
 
-    window.getNextDates = (p) => { 
-        let dates = []; for (let i = 0; i < 14; i++) { 
-            let d = new Date(); d.setDate(new Date().getDate() + i); let dStr = d.toLocaleDateString(), dNome = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sab"][d.getDay()];
-            if ((p.agenda||[]).some(a => a.dia == dNome)) dates.push(dStr.slice(0,5));
-        } return dates; 
+    window.renderDashboard = () => {
+        let totalAgend = agendamentos.length, dist = {};
+        agendamentos.forEach(a => dist[a.prestador] = (dist[a.prestador] || 0) + 1);
+        document.getElementById("dash-agend").innerText = totalAgend;
+        const ctx = document.getElementById('chartPrestadores').getContext('2d');
+        if(myChart) myChart.destroy();
+        myChart = new Chart(ctx, { type: 'bar', data: { labels: Object.keys(dist), datasets: [{ label: 'Agendamentos', data: Object.values(dist), backgroundColor: '#2F4EA1' }] }, options: { plugins: { legend: { display: false } } } });
     };
-    
-    window.renderizarListaPrestadores = () => { document.getElementById("lista-prestadores").innerHTML = prestadores.map((p, i) => `<div class="card"><div class="card-info"><strong>${p.nome}</strong><br>${p.cidade}/${p.uf}</div><div class="card-actions"><button onclick="window.abrirDetalhesPrestador(${i})" style="background:green;">Ver</button></div></div>`).join(''); };
-    window.renderizarListaPrestadoresSelecao = (lista) => { document.getElementById('lista-prestadores-selecao').innerHTML = lista.map(p => `<div class="card-selecao"><strong>${p.nome}</strong> (${p.distanciaFinal} km)<br><button onclick="prestadorSelecionadoIndex=prestadores.findIndex(x=>x.nome==='${p.nome}'); window.proximoPasso(3)">Selecionar</button></div>`).join(''); };
+
     window.carregarProdutos = () => { let s=document.getElementById("produto"); for(let t in produtos){ let g=document.createElement("optgroup"); g.label=t; produtos[t].forEach(p=>{ let o=document.createElement("option"); o.value=p.tempo; o.text=p.desc; g.appendChild(o); }); s.appendChild(g); } };
     window.trocarAba = (id, btn) => { document.querySelectorAll('.aba').forEach(a => a.classList.remove('ativa')); document.getElementById(id).classList.add('ativa'); document.querySelectorAll('.menu button').forEach(b => b.classList.remove('ativo')); btn.classList.add('ativo'); if(id === 'painel') window.renderPainel(); if(id === 'dashboard') window.renderDashboard(); };
     window.enviarNotificacaoSlack = async (t) => { fetch("https://fqaqlofndeihmhkopvan.supabase.co/functions/v1/notificar-slack", { method:'POST', headers:getHeaders(), body:JSON.stringify({text:t}) }); };
-    window.limparFiltros = () => { document.querySelectorAll('.filtros-painel input').forEach(i=>i.value=""); window.renderPainel(); };
+    window.limparFiltros = () => { document.getElementById("filtroTicket").value=""; window.renderPainel(); };
     window.cancelarAgendamento = () => window.location.reload();
 </script>
 </body>
