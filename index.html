@@ -28,7 +28,6 @@
         .menu .user-info { margin-left: auto; color: #ffffff; font-size: 0.8rem; margin-right: 15px; opacity: 0.8; }
         .menu .btn-sair { color: #ff9999; }
         
-        /* Inclusão do Estilo Switch Slack Admin */
         .slack-adm-panel { display: none; align-items: center; background: rgba(255,255,255,0.1); padding: 5px 12px; border-radius: 20px; margin-right: 15px; border: 1px solid rgba(255,255,255,0.2); }
         .slack-adm-panel span { color: white; font-size: 0.7rem; font-weight: bold; margin-right: 8px; }
         .slack-adm-panel select { width: 60px; height: 22px; padding: 0; font-size: 0.7rem; margin: 0; border-radius: 4px; border: none; background: white; color: var(--primary); cursor: pointer; }
@@ -385,7 +384,30 @@
     const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZxYXFsb2ZuZGVpaG1oa29wdmFuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcyMjU4ODIsImV4cCI6MjA5MjgwMTg4Mn0.nauPYoB9RDhLLueMEuop2H2FxdChjIxFkAmBcYbJLzc';
     function getHeaders() { return { 'Content-Type': 'application/json', 'apikey': ANON_KEY, 'Authorization': `Bearer ${ANON_KEY}` }; }
     let prestadores = [], itensSelecionados = [], agendamentos = [], etapa = 1, editingIndex = -1, prestadorSelecionadoIndex = null;
-    const produtos = { "Telemetria": [{desc:"Instalado veículos leves bloqueador", tempo:60}, {desc:"Instalado veículos leves e pesados + CAN", tempo:60}, {desc:"Instalado motos ou maquinários", tempo:40}, {desc:"Instalado veículos leves e pesados", tempo:40}], "Identificador": [{desc:"Instalado veículos leves e pesados identificador", tempo:60}, {desc:"Instalado veículos leves e pesados identificador + CAN", tempo:90}, {desc:"Instalado veículos leves e pesados identificador RFID", tempo:60}, {desc:"Instalado veículos leves e pesados identificador RFID + CAN", tempo:80}], "Trava de ignição": [{desc:"Instalado veículos leves imobilizador", tempo:80}, {desc:"Instalado veículos leves imobilizador RFID", tempo:80}, {desc:"Instalado veículos leves imobilizador RFID + CAN", tempo:90}, {desc:"Instalado veículos leves imobilizador + CAN", tempo:100}], "Videotelemetria": [{desc:"CobliCam (2 câmeras)", tempo:90}, {desc:"Cobli Multicam (3 câmeras internas)", tempo:120}, {desc:"Cobli Multicam (2 câmeras + 1 externa)", tempo:240}, {desc:"Cobli Multicam (4 câmeras)", tempo:240}, {desc:"Cobli Multicam (5 câmeras)", tempo:300}] };
+    const produtos = { 
+    "Telemetria": [
+        {desc:"Instalado veículos leves ou pesados", tempo:40}, 
+        {desc:"Instalado motos ou maquinários", tempo:40}, 
+        {desc:"Leves ou pesados + CAN", tempo:60}
+    ], 
+    "Identificador": [
+        {desc:"Instalado veículos leves e pesados identificador", tempo:60}, 
+        {desc:"Leves ou pesados + CAN", tempo:90}
+    ], 
+    "Trava de ignição": [
+        {desc:"Instalado trava de Iginição", tempo:80}, 
+        {desc:"Leves ou pesados + CAN", tempo:100}
+    ], 
+    "Videotelemetria": [
+        {desc:"Coblicam (1 câmeras)", tempo:90}, 
+        {desc:"Coblicam Cabine (2 câmeras)", tempo:90}, 
+        {desc:"Coblicam Fadiga (2 câmeras)", tempo:90}, 
+        {desc:"Coblicam-Multi (3 câmeras internas)", tempo:120}, 
+        {desc:"Coblicam-Multi (2 câmeras + 1 externa)", tempo:240}, 
+        {desc:"Coblicam-Multi (4 câmeras)", tempo:240}, 
+        {desc:"Coblicam-Multi (5 câmeras)", tempo:300}
+    ] 
+};
     
     window.onload = async () => { carregarProdutos(); await carregarDadosDoBanco(); };
     async function carregarDadosDoBanco() { try { const resP = await fetch(`${API_URL}/prestadores`, { headers: getHeaders() }); prestadores = await resP.json(); renderizarListaPrestadores(); const resA = await fetch(`${API_URL}/agendamentos`, { headers: getHeaders() }); agendamentos = await resA.json(); renderPainel(); renderDashboard(); } catch(e) { console.error("Erro ao carregar dados:", e); } }
@@ -477,7 +499,7 @@
                 ticket, 
                 cliente: cli, 
                 solicitante: sol,
-                // Mapeamento exato da Foto 1
+                // Mapeamento dos campos detalhados para as colunas do banco
                 rua: document.getElementById('inputRua').value,
                 numero: document.getElementById('inputNumero').value,
                 bairro: document.getElementById('inputBairro').value,
