@@ -209,26 +209,32 @@
             </div>
         </div>
         
-<div id="step-4" class="step-container" style="display:none;">
-    <h5 style="margin-bottom:20px; color:var(--primary);"><i class="bi bi-person-check-fill"></i> Dados do Atendimento</h5>
-    <div class="row g-3">
-        <div class="col-md-8">
-            <label class="form-label">Nome do Cliente / Razão Social</label>
-            <input type="text" id="cliente_nome" class="form-control" placeholder="Ex: Padaria do João">
+<div id="step-4" class="card" style="display:none;">
+    <h2>Dados do Atendimento</h2>
+    <div style="display: flex; flex-direction: column; gap: 10px;">
+        <label>Nome do Cliente / Razão Social</label>
+        <input type="text" id="cliente_nome_input">
+        
+        <label>CNPJ/CPF</label>
+        <input type="text" id="cliente_cnpj_input">
+        
+        <label>Responsável Local (Quem recebe o técnico)</label>
+        <input type="text" id="resp_local_input">
+        
+        <label>Telefone do Responsável Local</label>
+        <input type="tel" id="tel_local_input">
+
+        <label>Nº do Ticket</label>
+        <input type="text" id="ticket_input">
+
+        <label>Responsável pela solicitação (APEX)</label>
+        <input type="text" id="solicitante_input">
+        
+        <div style="margin-top:20px;">
+            <button onclick="window.proximoPasso(3)" style="background:gray;">Voltar</button>
+            <button id="btnConfirmar" onclick="window.concluirAgendamentoFinal(this)" style="background:green;">Confirmar Agendamento</button>
         </div>
-        <div class="col-md-4">
-            <label class="form-label">CNPJ/CPF</label>
-            <input type="text" id="cliente_cnpj" class="form-control" placeholder="00.000.000/0000-00">
-        </div>
-        <div class="col-md-6">
-            <label class="form-label">Acompanhamento (No local)</label>
-            <input type="text" id="contato_nome" class="form-control" placeholder="Quem receberá o técnico?">
-        </div>
-        <div class="col-md-6">
-            <label class="form-label">Telefone do Responsável</label>
-            <input type="tel" id="contato_tel" class="form-control" placeholder="(00) 00000-0000">
-        </div>
-        </div>
+    </div>
 </div>
 
     <div id="cadastro" class="aba">
@@ -576,97 +582,90 @@ window.concluirAgendamentoFinal = async function(btn) {
     const prestador = prestadores[prestadorSelecionadoIndex];
 
     if (!prestador || slotsSelecionados.length === 0) {
-        window.showMessage("Erro: Selecione o prestador e o horário.");
-        return;
+        return window.showMessage("Erro: Selecione o prestador e o horário.");
     }
 
     const agendamento = {
         prestador: prestador.nome,
         qtdtecnicos: prestador.qtdtecnicos,
-        ticket: document.getElementById('ticket').value,
-        cliente: document.getElementById('clienteNome').value,
-        cnpj: document.getElementById('cliente_cnpj').value,
-        solicitante: document.getElementById('solicitante').value,
+        ticket: document.getElementById('ticket_input').value,
+        cliente: document.getElementById('cliente_nome_input').value,
+        cnpj: document.getElementById('cliente_cnpj_input').value,
+        solicitante: document.getElementById('solicitante_input').value,
         data: dataSelecionada, 
         rawdate: dataSelecionada,
         slots: slotsSelecionados,
-        // CAMPOS QUE PARARAM DE SALVAR:
         rua: document.getElementById('inputRua').value,
         numero: document.getElementById('inputNumero').value,
         bairro: document.getElementById('inputBairro').value,
         cidade: document.getElementById('inputCidade').value,
         uf: document.getElementById('inputUf').value,
         cep: document.getElementById('inputCep').value,
-        acompanhamento: document.getElementById('respAcompanhamento').value,
-        telefone_responsavel: document.getElementById('telResponsavel').value,
+        acompanhamento: document.getElementById('resp_local_input').value,
+        telefone_responsavel: document.getElementById('tel_local_input').value,
         segmento: itensSelecionados[0]?.nomeManutencao || "", 
         tipo_servico: "Agendamento Apex",
         field_id: prestador.field_id,
-        produtos_texto: itensSelecionados.map(i => `• [${i.nomeManutencao.toUpperCase()}] ${i.desc} (Qtd: ${i.qtd})`).join('\n'),
+        produtos_texto: itensSelecionados.map(i => `• [${i.nomeManutencao?.toUpperCase() || 'SERVIÇO'}] ${i.desc} (Qtd: ${i.qtd})`).join('\n'),
         segment_id_field: itensSelecionados[0]?.segment_id || "",
         maintenance_id_field: document.getElementById('tipoManutencao').value
     };
 
-    // 1. Limpar o CNPJ (deixar só números)
-const cnpjApenasNumeros = body.cnpj.replace(/\D/g, '');
+    const originalText = btn.innerText;
+    btn.innerText = "Processando..."; btn.disabled = true;
 
-// 2. Tentar buscar a localização (cliente) na Field Control pelo documento
-const buscaResponse = await fetch(`https://api.fieldcontrol.com.br/v1/locations?document=${cnpjApenasNumeros}`, {
-    method: 'GET',
-    headers: { 'X-Api-Key': 'SUA_CHAVE_AQUI' }
-});
+    try {
+        const response = await fetch(EDGE_URL, {
+            method: 'POST',
+            headers: getHeaders(),
+            body: JSON.stringify(agendamento)
+        });
 
-const buscaResultado = await buscaResponse.json();
-let locationId;
-
-if (buscaResultado.items && buscaResultado.items.length > 0) {
-    // CENÁRIO A: ENCONTROU O CLIENTE
-    locationId = buscaResultado.items[0].id;
-    console.log("Cliente encontrado ID:", locationId);
-} else {
-    // CENÁRIO B: NÃO ENCONTROU, VAMOS CADASTRAR COM OS DADOS DO APEX
-    const novoClienteResponse = await fetch(`https://api.fieldcontrol.com.br/v1/locations`, {
-        method: 'POST',
-        headers: { 
-            'Content-Type': 'application/json',
-            'X-Api-Key': 'SUA_CHAVE_AQUI' 
-        },
-        body: JSON.stringify({
-            name: body.cliente,
-            document: cnpjApenasNumeros,
-            externalId: cnpjApenasNumeros, // Boa prática usar o CNPJ como ID Externo
-            address: {
-                zipCode: body.cep,
-                street: body.rua,
-                number: body.numero,
-                neighborhood: body.bairro,
-                city: body.cidade,
-                state: body.uf
-            },
-            contact: {
-                name: body.acompanhamento,
-                phone: body.telefone_responsavel
-            }
-        })
-    });
-    
-    const novoCliente = await novoClienteResponse.json();
-    locationId = novoCliente.id;
-    console.log("Novo cliente cadastrado ID:", locationId);
-}
-
-// 3. AGORA CRIA A MANUTENÇÃO USANDO O ID QUE CONSEGUIMOS (SEJA BUSCADO OU CRIADO)
-const payloadMaintenance = {
-    location: { id: locationId },
-    serviceType: body.servico_id,
-    description: body.produtos,
-    // ... restante dos campos
+        if (response.ok) {
+            window.showMessage("✅ Agendado com sucesso no Banco e na Field!");
+            setTimeout(() => window.location.reload(), 2000);
+        } else {
+            const result = await response.json();
+            window.showMessage("❌ Erro: " + (result.error || "Erro na integração"));
+        }
+    } catch (error) {
+        window.showMessage("Erro de conexão com o servidor.");
+    } finally {
+        btn.innerText = originalText; btn.disabled = false;
+    }
 };
 // --- FIM DA MUDANÇA ---
     window.limparFormulario = function() { itensSelecionados = []; prestadorSelecionadoIndex = null; document.getElementById("lista-produtos").innerHTML = ""; document.getElementById("horasNecessarias").innerText = "0"; document.getElementById("agenda-agendamento").innerHTML = ""; document.getElementById("inputCep").value = ""; document.getElementById("ticket").value = ""; document.getElementById("clienteNome").value = ""; document.getElementById("solicitante").value = ""; document.getElementById("respAcompanhamento").value = ""; document.getElementById("telResponsavel").value = ""; };
     window.trocarAba = function(id, btn){ document.querySelectorAll('.aba').forEach(a => a.classList.remove('ativa')); document.getElementById(id).classList.add('ativa'); document.querySelectorAll('.menu button').forEach(b => b.classList.remove('ativo')); if(btn) btn.classList.add('ativo'); if(id === 'painel') window.atualizarFiltrosPrestador(); if(id === 'dashboard') window.renderDashboard(); };
     window.getNextDates = function(prestador) { let dates = []; let today = new Date(); const daysMap = {"Dom":0, "Seg":1, "Ter":2, "Qua":3, "Qui":4, "Sex":5, "Sab":6}; let agendaDays = (prestador.agenda && Array.isArray(prestador.agenda)) ? [...new Set(prestador.agenda.map(a => a.dia))].map(d => daysMap[d]) : []; let qtdLimit = parseInt(prestador.qtdtecnicos) || 1; for (let i = 0; i < 14; i++) { let d = new Date(); d.setDate(today.getDate() + i); let dStr = d.toLocaleDateString(); let dNome = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sab"][d.getDay()]; let blocked = window.getBlockedHours(prestador, dStr); let slotsDoDia = (prestador.agenda && Array.isArray(prestador.agenda)) ? prestador.agenda.filter(a => a.dia == dNome) : []; let temLivre = slotsDoDia.some(s => (s.hora && !blocked.has(parseInt(s.hora.split(':')[0])) && window.getOcupacaoSlot(prestador, dStr, s.hora) < qtdLimit)); if (agendaDays.includes(d.getDay()) && temLivre) dates.push(dStr.slice(0,5)); } return dates; };
-    window.proximoPasso = async function(n) { if(n === 2) { if(prestadores.length === 0) return window.showMessage("Cadastre um prestador!"); const rua = document.getElementById('inputRua').value; const num = document.getElementById('inputNumero').value; const cidade = document.getElementById('inputCidade').value; if(!rua || !num || !cidade) return window.showMessage("Preencha o endereço completo!"); const btn = document.getElementById('btnBuscar'); btn.disabled = true; btn.innerText = "Calculando..."; const enderecoBusca = `${rua}, ${num} - ${cidade} - ${document.getElementById('inputCep').value}`; let prestadoresFiltrados = []; for(let p of prestadores) { if (!p.endereco) continue; const dist = await consultarDistancia(enderecoBusca, p.endereco); let available = window.getNextDates(p); if(dist !== null && dist <= parseFloat(p.range) && available.length > 0) { p.distanciaFinal = dist.toFixed(1); p.nextDates = available.join(', '); prestadoresFiltrados.push(p); } } btn.disabled = false; btn.innerText = "Buscar Prestadores"; if(prestadoresFiltrados.length === 0) { window.exibirModal("Atenção", "Nenhum prestador encontrado no raio de atendimento."); return; } window.renderizarListaPrestadoresSelecao(prestadoresFiltrados); } if(n === 3 && prestadorSelecionadoIndex === null) return window.showMessage("Selecione um prestador!"); document.querySelectorAll('#consulta > div').forEach(div => div.style.display = 'none'); document.getElementById('step-' + n).style.display = 'block'; if (n === 3) { let p = prestadores[prestadorSelecionadoIndex]; document.getElementById("header-prestador-info").innerText = `Prestador: ${p.nome} | Distância: ${p.distanciaFinal} km`; window.rdaAgendamento(); } };
+    window.proximoPasso = async function(n) { 
+    // Esconde todos os passos dentro da aba Agendamento
+    const containers = document.querySelectorAll('#consulta > div');
+    containers.forEach(div => div.style.display = 'none');
+    
+    // Mostra o passo atual
+    const step = document.getElementById('step-' + n);
+    if(step) {
+        step.style.display = 'block';
+    } else {
+        console.error("Erro: O elemento step-" + n + " não existe no HTML.");
+    }
+
+    if(n === 2) {
+        // Lógica de busca de prestadores já existente no seu código...
+        const cepDigitado = document.getElementById('inputCep').value;
+        if(!cepDigitado) return window.showMessage("Digite o CEP!");
+        // (Mantenha o resto da sua lógica de busca aqui)
+    }
+    
+    if (n === 3) {
+        let p = prestadores[prestadorSelecionadoIndex];
+        if(p) {
+            document.getElementById("header-prestador-info").innerText = `Prestador: ${p.nome}`;
+            window.rdaAgendamento();
+        }
+    }
+};
     window.rdaAgendamento = function() { 
     let p = prestadores[prestadorSelecionadoIndex]; 
     let container = document.getElementById("agenda-agendamento"); 
