@@ -485,32 +485,32 @@ window.concluirAgendamentoFinal = async function(btn) {
     }
 
     // MONTAGEM DINÂMICA DO OBJETO
+// Dentro de window.concluirAgendamentoFinal no APEX
 const agendamento = {
-        ticket: document.getElementById('ticket').value,
-        cliente: document.getElementById('clienteNome').value,
-        solicitante: document.getElementById('solicitante').value,
-        acompanhamento: document.getElementById('respAcompanhamento').value,
-        telefone_responsavel: document.getElementById('telResponsavel').value,
-        nome_prestador: prestador.nome, 
-        field_id: prestador.field_id,
-        cep: document.getElementById('inputCep').value,
-        rua: document.getElementById('inputRua').value,
-        numero: document.getElementById('inputNumero').value,
-        bairro: document.getElementById('inputBairro').value,
-        cidade: document.getElementById('inputCidade').value,
-        uf: document.getElementById('inputUf').value,
-        maintenance_id: selectManutencao.value, 
-        segment_id: itensSelecionados.length > 0 ? itensSelecionados[0].segment_id : "",
-        
-        // Texto formatado para a Field
-        tipo_servico: itensSelecionados.map(i => `• [${i.nomeManutencao.toUpperCase()}] ${i.desc} (Qtd: ${i.qtd})`).join('\n'),
-        
-        // LISTA ORIGINAL para salvar no Banco de Dados (JSONB)
-        itens_originais: itensSelecionados, 
-        
-        data: dataSelecionada, 
-        slots: slotsSelecionados
-    };
+    ticket: document.getElementById('ticket').value,
+    cliente: document.getElementById('clienteNome').value,
+    solicitante: document.getElementById('solicitante').value,
+    acompanhamento: document.getElementById('respAcompanhamento').value,
+    telefone_responsavel: document.getElementById('telResponsavel').value,
+    nome_prestador: prestadores[prestadorSelecionadoIndex].nome, // IMPORTANTE PARA O BANCO
+    field_id: prestadores[prestadorSelecionadoIndex].field_id,
+    
+    cep: document.getElementById('inputCep').value,
+    rua: document.getElementById('inputRua').value,
+    numero: document.getElementById('inputNumero').value,
+    bairro: document.getElementById('inputBairro').value,
+    cidade: document.getElementById('inputCidade').value,
+    uf: document.getElementById('inputUf').value,
+    
+    maintenance_id: document.getElementById('tipoManutencao').value,
+    segment_id: itensSelecionados[0]?.segment_id || "",
+    
+    tipo_servico: itensSelecionados.map(i => `• ${i.desc} (Qtd: ${i.qtd})`).join('\n'),
+    itens_originais: itensSelecionados, // ENVIA O ARRAY PARA O JSONB
+    
+    data: dataSelecionada,
+    slots: slotsSelecionados
+};
 
     const originalText = btn.innerText;
     btn.innerText = "Integrando...";
