@@ -471,10 +471,13 @@ async function carregarDadosDoBanco() {
     };
 
     function parseDateToObj(dateStr) { const [d, m, y] = dateStr.split('/'); return new Date(y, m - 1, d); }
-   window.getOcupacaoSlot = function(prestador, data, hora) { 
+  window.getOcupacaoSlot = function(prestador, data, hora) { 
+    // Se o prestador não tiver qtdtecnicos no cadastro, assume 1 por segurança
+    let limite = parseInt(prestador.qtdtecnicos) || 1; 
+
     return agendamentos.filter(a => 
         a.prestador === prestador.nome && 
-        a.data === data && 
+        (a.data === data || a.rawdate === data) && 
         (Array.isArray(a.slots) ? a.slots.includes(hora) : false)
     ).length; 
 };
