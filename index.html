@@ -509,7 +509,7 @@ window.getBlockedHours = function(prestador, data) {
 };
     window.abrirDetalhesPrestador = function(index) { let p = prestadores[index]; let agendaHtml = ''; ["Seg", "Ter", "Qua", "Qui", "Sex", "Sab"].forEach(d => { let slots = p.agenda.filter(a => a.dia === d).map(a => `<div class="cell">${a.hora}</div>`).join(''); if(slots) { agendaHtml += `<div class="agenda-day-card" style="margin-bottom:10px;"><div class="agenda-day-title">${d}</div><div class="slots-wrapper">${slots}</div></div>`; } }); window.exibirModal("Detalhes do Prestador", `<div class="info-group" style="margin-bottom:15px;"><div style="font-weight:bold; font-size:1.1rem;">${p.nome}</div><div style="font-size:0.9rem; color:#64748b;">Resp: ${p.responsavel} | Contato: ${p.contato} | Raio: ${p.range} km</div></div>${agendaHtml}`); };
     
-Window.abrirDetalhesAgendamento = function(index) {
+window.abrirDetalhesAgendamento = function(index) {
     let a = filtradosPainel[index];
     
     // Pegamos o texto formatado que veio do banco
@@ -814,7 +814,6 @@ window.renderPainel = function(){
                     🛠️ <strong>Prestador:</strong> ${a.prestador} | <strong>Solicitante:</strong> ${a.solicitante}
                 </div>
                 <div style="margin-top:5px; font-size: 0.85rem; color: #64748b; background: #f8fafc; padding: 5px; border-radius: 4px;">
-                    📦 ${servicosExibicao.replace(/\n/g, ' | ')} 
                 </div>
                 <div style="margin-top:2px; font-size: 0.75rem; color: #94a3b8;">
                     Registrado em: ${dataRegistro}
