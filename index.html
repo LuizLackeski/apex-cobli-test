@@ -92,7 +92,7 @@
     </div>
 </div>
 
-<div class="topo"><strong>APEX</strong> <span>Agenda Prestadores'</span></div>
+<div class="topo"><strong>APEX</strong> <span>Agenda Prestadores</span></div>
 <div class="menu">
     <button class="ativo" onclick="window.trocarAba('consulta', this)">Agendamento</button>
     <button onclick="window.trocarAba('cadastro', this)">Prestadores</button>
@@ -472,56 +472,81 @@
     window.confirmarExclusaoPrestador = async function(i) { await fetch(`${API_URL}/prestadores/${prestadores[i].id}`, { method: 'DELETE', headers: getHeaders() }); await carregarDadosDoBanco(); window.showToast("Prestador excluído com sucesso!"); };
     window.confirmarExclusaoAgendamento = async function(id) { await fetch(`${API_URL}/agendamentos/${id}`, { method: 'DELETE', headers: getHeaders() }); await carregarDadosDoBanco(); window.showToast("Agendamento excluído!"); window.fecharModal(); };
     
-window.concluirAgendamentoFinal = async function(btn){ 
-    const ticket = document.getElementById("ticket").value, cli = document.getElementById("clienteNome").value, sol = document.getElementById("solicitante").value; 
-    const rAcomp = document.getElementById("respAcompanhamento").value, tResp = document.getElementById("telResponsavel").value;
-    const rua = document.getElementById('inputRua').value, num = document.getElementById('inputNumero').value, bairro = document.getElementById('inputBairro').value, cidade = document.getElementById('inputCidade').value, uf = document.getElementById('inputUf').value, cepAtend = document.getElementById('inputCep').value;
+window.concluirAgendamentoFinal = async function(btn) {
+    console.log("Iniciando processo de agendamento mestre...");
     
-    if(!ticket || !cli || !sol || !rAcomp || !tResp) return window.showMessage("Preencha tudo!"); 
-    let sel = document.querySelectorAll("#agenda-agendamento .cell.selecionado"); if(sel.length === 0) return window.showMessage("Horário?"); 
+    // Captura os horários selecionados na grid
+    const sel = document.querySelectorAll("#agenda-agendamento .cell.selecionado");
+    const slotsSelecionados = Array.from(sel).map(c => c.dataset.hora);
+    const dataSelecionada = sel.length > 0 ? sel[0].dataset.date : null;
     
-    let p = prestadores[prestadorSelecionadoIndex]; 
-    // GARANTIA: Se o prestador tiver o campo field_id, nós usamos ele.
-    const fieldIdTecnico = p.field_id || "";
+    // Pega o prestador atual
+    const prestador = prestadores[prestadorSelecionadoIndex];
 
-    btn.disabled = true; btn.innerText = "Salvando...";
-
-    try { 
-        let agendamento = { 
-            prestador: p.nome, 
-            field_id: fieldIdTecnico, // Agora salva na nova coluna do Supabase
-            qtdtecnicos: p.qtdtecnicos, 
-            produtos: itensSelecionados, 
-            data: sel[0].dataset.date, 
-            rawdate: new Date().toISOString(), 
-            slots: [...sel].map(s => s.dataset.hora), 
-            ticket, cliente: cli, solicitante: sol, rua, numero: num, bairro, cidade, uf, cep: cepAtend, acompanhamento: rAcomp, telefone_responsavel: tResp, segmento: document.getElementById("tipoManutencao").value, tipo_servico: itensSelecionados.map(i => i.desc).join(', '), col3: "", col4: "", col5: ""
-        }; 
-
-        // 1. SALVA NO BANCO APEX (Agora com a coluna field_id pronta)
-        const responseApex = await fetch(`${API_URL}/agendamentos`, { method: 'POST', headers: getHeaders(), body: JSON.stringify(agendamento) }); 
+    // 1. Captura de Dados Corrigida (usando os IDs REAIS do seu HTML)
+    const agendamento = {
+        ticket: document.getElementById('ticket').value,
+        cliente: document.getElementById('clienteNome').value,
+        solicitante: document.getElementById('solicitante').value,
+        acompanhamento: document.getElementById('respAcompanhamento').value,
+        telefone_responsavel: document.getElementById('telResponsavel').value,
         
-        if(!responseApex.ok) {
-            const erroTxt = await responseApex.text();
-            throw new Error("Erro no banco Supabase: " + erroTxt);
+        // Dados de Endereço (capturados no Step 1)
+        cep: document.getElementById('inputCep').value,
+        rua: document.getElementById('inputRua').value,
+        numero: document.getElementById('inputNumero').value,
+        bairro: document.getElementById('inputBairro').value,
+        cidade: document.getElementById('inputCidade').value,
+        uf: document.getElementById('inputUf').value,
+
+        // Dados do Serviço e Agenda
+        tipo_servico: itensSelecionados.map(i => i.desc).join(', '),
+        segmento: itensSelecionados.length > 0 ? itensSelecionados[0].segmento : "",
+        data: dataSelecionada, 
+        slots: slotsSelecionados,
+        
+        // ID do técnico para a Field Control
+        field_id: prestador.field_id 
+    };
+
+    // Validação básica
+    if (!agendamento.ticket || !agendamento.cliente || !agendamento.data) {
+        window.showMessage("Por favor, preencha todos os campos do cliente e selecione um horário.");
+        return;
+    }
+
+    const originalText = btn.innerText;
+    btn.innerText = "Integrando...";
+    btn.disabled = true;
+
+    const SUPABASE_URL = "https://fqaqlofndeihmhkopvan.supabase.co/functions/v1/integracao-field";
+
+    try {
+        const response = await fetch(SUPABASE_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(agendamento)
+        });
+
+        const resultado = await response.json();
+
+        if (response.ok) {
+            window.showMessage("✅ Agendado com sucesso na Field Control!");
+            // Aqui você pode chamar a função para salvar no seu banco Smart-Service também
+            // window.salvarNoBancoInterno(agendamento); 
+            window.limparFormulario();
+            window.trocarAba('painel');
+        } else {
+            console.error("Erro Field:", resultado);
+            window.showMessage("Erro Field Control: " + (resultado.message || "Recurso não encontrado"));
         }
-
-        // 2. DISPARA PARA A FIELD CONTROL (Edge Function)
-        // Não usamos 'await' aqui para não travar a tela se a Field demorar
-        fetch("https://fqaqlofndeihmhkopvan.supabase.co/functions/v1/integracao-field", { 
-            method: 'POST', 
-            headers: getHeaders(), 
-            body: JSON.stringify(agendamento) 
-        }).catch(err => console.error("Erro Field:", err));
-
-        window.showToast("Agendamento Realizado!");
-        setTimeout(() => { window.location.reload(); }, 1200); 
-
-    } catch(e) { 
-        console.error(e);
-        window.showMessage("Falha ao salvar: " + e.message); 
-        btn.disabled = false; btn.innerText = "Confirmar";
-    } 
+    } catch (error) {
+        console.error("Erro Conexão:", error);
+        window.showMessage("Erro de conexão com o servidor de integração.");
+    } finally {
+        btn.innerText = originalText;
+        btn.disabled = false;
+    }
 };
     window.limparFormulario = function() { itensSelecionados = []; prestadorSelecionadoIndex = null; document.getElementById("lista-produtos").innerHTML = ""; document.getElementById("horasNecessarias").innerText = "0"; document.getElementById("agenda-agendamento").innerHTML = ""; document.getElementById("inputCep").value = ""; document.getElementById("ticket").value = ""; document.getElementById("clienteNome").value = ""; document.getElementById("solicitante").value = ""; document.getElementById("respAcompanhamento").value = ""; document.getElementById("telResponsavel").value = ""; };
     window.trocarAba = function(id, btn){ document.querySelectorAll('.aba').forEach(a => a.classList.remove('ativa')); document.getElementById(id).classList.add('ativa'); document.querySelectorAll('.menu button').forEach(b => b.classList.remove('ativo')); if(btn) btn.classList.add('ativo'); if(id === 'painel') window.atualizarFiltrosPrestador(); if(id === 'dashboard') window.renderDashboard(); };
