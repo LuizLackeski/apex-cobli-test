@@ -209,26 +209,31 @@
             </div>
         </div>
         
-<div id="passo4" class="step-container" style="display:none;">
-    <h5 style="margin-bottom:20px; color:var(--primary);"><i class="bi bi-person-check-fill"></i> Dados do Atendimento</h5>
-    <div class="row g-3">
-        <div class="col-md-8">
-            <label class="form-label">Nome do Cliente / Razão Social</label>
-            <input type="text" id="cliente_nome" class="form-control" placeholder="Ex: Padaria do João">
+<div id="step-4" class="card" style="display:none;"> <h2 style="margin-bottom:20px; color:var(--primary);">Dados do Atendimento</h2>
+    <div style="display: flex; flex-direction: column; gap: 10px;">
+        <label>Nome do Cliente / Razão Social</label>
+        <input type="text" id="cliente_nome" placeholder="Ex: Padaria do João">
+        
+        <label>CNPJ/CPF</label>
+        <input type="text" id="cliente_cnpj" placeholder="00.000.000/0000-00">
+        
+        <label>Acompanhamento (No local)</label>
+        <input type="text" id="contato_nome" placeholder="Quem receberá o técnico?">
+        
+        <label>Telefone do Responsável</label>
+        <input type="tel" id="contato_tel" placeholder="(00) 00000-0000">
+
+        <label>Nº do Ticket</label>
+        <input id="ticket" required>
+
+        <label>Responsável pela solicitação (APEX)</label>
+        <input id="solicitante" required>
+        
+        <div style="margin-top:20px;">
+            <button onclick="window.proximoPasso(3)" style="background:gray;">Voltar</button>
+            <button id="btnConfirmar" onclick="window.concluirAgendamentoFinal(this)" style="background:green;">Confirmar</button>
         </div>
-        <div class="col-md-4">
-            <label class="form-label">CNPJ/CPF</label>
-            <input type="text" id="cliente_cnpj" class="form-control" placeholder="00.000.000/0000-00">
-        </div>
-        <div class="col-md-6">
-            <label class="form-label">Acompanhamento (No local)</label>
-            <input type="text" id="contato_nome" class="form-control" placeholder="Quem receberá o técnico?">
-        </div>
-        <div class="col-md-6">
-            <label class="form-label">Telefone do Responsável</label>
-            <input type="tel" id="contato_tel" class="form-control" placeholder="(00) 00000-0000">
-        </div>
-        </div>
+    </div>
 </div>
 
     <div id="cadastro" class="aba">
@@ -580,25 +585,24 @@ window.concluirAgendamentoFinal = async function(btn) {
         return;
     }
 
-    const agendamento = {
+const agendamento = {
         prestador: prestador.nome,
         qtdtecnicos: prestador.qtdtecnicos,
         ticket: document.getElementById('ticket').value,
-        cliente: document.getElementById('clienteNome').value,
-        cnpj: document.getElementById('cliente_cnpj').value,
+        cliente: document.getElementById('cliente_nome').value, // Pegando do ID correto
+        cnpj: document.getElementById('cliente_cnpj').value,    // Pegando do ID correto
         solicitante: document.getElementById('solicitante').value,
         data: dataSelecionada, 
         rawdate: dataSelecionada,
         slots: slotsSelecionados,
-        // CAMPOS QUE PARARAM DE SALVAR:
         rua: document.getElementById('inputRua').value,
         numero: document.getElementById('inputNumero').value,
         bairro: document.getElementById('inputBairro').value,
         cidade: document.getElementById('inputCidade').value,
         uf: document.getElementById('inputUf').value,
         cep: document.getElementById('inputCep').value,
-        acompanhamento: document.getElementById('respAcompanhamento').value,
-        telefone_responsavel: document.getElementById('telResponsavel').value,
+        acompanhamento: document.getElementById('contato_nome').value, // Pegando do ID correto
+        telefone_responsavel: document.getElementById('contato_tel').value, // Pegando do ID correto
         segmento: itensSelecionados[0]?.nomeManutencao || "", 
         tipo_servico: "Agendamento Apex",
         field_id: prestador.field_id,
@@ -635,7 +639,25 @@ window.concluirAgendamentoFinal = async function(btn) {
     window.limparFormulario = function() { itensSelecionados = []; prestadorSelecionadoIndex = null; document.getElementById("lista-produtos").innerHTML = ""; document.getElementById("horasNecessarias").innerText = "0"; document.getElementById("agenda-agendamento").innerHTML = ""; document.getElementById("inputCep").value = ""; document.getElementById("ticket").value = ""; document.getElementById("clienteNome").value = ""; document.getElementById("solicitante").value = ""; document.getElementById("respAcompanhamento").value = ""; document.getElementById("telResponsavel").value = ""; };
     window.trocarAba = function(id, btn){ document.querySelectorAll('.aba').forEach(a => a.classList.remove('ativa')); document.getElementById(id).classList.add('ativa'); document.querySelectorAll('.menu button').forEach(b => b.classList.remove('ativo')); if(btn) btn.classList.add('ativo'); if(id === 'painel') window.atualizarFiltrosPrestador(); if(id === 'dashboard') window.renderDashboard(); };
     window.getNextDates = function(prestador) { let dates = []; let today = new Date(); const daysMap = {"Dom":0, "Seg":1, "Ter":2, "Qua":3, "Qui":4, "Sex":5, "Sab":6}; let agendaDays = (prestador.agenda && Array.isArray(prestador.agenda)) ? [...new Set(prestador.agenda.map(a => a.dia))].map(d => daysMap[d]) : []; let qtdLimit = parseInt(prestador.qtdtecnicos) || 1; for (let i = 0; i < 14; i++) { let d = new Date(); d.setDate(today.getDate() + i); let dStr = d.toLocaleDateString(); let dNome = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sab"][d.getDay()]; let blocked = window.getBlockedHours(prestador, dStr); let slotsDoDia = (prestador.agenda && Array.isArray(prestador.agenda)) ? prestador.agenda.filter(a => a.dia == dNome) : []; let temLivre = slotsDoDia.some(s => (s.hora && !blocked.has(parseInt(s.hora.split(':')[0])) && window.getOcupacaoSlot(prestador, dStr, s.hora) < qtdLimit)); if (agendaDays.includes(d.getDay()) && temLivre) dates.push(dStr.slice(0,5)); } return dates; };
-    window.proximoPasso = async function(n) { if(n === 2) { if(prestadores.length === 0) return window.showMessage("Cadastre um prestador!"); const rua = document.getElementById('inputRua').value; const num = document.getElementById('inputNumero').value; const cidade = document.getElementById('inputCidade').value; if(!rua || !num || !cidade) return window.showMessage("Preencha o endereço completo!"); const btn = document.getElementById('btnBuscar'); btn.disabled = true; btn.innerText = "Calculando..."; const enderecoBusca = `${rua}, ${num} - ${cidade} - ${document.getElementById('inputCep').value}`; let prestadoresFiltrados = []; for(let p of prestadores) { if (!p.endereco) continue; const dist = await consultarDistancia(enderecoBusca, p.endereco); let available = window.getNextDates(p); if(dist !== null && dist <= parseFloat(p.range) && available.length > 0) { p.distanciaFinal = dist.toFixed(1); p.nextDates = available.join(', '); prestadoresFiltrados.push(p); } } btn.disabled = false; btn.innerText = "Buscar Prestadores"; if(prestadoresFiltrados.length === 0) { window.exibirModal("Atenção", "Nenhum prestador encontrado no raio de atendimento."); return; } window.renderizarListaPrestadoresSelecao(prestadoresFiltrados); } if(n === 3 && prestadorSelecionadoIndex === null) return window.showMessage("Selecione um prestador!"); document.querySelectorAll('#consulta > div').forEach(div => div.style.display = 'none'); document.getElementById('step-' + n).style.display = 'block'; if (n === 3) { let p = prestadores[prestadorSelecionadoIndex]; document.getElementById("header-prestador-info").innerText = `Prestador: ${p.nome} | Distância: ${p.distanciaFinal} km`; window.rdaAgendamento(); } };
+    window.proximoPasso = async function(n) { 
+    // Esconde todos os passos do agendamento
+    document.querySelectorAll('#consulta > div').forEach(div => div.style.display = 'none');
+    
+    // Mostra o passo solicitado
+    const nextStep = document.getElementById('step-' + n);
+    if(nextStep) {
+        nextStep.style.display = 'block';
+    }
+
+    if(n === 2) {
+        // Lógica de busca de prestadores...
+    }
+    if (n === 3) {
+        let p = prestadores[prestadorSelecionadoIndex];
+        document.getElementById("header-prestador-info").innerText = `Prestador: ${p.nome} | Distância: ${p.distanciaFinal} km`;
+        window.rdaAgendamento();
+    }
+};
     window.rdaAgendamento = function() { 
     let p = prestadores[prestadorSelecionadoIndex]; 
     let container = document.getElementById("agenda-agendamento"); 
