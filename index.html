@@ -478,7 +478,7 @@ window.concluirAgendamentoFinal = async function(btn) {
     const dataSelecionada = sel.length > 0 ? sel[0].dataset.date : null;
     const prestador = prestadores[prestadorSelecionadoIndex];
 
-const agendamento = {
+    const agendamento = {
         prestador: prestador.nome,
         ticket: document.getElementById('ticket').value,
         cliente: document.getElementById('clienteNome').value,
@@ -491,23 +491,23 @@ const agendamento = {
         cidade: document.getElementById('inputCidade').value,
         uf: document.getElementById('inputUf').value,
         cep: document.getElementById('inputCep').value,
-        acompanhamento: document.getElementById('respAcompanhamento').value, // CORRIGIDO AQUI TAMBÉM
+        acompanhamento: document.getElementById('respAcompanhamento').value,
         telefone_responsavel: document.getElementById('telResponsavel').value,
         segmento: itensSelecionados[0]?.nomeManutencao || "", 
         tipo_servico: "Agendamento Apex",
         field_id: prestador.field_id,
-        produtos_texto: itensSelecionados.map(i => `${i.desc} (Qtd: ${i.qtd})`).join(' | '),
+        produtos_texto: itensSelecionados.map(i => `• [${i.nomeManutencao.toUpperCase()}] ${i.desc} (Qtd: ${i.qtd})`).join('\n'),
         segment_id_field: itensSelecionados[0]?.segment_id || "",
         maintenance_id_field: document.getElementById('tipoManutencao').value,
         hora_limpa: slotsSelecionados[0]?.substring(0, 5)
     };
 
     const originalText = btn.innerText;
-    btn.innerText = "Processando...";
-    btn.disabled = true;
+    btn.innerText = "Processando..."; btn.disabled = true;
 
     try {
-        const response = await fetch("https://fqaqlofndeihmhkopvan.supabase.co/functions/v1/integracao-field", {
+        // USANDO O ENDPOINT PRINCIPAL (IGUAL AO DE LISTAGEM)
+        const response = await fetch("https://fqaqlofndeihmhkopvan.supabase.co/functions/v1/smart-service", {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(agendamento)
@@ -516,21 +516,15 @@ const agendamento = {
         const result = await response.json();
 
         if (response.ok) {
-            if (result.db_error) {
-                alert("⚠️ Agendado na Field, mas ERRO NO BANCO: " + JSON.stringify(result.db_error));
-            } else {
-                window.showMessage("✅ Sucesso Total: Banco e Field atualizados!");
-                window.location.reload();
-            }
+            window.showMessage("✅ Sucesso Total: Banco e Field atualizados!");
+            window.location.reload();
         } else {
-            window.showMessage("❌ Erro na integração: " + (result.error || "Erro desconhecido"));
+            window.showMessage("❌ Erro: " + (result.error || "Erro desconhecido"));
         }
     } catch (error) {
-        console.error(error);
         window.showMessage("Erro de conexão.");
     } finally {
-        btn.innerText = originalText;
-        btn.disabled = false;
+        btn.innerText = originalText; btn.disabled = false;
     }
 };
     window.limparFormulario = function() { itensSelecionados = []; prestadorSelecionadoIndex = null; document.getElementById("lista-produtos").innerHTML = ""; document.getElementById("horasNecessarias").innerText = "0"; document.getElementById("agenda-agendamento").innerHTML = ""; document.getElementById("inputCep").value = ""; document.getElementById("ticket").value = ""; document.getElementById("clienteNome").value = ""; document.getElementById("solicitante").value = ""; document.getElementById("respAcompanhamento").value = ""; document.getElementById("telResponsavel").value = ""; };
