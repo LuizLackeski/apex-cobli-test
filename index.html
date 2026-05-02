@@ -478,7 +478,7 @@ window.concluirAgendamentoFinal = async function(btn) {
     const dataSelecionada = sel.length > 0 ? sel[0].dataset.date : null;
     const prestador = prestadores[prestadorSelecionadoIndex];
 
-    const agendamento = {
+const agendamento = {
         prestador: prestador.nome,
         ticket: document.getElementById('ticket').value,
         cliente: document.getElementById('clienteNome').value,
@@ -491,7 +491,7 @@ window.concluirAgendamentoFinal = async function(btn) {
         cidade: document.getElementById('inputCidade').value,
         uf: document.getElementById('inputUf').value,
         cep: document.getElementById('inputCep').value,
-        acompannhamento: document.getElementById('respAcompanhamento').value, // 2 "n" conforme sua tabela
+        acompanhamento: document.getElementById('respAcompanhamento').value, // CORRIGIDO AQUI TAMBÉM
         telefone_responsavel: document.getElementById('telResponsavel').value,
         segmento: itensSelecionados[0]?.nomeManutencao || "", 
         tipo_servico: "Agendamento Apex",
