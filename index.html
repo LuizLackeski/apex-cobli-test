@@ -483,33 +483,37 @@ window.concluirAgendamentoFinal = async function(btn) {
     const prestador = prestadores[prestadorSelecionadoIndex];
 
     // Montagem do objeto conforme esperado pela Edge Function
-    const agendamento = {
-        ticket: document.getElementById('ticket').value,
-        cliente: document.getElementById('clienteNome').value,
-        solicitante: document.getElementById('solicitante').value,
-        acompanhamento: document.getElementById('respAcompanhamento').value,
-        telefone_responsavel: document.getElementById('telResponsavel').value,
-        nome_prestador: prestador.nome, // Enviando o nome que você selecionou no Step 2
-    field_id: prestador.field_id
-};
-        
-        // Dados de Endereço (Step 1)
-        cep: document.getElementById('inputCep').value,
-        rua: document.getElementById('inputRua').value,
-        numero: document.getElementById('inputNumero').value,
-        bairro: document.getElementById('inputBairro').value,
-        cidade: document.getElementById('inputCidade').value,
-        uf: document.getElementById('inputUf').value,
+   const sel = document.querySelectorAll("#agenda-agendamento .cell.selecionado");
+const slotsSelecionados = Array.from(sel).map(c => c.dataset.hora);
+const dataSelecionada = sel.length > 0 ? sel[0].dataset.date : null;
+const prestador = prestadores[prestadorSelecionadoIndex];
 
-        // Dados do Serviço e Agenda
-        tipo_servico: itensSelecionados.map(i => i.desc).join(', '),
-        segmento: itensSelecionados.length > 0 ? itensSelecionados[0].segmento : "",
-        data: dataSelecionada, 
-        slots: slotsSelecionados,
-        
-        // ID do técnico cadastrado na Field
-        field_id: prestador.field_id 
-    };
+const agendamento = {
+    // Dados básicos
+    ticket: document.getElementById('ticket').value,
+    cliente: document.getElementById('clienteNome').value,
+    solicitante: document.getElementById('solicitante').value,
+    acompanhamento: document.getElementById('respAcompanhamento').value,
+    telefone_responsavel: document.getElementById('telResponsavel').value,
+    
+    // Dados do Prestador (O que matará o ResourceNotFound)
+    nome_prestador: prestador.nome, 
+    field_id: prestador.field_id,
+
+    // Dados de Endereço (Step 1)
+    cep: document.getElementById('inputCep').value,
+    rua: document.getElementById('inputRua').value,
+    numero: document.getElementById('inputNumero').value,
+    bairro: document.getElementById('inputBairro').value,
+    cidade: document.getElementById('inputCidade').value,
+    uf: document.getElementById('inputUf').value,
+
+    // Dados do Serviço e Agenda
+    tipo_servico: itensSelecionados.map(i => i.desc).join(', '),
+    segmento: itensSelecionados.length > 0 ? itensSelecionados[0].segmento : "",
+    data: dataSelecionada, 
+    slots: slotsSelecionados
+}; // Chave fechada apenas AQUI no final
 
     if (!agendamento.ticket || !agendamento.cliente || !agendamento.data) {
         window.showMessage("Preencha os campos do cliente e selecione um horário!");
