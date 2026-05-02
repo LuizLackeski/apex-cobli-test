@@ -209,21 +209,21 @@
             </div>
         </div>
         
-<div id="step-4" class="card" style="display:none;">
-    <h2>Dados do Atendimento</h2>
-    <label>Nº do Ticket</label><input id="ticket" required>
-    <label>Nome do Cliente</label><input id="clienteNome" required>
-    <label>CNPJ / CPF</label><input id="clienteCnpj" placeholder="00.000.000/0000-00" required>
-    <label>Responsável pela solicitação (APEX)</label><input id="solicitante" required>
-    <label>Responsável pelo acompanhamento (Local)</label><input id="respAcompanhamento" required>
-    <label>Telefone do responsável</label><input id="telResponsavel" placeholder="(00) 00000-0000" required>
-    
-    <div style="margin-top:10px;">
-        <button onclick="window.proximoPasso(3)" style="background:gray;">Voltar</button>
-        <button id="btnConfirmar" onclick="window.concluirAgendamentoFinal(this)" style="background:green;">Confirmar</button>
-        <button onclick="window.cancelarAgendamento()" class="btn-cancelar">Cancelar</button>
-    </div>
-</div>
+       <div id="step-4" class="card" style="display:none;">
+            <h2>Dados do Atendimento</h2>
+            <label>Nº do Ticket</label><input id="ticket" required>
+            <label>Nome do Cliente</label><input id="clienteNome" required>
+            
+            <label>CNPJ / CPF</label><input id="clienteCnpj" placeholder="00.000.000/0000-00" required>
+            
+            <label>Responsável pela solicitação (APEX)</label><input id="solicitante" required>
+            <label>Responsável pelo acompanhamento (Local)</label><input id="respAcompanhamento" required>
+            <label>Telefone do responsável</label><input id="telResponsavel" placeholder="(00) 00000-0000" required>
+            
+            <button onclick="window.proximoPasso(3)" style="background:gray;">Voltar</button>
+            <button id="btnConfirmar" onclick="window.concluirAgendamentoFinal(this)" style="background:green;">Confirmar</button>
+            <button onclick="window.cancelarAgendamento()" class="btn-cancelar">Cancelar</button>
+        </div>
 
     <div id="cadastro" class="aba">
         <div id="lista-prestadores-view" class="card">
@@ -429,27 +429,25 @@ function getHeaders() {
     window.onload = async () => { carregarProdutos(); await carregarDadosDoBanco(); };
 async function carregarDadosDoBanco() { 
     try { 
-        console.log("Iniciando carga de dados...");
         // 1. Busca Prestadores
         const resP = await fetch(`${API_URL}/prestadores`, { headers: getHeaders() }); 
         prestadores = await resP.json(); 
-        
-        // 2. Busca Agendamentos
+        renderizarListaPrestadores(); 
+
+        // 2. Busca Agendamentos (Lendo direto da tabela agendamentos)
         const resA = await fetch(`${DB_URL}/agendamentos?select=*&order=created_at.desc`, { 
             method: 'GET',
             headers: getHeaders() 
         }); 
+        
         const dataAgend = await resA.json(); 
         agendamentos = Array.isArray(dataAgend) ? dataAgend : [];
-
-        // 3. Atualiza as telas (Verificando se as funções existem para não travar)
-        if (window.renderizarListaPrestadores) window.renderizarListaPrestadores();
-        if (window.renderPainel) window.renderPainel();
-        if (window.renderDashboard) window.renderDashboard();
-
-        console.log("Banco carregado com sucesso!");
+        
+        renderPainel(); 
+        renderDashboard(); 
+        console.log("Banco de agendamentos carregado:", agendamentos.length);
     } catch(e) { 
-        console.error("Erro na carga do banco:", e); 
+        console.error("Erro ao sincronizar agendamentos:", e); 
     } 
 }
     
@@ -581,11 +579,12 @@ window.concluirAgendamentoFinal = async function(btn) {
         qtdtecnicos: prestador.qtdtecnicos,
         ticket: document.getElementById('ticket').value,
         cliente: document.getElementById('clienteNome').value,
-        cnpj: document.getElementById('clienteCnpj').value, // <--- Enviando para a coluna 'cnpj'
+        cnpj: document.getElementById('clienteCnpj').value
         solicitante: document.getElementById('solicitante').value,
         data: dataSelecionada, 
         rawdate: dataSelecionada,
         slots: slotsSelecionados,
+        // CAMPOS QUE PARARAM DE SALVAR:
         rua: document.getElementById('inputRua').value,
         numero: document.getElementById('inputNumero').value,
         bairro: document.getElementById('inputBairro').value,
