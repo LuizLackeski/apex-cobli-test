@@ -381,9 +381,17 @@
     window.logout = function() { localStorage.removeItem('userEmail'); window.location.reload(); };
     checkAuth();
 
-    const API_URL = 'https://fqaqlofndeihmhkopvan.supabase.co/functions/v1/smart-service';
-    const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZxYXFsb2ZuZGVpaG1oa29wdmFuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcyMjU4ODIsImV4cCI6MjA5MjgwMTg4Mn0.nauPYoB9RDhLLueMEuop2H2FxdChjIxFkAmBcYbJLzc';
-    function getHeaders() { return { 'Content-Type': 'application/json', 'apikey': ANON_KEY, 'Authorization': `Bearer ${ANON_KEY}` }; }
+const API_URL = 'https://fqaqlofndeihmhkopvan.supabase.co/functions/v1/smart-service';
+const INTEGRACAO_URL = 'https://fqaqlofndeihmhkopvan.supabase.co/functions/v1/smart-service'; // Mesma URL para listar e agendar
+const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZxYXFsb2ZuZGVpaG1oa29wdmFuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcyMjU4ODIsImV4cCI6MjA5MjgwMTg4Mn0.nauPYoB9RDhLLueMEuop2H2FxdChjIxFkAmBcYbJLzc';
+
+function getHeaders() { 
+    return { 
+        'Content-Type': 'application/json', 
+        'apikey': ANON_KEY, 
+        'Authorization': `Bearer ${ANON_KEY}` 
+    }; 
+}
     let prestadores = [], itensSelecionados = [], agendamentos = [], etapa = 1, editingIndex = -1, prestadorSelecionadoIndex = null;
  const serviçosDisponíveis = {
     "Telemetria": [
@@ -411,7 +419,34 @@
 };
     
     window.onload = async () => { carregarProdutos(); await carregarDadosDoBanco(); };
-    async function carregarDadosDoBanco() { try { const resP = await fetch(`${API_URL}/prestadores`, { headers: getHeaders() }); prestadores = await resP.json(); renderizarListaPrestadores(); const resA = await fetch(`${API_URL}/agendamentos`, { headers: getHeaders() }); agendamentos = await resA.json(); renderPainel(); renderDashboard(); } catch(e) { console.error("Erro ao carregar dados:", e); } }
+    async function carregarDadosDoBanco() { 
+    try { 
+        // 1. Busca Prestadores (da API padrão)
+        const resP = await fetch(`${API_URL}/prestadores`, { headers: getHeaders() }); 
+        prestadores = await resP.json(); 
+        renderizarListaPrestadores(); 
+
+        // 2. Busca Agendamentos (Desta nova URL que configuramos na Edge Function)
+        const resA = await fetch(INTEGRACAO_URL, { 
+            method: 'GET',
+            headers: getHeaders() 
+        }); 
+        
+        agendamentos = await resA.json(); 
+        
+        renderPainel(); 
+        renderDashboard(); 
+        console.log("Dados carregados com sucesso:", agendamentos.length, "agendamentos encontrados.");
+    } catch(e) { 
+        console.error("Erro ao carregar dados:", e); 
+        // Se falhar a integração, tenta a URL antiga apenas como backup
+        try {
+            const resBackup = await fetch(`${API_URL}/agendamentos`, { headers: getHeaders() });
+            agendamentos = await resBackup.json();
+            renderPainel();
+        } catch(err) { console.error("Falha total no carregamento"); }
+    } 
+}
     
     window.renderDashboard = function() {
         let totalAgend = agendamentos.length;
@@ -472,11 +507,17 @@
     window.confirmarExclusaoPrestador = async function(i) { await fetch(`${API_URL}/prestadores/${prestadores[i].id}`, { method: 'DELETE', headers: getHeaders() }); await carregarDadosDoBanco(); window.showToast("Prestador excluído com sucesso!"); };
     window.confirmarExclusaoAgendamento = async function(id) { await fetch(`${API_URL}/agendamentos/${id}`, { method: 'DELETE', headers: getHeaders() }); await carregarDadosDoBanco(); window.showToast("Agendamento excluído!"); window.fecharModal(); };
     
+// --- INÍCIO DA MUDANÇA: CONCLUIR AGENDAMENTO ---
 window.concluirAgendamentoFinal = async function(btn) {
     const sel = document.querySelectorAll("#agenda-agendamento .cell.selecionado");
     const slotsSelecionados = Array.from(sel).map(c => c.dataset.hora.substring(0, 5));
     const dataSelecionada = sel.length > 0 ? sel[0].dataset.date : null;
     const prestador = prestadores[prestadorSelecionadoIndex];
+
+    if (!prestador || slotsSelecionados.length === 0) {
+        window.showMessage("Erro: Selecione o prestador e o horário.");
+        return;
+    }
 
     const agendamento = {
         prestador: prestador.nome,
@@ -506,27 +547,29 @@ window.concluirAgendamentoFinal = async function(btn) {
     btn.innerText = "Processando..."; btn.disabled = true;
 
     try {
-        // USANDO O ENDPOINT PRINCIPAL (IGUAL AO DE LISTAGEM)
-        const response = await fetch("https://fqaqlofndeihmhkopvan.supabase.co/functions/v1/smart-service", {
+        const response = await fetch(INTEGRACAO_URL, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: getHeaders(),
             body: JSON.stringify(agendamento)
         });
 
         const result = await response.json();
 
         if (response.ok) {
-            window.showMessage("✅ Sucesso Total: Banco e Field atualizados!");
-            window.location.reload();
+            window.showMessage("✅ Agendado com sucesso no Banco e na Field!");
+            // Força a atualização dos dados após o sucesso
+            await carregarDadosDoBanco();
+            window.location.reload(); 
         } else {
-            window.showMessage("❌ Erro: " + (result.error || "Erro desconhecido"));
+            window.showMessage("❌ Erro: " + (result.error || "Erro na integração"));
         }
     } catch (error) {
-        window.showMessage("Erro de conexão.");
+        window.showMessage("Erro de conexão com o servidor.");
     } finally {
         btn.innerText = originalText; btn.disabled = false;
     }
 };
+// --- FIM DA MUDANÇA ---
     window.limparFormulario = function() { itensSelecionados = []; prestadorSelecionadoIndex = null; document.getElementById("lista-produtos").innerHTML = ""; document.getElementById("horasNecessarias").innerText = "0"; document.getElementById("agenda-agendamento").innerHTML = ""; document.getElementById("inputCep").value = ""; document.getElementById("ticket").value = ""; document.getElementById("clienteNome").value = ""; document.getElementById("solicitante").value = ""; document.getElementById("respAcompanhamento").value = ""; document.getElementById("telResponsavel").value = ""; };
     window.trocarAba = function(id, btn){ document.querySelectorAll('.aba').forEach(a => a.classList.remove('ativa')); document.getElementById(id).classList.add('ativa'); document.querySelectorAll('.menu button').forEach(b => b.classList.remove('ativo')); if(btn) btn.classList.add('ativo'); if(id === 'painel') window.atualizarFiltrosPrestador(); if(id === 'dashboard') window.renderDashboard(); };
     window.getNextDates = function(prestador) { let dates = []; let today = new Date(); const daysMap = {"Dom":0, "Seg":1, "Ter":2, "Qua":3, "Qui":4, "Sex":5, "Sab":6}; let agendaDays = (prestador.agenda && Array.isArray(prestador.agenda)) ? [...new Set(prestador.agenda.map(a => a.dia))].map(d => daysMap[d]) : []; let qtdLimit = parseInt(prestador.qtdtecnicos) || 1; for (let i = 0; i < 14; i++) { let d = new Date(); d.setDate(today.getDate() + i); let dStr = d.toLocaleDateString(); let dNome = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sab"][d.getDay()]; let blocked = window.getBlockedHours(prestador, dStr); let slotsDoDia = (prestador.agenda && Array.isArray(prestador.agenda)) ? prestador.agenda.filter(a => a.dia == dNome) : []; let temLivre = slotsDoDia.some(s => (s.hora && !blocked.has(parseInt(s.hora.split(':')[0])) && window.getOcupacaoSlot(prestador, dStr, s.hora) < qtdLimit)); if (agendaDays.includes(d.getDay()) && temLivre) dates.push(dStr.slice(0,5)); } return dates; };
