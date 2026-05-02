@@ -381,9 +381,12 @@
     window.logout = function() { localStorage.removeItem('userEmail'); window.location.reload(); };
     checkAuth();
 
-const BASE_FUNCTION_URL = 'https://fqaqlofndeihmhkopvan.supabase.co/functions/v1/smart-service';
+// --- CONFIGURAÇÃO DE URLs ---
 const API_URL = 'https://fqaqlofndeihmhkopvan.supabase.co/functions/v1/smart-service'; 
-const INTEGRACAO_URL = BASE_FUNCTION_URL; 
+// URL direta para as tabelas (CRUD)
+const DB_URL = 'https://fqaqlofndeihmhkopvan.supabase.co/rest/v1'; 
+// URL da sua Edge Function (Confirme se o nome é 'integracao-field' ou 'smart-service')
+const EDGE_URL = 'https://fqaqlofndeihmhkopvan.supabase.co/functions/v1/integracao-field';
 
 const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZxYXFsb2ZuZGVpaG1oa29wdmFuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcyMjU4ODIsImV4cCI6MjA5MjgwMTg4Mn0.nauPYoB9RDhLLueMEuop2H2FxdChjIxFkAmBcYbJLzc';
 
@@ -393,7 +396,7 @@ function getHeaders() {
         'apikey': ANON_KEY, 
         'Authorization': `Bearer ${ANON_KEY}` 
     }; 
-}
+} 
     let prestadores = [], itensSelecionados = [], agendamentos = [], etapa = 1, editingIndex = -1, prestadorSelecionadoIndex = null;
  const serviçosDisponíveis = {
     "Telemetria": [
@@ -421,32 +424,27 @@ function getHeaders() {
 };
     
     window.onload = async () => { carregarProdutos(); await carregarDadosDoBanco(); };
- async function carregarDadosDoBanco() { 
+async function carregarDadosDoBanco() { 
     try { 
-        // 1. Busca Prestadores (Endpoint específico /prestadores)
+        // 1. Busca Prestadores
         const resP = await fetch(`${API_URL}/prestadores`, { headers: getHeaders() }); 
         prestadores = await resP.json(); 
-        if (!Array.isArray(prestadores)) prestadores = [];
         renderizarListaPrestadores(); 
 
-        // 2. Busca Agendamentos (Endpoint principal via GET)
-        const resA = await fetch(INTEGRACAO_URL, { 
+        // 2. Busca Agendamentos (Lendo direto da tabela agendamentos)
+        const resA = await fetch(`${DB_URL}/agendamentos?select=*&order=created_at.desc`, { 
             method: 'GET',
             headers: getHeaders() 
         }); 
         
-        let dataAgend = await resA.json(); 
-        
-        // PROTEÇÃO: Garante que agendamentos seja sempre um Array
+        const dataAgend = await resA.json(); 
         agendamentos = Array.isArray(dataAgend) ? dataAgend : [];
         
         renderPainel(); 
         renderDashboard(); 
-        console.log("Dados sincronizados. Total agendamentos:", agendamentos.length);
+        console.log("Banco de agendamentos carregado:", agendamentos.length);
     } catch(e) { 
-        console.error("Erro crítico ao carregar dados:", e); 
-        agendamentos = []; // Evita erro de .filter()
-        renderPainel();
+        console.error("Erro ao sincronizar agendamentos:", e); 
     } 
 }
     
@@ -549,11 +547,11 @@ window.concluirAgendamentoFinal = async function(btn) {
     btn.innerText = "Processando..."; btn.disabled = true;
 
     try {
-        const response = await fetch(INTEGRACAO_URL, {
-            method: 'POST',
-            headers: getHeaders(),
-            body: JSON.stringify(agendamento)
-        });
+        const response = await fetch(EDGE_URL, {
+    method: 'POST',
+    headers: getHeaders(),
+    body: JSON.stringify(agendamento)
+});
 
         const result = await response.json();
 
