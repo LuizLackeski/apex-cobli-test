@@ -168,32 +168,29 @@
             <button onclick="window.cancelarAgendamento()" class="btn-cancelar">Cancelar</button>
         </div>
         
-        <div id="step-3" class="card" style="display:none;">
+<div id="step-3" class="card" style="display:none;">
             <h2>Serviços e Agenda</h2>
             <div id="header-prestador-info" style="font-size: 0.95rem; color: var(--primary); font-weight: 600; margin-bottom: 15px; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px;"></div>
             
             <div class="bloco-servico">
                 <div style="display: flex; gap: 10px;">
                     <div style="flex:1;">
-                <div class="bloco-servico">
-    <div style="display: flex; gap: 10px;">
-        <div style="flex:1;">
-            <label>Segmento / Manutenção</label>
-            <select id="tipoManutencao">
-                <option value="00fa3181-0ee1-4bc2-8e16-04fce22f87f7">Instalação</option>
-                <option value="5664b3bb-f905-4da5-81c6-a7d46b6c0dd3">Desinstalação</option>
-                <option value="06a7192d-590f-4dd1-9e40-9053a7524e6c">Troca</option>
-                <option value="764b29fc-190c-4ca5-8e9d-2bde28996da4">Troca entre veículos</option>
-                <option value="6244f058-dd7c-4123-b35d-4c6cb96d332e">Upgrade</option>
-                <option value="0cabab12-25d2-4369-bc6e-fb1e0771db5f">Visita técnica</option>
-            </select>
-        </div>
-                     <div style="flex:1;">
+                        <label>Segmento / Manutenção</label>
+                        <select id="tipoManutencao">
+                            <option value="00fa3181-0ee1-4bc2-8e16-04fce22f87f7">Instalação</option>
+                            <option value="5664b3bb-f905-4da5-81c6-a7d46b6c0dd3">Desinstalação</option>
+                            <option value="06a7192d-590f-4dd1-9e40-9053a7524e6c">Troca</option>
+                            <option value="764b29fc-190c-4ca5-8e9d-2bde28996da4">Troca entre veículos</option>
+                            <option value="6244f058-dd7c-4123-b35d-4c6cb96d332e">Upgrade</option>
+                            <option value="0cabab12-25d2-4369-bc6e-fb1e0771db5f">Visita técnica</option>
+                        </select>
+                    </div>
+                    <div style="flex:1;">
                         <label>Tipo de Serviço</label>
                         <select id="produto"></select>
                     </div>
                 </div>
-                <div style="display: flex; gap: 10px; align-items: flex-end;">
+                <div style="display: flex; gap: 10px; align-items: flex-end; margin-top:10px;">
                     <div style="flex:1;">
                         <label>Quantidade</label>
                         <input type="number" id="quantidade" value="1">
@@ -205,9 +202,11 @@
             <div id="lista-produtos"></div>
             <p>Horas Necessárias: <strong><span id="horasNecessarias">0</span></strong></p>
             <div id="agenda-agendamento"></div>
-            <button onclick="window.proximoPasso(2)" style="background:gray; margin-top:10px;">Voltar</button>
-            <button onclick="window.validarEAvancar()" style="background:green; margin-top:10px;">Próximo</button>
-            <button onclick="window.cancelarAgendamento()" class="btn-cancelar" style="margin-top:10px;">Cancelar</button>
+            <div style="margin-top:10px;">
+                <button onclick="window.proximoPasso(2)" style="background:gray;">Voltar</button>
+                <button onclick="window.validarEAvancar()" style="background:green;">Próximo</button>
+                <button onclick="window.cancelarAgendamento()" class="btn-cancelar">Cancelar</button>
+            </div>
         </div>
         
         <div id="step-4" class="card" style="display:none;">
@@ -474,47 +473,35 @@
     window.confirmarExclusaoAgendamento = async function(id) { await fetch(`${API_URL}/agendamentos/${id}`, { method: 'DELETE', headers: getHeaders() }); await carregarDadosDoBanco(); window.showToast("Agendamento excluído!"); window.fecharModal(); };
     
 window.concluirAgendamentoFinal = async function(btn) {
-    console.log("Iniciando processo de agendamento mestre...");
-    
-    // 1. Captura de dados da grid de horários
-   const sel = document.querySelectorAll("#agenda-agendamento .cell.selecionado");
-// Pega apenas os 5 primeiros caracteres (HH:MM) direto na fonte
-const slotsSelecionados = Array.from(sel).map(c => c.dataset.hora.substring(0, 5));
-const dataSelecionada = sel.length > 0 ? sel[0].dataset.date : null;
-    
-    // 2. Captura do prestador selecionado
+    const sel = document.querySelectorAll("#agenda-agendamento .cell.selecionado");
+    const slotsSelecionados = Array.from(sel).map(c => c.dataset.hora.substring(0, 5));
+    const dataSelecionada = sel.length > 0 ? sel[0].dataset.date : null;
     const prestador = prestadores[prestadorSelecionadoIndex];
+    const selectManutencao = document.getElementById('tipoManutencao');
 
-    if (!prestador) {
-        window.showMessage("Erro: Selecione um prestador antes de concluir.");
+    if (!prestador || slotsSelecionados.length === 0) {
+        window.showMessage("Erro: Selecione o prestador e o horário.");
         return;
     }
 
-    // 3. Montagem do Objeto Agendamento (Sintaxe Corrigida)
-const selectManutencao = document.getElementById('tipoManutencao');
-    
+    // MONTAGEM DINÂMICA DO OBJETO
     const agendamento = {
         ticket: document.getElementById('ticket').value,
         cliente: document.getElementById('clienteNome').value,
         solicitante: document.getElementById('solicitante').value,
         acompanhamento: document.getElementById('respAcompanhamento').value,
         telefone_responsavel: document.getElementById('telResponsavel').value,
-        
         nome_prestador: prestador.nome, 
-        field_id: prestador.field_id, // ID do Técnico para alocação
-
-        // Dados de Endereço
+        field_id: prestador.field_id,
         cep: document.getElementById('inputCep').value,
         rua: document.getElementById('inputRua').value,
         numero: document.getElementById('inputNumero').value,
         bairro: document.getElementById('inputBairro').value,
         cidade: document.getElementById('inputCidade').value,
         uf: document.getElementById('inputUf').value,
-
-        // ENVIANDO OS IDS DINÂMICOS PARA A FIELD
-        // Pega o ID (Instalação, Troca, etc) do Value do Select
+        
+        // IDS DINÂMICOS PARA A API FIELD CONTROL
         maintenance_id: selectManutencao.value, 
-        // Pega o ID do Segmento (Telemetria/Câmeras) do primeiro item da lista
         segment_id: itensSelecionados.length > 0 ? itensSelecionados[0].segment_id : "",
         
         tipo_servico: itensSelecionados.map(i => i.desc).join(', '),
@@ -522,21 +509,13 @@ const selectManutencao = document.getElementById('tipoManutencao');
         slots: slotsSelecionados
     };
 
-    // 4. Validação
-    if (!agendamento.ticket || !agendamento.cliente || !agendamento.data) {
-        window.showMessage("Por favor, preencha os dados do cliente e selecione um horário na agenda.");
-        return;
-    }
-
-    // 5. Interface
     const originalText = btn.innerText;
     btn.innerText = "Integrando...";
     btn.disabled = true;
 
-    const SUPABASE_URL = "https://fqaqlofndeihmhkopvan.supabase.co/functions/v1/integracao-field";
-
     try {
-        const response = await fetch(SUPABASE_URL, {
+        const SUPABASE_INTEGRACAO = "https://fqaqlofndeihmhkopvan.supabase.co/functions/v1/integracao-field";
+        const response = await fetch(SUPABASE_INTEGRACAO, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(agendamento)
@@ -549,12 +528,10 @@ const selectManutencao = document.getElementById('tipoManutencao');
             window.limparFormulario();
             window.trocarAba('painel');
         } else {
-            console.error("Erro da Field:", resultado);
-            window.showMessage("Erro na Field: " + (resultado.message || resultado.code || "Recurso não encontrado"));
+            window.showMessage("Erro na Field: " + (resultado.message || "Falha na integração"));
         }
     } catch (error) {
-        console.error("Erro Conexão:", error);
-        window.showMessage("Erro de conexão com o Supabase.");
+        window.showMessage("Erro de conexão com o servidor.");
     } finally {
         btn.innerText = originalText;
         btn.disabled = false;
@@ -593,7 +570,8 @@ const selectManutencao = document.getElementById('tipoManutencao');
     };
 window.carregarProdutos = function() {
     let select = document.getElementById("produto");
-    select.innerHTML = ""; // Limpa antes de carregar
+    if(!select) return;
+    select.innerHTML = ""; 
     for (let tipo in serviçosDisponíveis) {
         let group = document.createElement("optgroup");
         group.label = tipo;
@@ -601,30 +579,30 @@ window.carregarProdutos = function() {
             let opt = document.createElement("option");
             opt.value = p.tempo;
             opt.text = p.desc;
-            // Guardamos o ID do segmento no dataset do option
-            opt.dataset.idField = p.id_field;
+            opt.dataset.idField = p.id_field; // UUID do Segmento
             group.appendChild(opt);
         });
         select.appendChild(group);
     }
 };
+
 window.adicionarProduto = function() {
     let select = document.getElementById("produto");
     let optionSelecionada = select.options[select.selectedIndex];
+    let selectManutencao = document.getElementById('tipoManutencao');
     
-    // Captura o ID do Segmento (Telemetria, Videotelemetria, etc)
     let idSegmento = optionSelecionada.dataset.idField;
     let descBase = optionSelecionada.text;
+    let nomeManutencao = selectManutencao.options[selectManutencao.selectedIndex].text;
     
     let qtd = parseInt(document.getElementById("quantidade").value) || 1;
     let tempoBase = parseInt(select.value);
 
-    // Adiciona ao array de itens selecionados
     itensSelecionados.push({
-        desc: descBase,
+        desc: `[${nomeManutencao.toUpperCase()}] ${descBase}`,
         tempo: tempoBase,
         qtd: qtd,
-        segment_id: idSegmento // Este é o ID que vai para a Field
+        segment_id: idSegmento // Este é o UUID que a Field precisa
     });
 
     window.renderizarProdutos();
