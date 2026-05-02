@@ -504,7 +504,8 @@ window.concluirAgendamentoFinal = async function(btn) {
         maintenance_id: selectManutencao.value, 
         segment_id: itensSelecionados.length > 0 ? itensSelecionados[0].segment_id : "",
         
-        tipo_servico: itensSelecionados.map(i => i.desc).join(', '),
+        // Dentro de window.concluirAgendamentoFinal:
+tipo_servico: itensSelecionados.map(i => `• [${i.nomeManutencao.toUpperCase()}] ${i.desc} (Qtd: ${i.qtd})`).join('\n'),
         data: dataSelecionada, 
         slots: slotsSelecionados
     };
@@ -598,12 +599,20 @@ window.adicionarProduto = function() {
     let qtd = parseInt(document.getElementById("quantidade").value) || 1;
     let tempoBase = parseInt(select.value);
 
-    itensSelecionados.push({
-        desc: `[${nomeManutencao.toUpperCase()}] ${descBase}`,
-        tempo: tempoBase,
-        qtd: qtd,
-        segment_id: idSegmento // Este é o UUID que a Field precisa
-    });
+    // LÓGICA DE SOMA: Verifica se o item já está na lista
+    let itemExistente = itensSelecionados.find(i => i.segment_id === idSegmento && i.desc === descBase);
+
+    if (itemExistente) {
+        itemExistente.qtd += qtd; // Se já existe, apenas soma a quantidade
+    } else {
+        itensSelecionados.push({
+            desc: descBase,
+            nomeManutencao: nomeManutencao, // Guardamos para a descrição
+            tempo: tempoBase,
+            qtd: qtd,
+            segment_id: idSegmento 
+        });
+    }
 
     window.renderizarProdutos();
     if (prestadorSelecionadoIndex !== null) window.rdaAgendamento();
