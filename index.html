@@ -485,7 +485,7 @@ window.concluirAgendamentoFinal = async function(btn) {
     }
 
     // MONTAGEM DINÂMICA DO OBJETO
-    const agendamento = {
+const agendamento = {
         ticket: document.getElementById('ticket').value,
         cliente: document.getElementById('clienteNome').value,
         solicitante: document.getElementById('solicitante').value,
@@ -499,13 +499,15 @@ window.concluirAgendamentoFinal = async function(btn) {
         bairro: document.getElementById('inputBairro').value,
         cidade: document.getElementById('inputCidade').value,
         uf: document.getElementById('inputUf').value,
-        
-        // IDS DINÂMICOS PARA A API FIELD CONTROL
         maintenance_id: selectManutencao.value, 
         segment_id: itensSelecionados.length > 0 ? itensSelecionados[0].segment_id : "",
         
-        // Dentro de window.concluirAgendamentoFinal:
-tipo_servico: itensSelecionados.map(i => `• [${i.nomeManutencao.toUpperCase()}] ${i.desc} (Qtd: ${i.qtd})`).join('\n'),
+        // Texto formatado para a Field
+        tipo_servico: itensSelecionados.map(i => `• [${i.nomeManutencao.toUpperCase()}] ${i.desc} (Qtd: ${i.qtd})`).join('\n'),
+        
+        // LISTA ORIGINAL para salvar no Banco de Dados (JSONB)
+        itens_originais: itensSelecionados, 
+        
         data: dataSelecionada, 
         slots: slotsSelecionados
     };
