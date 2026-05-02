@@ -512,28 +512,30 @@ window.getBlockedHours = function(prestador, data) {
 window.abrirDetalhesAgendamento = function(index) {
     let a = filtradosPainel[index];
     
-    // Pegamos o texto formatado que veio do banco
+    // Pegamos o texto formatado que veio do banco e colocamos no Popup
     let prodHtml = a.produtos 
         ? a.produtos.replace(/\n/g, '<br>') 
         : 'Sem produtos detalhados';
 
     let html = `
         <div style="background: white; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 15px;">
-            <div style="font-weight:bold; font-size:1.1rem; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px; margin-bottom: 8px;">🎟️ Ticket: ${a.ticket}</div>
-            <div style="font-size:0.9rem;">
+            <div style="font-weight:bold; font-size:1.1rem; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px; margin-bottom: 8px; color:var(--primary);">
+               🎟️ Ticket: ${a.ticket}
+            </div>
+            <div style="font-size:0.9rem; line-height:1.6;">
                 👤 <strong>Cliente:</strong> ${a.cliente}<br>
                 👔 <strong>Solicitante:</strong> ${a.solicitante}<br>
                 🛠️ <strong>Prestador:</strong> ${a.prestador}<br>
-                📅 <strong>Data:</strong> ${a.data}<br>
+                📅 <strong>Data do Atendimento:</strong> ${a.data}<br>
                 ⏰ <strong>Horários:</strong> ${Array.isArray(a.slots) ? a.slots.join(', ') : (a.slots || 'N/A')}
             </div>
         </div>
-        <div style="font-weight:600; margin-bottom:5px;">📦 Serviços Solicitados:</div>
-        <div style="background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0; margin-bottom: 15px; font-size: 0.9rem; line-height: 1.4;">
+        <div style="font-weight:600; margin-bottom:5px; color:#334155;">📦 Serviços/Produtos Solicitados:</div>
+        <div style="background: #f8fafc; padding: 12px; border-radius: 6px; border: 1px solid #cbd5e1; margin-bottom: 15px; font-size: 0.9rem; line-height: 1.5; color:#475569;">
             ${prodHtml}
         </div>
         <div style="text-align:center;">
-            <button onclick="window.excluirAgendamento(${a.id})" class="btn-cancelar" style="width: 100%;">Excluir Agendamento</button>
+            <button onclick="window.excluirAgendamento(${a.id})" class="btn-cancelar" style="width: 100%; padding:10px;">Excluir Agendamento</button>
         </div>
     `;
     window.exibirModal("Detalhes do Agendamento", html);
