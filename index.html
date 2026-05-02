@@ -471,30 +471,35 @@ async function carregarDadosDoBanco() {
     };
 
     function parseDateToObj(dateStr) { const [d, m, y] = dateStr.split('/'); return new Date(y, m - 1, d); }
-  window.getOcupacaoSlot = function(prestador, data, hora) { 
-    // Se o prestador não tiver qtdtecnicos no cadastro, assume 1 por segurança
-    let limite = parseInt(prestador.qtdtecnicos) || 1; 
-
-    return agendamentos.filter(a => 
-        a.prestador === prestador.nome && 
-        (a.data === data || a.rawdate === data) && 
-        (Array.isArray(a.slots) ? a.slots.includes(hora) : false)
-    ).length; 
+window.getOcupacaoSlot = function(prestador, data, hora) { 
+    if (!agendamentos) return 0;
+    return agendamentos.filter(a => {
+        const mesmaData = (a.data === data || a.rawdate === data);
+        const mesmoPrestador = (a.prestador === prestador.nome);
+        
+        let contemHora = false;
+        if (Array.isArray(a.slots)) {
+            contemHora = a.slots.includes(hora);
+        } else if (typeof a.slots === 'string') {
+            contemHora = a.slots.split(', ').includes(hora);
+        }
+        
+        return mesmoPrestador && mesmaData && contemHora;
+    }).length; 
 };
+
 window.getBlockedHours = function(prestador, data) {
     let blocked = new Set();
     let cap = parseInt(prestador.qtdtecnicos) || 1;
     
-    agendamentos.filter(a => a.prestador === prestador.nome && a.data === data).forEach(a => {
-        if (Array.isArray(a.slots)) {
-            a.slots.forEach(s => {
+    agendamentos.filter(a => a.prestador === prestador.nome && (a.data === data || a.rawdate === data)).forEach(a => {
+        let slotsArray = Array.isArray(a.slots) ? a.slots : (typeof a.slots === 'string' ? a.slots.split(', ') : []);
+        slotsArray.forEach(s => {
+            if (window.getOcupacaoSlot(prestador, data, s) >= cap) {
                 let h = parseInt(s.split(':')[0]);
-                // Se atingiu o limite de técnicos no slot, marca como bloqueado
-                if (window.getOcupacaoSlot(prestador, data, s) >= cap) { 
-                    blocked.add(h); 
-                }
-            });
-        }
+                blocked.add(h); 
+            }
+        });
     });
     return blocked;
 };
@@ -541,6 +546,7 @@ window.concluirAgendamentoFinal = async function(btn) {
         data: dataSelecionada, 
         rawdate: dataSelecionada,
         slots: slotsSelecionados,
+        // CAMPOS QUE PARARAM DE SALVAR:
         rua: document.getElementById('inputRua').value,
         numero: document.getElementById('inputNumero').value,
         bairro: document.getElementById('inputBairro').value,
@@ -554,8 +560,7 @@ window.concluirAgendamentoFinal = async function(btn) {
         field_id: prestador.field_id,
         produtos_texto: itensSelecionados.map(i => `• [${i.nomeManutencao.toUpperCase()}] ${i.desc} (Qtd: ${i.qtd})`).join('\n'),
         segment_id_field: itensSelecionados[0]?.segment_id || "",
-        maintenance_id_field: document.getElementById('tipoManutencao').value,
-        hora_limpa: slotsSelecionados[0]?.substring(0, 5)
+        maintenance_id_field: document.getElementById('tipoManutencao').value
     };
 
     const originalText = btn.innerText;
@@ -563,19 +568,17 @@ window.concluirAgendamentoFinal = async function(btn) {
 
     try {
         const response = await fetch(EDGE_URL, {
-    method: 'POST',
-    headers: getHeaders(),
-    body: JSON.stringify(agendamento)
-});
-
-        const result = await response.json();
+            method: 'POST',
+            headers: getHeaders(),
+            body: JSON.stringify(agendamento)
+        });
 
         if (response.ok) {
             window.showMessage("✅ Agendado com sucesso no Banco e na Field!");
-            // Força a atualização dos dados após o sucesso
             await carregarDadosDoBanco();
             window.location.reload(); 
         } else {
+            const result = await response.json();
             window.showMessage("❌ Erro: " + (result.error || "Erro na integração"));
         }
     } catch (error) {
