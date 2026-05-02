@@ -489,6 +489,9 @@ window.concluirAgendamentoFinal = async function(btn) {
         solicitante: document.getElementById('solicitante').value,
         acompanhamento: document.getElementById('respAcompanhamento').value,
         telefone_responsavel: document.getElementById('telResponsavel').value,
+        nome_prestador: prestador.nome, // Enviando o nome que você selecionou no Step 2
+    field_id: prestador.field_id
+};
         
         // Dados de Endereço (Step 1)
         cep: document.getElementById('inputCep').value,
