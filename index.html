@@ -212,9 +212,7 @@
     <h2>Dados do Cliente</h2>
     <label>Nº do Ticket</label><input id="ticket" required>
     <label>Nome do Cliente</label><input id="clienteNome" required>
-    
     <label>CNPJ / CPF</label><input id="clienteCnpj" placeholder="00.000.000/0000-00" required>
-    
     <label>Responsável pela solicitação (APEX)</label><input id="solicitante" required>
     <label>Responsável pelo acompanhamento (Local)</label><input id="respAcompanhamento" required>
     <label>Telefone do responsável</label><input id="telResponsavel" placeholder="(00) 00000-0000" required>
@@ -578,9 +576,9 @@ window.concluirAgendamentoFinal = async function(btn) {
         qtdtecnicos: prestador.qtdtecnicos,
         ticket: document.getElementById('ticket').value,
         cliente: document.getElementById('clienteNome').value,
-        cnpj: document.getElementById('clienteCnpj').value, // <--- CAMPO ENVIADO AO BANCO E EDGE
+        cnpj: document.getElementById('clienteCnpj').value,
         solicitante: document.getElementById('solicitante').value,
-        data: dataSelecionada, 
+        data: dataSelecionada,
         rawdate: dataSelecionada,
         slots: slotsSelecionados,
         rua: document.getElementById('inputRua').value,
@@ -591,7 +589,7 @@ window.concluirAgendamentoFinal = async function(btn) {
         cep: document.getElementById('inputCep').value,
         acompanhamento: document.getElementById('respAcompanhamento').value,
         telefone_responsavel: document.getElementById('telResponsavel').value,
-        segmento: itensSelecionados[0]?.nomeManutencao || "", 
+        segmento: itensSelecionados[0]?.nomeManutencao || "",
         tipo_servico: "Agendamento Apex",
         field_id: prestador.field_id,
         produtos_texto: itensSelecionados.map(i => `• [${i.nomeManutencao.toUpperCase()}] ${i.desc} (Qtd: ${i.qtd})`).join('\n'),
@@ -600,7 +598,8 @@ window.concluirAgendamentoFinal = async function(btn) {
     };
 
     const originalText = btn.innerText;
-    btn.innerText = "Processando..."; btn.disabled = true;
+    btn.innerText = "Processando...";
+    btn.disabled = true;
 
     try {
         const response = await fetch(EDGE_URL, {
@@ -612,7 +611,7 @@ window.concluirAgendamentoFinal = async function(btn) {
         if (response.ok) {
             window.showMessage("✅ Agendado com sucesso no Banco e na Field!");
             await carregarDadosDoBanco();
-            window.location.reload(); 
+            window.location.reload();
         } else {
             const result = await response.json();
             window.showMessage("❌ Erro: " + (result.error || "Erro na integração"));
@@ -620,7 +619,8 @@ window.concluirAgendamentoFinal = async function(btn) {
     } catch (error) {
         window.showMessage("Erro de conexão com o servidor.");
     } finally {
-        btn.innerText = originalText; btn.disabled = false;
+        btn.innerText = originalText;
+        btn.disabled = false;
     }
 };
 // --- FIM DA MUDANÇA ---
