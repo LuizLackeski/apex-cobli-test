@@ -509,16 +509,35 @@ window.getBlockedHours = function(prestador, data) {
 };
     window.abrirDetalhesPrestador = function(index) { let p = prestadores[index]; let agendaHtml = ''; ["Seg", "Ter", "Qua", "Qui", "Sex", "Sab"].forEach(d => { let slots = p.agenda.filter(a => a.dia === d).map(a => `<div class="cell">${a.hora}</div>`).join(''); if(slots) { agendaHtml += `<div class="agenda-day-card" style="margin-bottom:10px;"><div class="agenda-day-title">${d}</div><div class="slots-wrapper">${slots}</div></div>`; } }); window.exibirModal("Detalhes do Prestador", `<div class="info-group" style="margin-bottom:15px;"><div style="font-weight:bold; font-size:1.1rem;">${p.nome}</div><div style="font-size:0.9rem; color:#64748b;">Resp: ${p.responsavel} | Contato: ${p.contato} | Raio: ${p.range} km</div></div>${agendaHtml}`); };
     
-    window.abrirDetalhesAgendamento = function(index) {
-        let a = filtradosPainel[index];
-        let totalServicos = 0;
-        let prodHtml = "";
-        if (Array.isArray(a.produtos)) {
-            prodHtml = a.produtos.map(p => { totalServicos += p.qtd; return `<div style="margin-bottom:5px;">• ${p.desc} <strong>(${p.qtd}x)</strong></div>`; }).join('');
-        } else { prodHtml = 'Sem produtos'; }
-        let html = `<div style="background: white; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 15px;"><div style="font-weight:bold; font-size:1.1rem; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px; margin-bottom: 8px;">🎟️ Ticket: ${a.ticket}</div><div style="font-size:0.9rem;">👤 <strong>Cliente:</strong> ${a.cliente}<br>👔 <strong>Solicitante:</strong> ${a.solicitante}<br>🛠️ <strong>Prestador:</strong> ${a.prestador}<br>📅 <strong>Data:</strong> ${a.data}<br>⏰ <strong>Horários:</strong> ${Array.isArray(a.slots) ? a.slots.join(', ') : 'N/A'}</div></div><div style="font-weight:600; margin-bottom:5px;">📦 Serviços Solicitados (Total: ${totalServicos}):</div><div style="background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0; margin-bottom: 15px; font-size: 0.9rem;">${prodHtml}</div><div style="text-align:center;"><button onclick="window.excluirAgendamento(${a.id})" class="btn-cancelar" style="width: 100%;">Excluir Agendamento</button></div>`;
-        window.exibirModal("Detalhes do Agendamento", html);
-    };
+indow.abrirDetalhesAgendamento = function(index) {
+    let a = filtradosPainel[index];
+    
+    // Pegamos o texto formatado que veio do banco
+    let prodHtml = a.produtos 
+        ? a.produtos.replace(/\n/g, '<br>') 
+        : 'Sem produtos detalhados';
+
+    let html = `
+        <div style="background: white; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 15px;">
+            <div style="font-weight:bold; font-size:1.1rem; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px; margin-bottom: 8px;">🎟️ Ticket: ${a.ticket}</div>
+            <div style="font-size:0.9rem;">
+                👤 <strong>Cliente:</strong> ${a.cliente}<br>
+                👔 <strong>Solicitante:</strong> ${a.solicitante}<br>
+                🛠️ <strong>Prestador:</strong> ${a.prestador}<br>
+                📅 <strong>Data:</strong> ${a.data}<br>
+                ⏰ <strong>Horários:</strong> ${Array.isArray(a.slots) ? a.slots.join(', ') : (a.slots || 'N/A')}
+            </div>
+        </div>
+        <div style="font-weight:600; margin-bottom:5px;">📦 Serviços Solicitados:</div>
+        <div style="background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0; margin-bottom: 15px; font-size: 0.9rem; line-height: 1.4;">
+            ${prodHtml}
+        </div>
+        <div style="text-align:center;">
+            <button onclick="window.excluirAgendamento(${a.id})" class="btn-cancelar" style="width: 100%;">Excluir Agendamento</button>
+        </div>
+    `;
+    window.exibirModal("Detalhes do Agendamento", html);
+};
 
     window.excluirAgendamento = function(id) { window.showConfirm("Tem certeza que deseja excluir?", () => window.confirmarExclusaoAgendamento(id)); };
     window.cancelarAgendamento = function() { window.showConfirm("Deseja realmente cancelar este agendamento?", window.realizarCancelamento); };
@@ -759,7 +778,9 @@ window.adicionarProduto = function() {
 // --- INÍCIO DA MUDANÇA: RENDER PAINEL ---
 window.renderPainel = function(){ 
     if (!Array.isArray(agendamentos)) {
-        document.getElementById("painel-conteudo").innerHTML = "Nenhum dado disponível.";
+        document.getElementById("painel-conteudo").innerHTML = filtradosPainel.map((a, i) => {
+    // Agora usamos a coluna 'produtos' que contém o texto vindo da Edge Function
+    let servicosExibicao = a.produtos ? a.produtos : "Serviço não detalhado";
         return;
     }
 
@@ -783,25 +804,26 @@ window.renderPainel = function(){
     }); 
 
     document.getElementById("painel-conteudo").innerHTML = filtradosPainel.map((a, i) => {
-        // Se created_at existir, formata para exibir, senão usa a data do agendamento
+    // Agora usamos a coluna 'produtos' que contém o texto vindo da Edge Function
+    let servicosExibicao = a.produtos ? a.produtos : "Serviço não detalhado";
         let dataRegistro = a.created_at 
     ? new Date(a.created_at).toLocaleString('pt-BR') // Data e hora que entrou no banco
     : "Não registrado";
         
-        return `<div class="painel-item">
-            <div style="flex-grow: 1; font-size: 0.95rem;">
-                <strong>🎟️ #${a.ticket}</strong> &nbsp; 📅 Agendado: ${a.data} &nbsp; ⏰ ${a.slots || 'N/A'}<br>
-                <div style="margin-top:5px; font-size: 0.8rem; color: #64748b;">
-                    Registrado em: ${dataRegistro} | Solicitante: ${a.solicitante}
-                </div>
-                <div style="margin-top:5px;">
-                    👤 <strong>Cliente:</strong> ${a.cliente}<br>
-                    🛠️ <strong>Prestador:</strong> ${a.prestador}
-                </div>
+ return `<div class="painel-item">
+        <div style="flex-grow: 1; font-size: 0.95rem;">
+            <strong>🎟️ #${a.ticket}</strong> &nbsp; 📅 ${a.data} &nbsp; ⏰ ${Array.isArray(a.slots) ? a.slots.join(', ') : (a.slots || 'N/A')}<br>
+            <div style="margin-top:5px;">
+                👤 <strong>Cliente:</strong> ${a.cliente}<br>
+                🛠️ <strong>Prestador:</strong> ${a.prestador} | <strong>Solicitante:</strong> ${a.solicitante}
             </div>
-            <button style="background:var(--primary); padding: 5px 10px; font-size: 0.8rem; margin-left: 10px;" onclick="window.abrirDetalhesAgendamento(${i})">Ver detalhes</button>
-        </div>`;
-    }).join(''); 
+            <div style="margin-top:5px; font-size: 0.85rem; color: #64748b; background: #f8fafc; padding: 5px; border-radius: 4px;">
+                📦 ${servicosExibicao.replace(/\n/g, ' | ')} 
+            </div>
+        </div>
+        <button style="background:var(--primary); padding: 5px 10px; font-size: 0.8rem; margin-left: 10px;" onclick="window.abrirDetalhesAgendamento(${i})">Ver detalhes</button>
+    </div>`;
+}).join('');
 };
 
     window.limparFiltros = function(){ document.getElementById("filtroDataInicio").value = ""; document.getElementById("filtroDataFim").value = ""; document.getElementById("filtroTicket").value = ""; document.getElementById("filtroPrestador").value = ""; document.getElementById("filtroSolicitante").value = ""; window.renderPainel(); };
