@@ -680,13 +680,15 @@ window.renderPainel = function(){
 
     document.getElementById("painel-conteudo").innerHTML = filtradosPainel.map((a, i) => {
         // Se created_at existir, formata para exibir, senão usa a data do agendamento
-        let dataCriacao = a.created_at ? new Date(a.created_at).toLocaleDateString('pt-BR') : a.data;
+        let dataRegistro = a.created_at 
+    ? new Date(a.created_at).toLocaleString('pt-BR') // Data e hora que entrou no banco
+    : "Não registrado";
         
         return `<div class="painel-item">
             <div style="flex-grow: 1; font-size: 0.95rem;">
                 <strong>🎟️ #${a.ticket}</strong> &nbsp; 📅 Agendado: ${a.data} &nbsp; ⏰ ${a.slots || 'N/A'}<br>
                 <div style="margin-top:5px; font-size: 0.8rem; color: #64748b;">
-                    Registrado em: ${dataCriacao} | Solicitante: ${a.solicitante}
+                    Registrado em: ${dataRegistro} | Solicitante: ${a.solicitante}
                 </div>
                 <div style="margin-top:5px;">
                     👤 <strong>Cliente:</strong> ${a.cliente}<br>
