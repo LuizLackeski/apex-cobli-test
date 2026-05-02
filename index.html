@@ -218,7 +218,7 @@
         <label>CNPJ/CPF</label>
         <input type="text" id="cliente_cnpj_input">
         
-        <label>Responsável Local (Quem recebe o técnico)</label>
+        <label>Responsável Local (Contato)</label>
         <input type="text" id="resp_local_input">
         
         <label>Telefone do Responsável Local</label>
@@ -232,7 +232,7 @@
         
         <div style="margin-top:20px;">
             <button onclick="window.proximoPasso(3)" style="background:gray;">Voltar</button>
-            <button id="btnConfirmar" onclick="window.concluirAgendamentoFinal(this)" style="background:green;">Confirmar Agendamento</button>
+            <button id="btnConfirmar" onclick="window.concluirAgendamentoFinal(this)" style="background:green;">Confirmar</button>
         </div>
     </div>
 </div>
@@ -444,9 +444,9 @@ async function carregarDadosDoBanco() {
         // 1. Busca Prestadores
         const resP = await fetch(`${API_URL}/prestadores`, { headers: getHeaders() }); 
         prestadores = await resP.json(); 
-        renderizarListaPrestadores(); 
+        if(window.renderizarListaPrestadores) window.renderizarListaPrestadores(); 
 
-        // 2. Busca Agendamentos (Lendo direto da tabela agendamentos)
+        // 2. Busca Agendamentos
         const resA = await fetch(`${DB_URL}/agendamentos?select=*&order=created_at.desc`, { 
             method: 'GET',
             headers: getHeaders() 
@@ -455,8 +455,8 @@ async function carregarDadosDoBanco() {
         const dataAgend = await resA.json(); 
         agendamentos = Array.isArray(dataAgend) ? dataAgend : [];
         
-        renderPainel(); 
-        renderDashboard(); 
+        window.renderPainel(); 
+        if(window.renderDashboard) window.renderDashboard(); 
         console.log("Banco de agendamentos carregado:", agendamentos.length);
     } catch(e) { 
         console.error("Erro ao sincronizar agendamentos:", e); 
@@ -622,8 +622,8 @@ window.concluirAgendamentoFinal = async function(btn) {
         });
 
         if (response.ok) {
-            window.showMessage("✅ Agendado com sucesso no Banco e na Field!");
-            setTimeout(() => window.location.reload(), 2000);
+            window.showMessage("✅ Agendado com sucesso!");
+            setTimeout(() => window.location.reload(), 1500);
         } else {
             const result = await response.json();
             window.showMessage("❌ Erro: " + (result.error || "Erro na integração"));
