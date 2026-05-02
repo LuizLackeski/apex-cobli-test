@@ -512,7 +512,13 @@ window.getBlockedHours = function(prestador, data) {
 window.abrirDetalhesAgendamento = function(index) {
     let a = filtradosPainel[index];
     
-    // Pegamos o texto formatado que veio do banco e colocamos no Popup
+    // 1. Concatenação do Endereço
+    const enderecoCompleto = `${a.rua || ''}, ${a.numero || 'S/N'} - ${a.bairro || ''}, ${a.cidade || ''}/${a.uf || ''} - CEP: ${a.cep || ''}`;
+    
+    // 2. Formatação do Contato
+    const contatoResponsavel = `${a.acompanhamento || 'Não informado'} | ${a.telefone_responsavel || 'Sem telefone'}`;
+
+    // 3. Texto dos produtos
     let prodHtml = a.produtos 
         ? a.produtos.replace(/\n/g, '<br>') 
         : 'Sem produtos detalhados';
@@ -527,7 +533,10 @@ window.abrirDetalhesAgendamento = function(index) {
                 👔 <strong>Solicitante:</strong> ${a.solicitante}<br>
                 🛠️ <strong>Prestador:</strong> ${a.prestador}<br>
                 📅 <strong>Data do Atendimento:</strong> ${a.data}<br>
-                ⏰ <strong>Horários:</strong> ${Array.isArray(a.slots) ? a.slots.join(', ') : (a.slots || 'N/A')}
+                ⏰ <strong>Horários:</strong> ${Array.isArray(a.slots) ? a.slots.join(', ') : (a.slots || 'N/A')}<br>
+                <hr style="border:0; border-top:1px solid #f1f5f9; margin:8px 0;">
+                📍 <strong>Endereço:</strong> ${enderecoCompleto}<br>
+                📞 <strong>Responsável:</strong> ${contatoResponsavel}
             </div>
         </div>
         <div style="font-weight:600; margin-bottom:5px; color:#334155;">📦 Serviços/Produtos Solicitados:</div>
