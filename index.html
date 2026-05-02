@@ -480,10 +480,9 @@ window.concluirAgendamentoFinal = async function(btn) {
     const slotsSelecionados = Array.from(sel).map(c => c.dataset.hora);
     const dataSelecionada = sel.length > 0 ? sel[0].dataset.date : null;
     
-    // Pega o prestador atual
     const prestador = prestadores[prestadorSelecionadoIndex];
 
-    // 1. Captura de Dados Corrigida (usando os IDs REAIS do seu HTML)
+    // Montagem do objeto conforme esperado pela Edge Function
     const agendamento = {
         ticket: document.getElementById('ticket').value,
         cliente: document.getElementById('clienteNome').value,
@@ -491,7 +490,7 @@ window.concluirAgendamentoFinal = async function(btn) {
         acompanhamento: document.getElementById('respAcompanhamento').value,
         telefone_responsavel: document.getElementById('telResponsavel').value,
         
-        // Dados de Endereço (capturados no Step 1)
+        // Dados de Endereço (Step 1)
         cep: document.getElementById('inputCep').value,
         rua: document.getElementById('inputRua').value,
         numero: document.getElementById('inputNumero').value,
@@ -505,13 +504,12 @@ window.concluirAgendamentoFinal = async function(btn) {
         data: dataSelecionada, 
         slots: slotsSelecionados,
         
-        // ID do técnico para a Field Control
+        // ID do técnico cadastrado na Field
         field_id: prestador.field_id 
     };
 
-    // Validação básica
     if (!agendamento.ticket || !agendamento.cliente || !agendamento.data) {
-        window.showMessage("Por favor, preencha todos os campos do cliente e selecione um horário.");
+        window.showMessage("Preencha os campos do cliente e selecione um horário!");
         return;
     }
 
@@ -532,13 +530,12 @@ window.concluirAgendamentoFinal = async function(btn) {
 
         if (response.ok) {
             window.showMessage("✅ Agendado com sucesso na Field Control!");
-            // Aqui você pode chamar a função para salvar no seu banco Smart-Service também
-            // window.salvarNoBancoInterno(agendamento); 
             window.limparFormulario();
             window.trocarAba('painel');
         } else {
-            console.error("Erro Field:", resultado);
-            window.showMessage("Erro Field Control: " + (resultado.message || "Recurso não encontrado"));
+            console.error("Erro da Field:", resultado);
+            // Mostra o erro real que a Field retornou (ResourceNotFound, etc)
+            window.showMessage("Erro Field Control: " + (resultado.message || resultado.code || "Recurso não encontrado"));
         }
     } catch (error) {
         console.error("Erro Conexão:", error);
