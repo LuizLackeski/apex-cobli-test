@@ -581,16 +581,15 @@ window.concluirAgendamentoFinal = async function(btn) {
     const prestador = prestadores[prestadorSelecionadoIndex];
 
     if (!prestador || slotsSelecionados.length === 0) {
-        window.showMessage("Erro: Selecione o prestador e o horário.");
-        return;
+        return window.showMessage("Erro: Selecione o prestador e o horário.");
     }
 
-const agendamento = {
+    const agendamento = {
         prestador: prestador.nome,
         qtdtecnicos: prestador.qtdtecnicos,
         ticket: document.getElementById('ticket').value,
-        cliente: document.getElementById('cliente_nome').value, // Pegando do ID correto
-        cnpj: document.getElementById('cliente_cnpj').value,    // Pegando do ID correto
+        cliente: document.getElementById('cliente_nome').value,
+        cnpj: document.getElementById('cliente_cnpj').value,
         solicitante: document.getElementById('solicitante').value,
         data: dataSelecionada, 
         rawdate: dataSelecionada,
@@ -601,12 +600,12 @@ const agendamento = {
         cidade: document.getElementById('inputCidade').value,
         uf: document.getElementById('inputUf').value,
         cep: document.getElementById('inputCep').value,
-        acompanhamento: document.getElementById('contato_nome').value, // Pegando do ID correto
-        telefone_responsavel: document.getElementById('contato_tel').value, // Pegando do ID correto
+        acompanhamento: document.getElementById('contato_nome').value,
+        telefone_responsavel: document.getElementById('contato_tel').value,
         segmento: itensSelecionados[0]?.nomeManutencao || "", 
         tipo_servico: "Agendamento Apex",
         field_id: prestador.field_id,
-        produtos_texto: itensSelecionados.map(i => `• [${i.nomeManutencao.toUpperCase()}] ${i.desc} (Qtd: ${i.qtd})`).join('\n'),
+        produtos_texto: itensSelecionados.map(i => `• [${i.nomeManutencao?.toUpperCase() || 'SERVIÇO'}] ${i.desc} (Qtd: ${i.qtd})`).join('\n'),
         segment_id_field: itensSelecionados[0]?.segment_id || "",
         maintenance_id_field: document.getElementById('tipoManutencao').value
     };
@@ -623,8 +622,7 @@ const agendamento = {
 
         if (response.ok) {
             window.showMessage("✅ Agendado com sucesso no Banco e na Field!");
-            await carregarDadosDoBanco();
-            window.location.reload(); 
+            setTimeout(() => window.location.reload(), 2000);
         } else {
             const result = await response.json();
             window.showMessage("❌ Erro: " + (result.error || "Erro na integração"));
