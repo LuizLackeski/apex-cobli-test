@@ -472,11 +472,15 @@ async function carregarDadosDoBanco() {
 
     function parseDateToObj(dateStr) { const [d, m, y] = dateStr.split('/'); return new Date(y, m - 1, d); }
 window.getOcupacaoSlot = function(prestador, data, hora) { 
-    if (!agendamentos) return 0;
+    if (!agendamentos || agendamentos.length === 0) return 0;
+    
     return agendamentos.filter(a => {
-        const mesmaData = (a.data === data || a.rawdate === data);
+        // Verifica se o prestador bate
         const mesmoPrestador = (a.prestador === prestador.nome);
+        // Verifica se a data bate (conferindo as duas colunas possíveis)
+        const mesmaData = (a.data === data || a.rawdate === data);
         
+        // Trata os slots (se vierem como String do banco ou Array)
         let contemHora = false;
         if (Array.isArray(a.slots)) {
             contemHora = a.slots.includes(hora);
