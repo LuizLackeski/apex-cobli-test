@@ -475,51 +475,54 @@
 window.concluirAgendamentoFinal = async function(btn) {
     console.log("Iniciando processo de agendamento mestre...");
     
-    // Captura os horários selecionados na grid
+    // 1. Captura de dados da grid de horários
     const sel = document.querySelectorAll("#agenda-agendamento .cell.selecionado");
     const slotsSelecionados = Array.from(sel).map(c => c.dataset.hora);
     const dataSelecionada = sel.length > 0 ? sel[0].dataset.date : null;
     
+    // 2. Captura do prestador selecionado
     const prestador = prestadores[prestadorSelecionadoIndex];
 
-    // Montagem do objeto conforme esperado pela Edge Function
-   const sel = document.querySelectorAll("#agenda-agendamento .cell.selecionado");
-const slotsSelecionados = Array.from(sel).map(c => c.dataset.hora);
-const dataSelecionada = sel.length > 0 ? sel[0].dataset.date : null;
-const prestador = prestadores[prestadorSelecionadoIndex];
-
-const agendamento = {
-    // Dados básicos
-    ticket: document.getElementById('ticket').value,
-    cliente: document.getElementById('clienteNome').value,
-    solicitante: document.getElementById('solicitante').value,
-    acompanhamento: document.getElementById('respAcompanhamento').value,
-    telefone_responsavel: document.getElementById('telResponsavel').value,
-    
-    // Dados do Prestador (O que matará o ResourceNotFound)
-    nome_prestador: prestador.nome, 
-    field_id: prestador.field_id,
-
-    // Dados de Endereço (Step 1)
-    cep: document.getElementById('inputCep').value,
-    rua: document.getElementById('inputRua').value,
-    numero: document.getElementById('inputNumero').value,
-    bairro: document.getElementById('inputBairro').value,
-    cidade: document.getElementById('inputCidade').value,
-    uf: document.getElementById('inputUf').value,
-
-    // Dados do Serviço e Agenda
-    tipo_servico: itensSelecionados.map(i => i.desc).join(', '),
-    segmento: itensSelecionados.length > 0 ? itensSelecionados[0].segmento : "",
-    data: dataSelecionada, 
-    slots: slotsSelecionados
-}; // Chave fechada apenas AQUI no final
-
-    if (!agendamento.ticket || !agendamento.cliente || !agendamento.data) {
-        window.showMessage("Preencha os campos do cliente e selecione um horário!");
+    if (!prestador) {
+        window.showMessage("Erro: Selecione um prestador antes de concluir.");
         return;
     }
 
+    // 3. Montagem do Objeto Agendamento (Sintaxe Corrigida)
+    const agendamento = {
+        // Dados do Ticket e Cliente
+        ticket: document.getElementById('ticket').value,
+        cliente: document.getElementById('clienteNome').value,
+        solicitante: document.getElementById('solicitante').value,
+        acompanhamento: document.getElementById('respAcompanhamento').value,
+        telefone_responsavel: document.getElementById('telResponsavel').value,
+        
+        // Dados do Prestador (O que você achou no F12)
+        nome_prestador: prestador.nome, 
+        field_id: prestador.field_id,
+
+        // Dados de Endereço
+        cep: document.getElementById('inputCep').value,
+        rua: document.getElementById('inputRua').value,
+        numero: document.getElementById('inputNumero').value,
+        bairro: document.getElementById('inputBairro').value,
+        cidade: document.getElementById('inputCidade').value,
+        uf: document.getElementById('inputUf').value,
+
+        // Dados do Serviço e Agenda
+        tipo_servico: itensSelecionados.map(i => i.desc).join(', '),
+        segmento: itensSelecionados.length > 0 ? itensSelecionados[0].segmento : "",
+        data: dataSelecionada, 
+        slots: slotsSelecionados
+    };
+
+    // 4. Validação
+    if (!agendamento.ticket || !agendamento.cliente || !agendamento.data) {
+        window.showMessage("Por favor, preencha os dados do cliente e selecione um horário na agenda.");
+        return;
+    }
+
+    // 5. Interface
     const originalText = btn.innerText;
     btn.innerText = "Integrando...";
     btn.disabled = true;
@@ -541,12 +544,11 @@ const agendamento = {
             window.trocarAba('painel');
         } else {
             console.error("Erro da Field:", resultado);
-            // Mostra o erro real que a Field retornou (ResourceNotFound, etc)
-            window.showMessage("Erro Field Control: " + (resultado.message || resultado.code || "Recurso não encontrado"));
+            window.showMessage("Erro na Field: " + (resultado.message || resultado.code || "Recurso não encontrado"));
         }
     } catch (error) {
         console.error("Erro Conexão:", error);
-        window.showMessage("Erro de conexão com o servidor de integração.");
+        window.showMessage("Erro de conexão com o Supabase.");
     } finally {
         btn.innerText = originalText;
         btn.disabled = false;
