@@ -778,9 +778,7 @@ window.adicionarProduto = function() {
 // --- INÍCIO DA MUDANÇA: RENDER PAINEL ---
 window.renderPainel = function(){ 
     if (!Array.isArray(agendamentos)) {
-        document.getElementById("painel-conteudo").innerHTML = filtradosPainel.map((a, i) => {
-    // Agora usamos a coluna 'produtos' que contém o texto vindo da Edge Function
-    let servicosExibicao = a.produtos ? a.produtos : "Serviço não detalhado";
+        document.getElementById("painel-conteudo").innerHTML = "Nenhum dado disponível.";
         return;
     }
 
@@ -791,7 +789,7 @@ window.renderPainel = function(){
     
     filtradosPainel = agendamentos.filter(a => { 
         if(!a.data || !a.ticket) return false;
-       let [d, m, y] = a.data.split('/'); 
+        let [d, m, y] = a.data.split('/'); 
         let dataAgendada = `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
         
         let matchDate = (!fInicio || dataAgendada >= fInicio) && (!fFim || dataAgendada <= fFim); 
@@ -799,31 +797,32 @@ window.renderPainel = function(){
         let matchSol = (!fSol || (a.solicitante && a.solicitante.toLowerCase().includes(fSol)));
         return matchDate && matchTicket && matchSol; 
     }).sort((a,b) => {
-        // Ordena pelo created_at (data real de inserção)
         return new Date(b.created_at) - new Date(a.created_at);
     }); 
 
     document.getElementById("painel-conteudo").innerHTML = filtradosPainel.map((a, i) => {
-    // Agora usamos a coluna 'produtos' que contém o texto vindo da Edge Function
-    let servicosExibicao = a.produtos ? a.produtos : "Serviço não detalhado";
+        let servicosExibicao = a.produtos ? a.produtos : "Serviço não detalhado";
         let dataRegistro = a.created_at 
-    ? new Date(a.created_at).toLocaleString('pt-BR') // Data e hora que entrou no banco
-    : "Não registrado";
+            ? new Date(a.created_at).toLocaleString('pt-BR') 
+            : "Não registrado";
         
- return `<div class="painel-item">
-        <div style="flex-grow: 1; font-size: 0.95rem;">
-            <strong>🎟️ #${a.ticket}</strong> &nbsp; 📅 ${a.data} &nbsp; ⏰ ${Array.isArray(a.slots) ? a.slots.join(', ') : (a.slots || 'N/A')}<br>
-            <div style="margin-top:5px;">
-                👤 <strong>Cliente:</strong> ${a.cliente}<br>
-                🛠️ <strong>Prestador:</strong> ${a.prestador} | <strong>Solicitante:</strong> ${a.solicitante}
+        return `<div class="painel-item">
+            <div style="flex-grow: 1; font-size: 0.95rem;">
+                <strong>🎟️ #${a.ticket}</strong> &nbsp; 📅 Agendado: ${a.data} &nbsp; ⏰ ${Array.isArray(a.slots) ? a.slots.join(', ') : (a.slots || 'N/A')}<br>
+                <div style="margin-top:5px;">
+                    👤 <strong>Cliente:</strong> ${a.cliente}<br>
+                    🛠️ <strong>Prestador:</strong> ${a.prestador} | <strong>Solicitante:</strong> ${a.solicitante}
+                </div>
+                <div style="margin-top:5px; font-size: 0.85rem; color: #64748b; background: #f8fafc; padding: 5px; border-radius: 4px;">
+                    📦 ${servicosExibicao.replace(/\n/g, ' | ')} 
+                </div>
+                <div style="margin-top:2px; font-size: 0.75rem; color: #94a3b8;">
+                    Registrado em: ${dataRegistro}
+                </div>
             </div>
-            <div style="margin-top:5px; font-size: 0.85rem; color: #64748b; background: #f8fafc; padding: 5px; border-radius: 4px;">
-                📦 ${servicosExibicao.replace(/\n/g, ' | ')} 
-            </div>
-        </div>
-        <button style="background:var(--primary); padding: 5px 10px; font-size: 0.8rem; margin-left: 10px;" onclick="window.abrirDetalhesAgendamento(${i})">Ver detalhes</button>
-    </div>`;
-}).join('');
+            <button style="background:var(--primary); padding: 5px 10px; font-size: 0.8rem; margin-left: 10px;" onclick="window.abrirDetalhesAgendamento(${i})">Ver detalhes</button>
+        </div>`;
+    }).join(''); 
 };
 
     window.limparFiltros = function(){ document.getElementById("filtroDataInicio").value = ""; document.getElementById("filtroDataFim").value = ""; document.getElementById("filtroTicket").value = ""; document.getElementById("filtroPrestador").value = ""; document.getElementById("filtroSolicitante").value = ""; window.renderPainel(); };
