@@ -525,6 +525,7 @@ window.concluirAgendamentoFinal = async function(btn) {
         cliente: document.getElementById('clienteNome').value,
         solicitante: document.getElementById('solicitante').value,
         data: dataSelecionada, 
+        rawdate: dataSelecionada,
         slots: slotsSelecionados,
         rua: document.getElementById('inputRua').value,
         numero: document.getElementById('inputNumero').value,
@@ -665,17 +666,35 @@ window.renderPainel = function(){
     
     filtradosPainel = agendamentos.filter(a => { 
         if(!a.data || !a.ticket) return false;
-        let [d, m, y] = a.data.split('/'); 
+       let [d, m, y] = a.data.split('/'); 
         let dataAgendada = `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
+        
         let matchDate = (!fInicio || dataAgendada >= fInicio) && (!fFim || dataAgendada <= fFim); 
         let matchTicket = (!fTicket || (a.ticket && a.ticket.toLowerCase().includes(fTicket)));
         let matchSol = (!fSol || (a.solicitante && a.solicitante.toLowerCase().includes(fSol)));
         return matchDate && matchTicket && matchSol; 
-    }).sort((a,b) => parseDateToObj(b.data) - parseDateToObj(a.data)); 
+    }).sort((a,b) => {
+        // Ordena pelo created_at (data real de inserção)
+        return new Date(b.created_at) - new Date(a.created_at);
+    }); 
 
     document.getElementById("painel-conteudo").innerHTML = filtradosPainel.map((a, i) => {
-        let qtdTotal = Array.isArray(a.produtos) ? a.produtos.reduce((sum, p) => sum + p.qtd, 0) : 0;
-        return `<div class="painel-item"><div style="flex-grow: 1; font-size: 0.95rem;"><strong>🎟️ #${a.ticket}</strong> &nbsp; 📅 ${a.data} &nbsp; ⏰ ${a.slots || 'N/A'}<br><div style="margin-top:5px;">👤 <strong>Cliente:</strong> ${a.cliente}<br>🛠️ <strong>Prestador:</strong> ${a.prestador} | <strong>Solicitante:</strong> ${a.solicitante}</div></div><button style="background:var(--primary); padding: 5px 10px; font-size: 0.8rem; margin-left: 10px;" onclick="window.abrirDetalhesAgendamento(${i})">Ver detalhes</button></div>`;
+        // Se created_at existir, formata para exibir, senão usa a data do agendamento
+        let dataCriacao = a.created_at ? new Date(a.created_at).toLocaleDateString('pt-BR') : a.data;
+        
+        return `<div class="painel-item">
+            <div style="flex-grow: 1; font-size: 0.95rem;">
+                <strong>🎟️ #${a.ticket}</strong> &nbsp; 📅 Agendado: ${a.data} &nbsp; ⏰ ${a.slots || 'N/A'}<br>
+                <div style="margin-top:5px; font-size: 0.8rem; color: #64748b;">
+                    Registrado em: ${dataCriacao} | Solicitante: ${a.solicitante}
+                </div>
+                <div style="margin-top:5px;">
+                    👤 <strong>Cliente:</strong> ${a.cliente}<br>
+                    🛠️ <strong>Prestador:</strong> ${a.prestador}
+                </div>
+            </div>
+            <button style="background:var(--primary); padding: 5px 10px; font-size: 0.8rem; margin-left: 10px;" onclick="window.abrirDetalhesAgendamento(${i})">Ver detalhes</button>
+        </div>`;
     }).join(''); 
 };
 
