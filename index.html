@@ -209,18 +209,27 @@
             </div>
         </div>
         
-        <div id="step-4" class="card" style="display:none;">
-            <h2>Dados do Cliente</h2>
-            <label>Nº do Ticket</label><input id="ticket" required>
-            <label>Nome do Cliente</label><input id="clienteNome" required>
-            <label>Responsável pela solicitação (APEX)</label><input id="solicitante" required>
-            <label>Responsável pelo acompanhamento (Local)</label><input id="respAcompanhamento" required>
-            <label>Telefone do responsável</label><input id="telResponsavel" placeholder="(00) 00000-0000" required>
-            <button onclick="window.proximoPasso(3)" style="background:gray;">Voltar</button>
-            <button id="btnConfirmar" onclick="window.concluirAgendamentoFinal(this)" style="background:green;">Confirmar</button>
-            <button onclick="window.cancelarAgendamento()" class="btn-cancelar">Cancelar</button>
+<div id="passo4" class="step-container" style="display:none;">
+    <h5 style="margin-bottom:20px; color:var(--primary);"><i class="bi bi-person-check-fill"></i> Dados do Atendimento</h5>
+    <div class="row g-3">
+        <div class="col-md-8">
+            <label class="form-label">Nome do Cliente / Razão Social</label>
+            <input type="text" id="cliente_nome" class="form-control" placeholder="Ex: Padaria do João">
         </div>
-    </div>
+        <div class="col-md-4">
+            <label class="form-label">CNPJ/CPF</label>
+            <input type="text" id="cliente_cnpj" class="form-control" placeholder="00.000.000/0000-00">
+        </div>
+        <div class="col-md-6">
+            <label class="form-label">Acompanhamento (No local)</label>
+            <input type="text" id="contato_nome" class="form-control" placeholder="Quem receberá o técnico?">
+        </div>
+        <div class="col-md-6">
+            <label class="form-label">Telefone do Responsável</label>
+            <input type="tel" id="contato_tel" class="form-control" placeholder="(00) 00000-0000">
+        </div>
+        </div>
+</div>
 
     <div id="cadastro" class="aba">
         <div id="lista-prestadores-view" class="card">
@@ -576,6 +585,7 @@ window.concluirAgendamentoFinal = async function(btn) {
         qtdtecnicos: prestador.qtdtecnicos,
         ticket: document.getElementById('ticket').value,
         cliente: document.getElementById('clienteNome').value,
+        document.getElementById('cliente_cnpj').value,
         solicitante: document.getElementById('solicitante').value,
         data: dataSelecionada, 
         rawdate: dataSelecionada,
