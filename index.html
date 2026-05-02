@@ -208,10 +208,11 @@
                 <button onclick="window.cancelarAgendamento()" class="btn-cancelar">Cancelar</button>
             </div>
         </div>
-        <div id="step-4" class="card" style="display:none;">
+<div id="step-4" class="card" style="display:none;">
     <h2>Dados do Cliente</h2>
     <label>Nº do Ticket</label><input id="ticket" required>
     <label>Nome do Cliente</label><input id="clienteNome" required>
+    
     <label>CNPJ / CPF</label><input id="clienteCnpj" placeholder="00.000.000/0000-00" required>
     
     <label>Responsável pela solicitação (APEX)</label><input id="solicitante" required>
@@ -220,6 +221,7 @@
     
     <button onclick="window.proximoPasso(3)" style="background:gray;">Voltar</button>
     <button id="btnConfirmar" onclick="window.concluirAgendamentoFinal(this)" style="background:green;">Confirmar</button>
+    <button onclick="window.cancelarAgendamento()" class="btn-cancelar">Cancelar</button>
 </div>
 
     <div id="cadastro" class="aba">
@@ -571,12 +573,12 @@ window.concluirAgendamentoFinal = async function(btn) {
         return;
     }
 
-const agendamento = {
+    const agendamento = {
         prestador: prestador.nome,
         qtdtecnicos: prestador.qtdtecnicos,
         ticket: document.getElementById('ticket').value,
         cliente: document.getElementById('clienteNome').value,
-        cnpj: document.getElementById('clienteCnpj').value, // <-- A VÍRGULA AQUI É O QUE FALTA!
+        cnpj: document.getElementById('clienteCnpj').value, // <--- CAMPO ENVIADO AO BANCO E EDGE
         solicitante: document.getElementById('solicitante').value,
         data: dataSelecionada, 
         rawdate: dataSelecionada,
