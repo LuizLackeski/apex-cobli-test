@@ -175,17 +175,20 @@
             <div class="bloco-servico">
                 <div style="display: flex; gap: 10px;">
                     <div style="flex:1;">
-                        <label>Segmento / Manutenção</label>
-                        <select id="tipoManutencao">
-                            <option value="instalação">Instalação</option>
-                            <option value="desinstalação">Desinstalação</option>
-                            <option value="troca">Troca</option>
-                            <option value="troca entre veículos">Troca entre veículos</option>
-                            <option value="upgrade">Upgrade</option>
-                            <option value="visita técnica">Visita técnica</option>
-                        </select>
-                    </div>
-                    <div style="flex:1;">
+                <div class="bloco-servico">
+    <div style="display: flex; gap: 10px;">
+        <div style="flex:1;">
+            <label>Segmento / Manutenção</label>
+            <select id="tipoManutencao">
+                <option value="00fa3181-0ee1-4bc2-8e16-04fce22f87f7">Instalação</option>
+                <option value="5664b3bb-f905-4da5-81c6-a7d46b6c0dd3">Desinstalação</option>
+                <option value="06a7192d-590f-4dd1-9e40-9053a7524e6c">Troca</option>
+                <option value="764b29fc-190c-4ca5-8e9d-2bde28996da4">Troca entre veículos</option>
+                <option value="6244f058-dd7c-4123-b35d-4c6cb96d332e">Upgrade</option>
+                <option value="0cabab12-25d2-4369-bc6e-fb1e0771db5f">Visita técnica</option>
+            </select>
+        </div>
+                     <div style="flex:1;">
                         <label>Tipo de Serviço</label>
                         <select id="produto"></select>
                     </div>
@@ -383,29 +386,29 @@
     const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZxYXFsb2ZuZGVpaG1oa29wdmFuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcyMjU4ODIsImV4cCI6MjA5MjgwMTg4Mn0.nauPYoB9RDhLLueMEuop2H2FxdChjIxFkAmBcYbJLzc';
     function getHeaders() { return { 'Content-Type': 'application/json', 'apikey': ANON_KEY, 'Authorization': `Bearer ${ANON_KEY}` }; }
     let prestadores = [], itensSelecionados = [], agendamentos = [], etapa = 1, editingIndex = -1, prestadorSelecionadoIndex = null;
-    const produtos = { 
+ const serviçosDisponíveis = {
     "Telemetria": [
-        {desc:"Instalado veículos leves ou pesados", tempo:40}, 
-        {desc:"Instalado motos ou maquinários", tempo:40}, 
-        {desc:"Leves ou pesados + CAN", tempo:60}
+        {desc:"Instalado veículos leves ou pesados", tempo:40, id_field: "b2098d2f-c060-445b-8e4b-bdcc5b6e613a"},
+        {desc:"Instalado motos ou maquinários", tempo:40, id_field: "fe2057ba-abd5-44b6-9686-2f50e7717f16"},
+        {desc:"Leves ou pesados + CAN", tempo:60, id_field: "b04b9472-5663-4d77-8dc9-a79b2f06aa28"}
     ], 
     "Identificador": [
-        {desc:"Instalado veículos leves e pesados identificador", tempo:60}, 
-        {desc:"Leves ou pesados + CAN", tempo:90}
+        {desc:"Instalado veículos leves e pesados identificador", tempo:60, id_field: "a5aa5112-5b34-48fe-bf9b-1d655522db0b"},
+        {desc:"Leves ou pesados + CAN", tempo:90, id_field: "b04b9472-5663-4d77-8dc9-a79b2f06aa28"}
     ], 
     "Trava de ignição": [
-        {desc:"Instalado trava de Iginição", tempo:80}, 
-        {desc:"Leves ou pesados + CAN", tempo:100}
+        {desc:"Instalado trava de Iginição", tempo:80, id_field: "cb5857b4-8312-4650-b388-69b878772337"},
+        {desc:"Leves ou pesados + CAN", tempo:100, id_field: "b04b9472-5663-4d77-8dc9-a79b2f06aa28"}
     ], 
     "Videotelemetria": [
-        {desc:"Coblicam (1 câmeras)", tempo:90}, 
-        {desc:"Coblicam Cabine (2 câmeras)", tempo:90}, 
-        {desc:"Coblicam Fadiga (2 câmeras)", tempo:90}, 
-        {desc:"Coblicam-Multi (3 câmeras internas)", tempo:120}, 
-        {desc:"Coblicam-Multi (2 câmeras + 1 externa)", tempo:240}, 
-        {desc:"Coblicam-Multi (4 câmeras)", tempo:240}, 
-        {desc:"Coblicam-Multi (5 câmeras)", tempo:300}
-    ] 
+        {desc:"Coblicam (1 câmeras)", tempo:90, id_field: "3003972e-cd7a-46d8-9194-d611e54e4093"},
+        {desc:"Coblicam Cabine (2 câmeras)", tempo:90, id_field: "3d4a1cd8-f290-48fb-8e9e-4fa3353d9ab7"},
+        {desc:"Coblicam Fadiga (2 câmeras)", tempo:90, id_field: "ce4c9906-84d3-4ff2-a295-8b23f51c5eb2"},
+        {desc:"Coblicam-Multi (3 câmeras internas)", tempo:120, id_field: "33eeb8a1-e867-469b-9701-bcfe695c74e5"},
+        {desc:"Coblicam-Multi (2 câmeras + 1 externa)", tempo:240, id_field: "33eeb8a1-e867-469b-9701-bcfe695c74e5"},
+        {desc:"Coblicam-Multi (4 câmeras)", tempo:240, id_field: "33eeb8a1-e867-469b-9701-bcfe695c74e5"},
+        {desc:"Coblicam-Multi (5 câmeras)", tempo:300, id_field: "33eeb8a1-e867-469b-9701-bcfe695c74e5"}
+    ]
 };
     
     window.onload = async () => { carregarProdutos(); await carregarDadosDoBanco(); };
@@ -488,17 +491,17 @@ const dataSelecionada = sel.length > 0 ? sel[0].dataset.date : null;
     }
 
     // 3. Montagem do Objeto Agendamento (Sintaxe Corrigida)
+const selectManutencao = document.getElementById('tipoManutencao');
+    
     const agendamento = {
-        // Dados do Ticket e Cliente
         ticket: document.getElementById('ticket').value,
         cliente: document.getElementById('clienteNome').value,
         solicitante: document.getElementById('solicitante').value,
         acompanhamento: document.getElementById('respAcompanhamento').value,
         telefone_responsavel: document.getElementById('telResponsavel').value,
         
-        // Dados do Prestador (O que você achou no F12)
         nome_prestador: prestador.nome, 
-        field_id: prestador.field_id,
+        field_id: prestador.field_id, // ID do Técnico para alocação
 
         // Dados de Endereço
         cep: document.getElementById('inputCep').value,
@@ -508,9 +511,13 @@ const dataSelecionada = sel.length > 0 ? sel[0].dataset.date : null;
         cidade: document.getElementById('inputCidade').value,
         uf: document.getElementById('inputUf').value,
 
-        // Dados do Serviço e Agenda
+        // ENVIANDO OS IDS DINÂMICOS PARA A FIELD
+        // Pega o ID (Instalação, Troca, etc) do Value do Select
+        maintenance_id: selectManutencao.value, 
+        // Pega o ID do Segmento (Telemetria/Câmeras) do primeiro item da lista
+        segment_id: itensSelecionados.length > 0 ? itensSelecionados[0].segment_id : "",
+        
         tipo_servico: itensSelecionados.map(i => i.desc).join(', '),
-        segmento: itensSelecionados.length > 0 ? itensSelecionados[0].segmento : "",
         data: dataSelecionada, 
         slots: slotsSelecionados
     };
@@ -584,22 +591,45 @@ const dataSelecionada = sel.length > 0 ? sel[0].dataset.date : null;
             return `<div class="card"><div class="card-info"><strong>${p.nome}</strong><br><span style="color:#64748b; font-size: 0.85rem;">${p.cidade}/${p.uf}</span><div style="margin-top: 5px; font-size: 0.85rem;">👥 Técnicos: ${p.qtdtecnicos} | 📍 Raio: ${p.range}km</div></div><div class="card-actions">${btns}</div></div>`; 
         }).join(''); 
     };
-    window.carregarProdutos = function(){ let select=document.getElementById("produto"); for(let tipo in produtos){ let group=document.createElement("optgroup"); group.label=tipo; produtos[tipo].forEach(p=>{ let opt=document.createElement("option"); opt.value=p.tempo; opt.text=p.desc; group.appendChild(opt); }); select.appendChild(group); } };
-    window.adicionarProduto = function(){ 
-        let select = document.getElementById("produto"); 
-        let segmento = document.getElementById("tipoManutencao").value;
-        let descBase = select.options[select.selectedIndex].text;
-        let descComSegmento = `[${segmento.toUpperCase()}] ${descBase}`;
-        let qtd = parseInt(document.getElementById("quantidade").value) || 1; 
-        let tempoBase = parseInt(select.value); 
-        
-        let index = itensSelecionados.findIndex(item => item.desc === descComSegmento);
-        if (index !== -1) { itensSelecionados[index].qtd += qtd; } else {
-            itensSelecionados.push({desc: descComSegmento, tempo: tempoBase, qtd: qtd, segmento: segmento});
-        }
-        window.renderizarProdutos(); 
-        if(prestadorSelecionadoIndex !== null) window.rdaAgendamento(); 
-    };
+window.carregarProdutos = function() {
+    let select = document.getElementById("produto");
+    select.innerHTML = ""; // Limpa antes de carregar
+    for (let tipo in serviçosDisponíveis) {
+        let group = document.createElement("optgroup");
+        group.label = tipo;
+        serviçosDisponíveis[tipo].forEach(p => {
+            let opt = document.createElement("option");
+            opt.value = p.tempo;
+            opt.text = p.desc;
+            // Guardamos o ID do segmento no dataset do option
+            opt.dataset.idField = p.id_field;
+            group.appendChild(opt);
+        });
+        select.appendChild(group);
+    }
+};
+window.adicionarProduto = function() {
+    let select = document.getElementById("produto");
+    let optionSelecionada = select.options[select.selectedIndex];
+    
+    // Captura o ID do Segmento (Telemetria, Videotelemetria, etc)
+    let idSegmento = optionSelecionada.dataset.idField;
+    let descBase = optionSelecionada.text;
+    
+    let qtd = parseInt(document.getElementById("quantidade").value) || 1;
+    let tempoBase = parseInt(select.value);
+
+    // Adiciona ao array de itens selecionados
+    itensSelecionados.push({
+        desc: descBase,
+        tempo: tempoBase,
+        qtd: qtd,
+        segment_id: idSegmento // Este é o ID que vai para a Field
+    });
+
+    window.renderizarProdutos();
+    if (prestadorSelecionadoIndex !== null) window.rdaAgendamento();
+};
     window.renderizarProdutos = function(){ let totalMinutos = itensSelecionados.reduce((a, b) => a + (b.tempo * b.qtd), 0); document.getElementById("horasNecessarias").innerText = Math.ceil(totalMinutos/60); document.getElementById("lista-produtos").innerHTML = itensSelecionados.map((i, idx) => `<div class="item-lista"><span>${i.desc} (x${i.qtd})</span> <button onclick="itensSelecionados.splice(${idx},1); window.renderizarProdutos(); window.rdaAgendamento();" style="background:red; padding:2px 8px; color:white; border:none; border-radius:4px; cursor:pointer;">x</button></div>`).join(''); };
     
     window.renderPainel = function(){ 
