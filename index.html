@@ -578,11 +578,11 @@ window.concluirAgendamentoFinal = async function(btn) {
         qtdtecnicos: prestador.qtdtecnicos,
         ticket: document.getElementById('ticket').value,
         cliente: document.getElementById('clienteNome').value,
-        cnpj: document.getElementById('clienteCnpj').value, // <--- NOME DA CHAVE CORRIGIDO PARA 'cnpj'
         solicitante: document.getElementById('solicitante').value,
         data: dataSelecionada, 
         rawdate: dataSelecionada,
         slots: slotsSelecionados,
+        // CAMPOS QUE PARARAM DE SALVAR:
         rua: document.getElementById('inputRua').value,
         numero: document.getElementById('inputNumero').value,
         bairro: document.getElementById('inputBairro').value,
