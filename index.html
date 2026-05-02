@@ -487,30 +487,31 @@ window.concluirAgendamentoFinal = async function(btn) {
     // MONTAGEM DINÂMICA DO OBJETO
 // Dentro de window.concluirAgendamentoFinal no APEX
 const agendamento = {
-    ticket: document.getElementById('ticket').value,
-    cliente: document.getElementById('clienteNome').value,
-    solicitante: document.getElementById('solicitante').value,
-    acompanhamento: document.getElementById('respAcompanhamento').value,
-    telefone_responsavel: document.getElementById('telResponsavel').value,
-    nome_prestador: prestadores[prestadorSelecionadoIndex].nome, // IMPORTANTE PARA O BANCO
-    field_id: prestadores[prestadorSelecionadoIndex].field_id,
-    
-    cep: document.getElementById('inputCep').value,
-    rua: document.getElementById('inputRua').value,
-    numero: document.getElementById('inputNumero').value,
-    bairro: document.getElementById('inputBairro').value,
-    cidade: document.getElementById('inputCidade').value,
-    uf: document.getElementById('inputUf').value,
-    
-    maintenance_id: document.getElementById('tipoManutencao').value,
-    segment_id: itensSelecionados[0]?.segment_id || "",
-    
-    tipo_servico: itensSelecionados.map(i => `• ${i.desc} (Qtd: ${i.qtd})`).join('\n'),
-    itens_originais: itensSelecionados, // ENVIA O ARRAY PARA O JSONB
-    
-    data: dataSelecionada,
-    slots: slotsSelecionados
-};
+        // Campos para sua Tabela
+        prestador: prestadores[prestadorSelecionadoIndex].nome,
+        ticket: document.getElementById('ticket').value,
+        cliente: document.getElementById('clienteNome').value,
+        solicitante: document.getElementById('solicitante').value,
+        data: dataSelecionada, 
+        slots: slotsSelecionados,
+        rua: document.getElementById('inputRua').value,
+        numero: document.getElementById('inputNumero').value,
+        bairro: document.getElementById('inputBairro').value,
+        cidade: document.getElementById('inputCidade').value,
+        uf: document.getElementById('inputUf').value,
+        cep: document.getElementById('inputCep').value,
+        acompannhamento: document.getElementById('respAcompanhamento').value,
+        telefone_responsavel: document.getElementById('telResponsavel').value,
+        segmento: itensSelecionados[0]?.nomeManutencao || "", 
+        tipo_servico: "Agendamento Apex",
+        field_id: prestadores[prestadorSelecionadoIndex].field_id,
+        produtos_texto: itensSelecionados.map(i => `${i.desc} (Qtd: ${i.qtd})`).join(' | '),
+
+        // Campos auxiliares para a Lógica da Field (Edge Function)
+        segment_id_field: itensSelecionados[0]?.segment_id || "",
+        maintenance_id_field: document.getElementById('tipoManutencao').value,
+        hora_limpa: slotsSelecionados[0]?.substring(0, 5)
+    };
 
     const originalText = btn.innerText;
     btn.innerText = "Integrando...";
