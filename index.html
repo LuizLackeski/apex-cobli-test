@@ -836,21 +836,24 @@ window.adicionarProduto = function() {
     window.renderizarProdutos();
     if (prestadorSelecionadoIndex !== null) window.rdaAgendamento();
 };
-    window.renderizarProdutos = function() { 
-    // Calcula o total geral apenas para o resumo das horas necessárias
-    let totalMinutos = itensSelecionados.reduce((a, b) => a + (b.tempo * b.qtd), 0); 
-    document.getElementById("horasNecessarias").innerText = Math.ceil(totalMinutos / 60); 
-    // Renderiza a lista com detalhes individuais
+window.renderizarProdutos = function() { 
+    // Calcula o total geral (em minutos) para o resumo das horas que bloqueiam a agenda
+    let totalMinutosGeral = itensSelecionados.reduce((a, b) => a + (b.tempo * b.qtd), 0); 
+    document.getElementById("horasNecessarias").innerText = Math.ceil(totalMinutosGeral / 60); 
+
+    // Renderiza a lista mostrando o tempo acumulado por serviço
     document.getElementById("lista-produtos").innerHTML = itensSelecionados.map((i, idx) => {
-        // i.tempo é o valor individual do banco (ex: 40 ou 90)
+        // Calcula o tempo total deste item específico (Ex: 2 unidades x 40m = 80m)
+        let tempoAcumuladoItem = i.tempo * i.qtd;
+        
         return `
             <div class="item-lista">
                 <span>
                     <strong>Serviço:</strong> [${i.nomeManutencao.toUpperCase()}] ${i.desc} 
-                    (Qtd: ${i.qtd} | ${i.tempo}m cada)
+                    (Qtd: ${i.qtd} | Total: ${tempoAcumuladoItem}m)
                 </span> 
                 <button onclick="itensSelecionados.splice(${idx},1); window.renderizarProdutos(); window.rdaAgendamento();" 
-                        style="background:red; padding:2px 8px; color:white; border:none; border-radius:4px; cursor:pointer;">
+                        style="background:red; padding:2px 8px; color:white; border:none; border-radius:4px; cursor:pointer; margin-left:10px;">
                     x
                 </button>
             </div>`;
