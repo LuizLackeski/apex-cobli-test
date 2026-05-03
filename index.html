@@ -510,17 +510,22 @@ window.getBlockedHours = function(prestador, data) {
     let blocked = new Set();
     let cap = parseInt(prestador.qtdtecnicos) || 1;
     
+    // Filtra agendamentos do prestador no dia
     agendamentos.filter(a => a.prestador === prestador.nome && (a.data === data || a.rawdate === data)).forEach(a => {
         let slotsArray = Array.isArray(a.slots) ? a.slots : (typeof a.slots === 'string' ? a.slots.split(', ') : []);
+        
         slotsArray.forEach(s => {
+            // Se o slot específico atingiu a capacidade máxima de técnicos
             if (window.getOcupacaoSlot(prestador, data, s) >= cap) {
                 let h = parseInt(s.split(':')[0]);
-                blocked.add(h); 
+                blocked.add(h);     // Bloqueia a hora do serviço
+                blocked.add(h - 1); // Bloqueia 1h antes (Margem de segurança)
+                blocked.add(h + 1); // Bloqueia 1h depois (Margem de segurança)
             }
         });
     });
     return blocked;
-};
+};;
     window.abrirDetalhesPrestador = function(index) { let p = prestadores[index]; let agendaHtml = ''; ["Seg", "Ter", "Qua", "Qui", "Sex", "Sab"].forEach(d => { let slots = p.agenda.filter(a => a.dia === d).map(a => `<div class="cell">${a.hora}</div>`).join(''); if(slots) { agendaHtml += `<div class="agenda-day-card" style="margin-bottom:10px;"><div class="agenda-day-title">${d}</div><div class="slots-wrapper">${slots}</div></div>`; } }); window.exibirModal("Detalhes do Prestador", `<div class="info-group" style="margin-bottom:15px;"><div style="font-weight:bold; font-size:1.1rem;">${p.nome}</div><div style="font-size:0.9rem; color:#64748b;">Resp: ${p.responsavel} | Contato: ${p.contato} | Raio: ${p.range} km</div></div>${agendaHtml}`); };
     
 window.abrirDetalhesAgendamento = function(index) {
@@ -684,18 +689,32 @@ window.concluirAgendamentoFinal = async function(btn) {
         }); 
     
         // REGRA DE HORAS CONSECUTIVAS
+// --- NOVA VALIDAÇÃO DE JANELA COM MARGEM ---
         let hours = availableSlots.map(s => parseInt(s.hora.split(':')[0])).sort((a, b) => a - b);
-        let hasConsecutive = false;
-        if (hours.length >= horasNecessarias) {
-            let count = 1;
-            for (let j = 0; j < hours.length - 1; j++) {
-                if (hours[j+1] === hours[j] + 1) {
-                    count++;
-                    if (count >= horasNecessarias) { hasConsecutive = true; break; }
-                } else { count = 1; }
+        let validStartHours = [];
+        for (let j = 0; j < hours.length; j++) {
+            let sequenceFound = true;
+            let currentStart = hours[j];
+                        // Verifica se as N horas do serviço estão disponíveis E não estão no Set de bloqueio/margem
+            for (let k = 0; k < horasNecessarias; k++) {
+                let hourToCheck = currentStart + k;
+                if (!hours.includes(hourToCheck) || blocked.has(hourToCheck)) {
+                    sequenceFound = false;
+                    break;
+                }
             }
+                        // Além das horas de serviço, a regra exige que o 'depois' (+1h) 
+            // não pode estar bloqueado por OUTRO agendamento que já atingiu o CAP
+            if (sequenceFound) {
+                let hourAfter = currentStart + horasNecessarias;
+                if (blocked.has(hourAfter)) {
+                    // Se a hora imediatamente após o fim do serviço pretendido 
+                    // for uma hora bloqueada (margem de outro serviço), não permite começar aqui
+                    sequenceFound = false;
+                }
+            }
+            if (sequenceFound) validStartHours.push(currentStart);
         }
-
         if(hasConsecutive){ 
             diasEncontrados++;
             let card = document.createElement("div"); 
