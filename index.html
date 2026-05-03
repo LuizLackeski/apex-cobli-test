@@ -367,13 +367,17 @@
 
     const ADMIN_EMAILS = ["luiz.lackeski@cobli.co", "fernando.souza@cobli.co", "anni.torrecilhas@cobli.co"]; 
     let isAuthorized = false;
-    function checkAuth() {
+function checkAuth() {
         let email = localStorage.getItem('userEmail');
         if (email && email.toLowerCase().endsWith("@cobli.co")) {
             document.getElementById('login-overlay').style.display = 'none';
             isAuthorized = ADMIN_EMAILS.includes(email.toLowerCase());
             document.getElementById('user-display').innerText = email;
-            if(isAuthorized) document.getElementById('slack-adm-toggle').style.display = 'flex';
+            
+            // CORREÇÃO AQUI: Mudamos de 'slack-adm-toggle' para 'integrations-control'
+            const panel = document.getElementById('integrations-control');
+            if(isAuthorized && panel) panel.style.display = 'flex';
+            
             if(window.renderizarListaPrestadores) window.renderizarListaPrestadores();
         } else {
             localStorage.removeItem('userEmail');
