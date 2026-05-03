@@ -592,7 +592,7 @@ window.concluirAgendamentoFinal = async function(btn) {
         acompanhamento: document.getElementById('respAcompanhamento').value,
         telefone_responsavel: document.getElementById('telResponsavel').value,
         segmento: itensSelecionados[0]?.nomeManutencao || "", 
-        tipo_servico: "Agendamento Apex",
+        tipo_servico: itensSelecionados[0]?.desc || "Manutenção",
         field_id: prestador.field_id,
         produtos_texto: itensSelecionados.map(i => `• [${i.nomeManutencao.toUpperCase()}] ${i.desc} (Qtd: ${i.qtd})`).join('\n'),
         segment_id_field: itensSelecionados[0]?.segment_id || "",
