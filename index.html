@@ -676,47 +676,31 @@ window.rdaAgendamento = function() {
         let dStr = data.toLocaleDateString(); 
         let dNome = diasSemana[data.getDay()]; 
         
-        // --- REGRA DE MARGEM (1h ANTES / 1h DEPOIS) ---
         let blocked = window.getBlockedHours(p, dStr); 
-        
         let allSlots = (p.agenda && Array.isArray(p.agenda)) ? p.agenda.filter(a => a.dia == dNome) : []; 
         
-        // Horas que têm pelo menos 1 técnico livre (sem considerar margem ainda)
+        // Apenas horas realmente disponíveis (capacidade técnica + sem margem de segurança)
         let hoursAvailable = allSlots
-            .filter(item => window.getOcupacaoSlot(p, dStr, item.hora) < cap)
+            .filter(item => window.getOcupacaoSlot(p, dStr, item.hora) < cap && !blocked.has(parseInt(item.hora.split(':')[0])))
             .map(item => parseInt(item.hora.split(':')[0]));
 
-        // --- VALIDAÇÃO DA JANELA SEQUENCIAL ---
-        let validStartHours = [];
-        hoursAvailable.forEach(hStart => {
-            let sequenceOk = true;
-            
-            // 1. Checa se todas as horas do serviço estão livres E não são margem de outro
+        // --- VALIDAÇÃO: O DIA SÓ APARECE SE TIVER PELO MENOS UMA JANELA COMPLETA ---
+        let temJanelaValida = false;
+        for (let h of hoursAvailable) {
+            let seq = true;
             for (let k = 0; k < horasNecessarias; k++) {
-                let currentH = hStart + k;
-                if (!hoursAvailable.includes(currentH) || blocked.has(currentH)) {
-                    sequenceOk = false;
-                    break;
-                }
+                if (!hoursAvailable.includes(h + k)) { seq = false; break; }
             }
-
-            // 2. Checa a margem de saída (1h depois do fim do serviço)
-            if (sequenceOk) {
-                let marginAfter = hStart + horasNecessarias;
-                if (blocked.has(marginAfter)) {
-                    sequenceOk = false;
-                }
-            }
-
-            if (sequenceOk) validStartHours.push(hStart);
-        });
-        if(validStartHours.length > 0){ 
+            if (seq) { temJanelaValida = true; break; }
+        }
+        if(temJanelaValida){ 
             diasEncontrados++;
             let card = document.createElement("div"); 
             card.className = "agenda-day-card"; 
             card.innerHTML = `<div class="agenda-day-title">${dStr} (${dNome})</div>`; 
             let wrapper = document.createElement("div"); 
             wrapper.className = "slots-wrapper"; 
+          
             allSlots.forEach(item => { 
                 let hInt = parseInt(item.hora.split(':')[0]);
                 let div = document.createElement("div"); 
@@ -724,20 +708,44 @@ window.rdaAgendamento = function() {
                 div.innerText = item.hora; 
                 div.dataset.hora = item.hora; 
                 div.dataset.date = dStr; 
-                // Se não for uma hora de início válida, desabilita visualmente
-                if (!validStartHours.includes(hInt)) {
-                    div.style.opacity = "0.3";
+                // Se a hora individual está ocupada ou é margem, ela fica apagada
+                if (!hoursAvailable.includes(hInt)) {
+                    div.style.opacity = "0.2";
                     div.style.cursor = "not-allowed";
-                    div.title = "Horário indisponível ou sem margem de segurança";
                 }
                 div.onclick = function() { 
-                    if (!validStartHours.includes(hInt)) return;
-                    // Limpa seleções anteriores
+                    if (!hoursAvailable.includes(hInt)) return;
+
+                    // LÓGICA DE SELEÇÃO INTELIGENTE (Prioriza frente, senão pega trás)
+                    let selecionados = [];
+                  // Tenta ver se cabe do clique para frente
+                    let cabeFrente = true;
+                    for(let f=0; f < horasNecessarias; f++) {
+                        if(!hoursAvailable.includes(hInt + f)) { cabeFrente = false; break; }
+                    }
+                    let horaInicioReal = hInt;
+                    if(!cabeFrente) {
+                        // Se não coube para frente, tenta achar o início voltando as horas necessárias
+                        // Varre para trás para encontrar onde começa a sequência que termina no clique
+                        for(let b = horasNecessarias - 1; b >= 0; b--) {
+                            let testeInicio = hInt - b;
+                            let seqOk = true;
+                            for(let k=0; k < horasNecessarias; k++) {
+                                if(!hoursAvailable.includes(testeInicio + k)) { seqOk = false; break; }
+                            }
+                            if(seqOk) { horaInicioReal = testeInicio; break; }
+                        }
+                    }
+                    // Verifica se a hora de início encontrada é válida
+                    let checkFinal = true;
+                    for(let m=0; m<horasNecessarias; m++) {
+                        if(!hoursAvailable.includes(horaInicioReal + m)) checkFinal = false;
+                    }
+                    if(!checkFinal) return window.showMessage("Este horário não possui janela de " + horasNecessarias + "h livre.");
+                    // Limpa e aplica a seleção
                     document.querySelectorAll("#agenda-agendamento .cell").forEach(c => c.classList.remove('selecionado'));
-                    
-                    // Seleciona o bloco de horas automático
                     for(let m=0; m < horasNecessarias; m++) {
-                        let targetH = `${hInt + m}:00`;
+                        let targetH = `${horaInicioReal + m}:00`;
                         let targetCell = Array.from(wrapper.children).find(c => c.dataset.hora === targetH);
                         if(targetCell) targetCell.classList.add("selecionado");
                     }
@@ -749,7 +757,7 @@ window.rdaAgendamento = function() {
         } 
     } 
     if (diasEncontrados === 0) {
-        container.innerHTML = `<div style="color:red; font-size:0.8rem;">Não há janelas disponíveis para este serviço (considerando margem de 1h).</div>`;
+        container.innerHTML = `<div style="color:red; font-size:0.85rem; font-weight:bold;">⚠️ Não há horários disponíveis com ${horasNecessarias}h seguidas para este prestador.</div>`;
     }
 };
     window.validarEAvancar = function() { if (itensSelecionados.length === 0) return window.showMessage("Adicione pelo menos um serviço!"); let totalMinutos = itensSelecionados.reduce((a, b) => a + (b.tempo * b.qtd), 0); let horas = Math.ceil(totalMinutos / 60); let sel = document.querySelectorAll("#agenda-agendamento .cell.selecionado"); if (sel.length === 0) return window.showMessage("Selecione horário!"); if (sel.length !== horas && horas > 0) return window.showMessage("Selecione exatamente " + horas + " hora(s)!"); document.querySelectorAll('#consulta > div').forEach(div => div.style.display = 'none'); document.getElementById('step-4').style.display = 'block'; };
