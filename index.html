@@ -213,6 +213,7 @@
             <h2>Dados do Cliente</h2>
             <label>Nº do Ticket</label><input id="ticket" required>
             <label>Nome do Cliente</label><input id="clienteNome" required>
+            <label>CNPJ / CPF</label><input id="clienteCnpj" placeholder="00.000.000/0000-00" required>
             <label>Responsável pela solicitação (APEX)</label><input id="solicitante" required>
             <label>Responsável pelo acompanhamento (Local)</label><input id="respAcompanhamento" required>
             <label>Telefone do responsável</label><input id="telResponsavel" placeholder="(00) 00000-0000" required>
@@ -576,6 +577,7 @@ window.concluirAgendamentoFinal = async function(btn) {
         qtdtecnicos: prestador.qtdtecnicos,
         ticket: document.getElementById('ticket').value,
         cliente: document.getElementById('clienteNome').value,
+        cnpj: document.getElementById('clienteCnpj').value,
         solicitante: document.getElementById('solicitante').value,
         data: dataSelecionada, 
         rawdate: dataSelecionada,
@@ -590,7 +592,7 @@ window.concluirAgendamentoFinal = async function(btn) {
         acompanhamento: document.getElementById('respAcompanhamento').value,
         telefone_responsavel: document.getElementById('telResponsavel').value,
         segmento: itensSelecionados[0]?.nomeManutencao || "", 
-        tipo_servico: "Agendamento Apex",
+        tipo_servico: itensSelecionados[0]?.desc || "Manutenção",
         field_id: prestador.field_id,
         produtos_texto: itensSelecionados.map(i => `• [${i.nomeManutencao.toUpperCase()}] ${i.desc} (Qtd: ${i.qtd})`).join('\n'),
         segment_id_field: itensSelecionados[0]?.segment_id || "",
@@ -812,9 +814,7 @@ window.renderPainel = function(){
     }); 
 
     document.getElementById("painel-conteudo").innerHTML = filtradosPainel.map((a, i) => {
-        let dataRegistro = a.created_at 
-            ? new Date(a.created_at).toLocaleString('pt-BR') 
-            : "Não registrado";
+        let dataRegistro = a.created_at ? new Date(a.created_at).toLocaleString('pt-BR') : "N/A";
         
         return `<div class="painel-item">
             <div style="flex-grow: 1; font-size: 0.95rem;">
