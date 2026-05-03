@@ -225,19 +225,21 @@
             </div>
         </div>
         
-        <button id="btnConfirmar" onclick="window.revisarAgendamento(this)" style="background:green;">Confirmar</button>
-            <h2>Dados do Cliente</h2>
-            <label>Nº do Ticket</label><input id="ticket" required>
-            <label>Nome do Cliente</label><input id="clienteNome" required>
-            <label>CNPJ / CPF</label><input id="clienteCnpj" placeholder="00.000.000/0000-00" required>
-            <label>Responsável pela solicitação (APEX)</label><input id="solicitante" required>
-            <label>Responsável pelo acompanhamento (Local)</label><input id="respAcompanhamento" required>
-            <label>Telefone do responsável</label><input id="telResponsavel" placeholder="(00) 00000-0000" required>
-            <button onclick="window.proximoPasso(3)" style="background:gray;">Voltar</button>
-            <button id="btnConfirmar" onclick="window.revisarAgendamento()" style="background:green;">Confirmar</button>
-            <button onclick="window.cancelarAgendamento()" class="btn-cancelar">Cancelar</button>
-        </div>
-    </div>
+       <div id="step-4" class="card" style="display:none;">
+    <h2>Dados do Cliente</h2>
+    <label>Nº do Ticket</label><input id="ticket" required>
+    <label>Nome do Cliente</label><input id="clienteNome" required>
+    <label>CNPJ / CPF</label><input id="clienteCnpj" placeholder="00.000.000/0000-00" required>
+    <label>Responsável pela solicitação (APEX)</label><input id="solicitante" required>
+    <label>Responsável pelo acompanhamento (Local)</label><input id="respAcompanhamento" required>
+    <label>Telefone do responsável</label><input id="telResponsavel" placeholder="(00) 00000-0000" required>
+    
+    <button onclick="window.proximoPasso(3)" style="background:gray;">Voltar</button>
+    
+    <button id="btnConfirmar" onclick="window.revisarAgendamento()" style="background:green;">Confirmar</button>
+    
+    <button onclick="window.cancelarAgendamento()" class="btn-cancelar">Cancelar</button>
+</div>
 
     <div id="cadastro" class="aba">
         <div id="lista-prestadores-view" class="card">
@@ -586,6 +588,59 @@ window.abrirDetalhesAgendamento = function(index) {
     window.confirmarExclusaoAgendamento = async function(id) { await fetch(`${API_URL}/agendamentos/${id}`, { method: 'DELETE', headers: getHeaders() }); await carregarDadosDoBanco(); window.showToast("Agendamento excluído!"); window.fecharModal(); };
     
 // --- INÍCIO DA MUDANÇA: CONCLUIR AGENDAMENTO ---
+    window.revisarAgendamento = function() {
+    const sel = document.querySelectorAll("#agenda-agendamento .cell.selecionado");
+    const dataSelecionada = sel.length > 0 ? sel[0].dataset.date : 'N/A';
+    const slotsSelecionados = Array.from(sel).map(c => c.dataset.hora).join(', ');
+    const prestador = prestadores[prestadorSelecionadoIndex]?.nome || 'Não selecionado';
+    
+    const ticket = document.getElementById('ticket').value;
+    const cliente = document.getElementById('clienteNome').value;
+    const solicitante = document.getElementById('solicitante').value;
+    const responsavel = document.getElementById('respAcompanhamento').value;
+    const telefone = document.getElementById('telResponsavel').value;
+    const endereco = `${document.getElementById('inputRua').value}, ${document.getElementById('inputNumero').value} - ${document.getElementById('inputBairro').value}`;
+
+    // Monta o resumo dos serviços
+    let prodHtml = itensSelecionados.map(i => 
+        `<div style="margin-bottom:5px;">• ${i.desc} <strong>(Qtd: ${i.qtd} | ${i.tempo * i.qtd}m)</strong></div>`
+    ).join('');
+
+    let html = `
+        <div style="background: white; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 15px; text-align: left;">
+            <div style="font-weight:bold; font-size:1.1rem; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px; margin-bottom: 8px; color:var(--primary);">
+                📝 Revisão do Agendamento
+            </div>
+            <div style="font-size:0.9rem; line-height:1.6;">
+                <strong>🎟️ Ticket:</strong> ${ticket}<br>
+                <strong>👤 Cliente:</strong> ${cliente}<br>
+                <strong>🛠️ Prestador:</strong> ${prestador}<br>
+                <strong>📅 Data:</strong> ${dataSelecionada}<br>
+                <strong>⏰ Horários:</strong> ${slotsSelecionados}<br>
+                <hr style="border:0; border-top:1px solid #f1f5f9; margin:8px 0;">
+                <strong>📍 Local:</strong> ${endereco}<br>
+                <strong>📞 Contato:</strong> ${responsavel} (${telefone})
+            </div>
+        </div>
+        <div style="font-weight:600; margin-bottom:5px; text-align: left;">📦 Serviços:</div>
+        <div style="background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #cbd5e1; margin-bottom: 20px; font-size: 0.85rem; text-align: left;">
+            ${prodHtml}
+        </div>
+        <div style="display: flex; gap: 10px;">
+            <button onclick="window.fecharModal()" style="background:gray; flex:1;">⬅️ Editar Dados</button>
+            <button onclick="window.confirmarEnvioReal()" style="background:green; flex:1;">✅ Confirmar e Salvar</button>
+        </div>
+    `;
+
+    window.exibirModal("Confirme os Dados", html);
+};
+
+// Esta função será a que realmente chama a Edge Function
+window.confirmarEnvioReal = function() {
+    window.fecharModal();
+    const btn = document.getElementById('btnConfirmar');
+    window.concluirAgendamentoFinal(btn);
+};
 window.concluirAgendamentoFinal = async function(btn) {
     const sel = document.querySelectorAll("#agenda-agendamento .cell.selecionado");
     const slotsSelecionados = Array.from(sel).map(c => c.dataset.hora.substring(0, 5));
@@ -659,54 +714,7 @@ window.concluirAgendamentoFinal = async function(btn) {
         btn.innerText = originalText; btn.disabled = false;
     }
 };
-     window.revisarAgendamento = function() {
-    const sel = document.querySelectorAll("#agenda-agendamento .cell.selecionado");
-    const dataSelecionada = sel.length > 0 ? sel[0].dataset.date : 'N/A';
-    const slotsSelecionados = Array.from(sel).map(c => c.dataset.hora).join(', ');
-    const prestador = prestadores[prestadorSelecionadoIndex]?.nome || 'Não selecionado';
-    const ticket = document.getElementById('ticket').value;
-    const cliente = document.getElementById('clienteNome').value;
-    const solicitante = document.getElementById('solicitante').value;
-    const responsavel = document.getElementById('respAcompanhamento').value;
-    const telefone = document.getElementById('telResponsavel').value;
-    const endereco = `${document.getElementById('inputRua').value}, ${document.getElementById('inputNumero').value} - ${document.getElementById('inputBairro').value}`;
-    // Monta o resumo dos serviços
-    let prodHtml = itensSelecionados.map(i => 
-        `<div style="margin-bottom:5px;">• ${i.desc} <strong>(Qtd: ${i.qtd} | ${i.tempo * i.qtd}m)</strong></div>`
-    ).join('');
-    let html = `
-        <div style="background: white; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 15px; text-align: left;">
-            <div style="font-weight:bold; font-size:1.1rem; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px; margin-bottom: 8px; color:var(--primary);">
-                📝 Revisão do Agendamento
-            </div>
-            <div style="font-size:0.9rem; line-height:1.6;">
-                <strong>🎟️ Ticket:</strong> ${ticket}<br>
-                <strong>👤 Cliente:</strong> ${cliente}<br>
-                <strong>🛠️ Prestador:</strong> ${prestador}<br>
-                <strong>📅 Data:</strong> ${dataSelecionada}<br>
-                <strong>⏰ Horários:</strong> ${slotsSelecionados}<br>
-                <hr style="border:0; border-top:1px solid #f1f5f9; margin:8px 0;">
-                <strong>📍 Local:</strong> ${endereco}<br>
-                <strong>📞 Contato:</strong> ${responsavel} (${telefone})
-            </div>
-        </div>
-        <div style="font-weight:600; margin-bottom:5px; text-align: left;">📦 Serviços:</div>
-        <div style="background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #cbd5e1; margin-bottom: 20px; font-size: 0.85rem; text-align: left;">
-            ${prodHtml}
-        </div>
-        <div style="display: flex; gap: 10px;">
-            <button onclick="window.fecharModal()" style="background:gray; flex:1;">⬅️ Editar Dados</button>
-            <button onclick="window.confirmarEnvioReal()" style="background:green; flex:1;">✅ Confirmar e Salvar</button>
-        </div>
-    `;
-    window.exibirModal("Confirme os Dados", html);
-};
-// Esta função será a que realmente chama a Edge Function
-window.confirmarEnvioReal = function() {
-    window.fecharModal();
-    const btn = document.getElementById('btnConfirmar');
-    window.concluirAgendamentoFinal(btn);
-};
+    
 // --- FIM DA MUDANÇA ---
     window.limparFormulario = function() { itensSelecionados = []; prestadorSelecionadoIndex = null; document.getElementById("lista-produtos").innerHTML = ""; document.getElementById("horasNecessarias").innerText = "0"; document.getElementById("agenda-agendamento").innerHTML = ""; document.getElementById("inputCep").value = ""; document.getElementById("ticket").value = ""; document.getElementById("clienteNome").value = ""; document.getElementById("solicitante").value = ""; document.getElementById("respAcompanhamento").value = ""; document.getElementById("telResponsavel").value = ""; };
     window.trocarAba = function(id, btn){ document.querySelectorAll('.aba').forEach(a => a.classList.remove('ativa')); document.getElementById(id).classList.add('ativa'); document.querySelectorAll('.menu button').forEach(b => b.classList.remove('ativo')); if(btn) btn.classList.add('ativo'); if(id === 'painel') window.atualizarFiltrosPrestador(); if(id === 'dashboard') window.renderDashboard(); };
