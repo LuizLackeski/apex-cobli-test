@@ -76,8 +76,9 @@
         .card-selecao strong { color: var(--primary); font-size: 1.1rem; }
         .date-pills { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
         .pill { background: #dbeafe; color: #1e40af; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; border: 1px solid #bfdbfe; }
-        
         .bloco-servico { background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #cbd5e1; margin-bottom: 15px; }
+        .switch-on { background-color: #10b981 !important; color: white !important; } /* Verde */
+        .switch-off { background-color: #ef4444 !important; color: white !important; } /* Vermelho */
     </style>
 </head>
 <body>
@@ -102,21 +103,21 @@
 <div id="integrations-control" class="slack-adm-panel" style="display: flex; gap: 10px;">
     <div style="display:flex; align-items:center; gap:5px;">
         <span>SLACK</span>
-        <select id="slackSwitch">
+        <select id="slackSwitch" class="switch-off" onchange="window.updateSwitchColor(this)">
             <option value="ON">ON</option>
             <option value="OFF" selected>OFF</option>
         </select>
     </div>
     <div style="display:flex; align-items:center; gap:5px; border-left: 1px solid rgba(255,255,255,0.3); padding-left:10px;">
         <span>FIELD</span>
-        <select id="fieldSwitch">
+        <select id="fieldSwitch" class="switch-off" onchange="window.updateSwitchColor(this)">
             <option value="ON">ON</option>
             <option value="OFF" selected>OFF</option>
-       </select>
+        </select>
     </div>
     <div style="display:flex; align-items:center; gap:5px; border-left: 1px solid rgba(255,255,255,0.3); padding-left:10px;">
         <span>BANCO</span>
-        <select id="dbSwitch">
+        <select id="dbSwitch" class="switch-on" onchange="window.updateSwitchColor(this)">
             <option value="ON" selected>ON</option>
             <option value="OFF">OFF</option>
         </select>
@@ -299,7 +300,16 @@
 <script>
     let filtradosPainel = []; 
     let myChart = null; 
-
+    
+window.updateSwitchColor = function(el) {
+    if (el.value === 'ON') {
+        el.classList.remove('switch-off');
+        el.classList.add('switch-on');
+    } else {
+        el.classList.remove('switch-on');
+        el.classList.add('switch-off');
+    }
+};
     window.exibirModal = function(titulo, htmlBody) {
         document.getElementById('modalHeader').innerText = titulo;
         document.getElementById('modalBody').innerHTML = htmlBody;
@@ -463,6 +473,12 @@ async function carregarDadosDoBanco() {
         
         renderPainel(); 
         renderDashboard(); 
+        setTimeout(() => {
+    ['slackSwitch', 'fieldSwitch', 'dbSwitch'].forEach(id => {
+        const el = document.getElementById(id);
+        if(el) window.updateSwitchColor(el);
+    });
+}, 500);
         console.log("Banco de agendamentos carregado:", agendamentos.length);
     } catch(e) { 
         console.error("Erro ao sincronizar agendamentos:", e); 
