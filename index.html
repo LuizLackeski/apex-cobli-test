@@ -225,21 +225,19 @@
             </div>
         </div>
         
-       <div id="step-4" class="card" style="display:none;">
-    <h2>Dados do Cliente</h2>
-    <label>Nº do Ticket</label><input id="ticket" required>
-    <label>Nome do Cliente</label><input id="clienteNome" required>
-    <label>CNPJ / CPF</label><input id="clienteCnpj" placeholder="00.000.000/0000-00" required>
-    <label>Responsável pela solicitação (APEX)</label><input id="solicitante" required>
-    <label>Responsável pelo acompanhamento (Local)</label><input id="respAcompanhamento" required>
-    <label>Telefone do responsável</label><input id="telResponsavel" placeholder="(00) 00000-0000" required>
-    
-    <button onclick="window.proximoPasso(3)" style="background:gray;">Voltar</button>
-    
-    <button id="btnConfirmar" onclick="window.revisarAgendamento()" style="background:green;">Confirmar</button>
-    
-    <button onclick="window.cancelarAgendamento()" class="btn-cancelar">Cancelar</button>
-</div>
+        <div id="step-4" class="card" style="display:none;">
+            <h2>Dados do Cliente</h2>
+            <label>Nº do Ticket</label><input id="ticket" required>
+            <label>Nome do Cliente</label><input id="clienteNome" required>
+            <label>CNPJ / CPF</label><input id="clienteCnpj" placeholder="00.000.000/0000-00" required>
+            <label>Responsável pela solicitação (APEX)</label><input id="solicitante" required>
+            <label>Responsável pelo acompanhamento (Local)</label><input id="respAcompanhamento" required>
+            <label>Telefone do responsável</label><input id="telResponsavel" placeholder="(00) 00000-0000" required>
+            <button onclick="window.proximoPasso(3)" style="background:gray;">Voltar</button>
+            <button id="btnConfirmar" onclick="window.concluirAgendamentoFinal(this)" style="background:green;">Confirmar</button>
+            <button onclick="window.cancelarAgendamento()" class="btn-cancelar">Cancelar</button>
+        </div>
+    </div>
 
     <div id="cadastro" class="aba">
         <div id="lista-prestadores-view" class="card">
@@ -302,7 +300,6 @@
     let filtradosPainel = []; 
     let myChart = null; 
 
-   
     window.exibirModal = function(titulo, htmlBody) {
         document.getElementById('modalHeader').innerText = titulo;
         document.getElementById('modalBody').innerHTML = htmlBody;
@@ -333,6 +330,7 @@
         t.style.display = "block"; 
         setTimeout(() => { t.style.display = "none"; }, 3000); 
     };
+
     window.enviarNotificacaoSlack = async function(msg) {
         const SUPABASE_URL = "https://fqaqlofndeihmhkopvan.supabase.co/functions/v1/notificar-slack";
         try {
@@ -421,7 +419,7 @@ function getHeaders() {
     }; 
 } 
     let prestadores = [], itensSelecionados = [], agendamentos = [], etapa = 1, editingIndex = -1, prestadorSelecionadoIndex = null;
- const servicosDisponiveis = {
+ const serviçosDisponíveis = {
     "Telemetria": [
         {desc:"Instalado veículos leves ou pesados", tempo:40, id_field: "b2098d2f-c060-445b-8e4b-bdcc5b6e613a"},
         {desc:"Instalado motos ou maquinários", tempo:40, id_field: "fe2057ba-abd5-44b6-9686-2f50e7717f16"},
@@ -534,7 +532,7 @@ window.getBlockedHours = function(prestador, data) {
         });
     });
     return blocked;
-};
+};;
     window.abrirDetalhesPrestador = function(index) { let p = prestadores[index]; let agendaHtml = ''; ["Seg", "Ter", "Qua", "Qui", "Sex", "Sab"].forEach(d => { let slots = p.agenda.filter(a => a.dia === d).map(a => `<div class="cell">${a.hora}</div>`).join(''); if(slots) { agendaHtml += `<div class="agenda-day-card" style="margin-bottom:10px;"><div class="agenda-day-title">${d}</div><div class="slots-wrapper">${slots}</div></div>`; } }); window.exibirModal("Detalhes do Prestador", `<div class="info-group" style="margin-bottom:15px;"><div style="font-weight:bold; font-size:1.1rem;">${p.nome}</div><div style="font-size:0.9rem; color:#64748b;">Resp: ${p.responsavel} | Contato: ${p.contato} | Raio: ${p.range} km</div></div>${agendaHtml}`); };
     
 window.abrirDetalhesAgendamento = function(index) {
@@ -588,59 +586,6 @@ window.abrirDetalhesAgendamento = function(index) {
     window.confirmarExclusaoAgendamento = async function(id) { await fetch(`${API_URL}/agendamentos/${id}`, { method: 'DELETE', headers: getHeaders() }); await carregarDadosDoBanco(); window.showToast("Agendamento excluído!"); window.fecharModal(); };
     
 // --- INÍCIO DA MUDANÇA: CONCLUIR AGENDAMENTO ---
-    window.revisarAgendamento = function() {
-    const sel = document.querySelectorAll("#agenda-agendamento .cell.selecionado");
-    const dataSelecionada = sel.length > 0 ? sel[0].dataset.date : 'N/A';
-    const slotsSelecionados = Array.from(sel).map(c => c.dataset.hora).join(', ');
-    const prestador = prestadores[prestadorSelecionadoIndex]?.nome || 'Não selecionado';
-    
-    const ticket = document.getElementById('ticket').value;
-    const cliente = document.getElementById('clienteNome').value;
-    const solicitante = document.getElementById('solicitante').value;
-    const responsavel = document.getElementById('respAcompanhamento').value;
-    const telefone = document.getElementById('telResponsavel').value;
-    const endereco = `${document.getElementById('inputRua').value}, ${document.getElementById('inputNumero').value} - ${document.getElementById('inputBairro').value}`;
-
-    // Monta o resumo dos serviços
-    let prodHtml = itensSelecionados.map(i => 
-        `<div style="margin-bottom:5px;">• ${i.desc} <strong>(Qtd: ${i.qtd} | ${i.tempo * i.qtd}m)</strong></div>`
-    ).join('');
-
-    let html = `
-        <div style="background: white; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 15px; text-align: left;">
-            <div style="font-weight:bold; font-size:1.1rem; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px; margin-bottom: 8px; color:var(--primary);">
-                📝 Revisão do Agendamento
-            </div>
-            <div style="font-size:0.9rem; line-height:1.6;">
-                <strong>🎟️ Ticket:</strong> ${ticket}<br>
-                <strong>👤 Cliente:</strong> ${cliente}<br>
-                <strong>🛠️ Prestador:</strong> ${prestador}<br>
-                <strong>📅 Data:</strong> ${dataSelecionada}<br>
-                <strong>⏰ Horários:</strong> ${slotsSelecionados}<br>
-                <hr style="border:0; border-top:1px solid #f1f5f9; margin:8px 0;">
-                <strong>📍 Local:</strong> ${endereco}<br>
-                <strong>📞 Contato:</strong> ${responsavel} (${telefone})
-            </div>
-        </div>
-        <div style="font-weight:600; margin-bottom:5px; text-align: left;">📦 Serviços:</div>
-        <div style="background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #cbd5e1; margin-bottom: 20px; font-size: 0.85rem; text-align: left;">
-            ${prodHtml}
-        </div>
-        <div style="display: flex; gap: 10px;">
-            <button onclick="window.fecharModal()" style="background:gray; flex:1;">⬅️ Editar Dados</button>
-            <button onclick="window.confirmarEnvioReal()" style="background:green; flex:1;">✅ Confirmar e Salvar</button>
-        </div>
-    `;
-
-    window.exibirModal("Confirme os Dados", html);
-};
-
-// Esta função será a que realmente chama a Edge Function
-window.confirmarEnvioReal = function() {
-    window.fecharModal();
-    const btn = document.getElementById('btnConfirmar');
-    window.concluirAgendamentoFinal(btn);
-};
 window.concluirAgendamentoFinal = async function(btn) {
     const sel = document.querySelectorAll("#agenda-agendamento .cell.selecionado");
     const slotsSelecionados = Array.from(sel).map(c => c.dataset.hora.substring(0, 5));
@@ -714,7 +659,6 @@ window.concluirAgendamentoFinal = async function(btn) {
         btn.innerText = originalText; btn.disabled = false;
     }
 };
-    
 // --- FIM DA MUDANÇA ---
     window.limparFormulario = function() { itensSelecionados = []; prestadorSelecionadoIndex = null; document.getElementById("lista-produtos").innerHTML = ""; document.getElementById("horasNecessarias").innerText = "0"; document.getElementById("agenda-agendamento").innerHTML = ""; document.getElementById("inputCep").value = ""; document.getElementById("ticket").value = ""; document.getElementById("clienteNome").value = ""; document.getElementById("solicitante").value = ""; document.getElementById("respAcompanhamento").value = ""; document.getElementById("telResponsavel").value = ""; };
     window.trocarAba = function(id, btn){ document.querySelectorAll('.aba').forEach(a => a.classList.remove('ativa')); document.getElementById(id).classList.add('ativa'); document.querySelectorAll('.menu button').forEach(b => b.classList.remove('ativo')); if(btn) btn.classList.add('ativo'); if(id === 'painel') window.atualizarFiltrosPrestador(); if(id === 'dashboard') window.renderDashboard(); };
@@ -848,10 +792,10 @@ window.carregarProdutos = function() {
     let select = document.getElementById("produto");
     if(!select) return;
     select.innerHTML = ""; 
-    for (let tipo in servicosDisponiveis) {
+    for (let tipo in serviçosDisponíveis) {
         let group = document.createElement("optgroup");
         group.label = tipo;
-        servicosDisponiveis[tipo].forEach(p => {
+        serviçosDisponíveis[tipo].forEach(p => {
             let opt = document.createElement("option");
             opt.value = p.tempo;
             opt.text = p.desc;
@@ -917,52 +861,49 @@ window.renderizarProdutos = function() {
 };
     
 // --- INÍCIO DA MUDANÇA: RENDER PAINEL ---
-window.renderPainel = function() {
+window.renderPainel = function(){ 
     if (!Array.isArray(agendamentos)) {
         document.getElementById("painel-conteudo").innerHTML = "Nenhum dado disponível.";
         return;
     }
 
-    let fInicio = document.getElementById("filtroDataInicio").value;
-    let fFim = document.getElementById("filtroDataFim").value;
+    let fInicio = document.getElementById("filtroDataInicio").value; 
+    let fFim = document.getElementById("filtroDataFim").value; 
     let fTicket = document.getElementById("filtroTicket").value.toLowerCase();
     let fSol = document.getElementById("filtroSolicitante").value.toLowerCase();
-    let fPrest = document.getElementById("filtroPrestador").value.toLowerCase();
-    filtradosPainel = agendamentos.filter(a => {
-        // Se não tiver ticket ou data, ele tenta mostrar mesmo assim ou usa campos alternativos
-        let ticket = (a.ticket || "").toString().toLowerCase();
-        let solicitante = (a.solicitante || "").toLowerCase();
-        let prestador = (a.prestador || "").toLowerCase();
-                // Trata a data para o filtro (YYYY-MM-DD)
-        let dataFormatada = "";
-        if (a.data && a.data.includes('/')) {
-            let [d, m, y] = a.data.split('/');
-            dataFormatada = `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
-        }
-        let matchDate = (!fInicio || dataFormatada >= fInicio) && (!fFim || dataFormatada <= fFim);
-        let matchTicket = (!fTicket || ticket.includes(fTicket));
-        let matchSol = (!fSol || solicitante.includes(fSol));
-        let matchPrest = (!fPrest || prestador.includes(fPrest));
-        return matchDate && matchTicket && matchSol && matchPrest;
-    }).sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
-    if (filtradosPainel.length === 0) {
-        document.getElementById("painel-conteudo").innerHTML = "<p style='text-align:center; padding:20px;'>Nenhum agendamento encontrado para os filtros selecionados.</p>";
-        return;
-    }
+    
+    filtradosPainel = agendamentos.filter(a => { 
+        if(!a.data || !a.ticket) return false;
+        let [d, m, y] = a.data.split('/'); 
+        let dataAgendada = `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
+        
+        let matchDate = (!fInicio || dataAgendada >= fInicio) && (!fFim || dataAgendada <= fFim); 
+        let matchTicket = (!fTicket || (a.ticket && a.ticket.toLowerCase().includes(fTicket)));
+        let matchSol = (!fSol || (a.solicitante && a.solicitante.toLowerCase().includes(fSol)));
+        return matchDate && matchTicket && matchSol; 
+    }).sort((a,b) => {
+        return new Date(b.created_at) - new Date(a.created_at);
+    }); 
+
     document.getElementById("painel-conteudo").innerHTML = filtradosPainel.map((a, i) => {
         let dataRegistro = a.created_at ? new Date(a.created_at).toLocaleString('pt-BR') : "N/A";
+        
         return `<div class="painel-item">
             <div style="flex-grow: 1; font-size: 0.95rem;">
-                <strong>🎟️ #${a.ticket || 'S/N'}</strong> &nbsp; 📅 Agendado: ${a.data || 'Indefinido'} &nbsp; ⏰ ${Array.isArray(a.slots) ? a.slots.join(', ') : (a.slots || 'N/A')}<br>
+                <strong>🎟️ #${a.ticket}</strong> &nbsp; 📅 Agendado: ${a.data} &nbsp; ⏰ ${Array.isArray(a.slots) ? a.slots.join(', ') : (a.slots || 'N/A')}<br>
                 <div style="margin-top:5px;">
-                    👤 <strong>Cliente:</strong> ${a.cliente || 'Não informado'}<br>
-                    🛠️ <strong>Prestador:</strong> ${a.prestador || 'Não informado'} | <strong>Solicitante:</strong> ${a.solicitante || 'N/A'}
+                    👤 <strong>Cliente:</strong> ${a.cliente}<br>
+                    🛠️ <strong>Prestador:</strong> ${a.prestador} | <strong>Solicitante:</strong> ${a.solicitante}
+                </div>
+                <div style="margin-top:5px; font-size: 0.75rem; color: #94a3b8;">
+                    Registrado em: ${dataRegistro}
                 </div>
             </div>
             <button style="background:var(--primary); padding: 8px 12px; font-size: 0.85rem; margin-left: 10px;" onclick="window.abrirDetalhesAgendamento(${i})">Ver Detalhes</button>
         </div>`;
-    }).join('');
+    }).join(''); 
 };
+
     window.limparFiltros = function(){ document.getElementById("filtroDataInicio").value = ""; document.getElementById("filtroDataFim").value = ""; document.getElementById("filtroTicket").value = ""; document.getElementById("filtroPrestador").value = ""; document.getElementById("filtroSolicitante").value = ""; window.renderPainel(); };
     window.atualizarFiltrosPrestador = function(){ 
         let sel = document.getElementById("filtroPrestador"); let providersWithAgend = [...new Set(agendamentos.map(a => a.prestador))];
