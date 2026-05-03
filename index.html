@@ -99,13 +99,22 @@
     <button onclick="window.trocarAba('painel', this)">Painel</button>
     <button onclick="window.trocarAba('dashboard', this)">Dashboard</button>
     
-    <div id="slack-adm-toggle" class="slack-adm-panel">
-        <span>NOTIFICAR SLACK</span>
+<div id="integrations-control" class="slack-adm-panel" style="display: flex; gap: 10px;">
+    <div style="display:flex; align-items:center; gap:5px;">
+        <span>SLACK</span>
         <select id="slackSwitch">
             <option value="ON">ON</option>
-            <option value="OFF">OFF</option>
+            <option value="OFF" selected>OFF</option>
         </select>
     </div>
+    <div style="display:flex; align-items:center; gap:5px; border-left: 1px solid rgba(255,255,255,0.3); padding-left:10px;">
+        <span>FIELD</span>
+        <select id="fieldSwitch">
+            <option value="ON">ON</option>
+            <option value="OFF" selected>OFF</option>
+        </select>
+    </div>
+</div>
 
     <span id="user-display" class="user-info"></span>
     <button class="btn-sair" onclick="window.logout()">Sair</button>
@@ -566,12 +575,13 @@ window.concluirAgendamentoFinal = async function(btn) {
     const slotsSelecionados = Array.from(sel).map(c => c.dataset.hora.substring(0, 5));
     const dataSelecionada = sel.length > 0 ? sel[0].dataset.date : null;
     const prestador = prestadores[prestadorSelecionadoIndex];
-
+    // Status dos Switches
+    const dispararSlack = document.getElementById('slackSwitch').value === 'ON';
+    const dispararField = document.getElementById('fieldSwitch').value === 'ON';
     if (!prestador || slotsSelecionados.length === 0) {
         window.showMessage("Erro: Selecione o prestador e o horário.");
         return;
     }
-
     const agendamento = {
         prestador: prestador.nome,
         qtdtecnicos: prestador.qtdtecnicos,
@@ -582,7 +592,6 @@ window.concluirAgendamentoFinal = async function(btn) {
         data: dataSelecionada, 
         rawdate: dataSelecionada,
         slots: slotsSelecionados,
-        // CAMPOS QUE PARARAM DE SALVAR:
         rua: document.getElementById('inputRua').value,
         numero: document.getElementById('inputNumero').value,
         bairro: document.getElementById('inputBairro').value,
@@ -596,23 +605,29 @@ window.concluirAgendamentoFinal = async function(btn) {
         field_id: prestador.field_id,
         produtos_texto: itensSelecionados.map(i => `• [${i.nomeManutencao.toUpperCase()}] ${i.desc} (Qtd: ${i.qtd})`).join('\n'),
         segment_id_field: itensSelecionados[0]?.segment_id || "",
-        maintenance_id_field: document.getElementById('tipoManutencao').value
+        maintenance_id_field: document.getElementById('tipoManutencao').value,
+        // Envia para a Edge Function se deve ou não processar na Field
+        executar_field: dispararField 
     };
-
     const originalText = btn.innerText;
     btn.innerText = "Processando..."; btn.disabled = true;
-
     try {
+        // 1. DISPARO PARA A EDGE FUNCTION (BANCO + FIELD)
         const response = await fetch(EDGE_URL, {
             method: 'POST',
             headers: getHeaders(),
             body: JSON.stringify(agendamento)
         });
-
         if (response.ok) {
-            window.showMessage("✅ Agendado com sucesso no Banco e na Field!");
-            await carregarDadosDoBanco();
-            window.location.reload(); 
+            // 2. DISPARO PARA O SLACK (SÓ SE O BOTÃO ESTIVER ON)
+            if (dispararSlack) {
+                const msgSlack = `✅ *Novo Agendamento*\n*Ticket:* ${agendamento.ticket}\n*Cliente:* ${agendamento.cliente}\n*Prestador:* ${agendamento.prestador}\n*Data:* ${agendamento.data}`;
+                await window.enviarNotificacaoSlack(msgSlack);
+            }
+            let msgSucesso = dispararField ? "✅ Agendado no Banco e na Field!" : "✅ Salvo no Banco (Integração Field em OFF)";
+            window.showMessage(msgSucesso);
+                        await carregarDadosDoBanco();
+            setTimeout(() => window.location.reload(), 2000); 
         } else {
             const result = await response.json();
             window.showMessage("❌ Erro: " + (result.error || "Erro na integração"));
