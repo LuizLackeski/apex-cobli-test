@@ -112,6 +112,13 @@
         <select id="fieldSwitch">
             <option value="ON">ON</option>
             <option value="OFF" selected>OFF</option>
+       </select>
+    </div>
+    <div style="display:flex; align-items:center; gap:5px; border-left: 1px solid rgba(255,255,255,0.3); padding-left:10px;">
+        <span>BANCO</span>
+        <select id="dbSwitch">
+            <option value="ON" selected>ON</option>
+            <option value="OFF">OFF</option>
         </select>
     </div>
 </div>
@@ -587,6 +594,7 @@ window.concluirAgendamentoFinal = async function(btn) {
     // Status dos Switches
     const dispararSlack = document.getElementById('slackSwitch').value === 'ON';
     const dispararField = document.getElementById('fieldSwitch').value === 'ON';
+    const dispararBanco = document.getElementById('dbSwitch').value === 'ON';
     if (!prestador || slotsSelecionados.length === 0) {
         window.showMessage("Erro: Selecione o prestador e o horário.");
         return;
@@ -616,7 +624,8 @@ window.concluirAgendamentoFinal = async function(btn) {
         segment_id_field: itensSelecionados[0]?.segment_id || "",
         maintenance_id_field: document.getElementById('tipoManutencao').value,
         // Envia para a Edge Function se deve ou não processar na Field
-        executar_field: dispararField 
+        executar_field: dispararField,
+        executar_banco: dispararBanco
     };
     const originalText = btn.innerText;
     btn.innerText = "Processando..."; btn.disabled = true;
@@ -629,20 +638,23 @@ window.concluirAgendamentoFinal = async function(btn) {
         });
         if (response.ok) {
             // 2. DISPARO PARA O SLACK (SÓ SE O BOTÃO ESTIVER ON)
-            if (dispararSlack) {
-                const msgSlack = `✅ *Novo Agendamento*\n*Ticket:* ${agendamento.ticket}\n*Cliente:* ${agendamento.cliente}\n*Prestador:* ${agendamento.prestador}\n*Data:* ${agendamento.data}`;
+            if (dispararSlack && dispararBanco) {
+                const msgSlack = `✅ *Novo Agendamento*\n*Ticket:* ${agendamento.ticket}...`;
                 await window.enviarNotificacaoSlack(msgSlack);
             }
-            let msgSucesso = dispararField ? "✅ Agendado no Banco e na Field!" : "✅ Salvo no Banco (Integração Field em OFF)";
-            window.showMessage(msgSucesso);
-                        await carregarDadosDoBanco();
+            let statusMsg = "✅ Processado: ";
+            statusMsg += dispararBanco ? "Banco [ON] " : "Banco [OFF] ";
+            statusMsg += dispararField ? "Field [ON]" : "Field [OFF]";
+
+            window.showMessage(statusMsg);
+            await carregarDadosDoBanco();
             setTimeout(() => window.location.reload(), 2000); 
         } else {
             const result = await response.json();
             window.showMessage("❌ Erro: " + (result.error || "Erro na integração"));
         }
     } catch (error) {
-        window.showMessage("Erro de conexão com o servidor.");
+        window.showMessage("Erro de conexão.");
     } finally {
         btn.innerText = originalText; btn.disabled = false;
     }
