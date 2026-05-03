@@ -421,7 +421,7 @@ function getHeaders() {
     }; 
 } 
     let prestadores = [], itensSelecionados = [], agendamentos = [], etapa = 1, editingIndex = -1, prestadorSelecionadoIndex = null;
- const serviçosDisponíveis = {
+ const serviçosDisponiveis = {
     "Telemetria": [
         {desc:"Instalado veículos leves ou pesados", tempo:40, id_field: "b2098d2f-c060-445b-8e4b-bdcc5b6e613a"},
         {desc:"Instalado motos ou maquinários", tempo:40, id_field: "fe2057ba-abd5-44b6-9686-2f50e7717f16"},
@@ -848,10 +848,10 @@ window.carregarProdutos = function() {
     let select = document.getElementById("produto");
     if(!select) return;
     select.innerHTML = ""; 
-    for (let tipo in serviçosDisponíveis) {
+    for (let tipo in serviçosDisponiveis) {
         let group = document.createElement("optgroup");
         group.label = tipo;
-        serviçosDisponíveis[tipo].forEach(p => {
+        serviçosDisponiveis[tipo].forEach(p => {
             let opt = document.createElement("option");
             opt.value = p.tempo;
             opt.text = p.desc;
