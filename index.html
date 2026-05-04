@@ -1062,19 +1062,20 @@ window.renderPainel = function(){
     }); 
     document.getElementById("painel-conteudo").innerHTML = filtradosPainel.map((a, i) => {
         let dataRegistro = a.created_at ? new Date(a.created_at).toLocaleString('pt-BR') : "N/A";
-        return `<div class="painel-item">
-            <div style="flex-grow: 1; font-size: 0.95rem;">
-                <strong>🎟️ #${a.ticket}</strong> &nbsp; 📅 Agendado: ${a.data} &nbsp; ⏰ ${Array.isArray(a.slots) ? a.slots.join(', ') : (a.slots || 'N/A')}<br>
-                <div style="margin-top:5px;">
-                    👤 <strong>Cliente:</strong> ${a.cliente}<br>
-                    🛠️ <strong>Prestador:</strong> ${a.prestador} | <strong>Solicitante:</strong> ${a.solicitante}
-                </div>
-                <div style="margin-top:5px; font-size: 0.75rem; color: #94a3b8;">
-                    Registrado em: ${dataRegistro}
-                </div>
-            </div>
-            <button style="background:var(--primary); padding: 8px 12px; font-size: 0.85rem; margin-left: 10px;" onclick="window.abrirDetalhesAgendamento(${i})">Ver Detalhes</button>
-        </div>`;
+// ... dentro do seu map do renderPainel ...
+return `<div class="painel-item">
+    <div style="flex-grow: 1; font-size: 0.95rem;">
+        <strong>🎟️ #${a.ticket}</strong> | 🏷️ Status: <span style="color: #2F4EA1; font-weight: bold;">${a.status || 'SOLICITADO'}</span><br>
+        <div style="margin-top:5px; font-size: 0.85rem;">
+             📅 ${a.data} | ⏰ ${Array.isArray(a.slots) ? a.slots.join(', ') : (a.slots || 'N/A')}<br>
+             🛠️ Prestador: ${a.prestador} | Solicitante: ${a.solicitante}
+        </div>
+    </div>
+    <div style="display:flex; gap:5px;">
+        <button title="Sincronizar Status" style="background:#10b981; padding: 8px;" onclick="window.sincronizarStatusIndividual('${a.ticket}', this)">🔄</button>
+        <button style="background:var(--primary); padding: 8px 12px; font-size: 0.85rem;" onclick="window.abrirDetalhesAgendamento(${i})">Ver</button>
+    </div>
+</div>`;
     }).join(''); 
 };
 
@@ -1083,6 +1084,33 @@ window.renderPainel = function(){
         let sel = document.getElementById("filtroPrestador"); let providersWithAgend = [...new Set(agendamentos.map(a => a.prestador))];
         sel.innerHTML = '<option value="">Todos</option>'; providersWithAgend.forEach(p => sel.innerHTML += `<option value="${p}">${p}</option>`);
     };
+    window.sincronizarStatusIndividual = async function(ticket, btn) {
+    const originalText = btn.innerHTML;
+    btn.innerHTML = "🔄...";
+    btn.disabled = true;
+    try {
+        const response = await fetch(EDGE_URL, {
+            method: 'POST',
+            headers: getHeaders(),
+            body: JSON.stringify({ 
+                acao: 'sincronizar_status', 
+                ticket: ticket 
+            })
+        });
+        const result = await response.json();
+        if (response.ok) {
+            window.showToast(`✅ Ticket ${ticket} atualizado para: ${result.status}`);
+            await carregarDadosDoBanco(); // Recarrega a lista para mostrar o novo status
+        } else {
+            window.showMessage("❌ Erro ao sincronizar: " + result.error);
+        }
+    } catch (err) {
+        window.showMessage("❌ Erro de conexão.");
+    } finally {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+    }
+};
 </script>
 </body>
 </html>
