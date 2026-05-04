@@ -568,7 +568,7 @@ async function verificarSequenciaEFOP() {
     const baseOriginal = input.value.trim();
     
     if (!baseOriginal) {
-        alert("⚠️ Digite o número base do ticket primeiro.");
+        window.showMessage("⚠️ Digite o número base do ticket primeiro.");
         return;
     }
 
@@ -588,7 +588,7 @@ async function verificarSequenciaEFOP() {
         
         const result = await response.json();
         
-        // Se a API mandou um aviso (porque a EFOP estava OFF), mostra na tela!
+        // Se a API mandou qualquer aviso de delay ou offline, mostra no popup central
         if (result.warning) {
             window.showMessage(result.warning);
         }
@@ -598,16 +598,21 @@ async function verificarSequenciaEFOP() {
                 input.value = result.sugerido;
                 input.style.border = "2px solid #f59e0b";
                 
-                // Só dá o alert se NÃO teve warning, pra não ficar pulando 2 popups chatos
-                if (!result.warning) alert(`🔄 Sequência encontrada! Próximo número: ${result.sugerido}`);
+                // Exibe a sugestão no modal padronizado do APEX
+                if (!result.warning) {
+                    window.showMessage(`🔄 <strong>Sequência encontrada!</strong><br><br>O próximo número sugerido é: <strong>${result.sugerido}</strong>`);
+                }
             } else {
                 input.style.border = "2px solid #10b981";
-                if (!result.warning) alert("✅ Número disponível (sem sequenciais).");
+                
+                if (!result.warning) {
+                    window.showMessage("✅ <strong>Tudo certo!</strong><br><br>Esse número está totalmente disponível para uso.");
+                }
             }
         }
     } catch (err) {
         console.error(err);
-        alert("❌ Erro ao consultar a Edge Function.");
+        window.showMessage("❌ Erro de conexão ao tentar verificar a sequência.");
     } finally {
         btn.innerText = "Checar Sequência";
         btn.disabled = false;
