@@ -737,8 +737,9 @@ window.concluirAgendamentoFinal = async function(btn) {
                 await window.enviarNotificacaoSlack(msgSlack);
             }
             let statusMsg = "✅ Processado: ";
-            statusMsg += dispararBanco ? "Banco [ON] " : "Banco [OFF] ";
-            statusMsg += dispararField ? "Field [ON]" : "Field [OFF]";
+            statusMsg += dispararBanco ? "Banco [ON]✅" : "Banco [OFF]❌ ";
+            statusMsg += dispararField ? "Field [ON]✅" : "Field [OFF]❌";
+            statusMsg += dispararSlack ? "Slack [ON]✅" : "Slack [OFF]❌";
 
             window.showMessage(statusMsg);
             await carregarDadosDoBanco();
