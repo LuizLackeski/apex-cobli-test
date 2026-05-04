@@ -761,10 +761,12 @@ window.concluirAgendamentoFinal = async function(btn) {
     const dispararSlack = document.getElementById('slackSwitch').value === 'ON';
     const dispararField = document.getElementById('fieldSwitch').value === 'ON';
     const dispararBanco = document.getElementById('dbSwitch').value === 'ON';
+
     if (!prestador || slotsSelecionados.length === 0) {
         window.showMessage("Erro: Selecione o prestador e o horário.");
         return;
     }
+
     const agendamento = {
         prestador: prestador.nome,
         qtdtecnicos: prestador.qtdtecnicos,
@@ -792,7 +794,7 @@ window.concluirAgendamentoFinal = async function(btn) {
         executar_field: dispararField,
         executar_banco: dispararBanco
     };
-const originalText = btn.innerText;
+    const originalText = btn.innerText;
     btn.innerText = "Processando..."; btn.disabled = true;
     try {
         const response = await fetch(EDGE_URL, {
@@ -820,7 +822,8 @@ const originalText = btn.innerText;
                          (dispararField ? "Field [OK]" : "");
             window.showMessage(statusMsg, "success");
             await carregarDadosDoBanco();
-          // Tempo de 10s para você conseguir ler a Origem e o Status
+           
+            // Tempo de 10s para você conseguir ler a Origem e o Status
             setTimeout(() => window.location.reload(), 10000); 
         } else {
             // Se a Edge Function retornar erro (ex: Escudo da Field Control)
@@ -832,6 +835,7 @@ const originalText = btn.innerText;
     } finally {
         btn.innerText = originalText; btn.disabled = false;
     }
+};
     window.limparFormulario = function() { itensSelecionados = []; prestadorSelecionadoIndex = null; document.getElementById("lista-produtos").innerHTML = ""; document.getElementById("horasNecessarias").innerText = "0"; document.getElementById("agenda-agendamento").innerHTML = ""; document.getElementById("inputCep").value = ""; document.getElementById("ticket").value = ""; document.getElementById("clienteNome").value = ""; document.getElementById("solicitante").value = ""; document.getElementById("respAcompanhamento").value = ""; document.getElementById("telResponsavel").value = ""; };
     window.trocarAba = function(id, btn){ document.querySelectorAll('.aba').forEach(a => a.classList.remove('ativa')); document.getElementById(id).classList.add('ativa'); document.querySelectorAll('.menu button').forEach(b => b.classList.remove('ativo')); if(btn) btn.classList.add('ativo'); if(id === 'painel') window.atualizarFiltrosPrestador(); if(id === 'dashboard') window.renderDashboard(); };
     window.getNextDates = function(prestador) { let dates = []; let today = new Date(); const daysMap = {"Dom":0, "Seg":1, "Ter":2, "Qua":3, "Qui":4, "Sex":5, "Sab":6}; let agendaDays = (prestador.agenda && Array.isArray(prestador.agenda)) ? [...new Set(prestador.agenda.map(a => a.dia))].map(d => daysMap[d]) : []; let qtdLimit = parseInt(prestador.qtdtecnicos) || 1; for (let i = 0; i < 14; i++) { let d = new Date(); d.setDate(today.getDate() + i); let dStr = d.toLocaleDateString(); let dNome = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sab"][d.getDay()]; let blocked = window.getBlockedHours(prestador, dStr); let slotsDoDia = (prestador.agenda && Array.isArray(prestador.agenda)) ? prestador.agenda.filter(a => a.dia == dNome) : []; let temLivre = slotsDoDia.some(s => (s.hora && !blocked.has(parseInt(s.hora.split(':')[0])) && window.getOcupacaoSlot(prestador, dStr, s.hora) < qtdLimit)); if (agendaDays.includes(d.getDay()) && temLivre) dates.push(dStr.slice(0,5)); } return dates; };
