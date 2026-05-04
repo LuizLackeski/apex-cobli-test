@@ -770,7 +770,7 @@ window.concluirAgendamentoFinal = async function(btn) {
 
             window.showMessage(statusMsg);
             await carregarDadosDoBanco();
-            setTimeout(() => window.location.reload(), 2000); 
+            setTimeout(() => window.location.reload(), 10000); 
         } else {
             const result = await response.json();
             window.showMessage("❌ Erro: " + (result.error || "Erro na integração"));
