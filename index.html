@@ -243,7 +243,8 @@
         
         <div id="step-4" class="card" style="display:none;">
             <h2>Dados do Cliente</h2>
-            <label>Nº do Ticket</label><input id="ticket" placeholder="Digite o nº do ticket" required>
+            <label>Nº do Ticket</label><div style="display: flex; gap: 8px; margin-bottom: 12px;"><input id="ticket" placeholder="Ex: 123654789" required style="flex: 1;"><button type="button" id="btnChecarSequencia" onclick="verificarSequenciaEFOP()" 
+                style="background:#4f46e5; color:white; padding:0 15px; border-radius:6px; font-size:12px; cursor:pointer; border:none; height: 42px;">Checar Sequência</button></div>
             <label>Nome do Cliente</label><input id="clienteNome" required>
             <label>CNPJ / CPF</label><input id="clienteCnpj" placeholder="00.000.000/0000-00" oninput="window.maskCPFCNPJ(this)" required>
             <label>Responsável pela solicitação (APEX)</label><input id="solicitante" required>
@@ -562,7 +563,48 @@ async function carregarDadosDoBanco() {
         console.error("Erro ao sincronizar agendamentos:", e); 
     } 
 }
+    async function verificarSequenciaEFOP() {
+    const input = document.getElementById('ticket');
+    const baseOriginal = input.value.trim();
     
+    if (!baseOriginal) {
+        alert("⚠️ Digite o número base do ticket primeiro.");
+        return;
+    }
+
+    const btn = document.getElementById('btnChecarSequencia');
+    btn.innerText = "🔍...";
+    btn.disabled = true;
+    try {
+        const response = await fetch(EDGE_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                acao: 'checar_sequencia', 
+                ticket_base: baseOriginal 
+            })
+        });
+         const result = await response.json();
+         if (result.sugerido) {
+            if (result.sugerido !== baseOriginal) {
+                input.value = result.sugerido;
+                // Feedback visual de mudança
+                input.style.border = "2px solid #f59e0b";
+                alert(`🔄 Sequência encontrada! Próximo número: ${result.sugerido}`);
+            } else {
+                input.style.border = "2px solid #10b981";
+                alert("✅ Número disponível (sem sequenciais na EFOP).");
+            }
+        }
+    } catch (err) {
+        console.error(err);
+        alert("❌ Erro ao consultar sequência na API EFOP.");
+    } finally {
+        btn.innerText = "Checar Sequência";
+        btn.disabled = false;
+        setTimeout(() => { input.style.border = ""; }, 3000);
+    }
+}
     window.renderDashboard = function() {
         let totalAgend = agendamentos.length;
         let totalServ = 0;
@@ -750,7 +792,7 @@ window.concluirAgendamentoFinal = async function(btn) {
         executar_field: dispararField,
         executar_banco: dispararBanco
     };
-    const originalText = btn.innerText;
+const originalText = btn.innerText;
     btn.innerText = "Processando..."; btn.disabled = true;
     try {
         const response = await fetch(EDGE_URL, {
@@ -758,29 +800,38 @@ window.concluirAgendamentoFinal = async function(btn) {
             headers: getHeaders(),
             body: JSON.stringify(agendamento)
         });
+        const result = await response.json(); // <-- CAPTURA O RETORNO DA API AQUI
         if (response.ok) {
+            // 1. Notificação para o Slack com dados REAIS da API
             if (dispararSlack && dispararBanco) {
-                const msgSlack = `✅ *Novo Agendamento*\n*Ticket:* ${agendamento.ticket}...`;
+                const msgSlack = `✅ *Novo Agendamento: ${result.ticket}*\n` +
+                                 `*Status:* ${result.status}\n` +
+                                 `*Origem:* ${result.origin}\n` +
+                                 `*Cliente:* ${agendamento.cliente}`;
                 await window.enviarNotificacaoSlack(msgSlack);
             }
-            let statusMsg = "✅ Processado: ";
-            statusMsg += dispararBanco ? "Banco [ON]✅" : "Banco [OFF]❌ ";
-            statusMsg += dispararField ? "Field [ON]✅" : "Field [OFF]❌";
-            statusMsg += dispararSlack ? "Slack [ON]✅" : "Slack [OFF]❌";
-
-            window.showMessage(statusMsg);
+            // 2. Montagem da mensagem rica para o Popup na tela
+            let statusMsg = `🚀 **Sucesso!**\n\n`;
+            statusMsg += `🎫 **Ticket:** ${result.ticket}\n`;
+            statusMsg += `📊 **Status EFOP:** ${result.status}\n`;
+            statusMsg += `📍 **Origem:** ${result.origin}\n`;
+            statusMsg += `\nSincronização: ` + 
+                         (dispararBanco ? "Banco [OK] " : "") + 
+                         (dispararField ? "Field [OK]" : "");
+            window.showMessage(statusMsg, "success");
             await carregarDadosDoBanco();
+          // Tempo de 10s para você conseguir ler a Origem e o Status
             setTimeout(() => window.location.reload(), 10000); 
         } else {
-            const result = await response.json();
-            window.showMessage("❌ Erro: " + (result.error || "Erro na integração"));
+            // Se a Edge Function retornar erro (ex: Escudo da Field Control)
+            window.showMessage("❌ Erro: " + (result.error || "Erro na integração"), "error");
         }
     } catch (error) {
-        window.showMessage("Erro de conexão.");
+        console.error("Erro na chamada:", error);
+        window.showMessage("Erro de conexão com a Edge Function.");
     } finally {
         btn.innerText = originalText; btn.disabled = false;
     }
-};
     window.limparFormulario = function() { itensSelecionados = []; prestadorSelecionadoIndex = null; document.getElementById("lista-produtos").innerHTML = ""; document.getElementById("horasNecessarias").innerText = "0"; document.getElementById("agenda-agendamento").innerHTML = ""; document.getElementById("inputCep").value = ""; document.getElementById("ticket").value = ""; document.getElementById("clienteNome").value = ""; document.getElementById("solicitante").value = ""; document.getElementById("respAcompanhamento").value = ""; document.getElementById("telResponsavel").value = ""; };
     window.trocarAba = function(id, btn){ document.querySelectorAll('.aba').forEach(a => a.classList.remove('ativa')); document.getElementById(id).classList.add('ativa'); document.querySelectorAll('.menu button').forEach(b => b.classList.remove('ativo')); if(btn) btn.classList.add('ativo'); if(id === 'painel') window.atualizarFiltrosPrestador(); if(id === 'dashboard') window.renderDashboard(); };
     window.getNextDates = function(prestador) { let dates = []; let today = new Date(); const daysMap = {"Dom":0, "Seg":1, "Ter":2, "Qua":3, "Qui":4, "Sex":5, "Sab":6}; let agendaDays = (prestador.agenda && Array.isArray(prestador.agenda)) ? [...new Set(prestador.agenda.map(a => a.dia))].map(d => daysMap[d]) : []; let qtdLimit = parseInt(prestador.qtdtecnicos) || 1; for (let i = 0; i < 14; i++) { let d = new Date(); d.setDate(today.getDate() + i); let dStr = d.toLocaleDateString(); let dNome = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sab"][d.getDay()]; let blocked = window.getBlockedHours(prestador, dStr); let slotsDoDia = (prestador.agenda && Array.isArray(prestador.agenda)) ? prestador.agenda.filter(a => a.dia == dNome) : []; let temLivre = slotsDoDia.some(s => (s.hora && !blocked.has(parseInt(s.hora.split(':')[0])) && window.getOcupacaoSlot(prestador, dStr, s.hora) < qtdLimit)); if (agendaDays.includes(d.getDay()) && temLivre) dates.push(dStr.slice(0,5)); } return dates; };
