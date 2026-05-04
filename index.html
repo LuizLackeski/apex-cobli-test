@@ -355,7 +355,16 @@ window.updateSwitchColor = function(el) {
         t.style.display = "block"; 
         setTimeout(() => { t.style.display = "none"; }, 3000); 
     };
-
+    function extrairNomeDoEmail(email) {
+        if (!email) return "";
+        // Pega só o que vem antes do @
+        const usuario = email.split('@')[0]; 
+        // Divide pelo ponto
+        const partes = usuario.split('.'); 
+        // Mapeia cada parte para colocar a primeira letra em Maiúsculo
+        const nomeFormatado = partes.map(p => p.charAt(0).toUpperCase() + p.slice(1).toLowerCase()).join(' ');
+        return nomeFormatado;
+    }
     window.enviarNotificacaoSlack = async function(msg) {
         const SUPABASE_URL = "https://fqaqlofndeihmhkopvan.supabase.co/functions/v1/notificar-slack";
         try {
@@ -838,7 +847,26 @@ window.rdaAgendamento = function() {
         container.innerHTML = `<div style="color:red; font-size:0.85rem; font-weight:bold;">⚠️ Não há horários disponíveis com ${horasNecessarias}h seguidas para este prestador.</div>`;
     }
 };
-    window.validarEAvancar = function() { if (itensSelecionados.length === 0) return window.showMessage("Adicione pelo menos um serviço!"); let totalMinutos = itensSelecionados.reduce((a, b) => a + (b.tempo * b.qtd), 0); let horas = Math.ceil(totalMinutos / 60); let sel = document.querySelectorAll("#agenda-agendamento .cell.selecionado"); if (sel.length === 0) return window.showMessage("Selecione horário!"); if (sel.length !== horas && horas > 0) return window.showMessage("Selecione exatamente " + horas + " hora(s)!"); document.querySelectorAll('#consulta > div').forEach(div => div.style.display = 'none'); document.getElementById('step-4').style.display = 'block'; };
+    window.validarEAvancar = function() { 
+    if (itensSelecionados.length === 0) return window.showMessage("Adicione pelo menos um serviço!"); 
+    let totalMinutos = itensSelecionados.reduce((a, b) => a + (b.tempo * b.qtd), 0); 
+    let horas = Math.ceil(totalMinutos / 60); 
+    let sel = document.querySelectorAll("#agenda-agendamento .cell.selecionado"); 
+    if (sel.length === 0) return window.showMessage("Selecione horário!"); 
+    if (sel.length !== horas && horas > 0) return window.showMessage("Selecione exatamente " + horas + " hora(s)!"); 
+    // --- NOVIDADE AQUI: PREENCHER SOLICITANTE ---
+    const emailLogado = localStorage.getItem('userEmail');
+    const campoSolicitante = document.getElementById('solicitante');
+        if (emailLogado && campoSolicitante) {
+        campoSolicitante.value = extrairNomeDoEmail(emailLogado);
+        campoSolicitante.readOnly = true; // Trava o campo
+        campoSolicitante.style.background = "#f1f5f9"; // Cor de campo desativado
+        campoSolicitante.style.cursor = "not-allowed";
+    }
+    // --------------------------------------------
+    document.querySelectorAll('#consulta > div').forEach(div => div.style.display = 'none'); 
+    document.getElementById('step-4').style.display = 'block'; 
+};
     window.renderizarListaPrestadoresSelecao = function(lista) { document.getElementById('lista-prestadores-selecao').innerHTML = lista.map(p => { const datesArr = p.nextDates.split(', '); const pills = datesArr.map(d => `<span class="pill">${d}</span>`).join(''); return `<div class="card-selecao"><strong>${p.nome}</strong><br>📍Distância do atendimento: ${p.distanciaFinal} km<br><div class="date-pills">🗓️Agenda disponível: ${pills}</div><div style="margin-top:10px"><button onclick="window.selecionarPrestadorPorObjeto('${p.nome}')">Selecionar Prestador</button></div></div>`; }).join(''); };
     window.selecionarPrestadorPorObjeto = function(nome) { prestadorSelecionadoIndex = prestadores.findIndex(p => p.nome === nome); window.proximoPasso(3); };
     window.updateButtons = function() { document.getElementById('btn-voltar').style.display = (etapa === 1) ? 'none' : 'inline-block'; document.getElementById('btn-proximo').style.display = (etapa === 1) ? 'inline-block' : 'none'; document.getElementById('btn-concluir').style.display = (etapa === 2) ? 'inline-block' : 'none'; };
