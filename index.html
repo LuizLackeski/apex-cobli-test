@@ -156,9 +156,9 @@
         <div id="step-1" class="card">
             <h2>Localização do Atendimento</h2>
             
-            <label>CEP</label>
-            <div style="display: flex; gap: 10px;">
-                <input type="text" id="inputCep" placeholder="00000-000">
+           <label>CEP</label>
+                <div style="display: flex; gap: 10px;">
+                <input type="text" id="inputCep" placeholder="00000-000" oninput="window.maskCEP(this)">
                 <button onclick="window.buscarEnderecoPorCep()" id="btnValidarCep" style="background:#10b981; white-space:nowrap;">Validar CEP</button>
             </div>
 
@@ -249,7 +249,6 @@
             <label>Responsável pela solicitação (APEX)</label><input id="solicitante" required>
             <label>Responsável pelo acompanhamento (Local)</label><input id="respAcompanhamento" required>
             <label>Telefone do responsável</label><input id="telResponsavel" placeholder="(00) 00000-0000" oninput="window.maskPhone(this)" required>
-            <input type="text" id="inputCep" placeholder="00000-000" oninput="window.maskCEP(this)">
             <button onclick="window.proximoPasso(3)" style="background:gray;">Voltar</button>
             <button id="btnConfirmar" onclick="window.revisarAgendamento(this)" style="background:green;">Confirmar</button>
             <button onclick="window.cancelarAgendamento()" class="btn-cancelar">Cancelar</button>
