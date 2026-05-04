@@ -21,21 +21,24 @@
         .login-card h2 { color: var(--primary); border-bottom: none; margin-bottom: 20px; }
         
         .topo { background: var(--primary); color: white; padding: 15px 30px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        .menu { background: #1F3C88; padding: 0 30px; display: flex; align-items: center; }
+        .menu { background: #1F3C88; padding: 0 30px; display: flex; align-items: center; justify-content: space-between; /* Mantém pontas nas pontas */ min-height: 70px; }
         .menu button { background: none; border: none; color: #cbd5e1; padding: 15px 20px; cursor: pointer; font-size: 0.9rem; transition: 0.3s; }
+        .menu-left, .menu-right { display: flex; align-items: center; flex: 1; /* Isso força o centro a ficar no meio real */}
+        .menu-right { justify-content: flex-end; }
+
         .menu button.ativo { color: white; border-bottom: 3px solid #4da3ff; }
         .menu button:hover { color: white; }
         .menu .user-info { margin-left: auto; color: #ffffff; font-size: 0.8rem; margin-right: 15px; opacity: 0.8; }
         .menu .btn-sair { color: #ff9999; }
         
         /* AJUSTE NO LAYOUT DAS INTEGRAÇÕES */
-        .slack-adm-panel {display: none; flex-direction: column; align-items: center; background: rgba(255,255,255,0.08); padding: 5px 20px; border-radius: 10px; margin: 0 auto; /* Mágica para centralizar no flex */ border: 1px solid rgba(255,255,255,0.15); min-width: fit-content;}
-        .slack-adm-panel .label-integracoes {font-size: 0.6rem; color: #ffffff; font-weight: 700; text-transform: uppercase; margin-bottom: 2px; opacity: 0.5; letter-spacing: 0.8px;}
-        .slack-adm-panel .switches-row { display: flex; gap: 15px; align-items: center; }
-        .slack-adm-panel span { color: white; font-size: 0.65rem; font-weight: bold; margin-right: 5px; }
-        .slack-adm-panel select { width: 55px; height: 20px; padding: 0; font-size: 0.65rem; border-radius: 4px; border: none; background: white; color: var(--primary); cursor: pointer; }
-        /* AJUSTE PARA NÃO EMPURRAR O CARD */
-        .menu .user-info { color: #ffffff; font-size: 0.8rem; margin-right: 15px; opacity: 0.8; margin-left: 20px; }
+        .slack-adm-panel { display: none; /* Ativado via JS para ADMs */ flex-direction: column; align-items: center; background: rgba(255, 255, 255, 0.1); padding: 6px 15px; border-radius: 10px; border: 1px solid rgba(255, 255, 255, 0.2); /* Removemos o margin: 0 auto e deixamos o flex cuidar do centro */}
+        .slack-adm-panel .label-integracoes {font-size: 0.6rem; color: #ffffff; font-weight: 700; text-transform: uppercase; margin-bottom: 4px; opacity: 0.6; }
+        .slack-adm-panel .switches-row { display: flex; gap: 12px; align-items: center; }
+        .slack-adm-panel span { color: white; font-size: 0.6rem; font-weight: bold; }
+        .slack-adm-panel select { width: 52px; height: 18px; font-size: 0.6rem; border-radius: 4px; border: none; cursor: pointer; }
+
+        .menu .user-info { color: #ffffff; font-size: 0.75rem; margin-right: 15px; opacity: 0.8; }
 
         button:hover { filter: brightness(1.2); transform: translateY(-1px); box-shadow: 0 2px 4px rgba(0,0,0,0.2); transition: 0.2s; }
         button:active { transform: translateY(0); filter: brightness(0.9); }
@@ -100,11 +103,13 @@
 
 <div class="topo"><strong>APEX</strong> <span>Agenda Prestadores</span></div>
 <div class="menu">
-    <button class="ativo" onclick="window.trocarAba('consulta', this)">Agendamento</button>
-    <button onclick="window.trocarAba('cadastro', this)">Prestadores</button>
-    <button onclick="window.trocarAba('painel', this)">Painel</button>
-    <button onclick="window.trocarAba('dashboard', this)">Dashboard</button>
-    
+    <div class="menu-left">
+        <button class="ativo" onclick="window.trocarAba('consulta', this)">Agendamento</button>
+        <button onclick="window.trocarAba('cadastro', this)">Prestadores</button>
+        <button onclick="window.trocarAba('painel', this)">Painel</button>
+        <button onclick="window.trocarAba('dashboard', this)">Dashboard</button>
+    </div>
+
     <div id="integrations-control" class="slack-adm-panel">
         <div class="label-integracoes">Integrações</div>
         <div class="switches-row">
@@ -115,14 +120,14 @@
                     <option value="OFF" selected>OFF</option>
                 </select>
             </div>
-            <div style="display:flex; align-items:center; gap:5px; border-left: 1px solid rgba(255,255,255,0.2); padding-left:12px;">
+            <div style="display:flex; align-items:center; gap:5px; border-left: 1px solid rgba(255,255,255,0.2); padding-left:10px;">
                 <span>FIELD</span>
                 <select id="fieldSwitch" class="switch-off" onchange="window.updateSwitchColor(this)">
                     <option value="ON">ON</option>
                     <option value="OFF" selected>OFF</option>
                 </select>
             </div>
-            <div style="display:flex; align-items:center; gap:5px; border-left: 1px solid rgba(255,255,255,0.2); padding-left:12px;">
+            <div style="display:flex; align-items:center; gap:5px; border-left: 1px solid rgba(255,255,255,0.2); padding-left:10px;">
                 <span>BANCO</span>
                 <select id="dbSwitch" class="switch-on" onchange="window.updateSwitchColor(this)">
                     <option value="ON" selected>ON</option>
@@ -131,8 +136,10 @@
             </div>
         </div>
     </div>
-    <span id="user-display" class="user-info"></span>
-    <button class="btn-sair" onclick="window.logout()">Sair</button>
+    <div class="menu-right">
+        <span id="user-display" class="user-info"></span>
+        <button class="btn-sair" onclick="window.logout()">Sair</button>
+    </div>
 </div>
 
 <div id="modalAviso" class="modal-overlay">
