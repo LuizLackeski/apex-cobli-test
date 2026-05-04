@@ -579,28 +579,35 @@ async function verificarSequenciaEFOP() {
     try {
         const response = await fetch(EDGE_URL, {
             method: 'POST',
-            headers: getHeaders(), // <-- AGORA VAI PASSAR DIRETO PELO SUPABASE!
+            headers: getHeaders(), 
             body: JSON.stringify({ 
                 acao: 'checar_sequencia', 
                 ticket_base: baseOriginal 
             })
         });
         
-         const result = await response.json();
-         if (result.sugerido) {
+        const result = await response.json();
+        
+        // Se a API mandou um aviso (porque a EFOP estava OFF), mostra na tela!
+        if (result.warning) {
+            window.showMessage(result.warning);
+        }
+
+        if (result.sugerido) {
             if (result.sugerido !== baseOriginal) {
                 input.value = result.sugerido;
-                // Feedback visual de mudança
                 input.style.border = "2px solid #f59e0b";
-                alert(`🔄 Sequência encontrada! Próximo número: ${result.sugerido}`);
+                
+                // Só dá o alert se NÃO teve warning, pra não ficar pulando 2 popups chatos
+                if (!result.warning) alert(`🔄 Sequência encontrada! Próximo número: ${result.sugerido}`);
             } else {
                 input.style.border = "2px solid #10b981";
-                alert("✅ Número disponível (sem sequenciais na EFOP).");
+                if (!result.warning) alert("✅ Número disponível (sem sequenciais).");
             }
         }
     } catch (err) {
         console.error(err);
-        alert("❌ Erro ao consultar sequência na API EFOP.");
+        alert("❌ Erro ao consultar a Edge Function.");
     } finally {
         btn.innerText = "Checar Sequência";
         btn.disabled = false;
