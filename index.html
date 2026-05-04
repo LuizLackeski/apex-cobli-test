@@ -563,7 +563,7 @@ async function carregarDadosDoBanco() {
         console.error("Erro ao sincronizar agendamentos:", e); 
     } 
 }
-    async function verificarSequenciaEFOP() {
+async function verificarSequenciaEFOP() {
     const input = document.getElementById('ticket');
     const baseOriginal = input.value.trim();
     
@@ -571,18 +571,21 @@ async function carregarDadosDoBanco() {
         alert("⚠️ Digite o número base do ticket primeiro.");
         return;
     }
+
     const btn = document.getElementById('btnChecarSequencia');
     btn.innerText = "🔍...";
     btn.disabled = true;
+
     try {
-       const response = await fetch(EDGE_URL, {
+        const response = await fetch(EDGE_URL, {
             method: 'POST',
-            headers: getHeaders(), // <--- CORREÇÃO AQUI (Apresentando o crachá!)
-            body: JSON.stringify({
+            headers: getHeaders(), // <-- AGORA VAI PASSAR DIRETO PELO SUPABASE!
+            body: JSON.stringify({ 
                 acao: 'checar_sequencia', 
                 ticket_base: baseOriginal 
             })
         });
+        
          const result = await response.json();
          if (result.sugerido) {
             if (result.sugerido !== baseOriginal) {
