@@ -310,14 +310,14 @@
             <div class="painel-status-item"><div class="painel-status-title">Cancelado</div><div class="painel-status-value" id="st-cancelado" style="color: #64748b;">0</div></div>
         </div>
 
-        <div class="filtros-painel">
-            <div style="display: flex; flex-direction: column; gap: 5px; flex: 0.5;">
-                <input type="date" id="filtroDataInicio" title="Data Início">
-                <input type="date" id="filtroDataFim" title="Data Fim">
-            </div>
-            <div><label>Ticket</label><input type="text" id="filtroTicket" placeholder="Nº OS"></div>
-            <div><label>Prestador</label><select id="filtroPrestador"><option value="">Todos</option></select></div>       
-            <div><label>Status</label>
+<div class="filtros-painel">
+            <div style="min-width: 125px;"><label>Início</label><input type="date" id="filtroDataInicio"></div>
+            <div style="min-width: 125px;"><label>Fim</label><input type="date" id="filtroDataFim"></div>
+            
+            <div style="min-width: 100px;"><label>Ticket</label><input type="text" id="filtroTicket" placeholder="Nº OS"></div>
+            <div style="min-width: 130px;"><label>Prestador</label><select id="filtroPrestador"><option value="">Todos</option></select></div>       
+            
+            <div style="min-width: 130px;"><label>Status</label>
                 <select id="filtroStatus">
                     <option value="">Todos</option>
                     <option value="solicitado">Solicitado</option>
@@ -329,15 +329,16 @@
                     <option value="cancelado">Cancelado</option>
                 </select>
             </div>
-            <div><label>Solicitante</label><input type="text" id="filtroSolicitante" placeholder="Pesquisar..."></div>
-            <div style="display: flex; flex-direction: column; gap: 5px;">
-                <button onclick="window.renderPainel()">Filtrar</button>
-                <button onclick="window.limparFiltros()" style="background:gray;">Limpar</button>
-            </div>
-            <div style="display: flex; flex-direction: column; justify-content: flex-end;">
-                <button onclick="window.atualizarTodosStatus()" style="background:#10b981; height: 100%;">🔄 Sincronizar Tudo</button>
+            
+            <div style="min-width: 120px;"><label>Solicitante</label><input type="text" id="filtroSolicitante" placeholder="Pesquisar..."></div>
+            
+            <div style="display: flex; gap: 5px; flex-grow: 1; justify-content: flex-end;">
+                <button onclick="window.renderPainel()" style="height: 38px;">Filtrar</button>
+                <button onclick="window.limparFiltros()" style="background:gray; height: 38px;">Limpar</button>
+                <button onclick="window.atualizarTodosStatus()" style="background:#10b981; height: 38px; white-space: nowrap;">🔄 Sincronizar Tudo</button>
             </div>
         </div>
+       
         <div id="painel-conteudo" style="max-height: 500px; overflow-y: auto;"></div>
     </div>
 
