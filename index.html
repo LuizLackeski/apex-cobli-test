@@ -122,13 +122,6 @@
         <button onclick="window.trocarAba('painel', this)">Painel</button>
         <button onclick="window.trocarAba('dashboard', this)">Dashboard</button>
     </div>
-    <div id="resumo-status" class="status-container" style="display: none;">
-    <div class="status-card" style="border-color: #ffc107;"><b>SOLICITADO</b><span id="res-solicitado">0</span></div>
-    <div class="status-card" style="border-color: #17a2b8;"><b>AGENDADO</b><span id="res-agendado">0</span></div>
-    <div class="status-card" style="border-color: #fd7e14;"><b>EXECUÇÃO</b><span id="res-execucao">0</span></div>
-    <div class="status-card" style="border-color: #28a745;"><b>CONCLUÍDO</b><span id="res-concluido">0</span></div>
-    <div class="status-card" style="border-color: #6c757d;"><b>IMPEDIDO</b><span id="res-impedido">0</span></div>
-</div> 
     
     <div id="integrations-control" class="slack-adm-panel">
         <div class="label-integracoes">Integrações</div>
@@ -308,6 +301,16 @@
     </div>
 
     <div id="painel" class="aba">
+        <div id="painel" class="aba">
+    <div id="resumo-status" class="status-container" style="display: none;">
+        <div class="status-card" style="border-left-color: #ffc107;"><b>SOLICITADO</b><span id="res-solicitado">0</span></div>
+        <div class="status-card" style="border-left-color: #17a2b8;"><b>AGENDADO</b><span id="res-agendado">0</span></div>
+        <div class="status-card" style="border-left-color: #fd7e14;"><b>EXECUÇÃO</b><span id="res-execucao">0</span></div>
+        <div class="status-card" style="border-left-color: #28a745;"><b>CONCLUÍDO</b><span id="res-concluido">0</span></div>
+        <div class="status-card" style="border-left-color: #6c757d;"><b>IMPEDIDO</b><span id="res-impedido">0</span></div>
+    </div>
+
+    <div class="filtros-painel">
         <div class="filtros-painel">
             <div><label>Início</label><input type="date" id="filtroDataInicio"></div>
             <div><label>Fim</label><input type="date" id="filtroDataFim"></div>
@@ -1132,21 +1135,22 @@ window.renderPainel = function() {
 
     // Função para Atualizar Tudo
 async function atualizarTodosStatus() {
-    const cards = document.querySelectorAll('.card-agendamento'); // ajuste para sua classe
-    if(!confirm("Deseja sincronizar o status de todas as OS visíveis?")) return;
-    
-    // Mostra um alerta ou spinner de "processando"
-    console.log("Iniciando varredura em massa...");
-    
+    // Busca todos os itens do painel que estão na tela
+    const cards = document.querySelectorAll('.painel-item');  
+    if(cards.length === 0) return window.showMessage("Nenhum ticket na tela para atualizar.");
+    if(!confirm("Deseja sincronizar o status de todos os tickets visíveis?")) return;
+   
+    window.showToast("Iniciando sincronização em massa...");
     for (let card of cards) {
-        const ticket = card.dataset.ticket; // garanta que você guarda o número do ticket no elemento
+        const ticket = card.dataset.ticket;
         if(ticket) {
-            await sincronizarStatus(ticket); // Chama a função que já criamos
+            // Pegamos o botão de dentro do card para mostrar o ícone de carregando
+            const btn = card.querySelector('button[title="Sincronizar Status"]');
+            await window.sincronizarStatusIndividual(ticket, btn);
         }
     }
-    location.reload(); // Recarrega para atualizar os contadores
-}
-    window.limparFiltros = function(){ document.getElementById("filtroDataInicio").value = ""; document.getElementById("filtroDataFim").value = ""; document.getElementById("filtroTicket").value = ""; document.getElementById("filtroPrestador").value = ""; document.getElementById("filtroSolicitante").value = ""; window.renderPainel(); };
+    window.showToast("✅ Sincronização em massa concluída!");
+}    window.limparFiltros = function(){ document.getElementById("filtroDataInicio").value = ""; document.getElementById("filtroDataFim").value = ""; document.getElementById("filtroTicket").value = ""; document.getElementById("filtroPrestador").value = ""; document.getElementById("filtroSolicitante").value = ""; window.renderPainel(); };
     window.atualizarFiltrosPrestador = function(){ 
         let sel = document.getElementById("filtroPrestador"); let providersWithAgend = [...new Set(agendamentos.map(a => a.prestador))];
         sel.innerHTML = '<option value="">Todos</option>'; providersWithAgend.forEach(p => sel.innerHTML += `<option value="${p}">${p}</option>`);
