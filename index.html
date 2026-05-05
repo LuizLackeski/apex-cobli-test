@@ -299,29 +299,36 @@
         </div>
     </div>
 
-<div class="painel-status-bar" id="painel-status-bar" style="align-items: center; flex-wrap: wrap;">
-            <div class="painel-status-item"><div class="painel-status-title">Solicitado</div><div class="painel-status-value" id="st-solicitado">0</div></div>
-            <div class="painel-status-item"><div class="painel-status-title">Em Negociação</div><div class="painel-status-value" id="st-negociacao">0</div></div>
-            <div class="painel-status-item"><div class="painel-status-title">Agendado</div><div class="painel-status-value" id="st-agendado">0</div></div>
-            <div class="painel-status-item"><div class="painel-status-title">Em Andamento</div><div class="painel-status-value" id="st-andamento">0</div></div>
-            <div class="painel-status-item"><div class="painel-status-title">Impedido</div><div class="painel-status-value" id="st-impedido" style="color: #ef4444;">0</div></div>
-            <div class="painel-status-item"><div class="painel-status-title">Concluído</div><div class="painel-status-value" id="st-concluido" style="color: #10b981;">0</div></div>
-            <div class="painel-status-item" style="border-right: none;"><div class="painel-status-title">Cancelado</div><div class="painel-status-value" id="st-cancelado" style="color: #64748b;">0</div></div>
+<div id="painel" class="aba">
+        <div class="painel-status-bar" id="painel-status-bar" style="align-items: center; flex-wrap: wrap; justify-content: space-between;">
+            <div style="display: flex; flex: 1; gap: 10px; flex-wrap: wrap; min-width: max-content;">
+                <div class="painel-status-item"><div class="painel-status-title">Solicitado</div><div class="painel-status-value" id="st-solicitado">0</div></div>
+                <div class="painel-status-item"><div class="painel-status-title">Em Negociação</div><div class="painel-status-value" id="st-negociacao">0</div></div>
+                <div class="painel-status-item"><div class="painel-status-title">Agendado</div><div class="painel-status-value" id="st-agendado">0</div></div>
+                <div class="painel-status-item"><div class="painel-status-title">Em Andamento</div><div class="painel-status-value" id="st-andamento">0</div></div>
+                <div class="painel-status-item"><div class="painel-status-title">Impedido</div><div class="painel-status-value" id="st-impedido" style="color: #ef4444;">0</div></div>
+                <div class="painel-status-item"><div class="painel-status-title">Concluído</div><div class="painel-status-value" id="st-concluido" style="color: #10b981;">0</div></div>
+                <div class="painel-status-item" style="border-right: none;"><div class="painel-status-title">Cancelado</div><div class="painel-status-value" id="st-cancelado" style="color: #64748b;">0</div></div>
+            </div>
             
-            <div style="width: 1px; height: 30px; background: #e5e7eb; margin: 0 5px;"></div>
-            <button onclick="window.atualizarTodosStatus()" style="background:#10b981; padding: 6px 12px; font-size: 0.8rem; border-radius: 6px; border: none; color: white; cursor: pointer; white-space: nowrap;">
-                🔄 Update
-            </button>
+            <div style="width: 1px; height: 30px; background: #e5e7eb; margin: 0 15px; display: block;"></div>
+            
+            <div style="display: flex; align-items: center;">
+                <button onclick="window.atualizarTodosStatus()" style="background:#10b981; height: 34px; padding: 0 15px; font-size: 0.8rem; border-radius: 6px; border: none; color: white; cursor: pointer; white-space: nowrap;">
+                    🔄 Update
+                </button>
+            </div>
         </div>
 
         <div class="filtros-painel" style="flex-wrap: wrap; align-items: flex-end;">
-            <div style="display: flex; gap: 10px; min-width: 260px;">
+            
+            <div style="display: flex; gap: 10px; flex: 1.5; min-width: 260px;">
                 <div style="flex: 1;"><label>Início</label><input type="date" id="filtroDataInicio" style="margin: 0; padding: 6px;"></div>
                 <div style="flex: 1;"><label>Fim</label><input type="date" id="filtroDataFim" style="margin: 0; padding: 6px;"></div>
             </div>
             
             <div style="flex: 1; min-width: 100px;"><label>Ticket</label><input type="text" id="filtroTicket" placeholder="Nº OS" style="margin: 0; padding: 6px;"></div>
-            <div style="flex: 1; min-width: 110px;"><label>Prestador</label><select id="filtroPrestador" style="margin: 0; padding: 6px;"><option value="">Todos</option></select></div>       
+            <div style="flex: 1.5; min-width: 130px;"><label>Prestador</label><select id="filtroPrestador" style="margin: 0; padding: 6px;"><option value="">Todos</option></select></div>       
             
             <div style="flex: 1; min-width: 140px; position: relative;">
                 <label>Status</label>
@@ -339,7 +346,7 @@
                 </details>
             </div>
             
-            <div style="flex: 1; min-width: 120px;"><label>Solicitante</label><input type="text" id="filtroSolicitante" placeholder="Pesquisar..." style="margin: 0; padding: 6px;"></div>
+            <div style="flex: 1.5; min-width: 140px;"><label>Solicitante</label><input type="text" id="filtroSolicitante" placeholder="Pesquisar..." style="margin: 0; padding: 6px;"></div>
             
             <div style="display: flex; gap: 5px;">
                 <button onclick="window.renderPainel(); document.getElementById('dropdown-status').removeAttribute('open');" style="height: 34px; padding: 0 15px;">Filtrar</button>
