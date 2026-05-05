@@ -299,8 +299,7 @@
         </div>
     </div>
 
-<div id="painel" class="aba">
-            <div class="painel-status-bar" id="painel-status-bar" style="align-items: center; flex-wrap: nowrap; overflow-x: auto;">
+<div class="painel-status-bar" id="painel-status-bar" style="align-items: center; flex-wrap: wrap;">
             <div class="painel-status-item"><div class="painel-status-title">Solicitado</div><div class="painel-status-value" id="st-solicitado">0</div></div>
             <div class="painel-status-item"><div class="painel-status-title">Em Negociação</div><div class="painel-status-value" id="st-negociacao">0</div></div>
             <div class="painel-status-item"><div class="painel-status-title">Agendado</div><div class="painel-status-value" id="st-agendado">0</div></div>
@@ -309,9 +308,9 @@
             <div class="painel-status-item"><div class="painel-status-title">Concluído</div><div class="painel-status-value" id="st-concluido" style="color: #10b981;">0</div></div>
             <div class="painel-status-item" style="border-right: none;"><div class="painel-status-title">Cancelado</div><div class="painel-status-value" id="st-cancelado" style="color: #64748b;">0</div></div>
             
-            <div style="min-width: 2px; height: 35px; background: #e5e7eb; margin: 0 5px;"></div>
-            <button onclick="window.atualizarTodosStatus()" style="background:#10b981; padding: 10px 15px; font-size: 0.85rem; white-space: nowrap; height: fit-content; border-radius: 6px;">
-                🔄 Sincronizar Tudo
+            <div style="width: 1px; height: 30px; background: #e5e7eb; margin: 0 5px;"></div>
+            <button onclick="window.atualizarTodosStatus()" style="background:#10b981; padding: 6px 12px; font-size: 0.8rem; border-radius: 6px; border: none; color: white; cursor: pointer; white-space: nowrap;">
+                🔄 Update
             </button>
         </div>
 
@@ -328,14 +327,14 @@
                 <label>Status</label>
                 <details id="dropdown-status" style="background: white; border: 1px solid #cbd5e1; border-radius: 6px; cursor: pointer; user-select: none;">
                     <summary style="padding: 6px; font-size: 0.8rem; font-weight: 500; color: #334155; outline: none; list-style: none;">📑 Selecionar...</summary>
-                    <div style="position: absolute; top: 100%; left: 0; right: 0; background: white; border: 1px solid #cbd5e1; border-radius: 6px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); padding: 8px; z-index: 100; display: flex; flex-direction: column; gap: 5px; margin-top: 2px;">
-                        <label style="display:flex; align-items:center; gap:5px; margin:0; cursor:pointer; text-transform:none;"><input type="checkbox" value="solicitado" class="cb-status"> Solicitado</label>
-                        <label style="display:flex; align-items:center; gap:5px; margin:0; cursor:pointer; text-transform:none;"><input type="checkbox" value="negociacao" class="cb-status"> Em Negociação</label>
-                        <label style="display:flex; align-items:center; gap:5px; margin:0; cursor:pointer; text-transform:none;"><input type="checkbox" value="agendado" class="cb-status"> Agendado</label>
-                        <label style="display:flex; align-items:center; gap:5px; margin:0; cursor:pointer; text-transform:none;"><input type="checkbox" value="andamento" class="cb-status"> Em Andamento</label>
-                        <label style="display:flex; align-items:center; gap:5px; margin:0; cursor:pointer; text-transform:none;"><input type="checkbox" value="impedido" class="cb-status"> Impedido</label>
-                        <label style="display:flex; align-items:center; gap:5px; margin:0; cursor:pointer; text-transform:none;"><input type="checkbox" value="concluido" class="cb-status"> Concluído</label>
-                        <label style="display:flex; align-items:center; gap:5px; margin:0; cursor:pointer; text-transform:none;"><input type="checkbox" value="cancelado" class="cb-status"> Cancelado</label>
+                    <div style="position: absolute; top: 100%; left: 0; background: white; border: 1px solid #cbd5e1; border-radius: 6px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); padding: 8px; z-index: 100; display: flex; flex-direction: column; gap: 8px; margin-top: 2px; min-width: 160px;">
+                        <label style="display:flex; align-items:center; gap:5px; margin:0; cursor:pointer; font-size: 0.85rem; white-space: nowrap;"><input type="checkbox" value="solicitado" class="cb-status"> Solicitado</label>
+                        <label style="display:flex; align-items:center; gap:5px; margin:0; cursor:pointer; font-size: 0.85rem; white-space: nowrap;"><input type="checkbox" value="negociacao" class="cb-status"> Em Negociação</label>
+                        <label style="display:flex; align-items:center; gap:5px; margin:0; cursor:pointer; font-size: 0.85rem; white-space: nowrap;"><input type="checkbox" value="agendado" class="cb-status"> Agendado</label>
+                        <label style="display:flex; align-items:center; gap:5px; margin:0; cursor:pointer; font-size: 0.85rem; white-space: nowrap;"><input type="checkbox" value="andamento" class="cb-status"> Em Andamento</label>
+                        <label style="display:flex; align-items:center; gap:5px; margin:0; cursor:pointer; font-size: 0.85rem; white-space: nowrap;"><input type="checkbox" value="impedido" class="cb-status"> Impedido</label>
+                        <label style="display:flex; align-items:center; gap:5px; margin:0; cursor:pointer; font-size: 0.85rem; white-space: nowrap;"><input type="checkbox" value="concluido" class="cb-status"> Concluído</label>
+                        <label style="display:flex; align-items:center; gap:5px; margin:0; cursor:pointer; font-size: 0.85rem; white-space: nowrap;"><input type="checkbox" value="cancelado" class="cb-status"> Cancelado</label>
                     </div>
                 </details>
             </div>
