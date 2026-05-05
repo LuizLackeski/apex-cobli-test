@@ -439,6 +439,10 @@
             </div>
         </div>
         
+       <div id="indicador-filtro" style="display: none; text-align: center; color: #ef4444; font-size: 0.75rem; font-weight: 700; margin-top: -10px; margin-bottom: 15px; letter-spacing: 1px;">
+            ⚠️ DADOS FILTRADOS, LIMPE A SELEÇÃO
+        </div>
+        
         <div id="painel-conteudo" style="max-height: 500px; overflow-y: auto;"></div>
     </div>
 
@@ -1235,6 +1239,11 @@ window.renderPainel = function(){
     let statusMarcados = Array.from(document.querySelectorAll('.cb-status:checked')).map(cb => cb.value);
     let prestadoresMarcados = Array.from(document.querySelectorAll('.cb-prestador:checked')).map(cb => cb.value);
 
+    // LIGA/DESLIGA O AVISO VERMELHO AUTOMATICAMENTE
+    let temFiltroAtivo = fInicio || fFim || fTicket || fSol || statusMarcados.length > 0 || prestadoresMarcados.length > 0;
+    let indicador = document.getElementById('indicador-filtro');
+    if(indicador) indicador.style.display = temFiltroAtivo ? 'block' : 'none';
+
     filtradosPainel = agendamentos.filter(a => { 
         if(!a.data || !a.ticket) return false;
         let [d, m, y] = a.data.split('/'); 
@@ -1245,13 +1254,15 @@ window.renderPainel = function(){
         let matchSol = (!fSol || (a.solicitante && a.solicitante.toLowerCase().includes(fSol)));
         let matchPrest = prestadoresMarcados.length === 0 || prestadoresMarcados.includes(a.prestador);
 
-        let statusOriginal = (a.status || 'solicitado').toLowerCase();
+        // TRADUTOR UNIVERSAL DE STATUS E BLINDAGEM DE ESPAÇOS
+        let statusOriginal = String(a.status || 'solicitado').trim().toLowerCase();
         let statusMapeado = 'solicitado';
-        if (statusOriginal.includes('negocia')) statusMapeado = 'negociacao';
+        
+        if (statusOriginal.includes('negocia') || statusOriginal.includes('aguardando')) statusMapeado = 'negociacao';
         else if (statusOriginal.includes('agendado') || statusOriginal.includes('scheduled')) statusMapeado = 'agendado';
-        else if (statusOriginal.includes('andamento') || statusOriginal.includes('progress')) statusMapeado = 'andamento';
-        else if (statusOriginal.includes('impedido') || statusOriginal.includes('reportado')) statusMapeado = 'impedido';
-        else if (statusOriginal.includes('conclu') || statusOriginal.includes('completed')) statusMapeado = 'concluido';
+        else if (statusOriginal.includes('andamento') || statusOriginal.includes('progress') || statusOriginal.includes('deslocamento')) statusMapeado = 'andamento';
+        else if (statusOriginal.includes('impedido') || statusOriginal.includes('reportado') || statusOriginal.includes('falha')) statusMapeado = 'impedido';
+        else if (statusOriginal.includes('conclu') || statusOriginal.includes('completed') || statusOriginal.includes('finalizado')) statusMapeado = 'concluido';
         else if (statusOriginal.includes('cancelado') || statusOriginal.includes('canceled')) statusMapeado = 'cancelado';
         
         let matchStatus = statusMarcados.length === 0 || statusMarcados.includes(statusMapeado);
@@ -1264,12 +1275,12 @@ window.renderPainel = function(){
     let counts = { solicitado: 0, negociacao: 0, agendado: 0, andamento: 0, impedido: 0, concluido: 0, cancelado: 0 };
     
     filtradosPainel.forEach(a => {
-        let status = a.status ? a.status.toLowerCase() : '';
-        if (status.includes('negocia')) counts.negociacao++;
+        let status = a.status ? String(a.status).toLowerCase() : '';
+        if (status.includes('negocia') || status.includes('aguardando')) counts.negociacao++;
         else if (status.includes('agendado') || status.includes('scheduled')) counts.agendado++;
-        else if (status.includes('andamento') || status.includes('progress')) counts.andamento++;
-        else if (status.includes('impedido') || status.includes('reportado')) counts.impedido++;
-        else if (status.includes('conclu') || status.includes('completed')) counts.concluido++;
+        else if (status.includes('andamento') || status.includes('progress') || status.includes('deslocamento')) counts.andamento++;
+        else if (status.includes('impedido') || status.includes('reportado') || status.includes('falha')) counts.impedido++;
+        else if (status.includes('conclu') || status.includes('completed') || status.includes('finalizado')) counts.concluido++;
         else if (status.includes('cancelado') || status.includes('canceled')) counts.cancelado++;
         else counts.solicitado++; 
     });
