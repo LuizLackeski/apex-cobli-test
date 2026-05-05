@@ -790,8 +790,9 @@ window.revisarAgendamento = function() {
     const telefone = document.getElementById('telResponsavel').value;
     const endereco = `${document.getElementById('inputRua').value}, ${document.getElementById('inputNumero').value} - ${document.getElementById('inputBairro').value}`;
 
+    // A MÁGICA AQUI: Adicionado o [${i.nomeManutencao.toUpperCase()}]
     let prodHtml = itensSelecionados.map(i => 
-        `<div style="margin-bottom:5px;">• ${i.desc} <strong>(Qtd: ${i.qtd} | ${i.tempo * i.qtd}m)</strong></div>`
+        `<div style="margin-bottom:5px;">• [${i.nomeManutencao.toUpperCase()}] ${i.desc} <strong>(Qtd: ${i.qtd} | ${i.tempo * i.qtd}m)</strong></div>`
     ).join('');
 
     let html = `
