@@ -249,7 +249,7 @@
             <label>CNPJ / CPF</label><input id="clienteCnpj" placeholder="00.000.000/0000-00" oninput="window.maskCPFCNPJ(this)" required>
             <label>Responsável pela solicitação (APEX)</label><input id="solicitante" required>
             <label>Responsável pelo acompanhamento (Local)</label><input id="respAcompanhamento" required>
-            <label>Telefone do responsável</label><input id="telResponsavel" placeholder="(00) 00000-0000" oninput="window.maskPhone(this)" required>
+            <label>Telefone do responsável</label><input id="telResponsavel" placeholder="(00) 00000-0000" oninput="window.maskPhone(this)" maxlength="15" required>
             <button onclick="window.proximoPasso(3)" style="background:gray;">Voltar</button>
             <button id="btnConfirmar" onclick="window.revisarAgendamento(this)" style="background:green;">Confirmar</button>
             <button onclick="window.cancelarAgendamento()" class="btn-cancelar">Cancelar</button>
@@ -332,11 +332,16 @@ window.maskCPFCNPJ = function(i) {
     }
     i.value = v.substring(0, 18);
 };
-window.maskPhone = function(i) {
-    let v = i.value.replace(/\D/g, "");
-    v = v.replace(/^(\d{2})(\d)/g, "($1) $2");
-    v = v.replace(/(\d)(\d{4})$/, "$1-$2");
-    i.value = v.substring(0, 15);
+window.maskPhone = function(campo) {
+    let v = campo.value.replace(/\D/g, ""); // Remove tudo o que não é número
+    if (v.length <= 10) {
+        // Fixo: (XX) XXXX-XXXX
+        v = v.replace(/^(\d{2})(\d{4})(\d{4}).*/, "($1) $2-$3");
+    } else {
+        // Celular: (XX) XXXXX-XXXX
+        v = v.replace(/^(\d{2})(\d{5})(\d{4}).*/, "($1) $2-$3");
+    }
+    campo.value = v;
 };
 window.maskCEP = function(i) {
     let v = i.value.replace(/\D/g, "");
@@ -768,6 +773,13 @@ window.confirmarEnvioReal = function() {
     window.concluirAgendamentoFinal(btn);
 };
 window.concluirAgendamentoFinal = async function(btn) {
+    const cnpjInput = document.getElementById('campo_cnpj').value;
+    const cnpjSomenteNumeros = cnpjInput.replace(/\D/g, ''); // Limpa pontos e traços
+// A Trava de Segurança
+    if (cnpjSomenteNumeros.length !== 14) {
+    window.showMessage("❌ O CNPJ está incompleto! Ele precisa ter exatamente 14 números.");
+    return; // Para a execução do código aqui e não deixa seguir
+}
     const sel = document.querySelectorAll("#agenda-agendamento .cell.selecionado");
     const slotsSelecionados = Array.from(sel).map(c => c.dataset.hora.substring(0, 5));
     const dataSelecionada = sel.length > 0 ? sel[0].dataset.date : null;
