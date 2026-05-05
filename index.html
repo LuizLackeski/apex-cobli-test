@@ -363,43 +363,56 @@
                 <select id="filtroPrestador" style="margin: 0; padding: 6px; width: 100%; box-sizing: border-box; border: 1px solid #cbd5e1; border-radius: 6px;"><option value="">Todos</option></select>
             </div>       
             
-<div style="flex: 1; min-width: 140px; position: relative;">
+<div style="display: flex; gap: 10px; margin-bottom: 20px; padding: 12px; background: white; border-radius: 8px; border: 1px solid #e5e7eb; align-items: flex-end; flex-wrap: wrap;">
+            
+            <div style="display: flex; gap: 10px; flex: 1; min-width: 250px;">
+                <div style="flex: 1;">
+                    <label style="font-size: 0.65rem; color: #64748b; font-weight: 600; text-transform: uppercase; margin-bottom: 2px; display: block;">Início</label>
+                    <input type="date" id="filtroDataInicio" style="margin: 0; padding: 4px 6px; width: 100%; height: 31px; box-sizing: border-box; border: 1px solid #cbd5e1; border-radius: 6px; font-family: inherit; font-size: 0.8rem;">
+                </div>
+                <div style="flex: 1;">
+                    <label style="font-size: 0.65rem; color: #64748b; font-weight: 600; text-transform: uppercase; margin-bottom: 2px; display: block;">Fim</label>
+                    <input type="date" id="filtroDataFim" style="margin: 0; padding: 4px 6px; width: 100%; height: 31px; box-sizing: border-box; border: 1px solid #cbd5e1; border-radius: 6px; font-family: inherit; font-size: 0.8rem;">
+                </div>
+            </div>
+            
+            <div style="flex: 1; min-width: 100px;">
+                <label style="font-size: 0.65rem; color: #64748b; font-weight: 600; text-transform: uppercase; margin-bottom: 2px; display: block;">Ticket</label>
+                <input type="text" id="filtroTicket" placeholder="Nº OS" style="margin: 0; padding: 4px 6px; width: 100%; height: 31px; box-sizing: border-box; border: 1px solid #cbd5e1; border-radius: 6px; font-family: inherit; font-size: 0.8rem;">
+            </div>
+            
+            <div style="flex: 1; min-width: 140px; position: relative;">
+                <label style="font-size: 0.65rem; color: #64748b; font-weight: 600; text-transform: uppercase; margin-bottom: 2px; display: block; text-align: left;">Prestador</label>
+                <details id="dropdown-prestador" style="background: white; border: 1px solid #cbd5e1; border-radius: 6px; cursor: pointer; user-select: none; height: 31px; box-sizing: border-box;">
+                    <summary style="padding: 6px; font-size: 0.8rem; font-weight: 500; color: #334155; outline: none; list-style: none; text-align: left; line-height: 1.2;">👷 Selecionar...</summary>
+                    <div id="container-prestadores" style="position: absolute; top: 100%; left: 0; background: white; border: 1px solid #cbd5e1; border-radius: 6px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); padding: 10px; z-index: 100; display: flex; flex-direction: column; gap: 8px; margin-top: 2px; min-width: 180px; max-height: 250px; overflow-y: auto;">
+                        </div>
+                </details>
+            </div>       
+            
+            <div style="flex: 1; min-width: 140px; position: relative;">
                 <label style="font-size: 0.65rem; color: #64748b; font-weight: 600; text-transform: uppercase; margin-bottom: 2px; display: block; text-align: left;">Status</label>
-                <details id="dropdown-status" style="background: white; border: 1px solid #cbd5e1; border-radius: 6px; cursor: pointer; user-select: none;">
-                    <summary style="padding: 6px; font-size: 0.8rem; font-weight: 500; color: #334155; outline: none; list-style: none; text-align: left;">📑 Selecionar...</summary>
+                <details id="dropdown-status" style="background: white; border: 1px solid #cbd5e1; border-radius: 6px; cursor: pointer; user-select: none; height: 31px; box-sizing: border-box;">
+                    <summary style="padding: 6px; font-size: 0.8rem; font-weight: 500; color: #334155; outline: none; list-style: none; text-align: left; line-height: 1.2;">📑 Selecionar...</summary>
                     <div style="position: absolute; top: 100%; left: 0; background: white; border: 1px solid #cbd5e1; border-radius: 6px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); padding: 10px; z-index: 100; display: flex; flex-direction: column; gap: 8px; margin-top: 2px; min-width: 150px;">
-                        <label style="display:flex; align-items:center; justify-content:flex-start; gap:8px; margin:0; cursor:pointer; font-size: 0.75rem; font-weight: 600; color: #334155; white-space: nowrap; text-transform: uppercase;">
-                            <input type="checkbox" value="solicitado" class="cb-status" style="width: auto; margin: 0; padding: 0;"> Solicitado
-                        </label>
-                        <label style="display:flex; align-items:center; justify-content:flex-start; gap:8px; margin:0; cursor:pointer; font-size: 0.75rem; font-weight: 600; color: #334155; white-space: nowrap; text-transform: uppercase;">
-                            <input type="checkbox" value="negociacao" class="cb-status" style="width: auto; margin: 0; padding: 0;"> Em Negociação
-                        </label>
-                        <label style="display:flex; align-items:center; justify-content:flex-start; gap:8px; margin:0; cursor:pointer; font-size: 0.75rem; font-weight: 600; color: #334155; white-space: nowrap; text-transform: uppercase;">
-                            <input type="checkbox" value="agendado" class="cb-status" style="width: auto; margin: 0; padding: 0;"> Agendado
-                        </label>
-                        <label style="display:flex; align-items:center; justify-content:flex-start; gap:8px; margin:0; cursor:pointer; font-size: 0.75rem; font-weight: 600; color: #334155; white-space: nowrap; text-transform: uppercase;">
-                            <input type="checkbox" value="andamento" class="cb-status" style="width: auto; margin: 0; padding: 0;"> Em Andamento
-                        </label>
-                        <label style="display:flex; align-items:center; justify-content:flex-start; gap:8px; margin:0; cursor:pointer; font-size: 0.75rem; font-weight: 600; color: #334155; white-space: nowrap; text-transform: uppercase;">
-                            <input type="checkbox" value="impedido" class="cb-status" style="width: auto; margin: 0; padding: 0;"> Impedido
-                        </label>
-                        <label style="display:flex; align-items:center; justify-content:flex-start; gap:8px; margin:0; cursor:pointer; font-size: 0.75rem; font-weight: 600; color: #334155; white-space: nowrap; text-transform: uppercase;">
-                            <input type="checkbox" value="concluido" class="cb-status" style="width: auto; margin: 0; padding: 0;"> Concluído
-                        </label>
-                        <label style="display:flex; align-items:center; justify-content:flex-start; gap:8px; margin:0; cursor:pointer; font-size: 0.75rem; font-weight: 600; color: #334155; white-space: nowrap; text-transform: uppercase;">
-                            <input type="checkbox" value="cancelado" class="cb-status" style="width: auto; margin: 0; padding: 0;"> Cancelado
-                        </label>
+                        <label style="display:flex; align-items:center; justify-content:flex-start; gap:8px; margin:0; cursor:pointer; font-size: 0.75rem; font-weight: 600; color: #334155; white-space: nowrap; text-transform: uppercase;"><input type="checkbox" value="solicitado" class="cb-status" style="width: auto; margin: 0; padding: 0;"> Solicitado</label>
+                        <label style="display:flex; align-items:center; justify-content:flex-start; gap:8px; margin:0; cursor:pointer; font-size: 0.75rem; font-weight: 600; color: #334155; white-space: nowrap; text-transform: uppercase;"><input type="checkbox" value="negociacao" class="cb-status" style="width: auto; margin: 0; padding: 0;"> Em Negociação</label>
+                        <label style="display:flex; align-items:center; justify-content:flex-start; gap:8px; margin:0; cursor:pointer; font-size: 0.75rem; font-weight: 600; color: #334155; white-space: nowrap; text-transform: uppercase;"><input type="checkbox" value="agendado" class="cb-status" style="width: auto; margin: 0; padding: 0;"> Agendado</label>
+                        <label style="display:flex; align-items:center; justify-content:flex-start; gap:8px; margin:0; cursor:pointer; font-size: 0.75rem; font-weight: 600; color: #334155; white-space: nowrap; text-transform: uppercase;"><input type="checkbox" value="andamento" class="cb-status" style="width: auto; margin: 0; padding: 0;"> Em Andamento</label>
+                        <label style="display:flex; align-items:center; justify-content:flex-start; gap:8px; margin:0; cursor:pointer; font-size: 0.75rem; font-weight: 600; color: #334155; white-space: nowrap; text-transform: uppercase;"><input type="checkbox" value="impedido" class="cb-status" style="width: auto; margin: 0; padding: 0;"> Impedido</label>
+                        <label style="display:flex; align-items:center; justify-content:flex-start; gap:8px; margin:0; cursor:pointer; font-size: 0.75rem; font-weight: 600; color: #334155; white-space: nowrap; text-transform: uppercase;"><input type="checkbox" value="concluido" class="cb-status" style="width: auto; margin: 0; padding: 0;"> Concluído</label>
+                        <label style="display:flex; align-items:center; justify-content:flex-start; gap:8px; margin:0; cursor:pointer; font-size: 0.75rem; font-weight: 600; color: #334155; white-space: nowrap; text-transform: uppercase;"><input type="checkbox" value="cancelado" class="cb-status" style="width: auto; margin: 0; padding: 0;"> Cancelado</label>
                     </div>
                 </details>
             </div>
             
-            <div style="flex: 1.5; min-width: 140px;">
+            <div style="flex: 1; min-width: 140px;">
                 <label style="font-size: 0.65rem; color: #64748b; font-weight: 600; text-transform: uppercase; margin-bottom: 2px; display: block;">Solicitante</label>
-                <input type="text" id="filtroSolicitante" placeholder="Pesquisar..." style="margin: 0; padding: 6px; width: 100%; box-sizing: border-box; border: 1px solid #cbd5e1; border-radius: 6px;">
+                <input type="text" id="filtroSolicitante" placeholder="Pesquisar..." style="margin: 0; padding: 4px 6px; width: 100%; height: 31px; box-sizing: border-box; border: 1px solid #cbd5e1; border-radius: 6px; font-family: inherit; font-size: 0.8rem;">
             </div>
             
             <div style="display: flex; gap: 5px; height: 31px;">
-                <button onclick="window.renderPainel(); document.getElementById('dropdown-status').removeAttribute('open');" style="height: 100%; padding: 0 15px; margin: 0; border: none; border-radius: 5px; background: var(--primary); color: white; cursor: pointer;">Filtrar</button>
+                <button onclick="window.renderPainel(); document.getElementById('dropdown-status').removeAttribute('open'); document.getElementById('dropdown-prestador').removeAttribute('open');" style="height: 100%; padding: 0 15px; margin: 0; border: none; border-radius: 5px; background: var(--primary); color: white; cursor: pointer;">Filtrar</button>
                 <button onclick="window.limparFiltros()" style="background:gray; height: 100%; padding: 0 15px; margin: 0; border: none; border-radius: 5px; color: white; cursor: pointer;">Limpar</button>
             </div>
         </div>
@@ -1162,19 +1175,14 @@ window.renderizarProdutos = function() {
     }).join(''); 
 };
     
-window.renderPainel = function(){ 
-    if (!Array.isArray(agendamentos)) {
-        document.getElementById("painel-conteudo").innerHTML = "Nenhum dado disponível.";
-        return;
-    }
-    let fInicio = document.getElementById("filtroDataInicio").value; 
+let fInicio = document.getElementById("filtroDataInicio").value; 
     let fFim = document.getElementById("filtroDataFim").value; 
     let fTicket = document.getElementById("filtroTicket").value.toLowerCase();
     let fSol = document.getElementById("filtroSolicitante").value.toLowerCase();
-    let fPrest = document.getElementById("filtroPrestador").value;
     
-    // NOVO: Pega todos os checkboxes que estão marcados e joga num Array
+    // Pega as listas do que está marcado
     let statusMarcados = Array.from(document.querySelectorAll('.cb-status:checked')).map(cb => cb.value);
+    let prestadoresMarcados = Array.from(document.querySelectorAll('.cb-prestador:checked')).map(cb => cb.value);
 
     // 1. Filtragem dos dados
     filtradosPainel = agendamentos.filter(a => { 
@@ -1185,7 +1193,9 @@ window.renderPainel = function(){
         let matchDate = (!fInicio || dataAgendada >= fInicio) && (!fFim || dataAgendada <= fFim); 
         let matchTicket = (!fTicket || (a.ticket && a.ticket.toLowerCase().includes(fTicket)));
         let matchSol = (!fSol || (a.solicitante && a.solicitante.toLowerCase().includes(fSol)));
-        let matchPrest = (!fPrest || a.prestador === fPrest);
+        
+        // Verifica se o prestador está na lista marcada (se não tiver nada marcado, passa todos)
+        let matchPrest = prestadoresMarcados.length === 0 || prestadoresMarcados.includes(a.prestador);
 
         // Mapeia o status do banco
         let statusOriginal = (a.status || 'solicitado').toLowerCase();
@@ -1197,7 +1207,6 @@ window.renderPainel = function(){
         else if (statusOriginal.includes('conclu') || statusOriginal.includes('completed')) statusMapeado = 'concluido';
         else if (statusOriginal.includes('cancelado') || statusOriginal.includes('canceled')) statusMapeado = 'cancelado';
         
-        // NOVO: Se o array estiver vazio (nada marcado), mostra tudo. Se tiver algo, verifica se o status está lá.
         let matchStatus = statusMarcados.length === 0 || statusMarcados.includes(statusMapeado);
 
         return matchDate && matchTicket && matchSol && matchPrest && matchStatus; 
@@ -1289,21 +1298,31 @@ window.limparFiltros = function(){
     document.getElementById("filtroDataInicio").value = ""; 
     document.getElementById("filtroDataFim").value = ""; 
     document.getElementById("filtroTicket").value = ""; 
-    document.getElementById("filtroPrestador").value = ""; 
     document.getElementById("filtroSolicitante").value = ""; 
     
     // Desmarca todos os checkboxes
     document.querySelectorAll('.cb-status').forEach(cb => cb.checked = false);
+    document.querySelectorAll('.cb-prestador').forEach(cb => cb.checked = false);
     
-    // Fecha a caixinha de dropdown caso o usuário tenha deixado aberta
+    // Fecha os popups
     document.getElementById('dropdown-status').removeAttribute('open');
-    
+    document.getElementById('dropdown-prestador').removeAttribute('open');
     window.renderPainel(); 
 };
-    window.atualizarFiltrosPrestador = function(){ 
-        let sel = document.getElementById("filtroPrestador"); let providersWithAgend = [...new Set(agendamentos.map(a => a.prestador))];
-        sel.innerHTML = '<option value="">Todos</option>'; providersWithAgend.forEach(p => sel.innerHTML += `<option value="${p}">${p}</option>`);
-    };
+    
+window.atualizarFiltrosPrestador = function(){ 
+    let container = document.getElementById("container-prestadores"); 
+    // Busca os nomes únicos, tira os vazios e ordena
+    let providersWithAgend = [...new Set(agendamentos.map(a => a.prestador).filter(Boolean))].sort(); 
+    container.innerHTML = ''; 
+    providersWithAgend.forEach(p => {
+        container.innerHTML += `
+        <label style="display:flex; align-items:center; justify-content:flex-start; gap:8px; margin:0; cursor:pointer; font-size: 0.75rem; font-weight: 600; color: #334155; white-space: nowrap; text-transform: uppercase;">
+            <input type="checkbox" value="${p}" class="cb-prestador" style="width: auto; margin: 0; padding: 0;"> ${p}
+        </label>`;
+    });
+};
+    
     window.sincronizarStatusIndividual = async function(ticket, btn) {
     const originalText = btn.innerHTML;
     btn.innerHTML = "🔄...";
