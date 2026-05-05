@@ -773,7 +773,7 @@ window.confirmarEnvioReal = function() {
     window.concluirAgendamentoFinal(btn);
 };
 window.concluirAgendamentoFinal = async function(btn) {
-    const cnpjInput = document.getElementById('campo_cnpj').value;
+    const cnpjInput = document.getElementById('cnpj').value;
     const cnpjSomenteNumeros = cnpjInput.replace(/\D/g, ''); // Limpa pontos e traços
 // A Trava de Segurança
     if (cnpjSomenteNumeros.length !== 14) {
