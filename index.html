@@ -114,6 +114,16 @@
             gap: 8px;
             height: 38px;
         }
+        
+        /* ANIMAÇÃO DE GIRO PARA O BOTÃO REFRESH */
+        @keyframes girar {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        .icone-girando {
+            display: inline-block;
+            animation: girar 1s linear infinite;
+        }
     </style>
 </head>
 <body>
@@ -1370,9 +1380,10 @@ window.atualizarFiltrosPrestador = function(){
 
 window.sincronizarStatusIndividual = async function(ticket, btn) {
     const originalText = btn.innerHTML;
-    // Aqui a mágica do vermelho!
-    btn.innerHTML = `🔄<span style="color: #ff0000; font-size: 1.2rem; font-weight: 900; margin-left: 4px;">...</span>`;
+    // A MÁGICA DO GIRO AQUI!
+    btn.innerHTML = `<span class="icone-girando">🔄</span>`;
     btn.disabled = true;
+    
     try {
         const response = await fetch(EDGE_URL, {
             method: 'POST',
@@ -1392,6 +1403,7 @@ window.sincronizarStatusIndividual = async function(ticket, btn) {
     } catch (err) {
         window.showMessage("❌ Erro de conexão.");
     } finally {
+        // Volta ao normal (para de girar e libera o botão)
         btn.innerHTML = originalText;
         btn.disabled = false;
     }
