@@ -8,15 +8,6 @@
     <style>
         :root { --primary: #2F4EA1; --bg: #f0f2f5; --text: #334155; --cobli-blue: #2F4EA1; }
         body { font-family: 'Inter', -apple-system, sans-serif; background:var(--bg); color: var(--text); margin:0; padding:20px; }
-     
-        /* Cards de Resumo no Topo */
-.status-container { display: flex; justify-content: center; gap: 10px; margin: 20px 0; flex-wrap: wrap; }
-.status-card { 
-    background: #fff; padding: 10px 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); 
-    border-left: 5px solid #007bff; text-align: center; min-width: 130px; 
-}
-.status-card b { font-size: 0.7rem; color: #555; display: block; margin-bottom: 2px; text-transform: uppercase; }
-.status-card span { font-size: 1.1rem; font-weight: bold; color: #333; }
         
         #toast {
             display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); 
@@ -24,14 +15,22 @@
             box-shadow: 0 10px 25px rgba(0,0,0,0.2); z-index: 10000; border: 1px solid #e5e7eb;
             font-weight: 600; text-align: center;
         }
-   
- <button onclick="atualizarTodosStatus()" class="btn-refresh-all">
-    <i class="fa fa-refresh"></i> Sincronizar Tudo
-</button>
+
         #login-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #2F4EA1; display: none; align-items: center; justify-content: center; z-index: 20000; }
         .login-card { background: white; padding: 40px; border-radius: 12px; width: 350px; text-align: center; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2); }
         .login-card h2 { color: var(--primary); border-bottom: none; margin-bottom: 20px; }
 
+        /* CARDS DE STATUS DO PAINEL */
+        .painel-status-bar {
+            display: flex; gap: 10px; background: white; padding: 12px; border-radius: 8px; border: 1px solid #e5e7eb; margin-bottom: 20px; flex-wrap: wrap; justify-content: center;
+        }
+        .painel-status-item {
+            flex: 1; text-align: center; border-right: 1px solid #e5e7eb; padding: 0 10px; min-width: 100px;
+        }
+        .painel-status-item:last-child { border-right: none; }
+        .painel-status-title { font-size: 0.65rem; color: #64748b; font-weight: 700; text-transform: uppercase; margin-bottom: 4px; }
+        .painel-status-value { font-size: 1.2rem; font-weight: 800; color: var(--primary); }
+    
         /* MENU TOPO NOME E BOTOES */
         .topo { background: var(--primary); color: white; padding: 15px 30px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
         .menu { background: #1F3C88; padding: 0 30px; display: flex; align-items: center; justify-content: space-between; /* Mantém pontas nas pontas */ min-height: 45px; }
@@ -114,7 +113,7 @@
     </div>
 </div>
 
-<div class="topo"><strong>APEX |</strong> <span>Cobli</span></div>
+<div class="topo"><strong>APEX</strong> <span>Agenda Prestadores</span></div>
 <div class="menu">
     <div class="menu-left">
         <button class="ativo" onclick="window.trocarAba('consulta', this)">Agendamento</button>
@@ -122,7 +121,7 @@
         <button onclick="window.trocarAba('painel', this)">Painel</button>
         <button onclick="window.trocarAba('dashboard', this)">Dashboard</button>
     </div>
-    
+
     <div id="integrations-control" class="slack-adm-panel">
         <div class="label-integracoes">Integrações</div>
         <div class="switches-row">
@@ -300,26 +299,28 @@
         </div>
     </div>
 
-<div id="painel" class="aba">
-    <div id="resumo-status" class="status-container" style="display: none;">
-        <div class="status-card" style="border-left: 5px solid #ffc107;"><b>SOLICITADO</b><span id="res-solicitado">0</span></div>
-        <div class="status-card" style="border-left: 5px solid #17a2b8;"><b>AGENDADO</b><span id="res-agendado">0</span></div>
-        <div class="status-card" style="border-left: 5px solid #fd7e14;"><b>EXECUÇÃO</b><span id="res-execucao">0</span></div>
-        <div class="status-card" style="border-left: 5px solid #28a745;"><b>CONCLUÍDO</b><span id="res-concluido">0</span></div>
-        <div class="status-card" style="border-left: 5px solid #6c757d;"><b>IMPEDIDO</b><span id="res-impedido">0</span></div>
-    </div>
+   <div id="painel" class="aba">
+        <div class="painel-status-bar" id="painel-status-bar">
+            <div class="painel-status-item"><div class="painel-status-title">Solicitado</div><div class="painel-status-value" id="st-solicitado">0</div></div>
+            <div class="painel-status-item"><div class="painel-status-title">Em Negociação</div><div class="painel-status-value" id="st-negociacao">0</div></div>
+            <div class="painel-status-item"><div class="painel-status-title">Agendado</div><div class="painel-status-value" id="st-agendado">0</div></div>
+            <div class="painel-status-item"><div class="painel-status-title">Em Andamento</div><div class="painel-status-value" id="st-andamento">0</div></div>
+            <div class="painel-status-item"><div class="painel-status-title">Impedido</div><div class="painel-status-value" id="st-impedido" style="color: #ef4444;">0</div></div>
+            <div class="painel-status-item"><div class="painel-status-title">Concluído</div><div class="painel-status-value" id="st-concluido" style="color: #10b981;">0</div></div>
+            <div class="painel-status-item"><div class="painel-status-title">Cancelado</div><div class="painel-status-value" id="st-cancelado" style="color: #64748b;">0</div></div>
+        </div>
 
-    <div class="filtros-painel">
-        <div><label>Início</label><input type="date" id="filtroDataInicio"></div>
-        <div><label>Fim</label><input type="date" id="filtroDataFim"></div>
-        <div><label>Ticket</label><input type="text" id="filtroTicket" placeholder="Nº OS"></div>
-        <div><label>Prestador</label><select id="filtroPrestador"><option value="">Todos</option></select></div>
-        <button onclick="window.renderPainel()">Filtrar</button>
-        <button onclick="window.atualizarTodosStatus()" style="background:#10b981;">🔄 Sincronizar Tudo</button>
+        <div class="filtros-painel">
+            <div><label>Início</label><input type="date" id="filtroDataInicio"></div>
+            <div><label>Fim</label><input type="date" id="filtroDataFim"></div>
+            <div><label>Ticket</label><input type="text" id="filtroTicket" placeholder="Nº Ticket"></div>
+            <div><label>Prestador</label><select id="filtroPrestador"><option value="">Todos</option></select></div>
+            <div><label>Solicitante</label><input type="text" id="filtroSolicitante" placeholder="Pesquisar..."></div>
+            <button onclick="window.renderPainel()">Filtrar</button>
+            <button onclick="window.limparFiltros()" style="background:green;">Limpar</button>
+        </div>
+        <div id="painel-conteudo" style="max-height: 500px; overflow-y: auto;"></div>
     </div>
-    
-    <div id="painel-conteudo" style="max-height: 600px; overflow-y: auto;"></div>
-</div>
 
     <div id="dashboard" class="aba">
         <div class="flex-cards">
@@ -887,7 +888,8 @@ window.concluirAgendamentoFinal = async function(btn) {
     }
 };
     window.limparFormulario = function() { itensSelecionados = []; prestadorSelecionadoIndex = null; document.getElementById("lista-produtos").innerHTML = ""; document.getElementById("horasNecessarias").innerText = "0"; document.getElementById("agenda-agendamento").innerHTML = ""; document.getElementById("inputCep").value = ""; document.getElementById("ticket").value = ""; document.getElementById("clienteNome").value = ""; document.getElementById("solicitante").value = ""; document.getElementById("respAcompanhamento").value = ""; document.getElementById("telResponsavel").value = ""; };
-    window.trocarAba = function(id, btn){ document.querySelectorAll('.aba').forEach(a => a.classList.remove('ativa')); document.getElementById(id).classList.add('ativa'); document.querySelectorAll('.menu button').forEach(b => b.classList.remove('ativo')); if(btn) btn.classList.add('ativo'); if(id === 'painel') window.atualizarFiltrosPrestador(); if(id === 'dashboard') window.renderDashboard(); document.getElementById('resumo-status').style.display = (id === 'painel') ? 'flex' : 'none'; };    window.getNextDates = function(prestador) { let dates = []; let today = new Date(); const daysMap = {"Dom":0, "Seg":1, "Ter":2, "Qua":3, "Qui":4, "Sex":5, "Sab":6}; let agendaDays = (prestador.agenda && Array.isArray(prestador.agenda)) ? [...new Set(prestador.agenda.map(a => a.dia))].map(d => daysMap[d]) : []; let qtdLimit = parseInt(prestador.qtdtecnicos) || 1; for (let i = 0; i < 14; i++) { let d = new Date(); d.setDate(today.getDate() + i); let dStr = d.toLocaleDateString(); let dNome = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sab"][d.getDay()]; let blocked = window.getBlockedHours(prestador, dStr); let slotsDoDia = (prestador.agenda && Array.isArray(prestador.agenda)) ? prestador.agenda.filter(a => a.dia == dNome) : []; let temLivre = slotsDoDia.some(s => (s.hora && !blocked.has(parseInt(s.hora.split(':')[0])) && window.getOcupacaoSlot(prestador, dStr, s.hora) < qtdLimit)); if (agendaDays.includes(d.getDay()) && temLivre) dates.push(dStr.slice(0,5)); } return dates; };
+    window.trocarAba = function(id, btn){ document.querySelectorAll('.aba').forEach(a => a.classList.remove('ativa')); document.getElementById(id).classList.add('ativa'); document.querySelectorAll('.menu button').forEach(b => b.classList.remove('ativo')); if(btn) btn.classList.add('ativo'); if(id === 'painel') window.atualizarFiltrosPrestador(); if(id === 'dashboard') window.renderDashboard(); };
+    window.getNextDates = function(prestador) { let dates = []; let today = new Date(); const daysMap = {"Dom":0, "Seg":1, "Ter":2, "Qua":3, "Qui":4, "Sex":5, "Sab":6}; let agendaDays = (prestador.agenda && Array.isArray(prestador.agenda)) ? [...new Set(prestador.agenda.map(a => a.dia))].map(d => daysMap[d]) : []; let qtdLimit = parseInt(prestador.qtdtecnicos) || 1; for (let i = 0; i < 14; i++) { let d = new Date(); d.setDate(today.getDate() + i); let dStr = d.toLocaleDateString(); let dNome = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sab"][d.getDay()]; let blocked = window.getBlockedHours(prestador, dStr); let slotsDoDia = (prestador.agenda && Array.isArray(prestador.agenda)) ? prestador.agenda.filter(a => a.dia == dNome) : []; let temLivre = slotsDoDia.some(s => (s.hora && !blocked.has(parseInt(s.hora.split(':')[0])) && window.getOcupacaoSlot(prestador, dStr, s.hora) < qtdLimit)); if (agendaDays.includes(d.getDay()) && temLivre) dates.push(dStr.slice(0,5)); } return dates; };
     window.proximoPasso = async function(n) { if(n === 2) { if(prestadores.length === 0) return window.showMessage("Cadastre um prestador!"); const rua = document.getElementById('inputRua').value; const num = document.getElementById('inputNumero').value; const cidade = document.getElementById('inputCidade').value; if(!rua || !num || !cidade) return window.showMessage("Preencha o endereço completo!"); const btn = document.getElementById('btnBuscar'); btn.disabled = true; btn.innerText = "Calculando..."; const enderecoBusca = `${rua}, ${num} - ${cidade} - ${document.getElementById('inputCep').value}`; let prestadoresFiltrados = []; for(let p of prestadores) { if (!p.endereco) continue; const dist = await consultarDistancia(enderecoBusca, p.endereco); let available = window.getNextDates(p); if(dist !== null && dist <= parseFloat(p.range) && available.length > 0) { p.distanciaFinal = dist.toFixed(1); p.nextDates = available.join(', '); prestadoresFiltrados.push(p); } } btn.disabled = false; btn.innerText = "Buscar Prestadores"; if(prestadoresFiltrados.length === 0) { window.exibirModal("Atenção", "Nenhum prestador encontrado no raio de atendimento."); return; } window.renderizarListaPrestadoresSelecao(prestadoresFiltrados); } if(n === 3 && prestadorSelecionadoIndex === null) return window.showMessage("Selecione um prestador!"); document.querySelectorAll('#consulta > div').forEach(div => div.style.display = 'none'); document.getElementById('step-' + n).style.display = 'block'; if (n === 3) { let p = prestadores[prestadorSelecionadoIndex]; document.getElementById("header-prestador-info").innerText = `Prestador: ${p.nome} | Distância: ${p.distanciaFinal} km`; window.rdaAgendamento(); } };
 window.rdaAgendamento = function() { 
     let p = prestadores[prestadorSelecionadoIndex]; 
@@ -1075,94 +1077,72 @@ window.renderizarProdutos = function() {
     }).join(''); 
 };
     
-window.renderPainel = function() {
-    window.atualizarTodosStatus = async function() {
-    const items = document.querySelectorAll('.painel-item');
-    if(items.length === 0) return;
-    if(!confirm(`Deseja sincronizar os ${items.length} tickets na tela?`)) return;
-
-    window.showToast("Iniciando sincronização em massa...");
-    for (let item of items) {
-        const ticket = item.dataset.ticket;
-        const btn = item.querySelector('button[title="Sincronizar Status"]');
-        await window.sincronizarStatusIndividual(ticket, btn);
+window.renderPainel = function(){ 
+    if (!Array.isArray(agendamentos)) {
+        document.getElementById("painel-conteudo").innerHTML = "Nenhum dado disponível.";
+        return;
     }
-    window.showToast("Sincronização concluída!");
-};
-    if (!Array.isArray(agendamentos)) return;
+    let fInicio = document.getElementById("filtroDataInicio").value; 
+    let fFim = document.getElementById("filtroDataFim").value; 
+    let fTicket = document.getElementById("filtroTicket").value.toLowerCase();
+    let fSol = document.getElementById("filtroSolicitante").value.toLowerCase();
 
-    const fI = document.getElementById("filtroDataInicio").value;
-    const fF = document.getElementById("filtroDataFim").value;
-    const fT = document.getElementById("filtroTicket").value.toLowerCase();
-    const fP = document.getElementById("filtroPrestador").value;
+    // 1. Filtragem dos dados
+    filtradosPainel = agendamentos.filter(a => { 
+        if(!a.data || !a.ticket) return false;
+        let [d, m, y] = a.data.split('/'); 
+        let dataAgendada = `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
+        let matchDate = (!fInicio || dataAgendada >= fInicio) && (!fFim || dataAgendada <= fFim); 
+        let matchTicket = (!fTicket || (a.ticket && a.ticket.toLowerCase().includes(fTicket)));
+        let matchSol = (!fSol || (a.solicitante && a.solicitante.toLowerCase().includes(fSol)));
+        return matchDate && matchTicket && matchSol; 
+    }).sort((a,b) => {
+        return new Date(b.created_at) - new Date(a.created_at);
+    }); 
+
+    // 2. Lógica para contar os status
+    let counts = { solicitado: 0, negociacao: 0, agendado: 0, andamento: 0, impedido: 0, concluido: 0, cancelado: 0 };
     
-    filtradosPainel = agendamentos.filter(a => {
-        if(!a.data) return false;
-        let [d, m, y] = a.data.split('/');
-        let dIso = `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
-        return (!fI || dIso >= fI) && (!fF || dIso <= fF) && (!fT || a.ticket.toLowerCase().includes(fT)) && (!fP || a.prestador === fP);
-    });
-
-    // Atualiza os Contadores do Topo
-    const counts = { Solicitado:0, Agendado:0, Em andamento:0, Concluído:0, Em negociação, Impedido:0 };
     filtradosPainel.forEach(a => {
-        let s = (a.status || 'SOLICITADO').toUpperCase();
-        if(s.includes('PROGRESS')) s = 'Em andamento';
-        else if(s.includes('REPORTED')) s = 'Impedido';
-        else if(s.includes('COMPLETED')) s = 'Concluído';
-        else if(s.includes('SCHEDULED')) s = 'Aagendado';
-        else if(s.includes('canceled')) s = 'Cancelado';
-        else if(s.includes('negotiation')) s = 'Em negociação';
-        if(counts[s] !== undefined) counts[s]++; else counts['Solicitado']++;
+        let status = a.status ? a.status.toLowerCase() : '';
+        
+        if (status.includes('negocia')) counts.negociacao++;
+        else if (status.includes('agendado')) counts.agendado++;
+        else if (status.includes('andamento') || status.includes('progress')) counts.andamento++;
+        else if (status.includes('impedido') || status.includes('reportado')) counts.impedido++;
+        else if (status.includes('conclu')) counts.concluido++;
+        else if (status.includes('cancelado')) counts.cancelado++;
+        else counts.solicitado++; // Default se não achar nada
     });
 
-    document.getElementById('res-solicitado').innerText = counts.Solicitado;
-    document.getElementById('res-agendado').innerText = counts.Agendado;
-    document.getElementById('res-execucao').innerText = counts.Em andamento;
-    document.getElementById('res-concluido').innerText = counts.Concluído;
-    document.getElementById('res-impedido').innerText = counts.Impedido;
-    document.getElementById('res-impedido').innerText = counts.Cancelado;
-    document.getElementById('res-impedido').innerText = counts.Em negociação;
+    // Atualiza o HTML com os valores contados
+    document.getElementById('st-solicitado').innerText = counts.solicitado;
+    document.getElementById('st-negociacao').innerText = counts.negociacao;
+    document.getElementById('st-agendado').innerText = counts.agendado;
+    document.getElementById('st-andamento').innerText = counts.andamento;
+    document.getElementById('st-impedido').innerText = counts.impedido;
+    document.getElementById('st-concluido').innerText = counts.concluido;
+    document.getElementById('st-cancelado').innerText = counts.cancelado;
 
-    // Gera os Cards
-    document.getElementById("painel-conteudo").innerHTML = filtradosPainel.map((a, i) => `
-        <div class="painel-item" data-ticket="${a.ticket}">
+    // 3. Renderiza os Cards
+    document.getElementById("painel-conteudo").innerHTML = filtradosPainel.map((a, i) => {
+        return `<div class="painel-item">
             <div style="flex-grow: 1; font-size: 0.95rem;">
-                <strong>🎟️ #APEX-${a.ticket}</strong> | 🏷️ Status: <span style="color: #2F4EA1; font-weight: bold;">${a.status || 'SOLICITADO'}</span><br>
+                <strong>🎟️ #${a.ticket}</strong> | 🏷️ Status: <span style="color: #2F4EA1; font-weight: bold;">${a.status || 'SOLICITADO'}</span><br>
                 <div style="margin-top:5px; font-size: 0.85rem;">
-                     👤 Cliente: <b>${a.cliente || 'Não informado'}</b><br>
-                     📅 Data: ${a.data} | ⏰ ${Array.isArray(a.slots) ? a.slots[0] : (String(a.slots).split(',')[0] || 'N/A')}<br>
-                     🛠️ Prestador: ${a.prestador}
-                </div>
-                <div style="margin-top: 8px; font-size: 0.7rem; color: #666; border-top: 1px dashed #eee; padding-top: 5px;">
-                     Registrado em: ${new Date(a.created_at).toLocaleString('pt-BR')}
+                     📅 ${a.data} | ⏰ ${Array.isArray(a.slots) ? a.slots.join(', ') : (a.slots || 'N/A')}<br>
+                     🛠️ Prestador: ${a.prestador} | Solicitante: ${a.solicitante}
                 </div>
             </div>
-            <div style="display:flex; align-items: center; gap:5px;">
+            <div style="display:flex; gap:5px;">
                 <button title="Sincronizar Status" style="background:#10b981; padding: 8px;" onclick="window.sincronizarStatusIndividual('${a.ticket}', this)">🔄</button>
                 <button style="background:var(--primary); padding: 8px 12px; font-size: 0.85rem;" onclick="window.abrirDetalhesAgendamento(${i})">Ver</button>
             </div>
-        </div>`).join('');
+        </div>`;
+    }).join(''); 
 };
 
-    // Função para Atualizar Tudo
-async function atualizarTodosStatus() {
-    // Busca todos os itens do painel que estão na tela
-    const cards = document.querySelectorAll('.painel-item');  
-    if(cards.length === 0) return window.showMessage("Nenhum ticket na tela para atualizar.");
-    if(!confirm("Deseja sincronizar o status de todos os tickets visíveis?")) return;
-   
-    window.showToast("Iniciando sincronização em massa...");
-    for (let card of cards) {
-        const ticket = card.dataset.ticket;
-        if(ticket) {
-            // Pegamos o botão de dentro do card para mostrar o ícone de carregando
-            const btn = card.querySelector('button[title="Sincronizar Status"]');
-            await window.sincronizarStatusIndividual(ticket, btn);
-        }
-    }
-    window.showToast("✅ Sincronização em massa concluída!");
-}    window.limparFiltros = function(){ document.getElementById("filtroDataInicio").value = ""; document.getElementById("filtroDataFim").value = ""; document.getElementById("filtroTicket").value = ""; document.getElementById("filtroPrestador").value = ""; document.getElementById("filtroSolicitante").value = ""; window.renderPainel(); };
+    window.limparFiltros = function(){ document.getElementById("filtroDataInicio").value = ""; document.getElementById("filtroDataFim").value = ""; document.getElementById("filtroTicket").value = ""; document.getElementById("filtroPrestador").value = ""; document.getElementById("filtroSolicitante").value = ""; window.renderPainel(); };
     window.atualizarFiltrosPrestador = function(){ 
         let sel = document.getElementById("filtroPrestador"); let providersWithAgend = [...new Set(agendamentos.map(a => a.prestador))];
         sel.innerHTML = '<option value="">Todos</option>'; providersWithAgend.forEach(p => sel.innerHTML += `<option value="${p}">${p}</option>`);
