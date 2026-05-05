@@ -358,38 +358,38 @@
             </button>
         </div>
 
-        <div style="display: flex; gap: 10px; margin-bottom: 20px; padding: 12px; background: white; border-radius: 8px; border: 1px solid #e5e7eb; align-items: flex-end; flex-wrap: wrap;">
+        <div style="display: flex; gap: 10px; margin-bottom: 20px; padding: 15px; background: white; border-radius: 8px; border: 1px solid #e5e7eb; align-items: flex-end; flex-wrap: wrap;">
             
-            <div style="display: flex; gap: 10px; flex: 1; min-width: 250px;">
+            <div style="display: flex; gap: 10px; flex: 2; min-width: 240px;">
                 <div style="flex: 1;">
-                    <label style="font-size: 0.65rem; color: #64748b; font-weight: 600; text-transform: uppercase; margin-bottom: 2px; display: block;">Início</label>
-                    <input type="date" id="filtroDataInicio" style="margin: 0; padding: 4px 6px; width: 100%; height: 31px; box-sizing: border-box; border: 1px solid #cbd5e1; border-radius: 6px; font-family: inherit; font-size: 0.8rem;">
+                    <label style="font-size: 0.65rem; color: #64748b; font-weight: 600; text-transform: uppercase; margin-bottom: 4px; display: block;">Início</label>
+                    <input type="date" id="filtroDataInicio" style="margin: 0; padding: 0 8px; width: 100%; height: 34px; box-sizing: border-box; border: 1px solid #cbd5e1; border-radius: 6px; font-family: inherit; font-size: 0.85rem;">
                 </div>
                 <div style="flex: 1;">
-                    <label style="font-size: 0.65rem; color: #64748b; font-weight: 600; text-transform: uppercase; margin-bottom: 2px; display: block;">Fim</label>
-                    <input type="date" id="filtroDataFim" style="margin: 0; padding: 4px 6px; width: 100%; height: 31px; box-sizing: border-box; border: 1px solid #cbd5e1; border-radius: 6px; font-family: inherit; font-size: 0.8rem;">
+                    <label style="font-size: 0.65rem; color: #64748b; font-weight: 600; text-transform: uppercase; margin-bottom: 4px; display: block;">Fim</label>
+                    <input type="date" id="filtroDataFim" style="margin: 0; padding: 0 8px; width: 100%; height: 34px; box-sizing: border-box; border: 1px solid #cbd5e1; border-radius: 6px; font-family: inherit; font-size: 0.85rem;">
                 </div>
             </div>
             
             <div style="flex: 1; min-width: 100px;">
-                <label style="font-size: 0.65rem; color: #64748b; font-weight: 600; text-transform: uppercase; margin-bottom: 2px; display: block;">Ticket</label>
-                <input type="text" id="filtroTicket" placeholder="Nº OS" style="margin: 0; padding: 4px 6px; width: 100%; height: 31px; box-sizing: border-box; border: 1px solid #cbd5e1; border-radius: 6px; font-family: inherit; font-size: 0.8rem;">
+                <label style="font-size: 0.65rem; color: #64748b; font-weight: 600; text-transform: uppercase; margin-bottom: 4px; display: block;">Ticket</label>
+                <input type="text" id="filtroTicket" placeholder="Nº OS" style="margin: 0; padding: 0 8px; width: 100%; height: 34px; box-sizing: border-box; border: 1px solid #cbd5e1; border-radius: 6px; font-family: inherit; font-size: 0.85rem;">
             </div>
             
-            <div style="flex: 1; min-width: 140px; position: relative;">
-                <label style="font-size: 0.65rem; color: #64748b; font-weight: 600; text-transform: uppercase; margin-bottom: 2px; display: block; text-align: left;">Prestador</label>
-                <details id="dropdown-prestador" onmouseleave="this.removeAttribute('open')" style="background: white; border: 1px solid #cbd5e1; border-radius: 6px; cursor: pointer; user-select: none; height: 31px; box-sizing: border-box;">
-                    <summary style="padding: 6px; font-size: 0.8rem; font-weight: 500; color: #334155; outline: none; list-style: none; text-align: left; line-height: 1.2;">👷 Selecionar...</summary>
-                    <div id="container-prestadores" style="position: absolute; top: 100%; left: 0; background: white; border: 1px solid #cbd5e1; border-radius: 6px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); padding: 10px; z-index: 100; display: flex; flex-direction: column; gap: 8px; margin-top: 2px; min-width: 180px; max-height: 250px; overflow-y: auto;">
+            <div style="flex: 1.5; min-width: 140px; position: relative;">
+                <label style="font-size: 0.65rem; color: #64748b; font-weight: 600; text-transform: uppercase; margin-bottom: 4px; display: block; text-align: left;">Prestador</label>
+                <details id="dropdown-prestador" onmouseleave="this.removeAttribute('open')" style="background: white; border: 1px solid #cbd5e1; border-radius: 6px; cursor: pointer; user-select: none; height: 34px; box-sizing: border-box;">
+                    <summary style="padding: 0 8px; height: 32px; display: flex; align-items: center; font-size: 0.85rem; font-weight: 500; color: #334155; outline: none; list-style: none;">👷 Selecionar...</summary>
+                    <div id="container-prestadores" style="position: absolute; top: 100%; left: 0; background: white; border: 1px solid #cbd5e1; border-radius: 6px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); padding: 10px; z-index: 100; display: flex; flex-direction: column; gap: 8px; margin-top: 4px; min-width: 180px; max-height: 250px; overflow-y: auto;">
                         </div>
                 </details>
             </div>       
             
-            <div style="flex: 1; min-width: 140px; position: relative;">
-                <label style="font-size: 0.65rem; color: #64748b; font-weight: 600; text-transform: uppercase; margin-bottom: 2px; display: block; text-align: left;">Status</label>
-                <details id="dropdown-status" onmouseleave="this.removeAttribute('open')" style="background: white; border: 1px solid #cbd5e1; border-radius: 6px; cursor: pointer; user-select: none; height: 31px; box-sizing: border-box;">
-                    <summary style="padding: 6px; font-size: 0.8rem; font-weight: 500; color: #334155; outline: none; list-style: none; text-align: left; line-height: 1.2;">📑 Selecionar...</summary>
-                    <div style="position: absolute; top: 100%; left: 0; background: white; border: 1px solid #cbd5e1; border-radius: 6px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); padding: 10px; z-index: 100; display: flex; flex-direction: column; gap: 8px; margin-top: 2px; min-width: 150px;">
+            <div style="flex: 1; min-width: 130px; position: relative;">
+                <label style="font-size: 0.65rem; color: #64748b; font-weight: 600; text-transform: uppercase; margin-bottom: 4px; display: block; text-align: left;">Status</label>
+                <details id="dropdown-status" onmouseleave="this.removeAttribute('open')" style="background: white; border: 1px solid #cbd5e1; border-radius: 6px; cursor: pointer; user-select: none; height: 34px; box-sizing: border-box;">
+                    <summary style="padding: 0 8px; height: 32px; display: flex; align-items: center; font-size: 0.85rem; font-weight: 500; color: #334155; outline: none; list-style: none;">📑 Selecionar...</summary>
+                    <div style="position: absolute; top: 100%; left: 0; background: white; border: 1px solid #cbd5e1; border-radius: 6px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); padding: 10px; z-index: 100; display: flex; flex-direction: column; gap: 8px; margin-top: 4px; min-width: 150px;">
                         <label style="display:flex; align-items:center; justify-content:flex-start; gap:8px; margin:0; cursor:pointer; font-size: 0.75rem; font-weight: 600; color: #334155; white-space: nowrap; text-transform: uppercase;"><input type="checkbox" value="solicitado" class="cb-status" style="width: auto; margin: 0; padding: 0;"> Solicitado</label>
                         <label style="display:flex; align-items:center; justify-content:flex-start; gap:8px; margin:0; cursor:pointer; font-size: 0.75rem; font-weight: 600; color: #334155; white-space: nowrap; text-transform: uppercase;"><input type="checkbox" value="negociacao" class="cb-status" style="width: auto; margin: 0; padding: 0;"> Em Negociação</label>
                         <label style="display:flex; align-items:center; justify-content:flex-start; gap:8px; margin:0; cursor:pointer; font-size: 0.75rem; font-weight: 600; color: #334155; white-space: nowrap; text-transform: uppercase;"><input type="checkbox" value="agendado" class="cb-status" style="width: auto; margin: 0; padding: 0;"> Agendado</label>
@@ -401,17 +401,16 @@
                 </details>
             </div>
             
-            <div style="flex: 1; min-width: 140px;">
-                <label style="font-size: 0.65rem; color: #64748b; font-weight: 600; text-transform: uppercase; margin-bottom: 2px; display: block;">Solicitante</label>
-                <input type="text" id="filtroSolicitante" placeholder="Pesquisar..." style="margin: 0; padding: 4px 6px; width: 100%; height: 31px; box-sizing: border-box; border: 1px solid #cbd5e1; border-radius: 6px; font-family: inherit; font-size: 0.8rem;">
+            <div style="flex: 1; min-width: 120px;">
+                <label style="font-size: 0.65rem; color: #64748b; font-weight: 600; text-transform: uppercase; margin-bottom: 4px; display: block;">Solicitante</label>
+                <input type="text" id="filtroSolicitante" placeholder="Pesquisar..." style="margin: 0; padding: 0 8px; width: 100%; height: 34px; box-sizing: border-box; border: 1px solid #cbd5e1; border-radius: 6px; font-family: inherit; font-size: 0.85rem;">
             </div>
             
-            <div style="display: flex; gap: 5px; height: 31px;">
-                <button onclick="window.renderPainel(); document.getElementById('dropdown-status').removeAttribute('open'); if(document.getElementById('dropdown-prestador')) document.getElementById('dropdown-prestador').removeAttribute('open');" style="height: 100%; padding: 0 15px; margin: 0; border: none; border-radius: 5px; background: var(--primary); color: white; cursor: pointer;">Filtrar</button>
-                <button onclick="window.limparFiltros()" style="background:gray; height: 100%; padding: 0 15px; margin: 0; border: none; border-radius: 5px; color: white; cursor: pointer;">Limpar</button>
+            <div style="display: flex; gap: 5px; height: 34px;">
+                <button onclick="window.renderPainel(); document.getElementById('dropdown-status').removeAttribute('open'); if(document.getElementById('dropdown-prestador')) document.getElementById('dropdown-prestador').removeAttribute('open');" style="height: 100%; padding: 0 15px; margin: 0; border: none; border-radius: 6px; background: var(--primary); color: white; cursor: pointer; font-size: 0.85rem; font-weight: 600;">Filtrar</button>
+                <button onclick="window.limparFiltros()" style="background:gray; height: 100%; padding: 0 15px; margin: 0; border: none; border-radius: 6px; color: white; cursor: pointer; font-size: 0.85rem; font-weight: 600;">Limpar</button>
             </div>
-        </div>
-        
+        </div>        
         <div id="painel-conteudo" style="max-height: 500px; overflow-y: auto;"></div>
     </div>
 
