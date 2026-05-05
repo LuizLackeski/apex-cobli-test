@@ -310,7 +310,7 @@
             <div class="painel-status-item"><div class="painel-status-title">Cancelado</div><div class="painel-status-value" id="st-cancelado" style="color: #64748b;">0</div></div>
         </div>
 
-<div class="filtros-painel">
+        <div class="filtros-painel">
             <div style="display: flex; flex-direction: column; gap: 5px; flex: 0.5;">
                 <input type="date" id="filtroDataInicio" title="Data Início">
                 <input type="date" id="filtroDataFim" title="Data Fim">
@@ -338,6 +338,8 @@
                 <button onclick="window.atualizarTodosStatus()" style="background:#10b981; height: 100%;">🔄 Sincronizar Tudo</button>
             </div>
         </div>
+        <div id="painel-conteudo" style="max-height: 500px; overflow-y: auto;"></div>
+    </div>
 
     <div id="dashboard" class="aba">
         <div class="flex-cards">
@@ -1142,11 +1144,11 @@ window.renderPainel = function(){
         let status = a.status ? a.status.toLowerCase() : '';
         
         if (status.includes('negocia')) counts.negociacao++;
-        else if (status.includes('agendado')) counts.agendado++;
+        else if (status.includes('agendado') || status.includes('scheduled')) counts.agendado++;
         else if (status.includes('andamento') || status.includes('progress')) counts.andamento++;
         else if (status.includes('impedido') || status.includes('reportado')) counts.impedido++;
-        else if (status.includes('conclu')) counts.concluido++;
-        else if (status.includes('cancelado')) counts.cancelado++;
+        else if (status.includes('conclu') || status.includes('completed')) counts.concluido++;
+        else if (status.includes('cancelado') || status.includes('canceled')) counts.cancelado++;
         else counts.solicitado++; // Default se não achar nada
     });
 
