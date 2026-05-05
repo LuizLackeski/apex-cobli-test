@@ -363,18 +363,32 @@
                 <select id="filtroPrestador" style="margin: 0; padding: 6px; width: 100%; box-sizing: border-box; border: 1px solid #cbd5e1; border-radius: 6px;"><option value="">Todos</option></select>
             </div>       
             
-            <div style="flex: 1; min-width: 140px; position: relative;">
-                <label style="font-size: 0.65rem; color: #64748b; font-weight: 600; text-transform: uppercase; margin-bottom: 2px; display: block;">Status</label>
+<div style="flex: 1; min-width: 140px; position: relative;">
+                <label style="font-size: 0.65rem; color: #64748b; font-weight: 600; text-transform: uppercase; margin-bottom: 2px; display: block; text-align: left;">Status</label>
                 <details id="dropdown-status" style="background: white; border: 1px solid #cbd5e1; border-radius: 6px; cursor: pointer; user-select: none;">
-                    <summary style="padding: 6px; font-size: 0.8rem; font-weight: 500; color: #334155; outline: none; list-style: none;">📑 Selecionar...</summary>
-                    <div style="position: absolute; top: 100%; left: 0; background: white; border: 1px solid #cbd5e1; border-radius: 6px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); padding: 8px; z-index: 100; display: flex; flex-direction: column; gap: 8px; margin-top: 2px; min-width: 160px;">
-                        <label style="display:flex; align-items:center; gap:5px; margin:0; cursor:pointer; font-size: 0.85rem; white-space: nowrap;"><input type="checkbox" value="solicitado" class="cb-status"> Solicitado</label>
-                        <label style="display:flex; align-items:center; gap:5px; margin:0; cursor:pointer; font-size: 0.85rem; white-space: nowrap;"><input type="checkbox" value="negociacao" class="cb-status"> Em Negociação</label>
-                        <label style="display:flex; align-items:center; gap:5px; margin:0; cursor:pointer; font-size: 0.85rem; white-space: nowrap;"><input type="checkbox" value="agendado" class="cb-status"> Agendado</label>
-                        <label style="display:flex; align-items:center; gap:5px; margin:0; cursor:pointer; font-size: 0.85rem; white-space: nowrap;"><input type="checkbox" value="andamento" class="cb-status"> Em Andamento</label>
-                        <label style="display:flex; align-items:center; gap:5px; margin:0; cursor:pointer; font-size: 0.85rem; white-space: nowrap;"><input type="checkbox" value="impedido" class="cb-status"> Impedido</label>
-                        <label style="display:flex; align-items:center; gap:5px; margin:0; cursor:pointer; font-size: 0.85rem; white-space: nowrap;"><input type="checkbox" value="concluido" class="cb-status"> Concluído</label>
-                        <label style="display:flex; align-items:center; gap:5px; margin:0; cursor:pointer; font-size: 0.85rem; white-space: nowrap;"><input type="checkbox" value="cancelado" class="cb-status"> Cancelado</label>
+                    <summary style="padding: 6px; font-size: 0.8rem; font-weight: 500; color: #334155; outline: none; list-style: none; text-align: left;">📑 Selecionar...</summary>
+                    <div style="position: absolute; top: 100%; left: 0; background: white; border: 1px solid #cbd5e1; border-radius: 6px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); padding: 10px; z-index: 100; display: flex; flex-direction: column; gap: 8px; margin-top: 2px; min-width: 150px;">
+                        <label style="display:flex; align-items:center; justify-content:flex-start; gap:8px; margin:0; cursor:pointer; font-size: 0.75rem; font-weight: 600; color: #334155; white-space: nowrap; text-transform: uppercase;">
+                            <input type="checkbox" value="solicitado" class="cb-status" style="width: auto; margin: 0; padding: 0;"> Solicitado
+                        </label>
+                        <label style="display:flex; align-items:center; justify-content:flex-start; gap:8px; margin:0; cursor:pointer; font-size: 0.75rem; font-weight: 600; color: #334155; white-space: nowrap; text-transform: uppercase;">
+                            <input type="checkbox" value="negociacao" class="cb-status" style="width: auto; margin: 0; padding: 0;"> Em Negociação
+                        </label>
+                        <label style="display:flex; align-items:center; justify-content:flex-start; gap:8px; margin:0; cursor:pointer; font-size: 0.75rem; font-weight: 600; color: #334155; white-space: nowrap; text-transform: uppercase;">
+                            <input type="checkbox" value="agendado" class="cb-status" style="width: auto; margin: 0; padding: 0;"> Agendado
+                        </label>
+                        <label style="display:flex; align-items:center; justify-content:flex-start; gap:8px; margin:0; cursor:pointer; font-size: 0.75rem; font-weight: 600; color: #334155; white-space: nowrap; text-transform: uppercase;">
+                            <input type="checkbox" value="andamento" class="cb-status" style="width: auto; margin: 0; padding: 0;"> Em Andamento
+                        </label>
+                        <label style="display:flex; align-items:center; justify-content:flex-start; gap:8px; margin:0; cursor:pointer; font-size: 0.75rem; font-weight: 600; color: #334155; white-space: nowrap; text-transform: uppercase;">
+                            <input type="checkbox" value="impedido" class="cb-status" style="width: auto; margin: 0; padding: 0;"> Impedido
+                        </label>
+                        <label style="display:flex; align-items:center; justify-content:flex-start; gap:8px; margin:0; cursor:pointer; font-size: 0.75rem; font-weight: 600; color: #334155; white-space: nowrap; text-transform: uppercase;">
+                            <input type="checkbox" value="concluido" class="cb-status" style="width: auto; margin: 0; padding: 0;"> Concluído
+                        </label>
+                        <label style="display:flex; align-items:center; justify-content:flex-start; gap:8px; margin:0; cursor:pointer; font-size: 0.75rem; font-weight: 600; color: #334155; white-space: nowrap; text-transform: uppercase;">
+                            <input type="checkbox" value="cancelado" class="cb-status" style="width: auto; margin: 0; padding: 0;"> Cancelado
+                        </label>
                     </div>
                 </details>
             </div>
