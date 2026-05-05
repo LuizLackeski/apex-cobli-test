@@ -773,18 +773,15 @@ window.confirmarEnvioReal = function() {
     window.concluirAgendamentoFinal(btn);
 };
 window.concluirAgendamentoFinal = async function(btn) {
-    // 1. Tenta encontrar o elemento na tela (sem ler o valor ainda)
-    const elCnpj = document.getElementById('cnpj'); 
-// 2. Só faz a verificação se o elemento realmente existir no HTML
+    // 1. Busca o campo pelo ID correto do HTML
+    const elCnpj = document.getElementById('clienteCnpj');    
     if (elCnpj) {
-        const cnpjSomenteNumeros = elCnpj.value.replace(/\D/g, ''); 
-             // Se a pessoa digitou algo, mas não tem 14 dígitos, avisa e barra!
-        if (cnpjSomenteNumeros.length > 0 && cnpjSomenteNumeros.length !== 14) {
-            window.showMessage("❌ O CNPJ está incompleto! Ele precisa ter exatamente 14 números.");
-            return; // Para a execução aqui
+    const documentoNumeros = elCnpj.value.replace(/\D/g, '');       
+        // Se a pessoa digitou algo, exige estritamente 14 dígitos (CNPJ)
+        if (documentoNumeros.length > 0 && documentoNumeros.length !== 14) {
+            window.showMessage("❌ O CNPJ está incompleto! Digite todos os 14 números.");
+            return; // Para a execução aqui e não deixa seguir
         }
-    } else {
-        console.warn("⚠️ Aviso de sistema: Campo de CNPJ não encontrado no HTML com o ID 'cnpj'.");
     }
     
     const sel = document.querySelectorAll("#agenda-agendamento .cell.selecionado");
