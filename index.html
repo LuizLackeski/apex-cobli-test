@@ -1173,18 +1173,17 @@ window.renderizarProdutos = function() {
                 </button>
             </div>`;
     }).join(''); 
-};
-   window.renderPainel = function(){ 
+
+window.renderPainel = function(){ 
     if (!Array.isArray(agendamentos)) {
         document.getElementById("painel-conteudo").innerHTML = "Nenhum dado disponível.";
         return;
-    } 
+    }
     let fInicio = document.getElementById("filtroDataInicio").value; 
     let fFim = document.getElementById("filtroDataFim").value; 
     let fTicket = document.getElementById("filtroTicket").value.toLowerCase();
     let fSol = document.getElementById("filtroSolicitante").value.toLowerCase();
     
-    // Pega as listas do que está marcado
     let statusMarcados = Array.from(document.querySelectorAll('.cb-status:checked')).map(cb => cb.value);
     let prestadoresMarcados = Array.from(document.querySelectorAll('.cb-prestador:checked')).map(cb => cb.value);
 
@@ -1197,11 +1196,8 @@ window.renderizarProdutos = function() {
         let matchDate = (!fInicio || dataAgendada >= fInicio) && (!fFim || dataAgendada <= fFim); 
         let matchTicket = (!fTicket || (a.ticket && a.ticket.toLowerCase().includes(fTicket)));
         let matchSol = (!fSol || (a.solicitante && a.solicitante.toLowerCase().includes(fSol)));
-        
-        // Verifica se o prestador está na lista marcada (se não tiver nada marcado, passa todos)
         let matchPrest = prestadoresMarcados.length === 0 || prestadoresMarcados.includes(a.prestador);
 
-        // Mapeia o status do banco
         let statusOriginal = (a.status || 'solicitado').toLowerCase();
         let statusMapeado = 'solicitado';
         if (statusOriginal.includes('negocia')) statusMapeado = 'negociacao';
