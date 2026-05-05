@@ -80,15 +80,15 @@
         .switch-off { background-color: #ff4633 !important; color: white !important; } 
 
         /* CSS GRID - BARRA DE FILTROS DO PAINEL */
-        .grid-filtros {
+            .grid-filtros {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
             gap: 15px;
             background: white;
-            padding: 20px;
+            padding: 12px 15px; /* Diminuí o espaço interno */
             border-radius: 8px;
             border: 1px solid #e5e7eb;
-            margin-bottom: 20px;
+            margin-bottom: 10px; /* Diminuí o espaço pro card de baixo */
             align-items: end;
         }
         .campo-filtro {
@@ -356,7 +356,7 @@
 
     <div id="painel" class="aba">
         
-        <div style="display: flex; align-items: center; background: white; padding: 12px; border-radius: 8px; border: 1px solid #e5e7eb; margin-bottom: 20px; overflow-x: auto;">
+        <div style="display: flex; align-items: center; background: white; padding: 12px; border-radius: 8px; border: 1px solid #e5e7eb; margin-bottom: 10px; overflow-x: auto;">
             <div style="display: flex; flex: 1; justify-content: space-between; min-width: 650px;">
                 <div style="flex: 1; text-align: center; border-right: 1px solid #e5e7eb; padding: 0 10px;">
                     <div style="font-size: 0.65rem; color: #64748b; font-weight: 700; text-transform: uppercase;">Solicitado</div>
@@ -873,12 +873,19 @@ window.revisarAgendamento = function() {
     const solicitante = document.getElementById('solicitante').value;
     const responsavel = document.getElementById('respAcompanhamento').value;
     const telefone = document.getElementById('telResponsavel').value;
-    const endereco = `${document.getElementById('inputRua').value}, ${document.getElementById('inputNumero').value} - ${document.getElementById('inputBairro').value}`;
+    
+    // AQUI O ENDEREÇO PUXANDO TUDO
+    const rua = document.getElementById('inputRua').value;
+    const numero = document.getElementById('inputNumero').value;
+    const bairro = document.getElementById('inputBairro').value;
+    const cidade = document.getElementById('inputCidade').value;
+    const uf = document.getElementById('inputUf').value;
+    const cep = document.getElementById('inputCep').value;
+    const endereco = `${rua}, ${numero} - ${bairro}, ${cidade}/${uf} - CEP: ${cep}`;
 
     let prodHtml = itensSelecionados.map(i => 
         `<div style="margin-bottom:5px;">• [${i.nomeManutencao.toUpperCase()}] ${i.desc} <strong>(Qtd: ${i.qtd} | ${i.tempo * i.qtd}m)</strong></div>`
     ).join('');
-
     let html = `
         <div style="background: white; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 15px; text-align: left;">
             <div style="font-weight:bold; font-size:1.1rem; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px; margin-bottom: 8px; color:var(--primary);">
@@ -892,7 +899,7 @@ window.revisarAgendamento = function() {
                 <strong>⏰ Horários:</strong> ${slotsSelecionados}<br>
                 <hr style="border:0; border-top:1px solid #f1f5f9; margin:8px 0;">
                 <strong>📍 Local:</strong> ${endereco}<br>
-                <strong>📞 Contato:</strong> ${responsavel} (${telefone})
+                <strong>📞 Contato:</strong> ${responsavel} | ${telefone}
             </div>
         </div>
         <div style="font-weight:600; margin-bottom:5px; text-align: left;">📦 Serviços:</div>
@@ -906,6 +913,7 @@ window.revisarAgendamento = function() {
     `;
     window.exibirModal("Confirme os Dados", html);
 };
+    
 window.confirmarEnvioReal = function() {
     window.fecharModal();
     const btn = document.getElementById('btnConfirmar');
@@ -1128,10 +1136,11 @@ window.mudarEtapa = function(dir){ if (dir > 0 && etapa === 1) { const inputs = 
 window.renderizarListaPrestadores = function(){ 
     document.getElementById("btn-novo-container").innerHTML = isAuthorized ? `<button onclick="window.abrirCadastro()" style="margin-bottom: 20px;">+ Novo Prestador</button>` : '';
     document.getElementById("lista-prestadores").innerHTML = prestadores.map((p, i) => {
-        let btns = `<button onclick="window.abrirDetalhesPrestador(${i})" style="background:#10b981; height: 38px; padding: 0 15px; font-size: 0.9rem; border-radius:6px; border:none; color:white; cursor:pointer;">Ver</button>`;  
+        // Reduzido para height: 30px e font-size: 0.8rem
+        let btns = `<button onclick="window.abrirDetalhesPrestador(${i})" style="background:#10b981; height: 30px; padding: 0 12px; font-size: 0.8rem; font-weight: 600; border-radius:6px; border:none; color:white; cursor:pointer; display: flex; align-items: center; justify-content: center;">Ver</button>`;  
         if (isAuthorized) {
-            btns += `<button onclick="window.abrirCadastro(${i})" style="background:var(--primary); height: 38px; padding: 0 15px; font-size: 0.9rem; border-radius:6px; border:none; color:white; cursor:pointer;">Editar</button>`;
-            btns += `<button onclick="window.excluirPrestador(${i})" style="background:#ef4444; height: 38px; padding: 0 15px; font-size: 0.9rem; border-radius:6px; border:none; color:white; cursor:pointer;">Excluir</button>`;
+            btns += `<button onclick="window.abrirCadastro(${i})" style="background:var(--primary); height: 30px; padding: 0 12px; font-size: 0.8rem; font-weight: 600; border-radius:6px; border:none; color:white; cursor:pointer; display: flex; align-items: center; justify-content: center;">Editar</button>`;
+            btns += `<button onclick="window.excluirPrestador(${i})" style="background:#ef4444; height: 30px; padding: 0 12px; font-size: 0.8rem; font-weight: 600; border-radius:6px; border:none; color:white; cursor:pointer; display: flex; align-items: center; justify-content: center;">Excluir</button>`;
         }     
         return `<div class="painel-item">
             <div style="flex-grow: 1; font-size: 0.95rem;">
@@ -1350,7 +1359,8 @@ window.atualizarFiltrosPrestador = function(){
 
 window.sincronizarStatusIndividual = async function(ticket, btn) {
     const originalText = btn.innerHTML;
-    btn.innerHTML = "🔄...";
+    // Aqui a mágica do vermelho!
+    btn.innerHTML = `🔄<span style="color: #ff0000; font-size: 1.2rem; font-weight: 900; margin-left: 4px;">...</span>`;
     btn.disabled = true;
     try {
         const response = await fetch(EDGE_URL, {
