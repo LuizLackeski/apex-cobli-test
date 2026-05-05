@@ -1100,11 +1100,11 @@ window.mudarEtapa = function(dir){ if (dir > 0 && etapa === 1) { const inputs = 
 window.renderizarListaPrestadores = function(){ 
     document.getElementById("btn-novo-container").innerHTML = isAuthorized ? `<button onclick="window.abrirCadastro()" style="margin-bottom: 20px;">+ Novo Prestador</button>` : '';
     document.getElementById("lista-prestadores").innerHTML = prestadores.map((p, i) => {
-        let btns = `<button onclick="window.abrirDetalhesPrestador(${i})" style="background:#10b981; padding: 8px 12px; font-size: 0.85rem; border-radius:4px; border:none; color:white; cursor:pointer;">Ver</button>`;  
+      let btns = `<button onclick="window.abrirDetalhesPrestador(${i})" style="background:#10b981; height: 34px; padding: 0 20px; font-size: 0.9rem; font-weight: 600; border-radius:6px; border:none; color:white; cursor:pointer; display: flex; align-items: center; justify-content: center;">Ver</button>`;  
         if (isAuthorized) {
-            btns += `<button onclick="window.abrirCadastro(${i})" style="background:var(--primary); padding: 8px 12px; font-size: 0.85rem; border-radius:4px; border:none; color:white; cursor:pointer;">Editar</button>`;
-            btns += `<button onclick="window.excluirPrestador(${i})" style="background:#ef4444; padding: 8px 12px; font-size: 0.85rem; border-radius:4px; border:none; color:white; cursor:pointer;">Excluir</button>`;
-        }     
+            btns += `<button onclick="window.abrirCadastro(${i})" style="background:var(--primary); height: 34px; padding: 0 20px; font-size: 0.9rem; font-weight: 600; border-radius:6px; border:none; color:white; cursor:pointer; display: flex; align-items: center; justify-content: center;">Editar</button>`;
+            btns += `<button onclick="window.excluirPrestador(${i})" style="background:#ef4444; height: 34px; padding: 0 20px; font-size: 0.9rem; font-weight: 600; border-radius:6px; border:none; color:white; cursor:pointer; display: flex; align-items: center; justify-content: center;">Excluir</button>`;
+        }    
         return `<div class="painel-item">
             <div style="flex-grow: 1; font-size: 0.95rem;">
                 <strong>👷 Prestador:</strong> ${p.nome} | 📍 <strong>Local de atuação:</strong> ${p.cidade}/${p.uf}          
@@ -1262,9 +1262,9 @@ window.renderPainel = function(){
                 </div>
             </div>
             
-            <div style="display:flex; align-items: center; gap:5px;">
-                <button title="Sincronizar Status" style="background:#10b981; padding: 8px; border-radius:4px; border:none; cursor:pointer;" onclick="window.sincronizarStatusIndividual('${a.ticket}', this)">🔄</button>
-                <button style="background:var(--primary); color:white; padding: 8px 12px; font-size: 0.85rem; border-radius:4px; border:none; cursor:pointer;" onclick="window.abrirDetalhesAgendamento(${i})">Ver</button>
+           <div style="display:flex; align-items: center; gap:8px;">
+                <button title="Sincronizar Status" style="background:#10b981; height: 34px; padding: 0 15px; font-size: 1rem; border-radius:6px; border:none; color:white; cursor:pointer; display: flex; align-items: center; justify-content: center;" onclick="window.sincronizarStatusIndividual('${a.ticket}', this)">🔄</button>
+                <button style="background:var(--primary); height: 34px; padding: 0 20px; font-size: 0.9rem; font-weight: 600; border-radius:6px; border:none; color:white; cursor:pointer; display: flex; align-items: center; justify-content: center;" onclick="window.abrirDetalhesAgendamento(${i})">Ver</button>
             </div>
         </div>`;
     }).join(''); 
