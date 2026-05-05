@@ -773,19 +773,13 @@ window.confirmarEnvioReal = function() {
     window.concluirAgendamentoFinal(btn);
 };
 window.concluirAgendamentoFinal = async function(btn) {
-    // 1. Busca o campo com segurança (Verifique se o ID é esse mesmo!)
-    const elCnpj = document.getElementById('cnpj'); 
-    
-    // 2. Se o campo existir na tela, faz a checagem
-    if (elCnpj) {
-        const cnpjSomenteNumeros = elCnpj.value.replace(/\D/g, '');
-        
-        // Se o cara digitou alguma coisa, MAS não tem 14 números, bloqueia!
-        if (cnpjSomenteNumeros.length > 0 && cnpjSomenteNumeros.length !== 14) {
-            window.showMessage("❌ O CNPJ está incompleto! Ele precisa ter exatamente 14 números.");
-            return; // Para tudo
-        }
-    }
+    const cnpjInput = document.getElementById('cnpj').value;
+    const cnpjSomenteNumeros = cnpjInput.replace(/\D/g, ''); // Limpa pontos e traços
+// A Trava de Segurança
+    if (cnpjSomenteNumeros.length !== 14) {
+    window.showMessage("❌ O CNPJ está incompleto! Ele precisa ter exatamente 14 números.");
+    return; // Para a execução do código aqui e não deixa seguir
+}
     const sel = document.querySelectorAll("#agenda-agendamento .cell.selecionado");
     const slotsSelecionados = Array.from(sel).map(c => c.dataset.hora.substring(0, 5));
     const dataSelecionada = sel.length > 0 ? sel[0].dataset.date : null;
