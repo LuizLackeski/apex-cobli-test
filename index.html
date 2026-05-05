@@ -142,6 +142,7 @@
 </div>
 
 <div class="conteudo">
+    
     <div id="consulta" class="aba ativa">
         <div id="step-1" class="card">
             <h2>Localização do Atendimento</h2>
@@ -246,7 +247,14 @@
         </div>
     </div>
 
-<div id="etapa-1">
+    <div id="cadastro" class="aba">
+        <div id="lista-prestadores-view" class="card">
+            <div id="btn-novo-container"></div> 
+            <div id="lista-prestadores"></div>
+        </div>
+        <div id="cadastro-flow" class="card" style="display:none;">
+            
+            <div id="etapa-1">
                 <h3 style="margin-bottom: 20px; color: var(--primary);">Dados do Prestador</h3>
                 
                 <label>Nome / Empresa</label>
@@ -256,10 +264,6 @@
                 <input id="endereco" required style="margin-bottom: 12px;">
                 
                 <div style="display: flex; gap: 10px; margin-bottom: 12px;">
-                    <div style="flex: 2;">
-                        <label>Bairro</label>
-                        <input id="bairroPrestador" required>
-                    </div>
                     <div style="flex: 2;">
                         <label>Cidade</label>
                         <input id="cidade" required>
@@ -403,7 +407,7 @@
             </div>
             
             <div style="display: flex; gap: 5px; height: 31px;">
-                <button onclick="window.renderPainel(); document.getElementById('dropdown-status').removeAttribute('open'); document.getElementById('dropdown-prestador').removeAttribute('open');" style="height: 100%; padding: 0 15px; margin: 0; border: none; border-radius: 5px; background: var(--primary); color: white; cursor: pointer;">Filtrar</button>
+                <button onclick="window.renderPainel(); document.getElementById('dropdown-status').removeAttribute('open'); if(document.getElementById('dropdown-prestador')) document.getElementById('dropdown-prestador').removeAttribute('open');" style="height: 100%; padding: 0 15px; margin: 0; border: none; border-radius: 5px; background: var(--primary); color: white; cursor: pointer;">Filtrar</button>
                 <button onclick="window.limparFiltros()" style="background:gray; height: 100%; padding: 0 15px; margin: 0; border: none; border-radius: 5px; color: white; cursor: pointer;">Limpar</button>
             </div>
         </div>
@@ -773,7 +777,6 @@ window.abrirDetalhesPrestador = function(index) {
     let p = prestadores[index]; 
     let agendaHtml = '';  
     ["Seg", "Ter", "Qua", "Qui", "Sex", "Sab"].forEach(d => { 
-        // Aqui está a mágica: quadradinhos um pouco menores e com fonte menor
         let slots = p.agenda.filter(a => a.dia === d).map(a => `<div class="cell" style="width: 38px; height: 20px; font-size: 0.7rem; padding: 2px;">${a.hora}</div>`).join('');     
         if(slots) { 
             agendaHtml += `<div class="agenda-day-card" style="margin-bottom:10px; padding: 8px;"><div class="agenda-day-title" style="margin-bottom: 4px;">${d}</div><div class="slots-wrapper" style="gap: 3px;">${slots}</div></div>`; 
@@ -845,7 +848,6 @@ window.revisarAgendamento = function() {
     const telefone = document.getElementById('telResponsavel').value;
     const endereco = `${document.getElementById('inputRua').value}, ${document.getElementById('inputNumero').value} - ${document.getElementById('inputBairro').value}`;
 
-    // A MÁGICA AQUI: Adicionado o [${i.nomeManutencao.toUpperCase()}]
     let prodHtml = itensSelecionados.map(i => 
         `<div style="margin-bottom:5px;">• [${i.nomeManutencao.toUpperCase()}] ${i.desc} <strong>(Qtd: ${i.qtd} | ${i.tempo * i.qtd}m)</strong></div>`
     ).join('');
@@ -1099,13 +1101,11 @@ window.mudarEtapa = function(dir){ if (dir > 0 && etapa === 1) { const inputs = 
 window.renderizarListaPrestadores = function(){ 
     document.getElementById("btn-novo-container").innerHTML = isAuthorized ? `<button onclick="window.abrirCadastro()" style="margin-bottom: 20px;">+ Novo Prestador</button>` : '';
     document.getElementById("lista-prestadores").innerHTML = prestadores.map((p, i) => {
-        // Padronizando o visual dos botões igual ao painel
-        let btns = `<button onclick="window.abrirDetalhesPrestador(${i})" style="background:#10b981; padding: 8px 12px; font-size: 0.85rem; border-radius:4px; border:none; color:white; cursor:pointer;">Ver</button>`;    
+        let btns = `<button onclick="window.abrirDetalhesPrestador(${i})" style="background:#10b981; padding: 8px 12px; font-size: 0.85rem; border-radius:4px; border:none; color:white; cursor:pointer;">Ver</button>`;  
         if (isAuthorized) {
             btns += `<button onclick="window.abrirCadastro(${i})" style="background:var(--primary); padding: 8px 12px; font-size: 0.85rem; border-radius:4px; border:none; color:white; cursor:pointer;">Editar</button>`;
             btns += `<button onclick="window.excluirPrestador(${i})" style="background:#ef4444; padding: 8px 12px; font-size: 0.85rem; border-radius:4px; border:none; color:white; cursor:pointer;">Excluir</button>`;
         }     
-        // Usando a classe "painel-item" para puxar a bordinha azul!
         return `<div class="painel-item">
             <div style="flex-grow: 1; font-size: 0.95rem;">
                 <strong>👷 Prestador:</strong> ${p.nome} | 📍 <strong>Local de atuação:</strong> ${p.cidade}/${p.uf}          
@@ -1115,7 +1115,7 @@ window.renderizarListaPrestadores = function(){
                 <div style="margin-top: 6px; font-size: 0.7rem; color: #64748b; border-top: 1px dashed #e2e8f0; padding-top: 6px;">
                      👥 <strong>Técnicos:</strong> ${p.qtdtecnicos} | 📏 <strong>Raio de atuação:</strong> ${p.range}km
                 </div>
-            </div>    
+            </div>  
             <div style="display:flex; align-items: center; gap:5px;">
                 ${btns}
             </div>
@@ -1199,7 +1199,6 @@ window.renderPainel = function(){
     let statusMarcados = Array.from(document.querySelectorAll('.cb-status:checked')).map(cb => cb.value);
     let prestadoresMarcados = Array.from(document.querySelectorAll('.cb-prestador:checked')).map(cb => cb.value);
 
-    // 1. Filtragem dos dados
     filtradosPainel = agendamentos.filter(a => { 
         if(!a.data || !a.ticket) return false;
         let [d, m, y] = a.data.split('/'); 
@@ -1226,7 +1225,6 @@ window.renderPainel = function(){
         return new Date(b.created_at) - new Date(a.created_at);
     });
 
-    // 2. Lógica para contar os status
     let counts = { solicitado: 0, negociacao: 0, agendado: 0, andamento: 0, impedido: 0, concluido: 0, cancelado: 0 };
     
     filtradosPainel.forEach(a => {
@@ -1240,7 +1238,6 @@ window.renderPainel = function(){
         else counts.solicitado++; 
     });
 
-    // Atualiza o HTML
     document.getElementById('st-solicitado').innerText = counts.solicitado;
     document.getElementById('st-negociacao').innerText = counts.negociacao;
     document.getElementById('st-agendado').innerText = counts.agendado;
@@ -1249,7 +1246,6 @@ window.renderPainel = function(){
     document.getElementById('st-concluido').innerText = counts.concluido;
     document.getElementById('st-cancelado').innerText = counts.cancelado;
 
-    // 3. Renderiza os Cards
     document.getElementById("painel-conteudo").innerHTML = filtradosPainel.map((a, i) => {
         let primeiroSlot = Array.isArray(a.slots) ? a.slots[0] : (String(a.slots).split(',')[0] || 'N/A');
         let dataRegistro = a.created_at ? new Date(a.created_at).toLocaleString('pt-BR') : 'N/A';
