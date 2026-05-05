@@ -1313,7 +1313,8 @@ window.limparFiltros = function(){
 window.atualizarFiltrosPrestador = function(){ 
     let container = document.getElementById("container-prestadores"); 
     // Busca os nomes únicos, tira os vazios e ordena
-    let providersWithAgend = [...new Set(agendamentos.map(a => a.prestador).filter(Boolean))].sort(); 
+    let providersWithAgend = [...new Set(agendamentos.map(a => a.prestador).filter(Boolean))].sort();
+    
     container.innerHTML = ''; 
     providersWithAgend.forEach(p => {
         container.innerHTML += `
