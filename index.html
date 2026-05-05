@@ -311,41 +311,46 @@
         </div>
 
 <div class="filtros-painel" style="flex-wrap: wrap; align-items: flex-end;">
-    
-            <div style="display: flex; flex-direction: column; gap: 5px; min-width: 120px;">
-                <input type="date" id="filtroDataInicio" title="Data Início" style="margin: 0; padding: 6px;">
-                <input type="date" id="filtroDataFim" title="Data Fim" style="margin: 0; padding: 6px;">
+            <div style="display: flex; flex-direction: column; gap: 5px; min-width: 140px;">
+                <div style="display: flex; align-items: center; gap: 5px;">
+                    <span style="font-size: 0.65rem; font-weight: bold; color: #64748b; width: 35px;">INÍCIO</span>
+                    <input type="date" id="filtroDataInicio" style="margin: 0; padding: 4px; font-size: 0.75rem;">
+                </div>
+                <div style="display: flex; align-items: center; gap: 5px;">
+                    <span style="font-size: 0.65rem; font-weight: bold; color: #64748b; width: 35px;">FIM</span>
+                    <input type="date" id="filtroDataFim" style="margin: 0; padding: 4px; font-size: 0.75rem;">
+                </div>
             </div>
             
-            <div style="flex: 1; min-width: 110px;"><label>Ticket</label><input type="text" id="filtroTicket" placeholder="Nº OS" style="margin: 0;"></div>
-            <div style="flex: 1; min-width: 110px;"><label>Prestador</label><select id="filtroPrestador" style="margin: 0;"><option value="">Todos</option></select></div>       
+            <div style="flex: 1; min-width: 100px;"><label>Ticket</label><input type="text" id="filtroTicket" placeholder="Nº OS" style="margin: 0; padding: 6px;"></div>
+            <div style="flex: 1; min-width: 100px;"><label>Prestador</label><select id="filtroPrestador" style="margin: 0; padding: 6px;"><option value="">Todos</option></select></div>       
             
-            <div style="flex: 1; min-width: 110px;"><label>Status</label>
-                <select id="filtroStatus" style="margin: 0;">
-                    <option value="">Todos</option>
-                    <option value="solicitado">Solicitado</option>
-                    <option value="negociacao">Em Negociação</option>
-                    <option value="agendado">Agendado</option>
-                    <option value="andamento">Em Andamento</option>
-                    <option value="impedido">Impedido</option>
-                    <option value="concluido">Concluído</option>
-                    <option value="cancelado">Cancelado</option>
-                </select>
+            <div style="flex: 1; min-width: 140px; position: relative;">
+                <label>Status</label>
+                <details id="dropdown-status" style="background: white; border: 1px solid #cbd5e1; border-radius: 6px; cursor: pointer; user-select: none;">
+                    <summary style="padding: 6px; font-size: 0.8rem; font-weight: 500; color: #334155; outline: none; list-style: none;">📑 Selecionar...</summary>
+                    <div style="position: absolute; top: 100%; left: 0; right: 0; background: white; border: 1px solid #cbd5e1; border-radius: 6px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); padding: 8px; z-index: 100; display: flex; flex-direction: column; gap: 5px; margin-top: 2px;">
+                        <label style="display:flex; align-items:center; gap:5px; margin:0; cursor:pointer; text-transform:none;"><input type="checkbox" value="solicitado" class="cb-status"> Solicitado</label>
+                        <label style="display:flex; align-items:center; gap:5px; margin:0; cursor:pointer; text-transform:none;"><input type="checkbox" value="negociacao" class="cb-status"> Em Negociação</label>
+                        <label style="display:flex; align-items:center; gap:5px; margin:0; cursor:pointer; text-transform:none;"><input type="checkbox" value="agendado" class="cb-status"> Agendado</label>
+                        <label style="display:flex; align-items:center; gap:5px; margin:0; cursor:pointer; text-transform:none;"><input type="checkbox" value="andamento" class="cb-status"> Em Andamento</label>
+                        <label style="display:flex; align-items:center; gap:5px; margin:0; cursor:pointer; text-transform:none;"><input type="checkbox" value="impedido" class="cb-status"> Impedido</label>
+                        <label style="display:flex; align-items:center; gap:5px; margin:0; cursor:pointer; text-transform:none;"><input type="checkbox" value="concluido" class="cb-status"> Concluído</label>
+                        <label style="display:flex; align-items:center; gap:5px; margin:0; cursor:pointer; text-transform:none;"><input type="checkbox" value="cancelado" class="cb-status"> Cancelado</label>
+                    </div>
+                </details>
             </div>
             
-            <div style="flex: 1; min-width: 110px;"><label>Solicitante</label><input type="text" id="filtroSolicitante" placeholder="Pesquisar..." style="margin: 0;"></div>
+            <div style="flex: 1; min-width: 110px;"><label>Solicitante</label><input type="text" id="filtroSolicitante" placeholder="Pesquisar..." style="margin: 0; padding: 6px;"></div>
             
             <div style="display: flex; flex-direction: column; gap: 5px; min-width: 160px; justify-content: flex-end;">
                 <div style="display: flex; gap: 5px;">
-                    <button onclick="window.renderPainel()" style="flex: 1; margin: 0; height: 32px; padding: 0;">Filtrar</button>
+                    <button onclick="window.renderPainel(); document.getElementById('dropdown-status').removeAttribute('open');" style="flex: 1; margin: 0; height: 32px; padding: 0;">Filtrar</button>
                     <button onclick="window.limparFiltros()" style="background:gray; flex: 1; margin: 0; height: 32px; padding: 0;">Limpar</button>
                 </div>
                 <button onclick="window.atualizarTodosStatus()" style="background:#10b981; margin: 0; height: 32px; width: 100%; padding: 0;">🔄 Sincronizar Tudo</button>
             </div>
         </div>
-       
-        <div id="painel-conteudo" style="max-height: 500px; overflow-y: auto;"></div>
-    </div>
 
     <div id="dashboard" class="aba">
         <div class="flex-cards">
@@ -1107,14 +1112,16 @@ window.renderPainel = function(){
         document.getElementById("painel-conteudo").innerHTML = "Nenhum dado disponível.";
         return;
     }
-   let fInicio = document.getElementById("filtroDataInicio").value; 
+    let fInicio = document.getElementById("filtroDataInicio").value; 
     let fFim = document.getElementById("filtroDataFim").value; 
     let fTicket = document.getElementById("filtroTicket").value.toLowerCase();
     let fSol = document.getElementById("filtroSolicitante").value.toLowerCase();
-    let fPrest = document.getElementById("filtroPrestador").value; // Corrigido
-    let fStatus = document.getElementById("filtroStatus").value.toLowerCase(); // Novo
+    let fPrest = document.getElementById("filtroPrestador").value;
+    
+    // NOVO: Pega todos os checkboxes que estão marcados e joga num Array
+    let statusMarcados = Array.from(document.querySelectorAll('.cb-status:checked')).map(cb => cb.value);
 
-// 1. Filtragem dos dados
+    // 1. Filtragem dos dados
     filtradosPainel = agendamentos.filter(a => { 
         if(!a.data || !a.ticket) return false;
         let [d, m, y] = a.data.split('/'); 
@@ -1125,7 +1132,7 @@ window.renderPainel = function(){
         let matchSol = (!fSol || (a.solicitante && a.solicitante.toLowerCase().includes(fSol)));
         let matchPrest = (!fPrest || a.prestador === fPrest);
 
-        // Mapeia o status do banco para a palavra-chave do filtro
+        // Mapeia o status do banco
         let statusOriginal = (a.status || 'solicitado').toLowerCase();
         let statusMapeado = 'solicitado';
         if (statusOriginal.includes('negocia')) statusMapeado = 'negociacao';
@@ -1135,9 +1142,9 @@ window.renderPainel = function(){
         else if (statusOriginal.includes('conclu') || statusOriginal.includes('completed')) statusMapeado = 'concluido';
         else if (statusOriginal.includes('cancelado') || statusOriginal.includes('canceled')) statusMapeado = 'cancelado';
         
-        let matchStatus = (!fStatus || statusMapeado === fStatus);
+        // NOVO: Se o array estiver vazio (nada marcado), mostra tudo. Se tiver algo, verifica se o status está lá.
+        let matchStatus = statusMarcados.length === 0 || statusMarcados.includes(statusMapeado);
 
-        // Retorna só se bater com TODOS os filtros preenchidos
         return matchDate && matchTicket && matchSol && matchPrest && matchStatus; 
     }).sort((a,b) => {
         return new Date(b.created_at) - new Date(a.created_at);
@@ -1223,13 +1230,19 @@ window.atualizarTodosStatus = async function() {
     });
 };
 
-   window.limparFiltros = function(){ 
+window.limparFiltros = function(){ 
     document.getElementById("filtroDataInicio").value = ""; 
     document.getElementById("filtroDataFim").value = ""; 
     document.getElementById("filtroTicket").value = ""; 
     document.getElementById("filtroPrestador").value = ""; 
-    document.getElementById("filtroStatus").value = ""; // Novo reset
     document.getElementById("filtroSolicitante").value = ""; 
+    
+    // Desmarca todos os checkboxes
+    document.querySelectorAll('.cb-status').forEach(cb => cb.checked = false);
+    
+    // Fecha a caixinha de dropdown caso o usuário tenha deixado aberta
+    document.getElementById('dropdown-status').removeAttribute('open');
+    
     window.renderPainel(); 
 };
     window.atualizarFiltrosPrestador = function(){ 
