@@ -248,13 +248,18 @@
 
 <div id="etapa-1">
                 <h3 style="margin-bottom: 20px; color: var(--primary);">Dados do Prestador</h3>
-               
+                
                 <label>Nome / Empresa</label>
                 <input id="nomeEmpresa" required style="margin-bottom: 12px;">
-               
+                
                 <label>Endereço Completo (Ex: R. Lourenço Marques, 297 - Vila Olímpia)</label>
                 <input id="endereco" required style="margin-bottom: 12px;">
+                
                 <div style="display: flex; gap: 10px; margin-bottom: 12px;">
+                    <div style="flex: 2;">
+                        <label>Bairro</label>
+                        <input id="bairroPrestador" required>
+                    </div>
                     <div style="flex: 2;">
                         <label>Cidade</label>
                         <input id="cidade" required>
@@ -268,6 +273,7 @@
                         <input id="cep" required oninput="window.maskCEP(this)" placeholder="00000-000">
                     </div>
                 </div>
+
                 <div style="display: flex; gap: 10px; margin-bottom: 12px;">
                     <div style="flex: 1;">
                         <label>Responsável</label>
@@ -278,6 +284,7 @@
                         <input id="contatoResponsavel" required oninput="window.maskPhone(this)" placeholder="(00) 00000-0000">
                     </div>
                 </div>
+
                 <div style="display: flex; gap: 10px; margin-bottom: 15px;">
                     <div style="flex: 1;">
                         <label>Qtd Técnicos</label>
@@ -293,6 +300,19 @@
                     </div>
                 </div>
             </div>
+    
+            <div id="etapa-2" style="display:none;">
+                <h3>Agenda</h3>
+                <div id="agenda-cadastro"></div>
+            </div>
+            <div style="margin-top:20px;">
+                <button id="btn-voltar" onclick="window.mudarEtapa(-1)">Voltar</button>
+                <button id="btn-proximo" onclick="window.mudarEtapa(1)">Próximo</button>
+                <button id="btn-concluir" onclick="window.salvarPrestador(this)" style="background: green;">Concluir</button>
+                <button onclick="window.cancelarCadastro()" style="background:red;">Cancelar</button>
+            </div>
+        </div>
+    </div>
 
     <div id="painel" class="aba">
         
