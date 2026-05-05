@@ -1126,6 +1126,7 @@ window.renderPainel = function(){
     document.getElementById('st-cancelado').innerText = counts.cancelado;
 
     // 3. Renderiza os Cards
+// 3. Renderiza os Cards
     document.getElementById("painel-conteudo").innerHTML = filtradosPainel.map((a, i) => {
         // Pega apenas o primeiro horário, se houver
         let primeiroSlot = Array.isArray(a.slots) ? a.slots[0] : (String(a.slots).split(',')[0] || 'N/A');
@@ -1134,15 +1135,17 @@ window.renderPainel = function(){
 
         return `<div class="painel-item" data-ticket="${a.ticket}">
             <div style="flex-grow: 1; font-size: 0.95rem;">
-                <strong>🎟️ #APEX-${a.ticket}</strong> | 🏷️ Status: <span style="color: #2F4EA1; font-weight: bold;">${a.status || 'SOLICITADO'}</span> | 👤 Cliente: <strong>${a.cliente || 'Não informado'}</strong><br>
-                <div style="margin-top:5px; font-size: 0.85rem;">
-                     📅 Agendado: ${a.data} às ${primeiroSlot}<br>
-                     🛠️ Prestador: ${a.prestador} | Solicitante: ${a.solicitante}
+                <strong>🎟️ #APEX-${a.ticket}</strong> | 🏷️ Status: <span style="color: #2F4EA1; font-weight: bold;">${a.status || 'SOLICITADO'}</span> | 👤 Cliente: <strong>${a.cliente || 'Não informado'}</strong>
+                
+                <div style="margin-top:6px; font-size: 0.85rem; color: #334155;">
+                     📅 Agendado: ${a.data} às ${primeiroSlot} | 🛠️ Prestador: ${a.prestador}
                 </div>
-                <div style="margin-top: 8px; font-size: 0.7rem; color: #64748b; border-top: 1px dashed #e2e8f0; padding-top: 6px;">
-                     Registrado em: ${dataRegistro} (via APEX)
+                
+                <div style="margin-top: 6px; font-size: 0.7rem; color: #64748b; border-top: 1px dashed #e2e8f0; padding-top: 6px;">
+                     Registrado em: ${dataRegistro} (via APEX) | 🙋‍♂️ Solicitado por: ${a.solicitante}
                 </div>
             </div>
+            
             <div style="display:flex; align-items: center; gap:5px;">
                 <button title="Sincronizar Status" style="background:#10b981; padding: 8px; border-radius:4px; border:none; cursor:pointer;" onclick="window.sincronizarStatusIndividual('${a.ticket}', this)">🔄</button>
                 <button style="background:var(--primary); color:white; padding: 8px 12px; font-size: 0.85rem; border-radius:4px; border:none; cursor:pointer;" onclick="window.abrirDetalhesAgendamento(${i})">Ver</button>
