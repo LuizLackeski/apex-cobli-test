@@ -1139,7 +1139,34 @@ window.validarEAvancar = function() {
     document.getElementById('step-4').style.display = 'block'; 
 };
 
-window.renderizarListaPrestadoresSelecao = function(lista) { document.getElementById('lista-prestadores-selecao').innerHTML = lista.map(p => { const datesArr = p.nextDates.split(', '); const pills = datesArr.map(d => `<span class="pill">${d}</span>`).join(''); return `<div class="card-selecao"><strong>${p.nome}</strong><br>📍Distância do atendimento: ${p.distanciaFinal} km<br><div class="date-pills">🗓️Agenda disponível: ${pills}</div><div style="margin-top:10px"><button onclick="window.selecionarPrestadorPorObjeto('${p.nome}')">Selecionar Prestador</button></div></div>`; }).join(''); };
+window.renderizarListaPrestadoresSelecao = function(lista) { 
+    document.getElementById('lista-prestadores-selecao').innerHTML = lista.map(p => { 
+        const datesArr = p.nextDates.split(', '); 
+        const pills = datesArr.map(d => `<span class="pill">${d}</span>`).join('');  
+        return `
+        <div class="painel-item" 
+             onclick="window.selecionarPrestadorPorObjeto('${p.nome}')" 
+             style="cursor: pointer; flex-direction: column; align-items: flex-start; transition: all 0.2s ease; margin-bottom: 12px;" 
+             onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 6px 15px rgba(0,0,0,0.1)';" 
+             onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 1px 3px rgba(0,0,0,0.1)';">
+            
+            <div style="width: 100%; display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <div style="font-size: 1.05rem; font-weight: bold; color: var(--primary);">👷 ${p.nome}</div>
+                <div style="font-size: 0.75rem; color: #64748b; font-weight: 700; background: #f1f5f9; padding: 4px 8px; border-radius: 4px; border: 1px solid #e2e8f0;">
+                    📍 ${p.cidade}/${p.uf}
+                </div>
+            </div>       
+            <div style="font-size: 0.85rem; color: #334155; margin-bottom: 10px;">
+                📏 <strong>Distância do atendimento:</strong> ${p.distanciaFinal} km
+            </div>          
+            <div style="width: 100%; border-top: 1px dashed #e2e8f0; padding-top: 10px;">
+                <div style="font-size: 0.7rem; color: #64748b; font-weight: 700; text-transform: uppercase; margin-bottom: 6px;">🗓️ Datas Disponíveis</div>
+                <div class="date-pills" style="margin-top: 0;">${pills}</div>
+            </div>          
+        </div>`; 
+    }).join(''); 
+};
+    
 window.selecionarPrestadorPorObjeto = function(nome) { prestadorSelecionadoIndex = prestadores.findIndex(p => p.nome === nome); window.proximoPasso(3); };
 window.updateButtons = function() { document.getElementById('btn-voltar').style.display = (etapa === 1) ? 'none' : 'inline-block'; document.getElementById('btn-proximo').style.display = (etapa === 1) ? 'inline-block' : 'none'; document.getElementById('btn-concluir').style.display = (etapa === 2) ? 'inline-block' : 'none'; };
 window.abrirCadastro = function(index = -1){ editingIndex = index; document.getElementById("lista-prestadores-view").style.display="none"; document.getElementById("cadastro-flow").style.display="block"; etapa = 1; document.getElementById("etapa-1").style.display="block"; document.getElementById("etapa-2").style.display="none"; window.criarGridCadastro("agenda-cadastro"); if(index !== -1){ let p = prestadores[index]; document.getElementById("nomeEmpresa").value = p.nome; document.getElementById("endereco").value = p.endereco; document.getElementById("cidade").value = p.cidade; document.getElementById("uf").value = p.uf; document.getElementById("cep").value = p.cep; document.getElementById("responsavel").value = p.responsavel; document.getElementById("contatoResponsavel").value = p.contato; document.getElementById("qtdTecnicos").value = p.qtdtecnicos; document.getElementById("rangeAtendimento").value = p.range; document.getElementById("fieldIdField").value = p.field_id || ""; if(p.agenda) { p.agenda.forEach(item => { let cells = document.querySelectorAll("#agenda-cadastro .cell"); cells.forEach(c => { if(c.dataset.dia == item.dia && c.dataset.hora == item.hora) c.classList.add("selecionado"); }); }); } } else { document.querySelectorAll('input').forEach(i => i.value = ""); } window.updateButtons(); };
