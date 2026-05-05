@@ -15,7 +15,48 @@
             box-shadow: 0 10px 25px rgba(0,0,0,0.2); z-index: 10000; border: 1px solid #e5e7eb;
             font-weight: 600; text-align: center;
         }
+/* Cards de Resumo no Topo */
+.status-container {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin: 20px 0;
+    flex-wrap: wrap;
+}
+.status-card {
+    background: #fff;
+    padding: 10px 15px;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    border-left: 5px solid #007bff;
+    text-align: center;
+    min-width: 150px;
+}
+.status-card b { font-size: 0.8rem; color: #555; display: block; margin-bottom: 5px; }
+.status-card span { font-size: 1.2rem; font-weight: bold; color: #333; }
 
+/* Ajuste dos Filtros de Data Empilhados */
+.filter-date-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+.filter-date-group input {
+    width: 140px;
+    padding: 5px;
+    font-size: 0.8rem;
+}
+        <div class="status-container">
+    <div class="status-card" style="border-color: #ffc107;"><b>SOLICITADO</b><span id="resumo-solicitado">0</span></div>
+    <div class="status-card" style="border-color: #17a2b8;"><b>AGENDADO</b><span id="resumo-agendado">0</span></div>
+    <div class="status-card" style="border-color: #fd7e14;"><b>EXECUÇÃO</b><span id="resumo-execucao">0</span></div>
+    <div class="status-card" style="border-color: #28a745;"><b>CONCLUÍDO</b><span id="resumo-concluido">0</span></div>
+    <div class="status-card" style="border-color: #28a745;"><b>IMPEDIDO</b><span id="resumo-impedido">0</span></div>
+</div>
+
+<button onclick="atualizarTodosStatus()" class="btn-refresh-all">
+    <i class="fa fa-refresh"></i> Sincronizar Tudo
+</button>
         #login-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #2F4EA1; display: none; align-items: center; justify-content: center; z-index: 20000; }
         .login-card { background: white; padding: 40px; border-radius: 12px; width: 350px; text-align: center; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2); }
         .login-card h2 { color: var(--primary); border-bottom: none; margin-bottom: 20px; }
@@ -1079,22 +1120,43 @@ window.renderPainel = function(){
     document.getElementById("painel-conteudo").innerHTML = filtradosPainel.map((a, i) => {
         let dataRegistro = a.created_at ? new Date(a.created_at).toLocaleString('pt-BR') : "N/A";
 // ... dentro do seu map do renderPainel ...
-return `<div class="painel-item">
+return `
+<div class="painel-item" data-ticket="${a.ticket}">
     <div style="flex-grow: 1; font-size: 0.95rem;">
-        <strong>🎟️ #${a.ticket}</strong> | 🏷️ Status: <span style="color: #2F4EA1; font-weight: bold;">${a.status || 'SOLICITADO'}</span><br>
+        <strong>🎟️ #APEX-${a.ticket}</strong> | 🏷️ Status: <span style="color: #2F4EA1; font-weight: bold;">${a.status || 'SOLICITADO'}</span> | 👤 Cliente: <span style="font-weight: 500;">${a.cliente || 'Não informado'}</span><br>
+        
         <div style="margin-top:5px; font-size: 0.85rem;">
-             📅 ${a.data} | ⏰ ${Array.isArray(a.slots) ? a.slots.join(', ') : (a.slots || 'N/A')}<br>
-             🛠️ Prestador: ${a.prestador} | Solicitante: ${a.solicitante}
+             📅 Data: ${a.data} | ⏰ ${Array.isArray(a.slots) ? a.slots[0] : (String(a.slots).split(',')[0] || 'N/A')}<br>
+             🛠️ Prestador: ${a.prestador} | 🙋‍♂️ Solicitante: ${a.solicitante}
+        </div>
+
+        <div style="margin-top: 8px; font-size: 0.75rem; color: #666; border-top: 1px dashed #eee; pt-2">
+             Registrado em: ${new Date(a.created_at).toLocaleString('pt-BR')}
         </div>
     </div>
-    <div style="display:flex; gap:5px;">
-        <button title="Sincronizar Status" style="background:#10b981; padding: 8px;" onclick="window.sincronizarStatusIndividual('${a.ticket}', this)">🔄</button>
-        <button style="background:var(--primary); padding: 8px 12px; font-size: 0.85rem;" onclick="window.abrirDetalhesAgendamento(${i})">Ver</button>
+    <div style="display:flex; align-items: center; gap:5px;">
+        <button title="Sincronizar Status" style="background:#10b981; padding: 8px; border-radius: 4px; border:none; cursor:pointer;" onclick="window.sincronizarStatusIndividual('${a.ticket}', this)">🔄</button>
+        <button style="background:var(--primary); color:white; padding: 8px 12px; font-size: 0.85rem; border-radius: 4px; border:none; cursor:pointer;" onclick="window.abrirDetalhesAgendamento(${i})">Ver</button>
     </div>
 </div>`;
-    }).join(''); 
-};
+}).join('');
 
+    // Função para Atualizar Tudo
+async function atualizarTodosStatus() {
+    const cards = document.querySelectorAll('.card-agendamento'); // ajuste para sua classe
+    if(!confirm("Deseja sincronizar o status de todas as OS visíveis?")) return;
+    
+    // Mostra um alerta ou spinner de "processando"
+    console.log("Iniciando varredura em massa...");
+    
+    for (let card of cards) {
+        const ticket = card.dataset.ticket; // garanta que você guarda o número do ticket no elemento
+        if(ticket) {
+            await sincronizarStatus(ticket); // Chama a função que já criamos
+        }
+    }
+    location.reload(); // Recarrega para atualizar os contadores
+}
     window.limparFiltros = function(){ document.getElementById("filtroDataInicio").value = ""; document.getElementById("filtroDataFim").value = ""; document.getElementById("filtroTicket").value = ""; document.getElementById("filtroPrestador").value = ""; document.getElementById("filtroSolicitante").value = ""; window.renderPainel(); };
     window.atualizarFiltrosPrestador = function(){ 
         let sel = document.getElementById("filtroPrestador"); let providersWithAgend = [...new Set(agendamentos.map(a => a.prestador))];
