@@ -246,24 +246,51 @@
         </div>
     </div>
 
-    <div id="cadastro" class="aba">
-        <div id="lista-prestadores-view" class="card">
-            <div id="btn-novo-container"></div> 
-            <div id="lista-prestadores"></div>
-        </div>
-        <div id="cadastro-flow" class="card" style="display:none;">
-            <div id="etapa-1">
-                <h3>Dados do Prestador</h3>
-                <label>Nome / Empresa</label><input id="nomeEmpresa" required>
-                <label>Endereço - Ex: R. Lourenço Marques, 297 - Vila Olímpia, São Paulo - SP, 04547-100</label><input id="endereco" required>
-                <label>Cidade</label><input id="cidade" required>
-                <label>UF</label><input id="uf" required>
-                <label>CEP</label><input id="cep" required>
-                <label>Responsável</label><input id="responsavel" required>
-                <label>Telefone</label><input id="contatoResponsavel" required>
-                <label>Quantidade de Técnicos</label><input id="qtdTecnicos" type="number" required>
-                <label>Range de atendimento (Km)</label><input id="rangeAtendimento" type="number" required>
-                <label>ID Field Control</label><input id="fieldIdField" placeholder="Informe o ID da Field Control">
+<div id="etapa-1">
+                <h3 style="margin-bottom: 20px; color: var(--primary);">Dados do Prestador</h3>       
+                <label>Nome / Empresa</label>
+                <input id="nomeEmpresa" required style="margin-bottom: 12px;">        
+                <label>Endereço Completo (Ex: R. Lourenço Marques, 297 - Vila Olímpia)</label>
+                <input id="endereco" required style="margin-bottom: 12px;">
+                
+                <div style="display: flex; gap: 10px; margin-bottom: 12px;">
+                    <div style="flex: 2;">
+                        <label>Cidade</label>
+                        <input id="cidade" required>
+                    </div>
+                    <div style="flex: 1;">
+                        <label>UF</label>
+                        <input id="uf" required maxlength="2" placeholder="SP">
+                    </div>
+                    <div style="flex: 1.5;">
+                        <label>CEP</label>
+                        <input id="cep" required oninput="window.maskCEP(this)" placeholder="00000-000">
+                    </div>
+                </div>
+                <div style="display: flex; gap: 10px; margin-bottom: 12px;">
+                    <div style="flex: 1;">
+                        <label>Responsável</label>
+                        <input id="responsavel" required>
+                    </div>
+                    <div style="flex: 1;">
+                        <label>Telefone</label>
+                        <input id="contatoResponsavel" required oninput="window.maskPhone(this)" placeholder="(00) 00000-0000">
+                    </div>
+                </div>
+                <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                    <div style="flex: 1;">
+                        <label>Qtd Técnicos</label>
+                        <input id="qtdTecnicos" type="number" required>
+                    </div>
+                    <div style="flex: 1;">
+                        <label>Raio de Atuação (Km)</label>
+                        <input id="rangeAtendimento" type="number" required>
+                    </div>
+                    <div style="flex: 1.5;">
+                        <label>ID Field Control</label>
+                        <input id="fieldIdField" placeholder="Informe o ID da Field">
+                    </div>
+                </div>
             </div>
             <div id="etapa-2" style="display:none;">
                 <h3>Agenda</h3>
