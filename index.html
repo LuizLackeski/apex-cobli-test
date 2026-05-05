@@ -317,6 +317,7 @@
             <div><label>Prestador</label><select id="filtroPrestador"><option value="">Todos</option></select></div>
             <div><label>Solicitante</label><input type="text" id="filtroSolicitante" placeholder="Pesquisar..."></div>
             <button onclick="window.renderPainel()">Filtrar</button>
+            <button onclick="window.atualizarTodosStatus()" style="background:#10b981;">🔄 Sincronizar Tudo</button>
             <button onclick="window.limparFiltros()" style="background:green;">Limpar</button>
         </div>
         <div id="painel-conteudo" style="max-height: 500px; overflow-y: auto;"></div>
@@ -795,9 +796,9 @@ window.confirmarEnvioReal = function() {
 };
 window.concluirAgendamentoFinal = async function(btn) {
     // 1. Busca o campo pelo ID correto do HTML
-    const elCnpj = document.getElementById('clienteCnpj');    
+    const elCnpj = document.getElementById('clienteCnpj');   
     if (elCnpj) {
-    const documentoNumeros = elCnpj.value.replace(/\D/g, '');       
+    const documentoNumeros = elCnpj.value.replace(/\D/g, '');        
         // Se a pessoa digitou algo, exige estritamente 14 dígitos (CNPJ)
         if (documentoNumeros.length > 0 && documentoNumeros.length !== 14) {
             window.showMessage("❌ O CNPJ está incompleto! Digite todos os 14 números.");
@@ -873,7 +874,7 @@ window.concluirAgendamentoFinal = async function(btn) {
                          (dispararField ? "Field [OK]" : "");
             window.showMessage(statusMsg, "success");
             await carregarDadosDoBanco();
-           
+            
             // Tempo de 10s para você conseguir ler a Origem e o Status
             setTimeout(() => window.location.reload(), 10000); 
         } else {
@@ -1126,20 +1127,55 @@ window.renderPainel = function(){
 
     // 3. Renderiza os Cards
     document.getElementById("painel-conteudo").innerHTML = filtradosPainel.map((a, i) => {
-        return `<div class="painel-item">
+        // Pega apenas o primeiro horário, se houver
+        let primeiroSlot = Array.isArray(a.slots) ? a.slots[0] : (String(a.slots).split(',')[0] || 'N/A');
+        // Formata a data de registro
+        let dataRegistro = a.created_at ? new Date(a.created_at).toLocaleString('pt-BR') : 'N/A';
+
+        return `<div class="painel-item" data-ticket="${a.ticket}">
             <div style="flex-grow: 1; font-size: 0.95rem;">
-                <strong>🎟️ #${a.ticket}</strong> | 🏷️ Status: <span style="color: #2F4EA1; font-weight: bold;">${a.status || 'SOLICITADO'}</span><br>
+                <strong>🎟️ #APEX-${a.ticket}</strong> | 🏷️ Status: <span style="color: #2F4EA1; font-weight: bold;">${a.status || 'SOLICITADO'}</span> | 👤 Cliente: <strong>${a.cliente || 'Não informado'}</strong><br>
                 <div style="margin-top:5px; font-size: 0.85rem;">
-                     📅 ${a.data} | ⏰ ${Array.isArray(a.slots) ? a.slots.join(', ') : (a.slots || 'N/A')}<br>
+                     📅 Agendado: ${a.data} às ${primeiroSlot}<br>
                      🛠️ Prestador: ${a.prestador} | Solicitante: ${a.solicitante}
                 </div>
+                <div style="margin-top: 8px; font-size: 0.7rem; color: #64748b; border-top: 1px dashed #e2e8f0; padding-top: 6px;">
+                     Registrado em: ${dataRegistro} (via APEX)
+                </div>
             </div>
-            <div style="display:flex; gap:5px;">
-                <button title="Sincronizar Status" style="background:#10b981; padding: 8px;" onclick="window.sincronizarStatusIndividual('${a.ticket}', this)">🔄</button>
-                <button style="background:var(--primary); padding: 8px 12px; font-size: 0.85rem;" onclick="window.abrirDetalhesAgendamento(${i})">Ver</button>
+            <div style="display:flex; align-items: center; gap:5px;">
+                <button title="Sincronizar Status" style="background:#10b981; padding: 8px; border-radius:4px; border:none; cursor:pointer;" onclick="window.sincronizarStatusIndividual('${a.ticket}', this)">🔄</button>
+                <button style="background:var(--primary); color:white; padding: 8px 12px; font-size: 0.85rem; border-radius:4px; border:none; cursor:pointer;" onclick="window.abrirDetalhesAgendamento(${i})">Ver</button>
             </div>
         </div>`;
     }).join(''); 
+};
+
+window.atualizarTodosStatus = async function() {
+    // Procura todos os botões individuais visíveis na tela no momento
+    const botoesSincronizar = document.querySelectorAll('.painel-item button[title="Sincronizar Status"]');
+    
+    if (botoesSincronizar.length === 0) {
+        return window.showMessage("Nenhum ticket visível para atualizar. Limpe os filtros se necessário.");
+    }
+    
+    // Pede confirmação usando seu próprio modal
+    window.showConfirm(`Deseja verificar o status dos ${botoesSincronizar.length} tickets visíveis?`, async () => {
+        window.showToast("Iniciando varredura em massa...");
+        
+        // Clica "virtualmente" em cada botão, um por um, para não travar a API
+        for (let btn of botoesSincronizar) {
+            const divCard = btn.closest('.painel-item');
+            const ticket = divCard.dataset.ticket;
+            
+            if (ticket) {
+                await window.sincronizarStatusIndividual(ticket, btn);
+            }
+        }
+        
+        window.showToast("✅ Varredura completa!");
+        await carregarDadosDoBanco(); // Recarrega para atualizar os contadores do topo
+    });
 };
 
     window.limparFiltros = function(){ document.getElementById("filtroDataInicio").value = ""; document.getElementById("filtroDataFim").value = ""; document.getElementById("filtroTicket").value = ""; document.getElementById("filtroPrestador").value = ""; document.getElementById("filtroSolicitante").value = ""; window.renderPainel(); };
