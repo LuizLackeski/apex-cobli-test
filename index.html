@@ -247,12 +247,13 @@
     </div>
 
 <div id="etapa-1">
-                <h3 style="margin-bottom: 20px; color: var(--primary);">Dados do Prestador</h3>       
+                <h3 style="margin-bottom: 20px; color: var(--primary);">Dados do Prestador</h3>
+               
                 <label>Nome / Empresa</label>
-                <input id="nomeEmpresa" required style="margin-bottom: 12px;">        
+                <input id="nomeEmpresa" required style="margin-bottom: 12px;">
+               
                 <label>Endereço Completo (Ex: R. Lourenço Marques, 297 - Vila Olímpia)</label>
                 <input id="endereco" required style="margin-bottom: 12px;">
-                
                 <div style="display: flex; gap: 10px; margin-bottom: 12px;">
                     <div style="flex: 2;">
                         <label>Cidade</label>
@@ -292,18 +293,6 @@
                     </div>
                 </div>
             </div>
-            <div id="etapa-2" style="display:none;">
-                <h3>Agenda</h3>
-                <div id="agenda-cadastro"></div>
-            </div>
-            <div style="margin-top:20px;">
-                <button id="btn-voltar" onclick="window.mudarEtapa(-1)">Voltar</button>
-                <button id="btn-proximo" onclick="window.mudarEtapa(1)">Próximo</button>
-                <button id="btn-concluir" onclick="window.salvarPrestador(this)" style="background: green;">Concluir</button>
-                <button onclick="window.cancelarCadastro()" style="background:red;">Cancelar</button>
-            </div>
-        </div>
-    </div>
 
     <div id="painel" class="aba">
         
