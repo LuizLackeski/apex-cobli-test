@@ -78,6 +78,42 @@
         .bloco-servico { background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #cbd5e1; margin-bottom: 15px; }
         .switch-on { background-color: #00ae97 !important; color: white !important; } 
         .switch-off { background-color: #ff4633 !important; color: white !important; } 
+
+        /* CSS GRID - BARRA DE FILTROS DO PAINEL */
+        .grid-filtros {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 15px;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+            margin-bottom: 20px;
+            align-items: end;
+        }
+        .campo-filtro {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        .campo-filtro label {
+            font-size: 0.65rem;
+            color: #64748b;
+            font-weight: 700;
+            text-transform: uppercase;
+            margin: 0;
+        }
+        .campo-filtro input, 
+        .campo-filtro details {
+            margin: 0 !important;
+            height: 38px !important; 
+            box-sizing: border-box !important;
+        }
+        .grid-filtros .botoes-container {
+            display: flex;
+            gap: 8px;
+            height: 38px;
+        }
     </style>
 </head>
 <body>
@@ -351,66 +387,58 @@
                     <div style="font-size: 1.2rem; font-weight: 800; color: #64748b;" id="st-cancelado">0</div>
                 </div>
             </div>
-
             <div style="width: 1px; height: 35px; background: #e5e7eb; margin: 0 15px;"></div>
             <button onclick="window.atualizarTodosStatus()" style="background:#10b981; height: 36px; padding: 0 15px; font-size: 0.85rem; border-radius: 6px; border: none; color: white; cursor: pointer; white-space: nowrap;">
                 🔄 Update
             </button>
         </div>
 
-        <div style="display: flex; gap: 10px; margin-bottom: 20px; padding: 15px; background: white; border-radius: 8px; border: 1px solid #e5e7eb; align-items: flex-end; flex-wrap: wrap;">
-            
-            <div style="display: flex; gap: 10px; flex: 2; min-width: 240px;">
-                <div style="flex: 1;">
-                    <label style="font-size: 0.65rem; color: #64748b; font-weight: 600; text-transform: uppercase; margin-bottom: 4px; display: block;">Início</label>
-                    <input type="date" id="filtroDataInicio" style="margin: 0; padding: 0 8px; width: 100%; height: 34px; box-sizing: border-box; border: 1px solid #cbd5e1; border-radius: 6px; font-family: inherit; font-size: 0.85rem;">
-                </div>
-                <div style="flex: 1;">
-                    <label style="font-size: 0.65rem; color: #64748b; font-weight: 600; text-transform: uppercase; margin-bottom: 4px; display: block;">Fim</label>
-                    <input type="date" id="filtroDataFim" style="margin: 0; padding: 0 8px; width: 100%; height: 34px; box-sizing: border-box; border: 1px solid #cbd5e1; border-radius: 6px; font-family: inherit; font-size: 0.85rem;">
-                </div>
+        <div class="grid-filtros">
+            <div class="campo-filtro">
+                <label>Início</label>
+                <input type="date" id="filtroDataInicio">
             </div>
-            
-            <div style="flex: 1; min-width: 100px;">
-                <label style="font-size: 0.65rem; color: #64748b; font-weight: 600; text-transform: uppercase; margin-bottom: 4px; display: block;">Ticket</label>
-                <input type="text" id="filtroTicket" placeholder="Nº OS" style="margin: 0; padding: 0 8px; width: 100%; height: 34px; box-sizing: border-box; border: 1px solid #cbd5e1; border-radius: 6px; font-family: inherit; font-size: 0.85rem;">
+            <div class="campo-filtro">
+                <label>Fim</label>
+                <input type="date" id="filtroDataFim">
             </div>
-            
-            <div style="flex: 1.5; min-width: 140px; position: relative;">
-                <label style="font-size: 0.65rem; color: #64748b; font-weight: 600; text-transform: uppercase; margin-bottom: 4px; display: block; text-align: left;">Prestador</label>
-                <details id="dropdown-prestador" onmouseleave="this.removeAttribute('open')" style="background: white; border: 1px solid #cbd5e1; border-radius: 6px; cursor: pointer; user-select: none; height: 34px; box-sizing: border-box;">
-                    <summary style="padding: 0 8px; height: 32px; display: flex; align-items: center; font-size: 0.85rem; font-weight: 500; color: #334155; outline: none; list-style: none;">👷 Selecionar...</summary>
-                    <div id="container-prestadores" style="position: absolute; top: 100%; left: 0; background: white; border: 1px solid #cbd5e1; border-radius: 6px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); padding: 10px; z-index: 100; display: flex; flex-direction: column; gap: 8px; margin-top: 4px; min-width: 180px; max-height: 250px; overflow-y: auto;">
-                        </div>
-                </details>
-            </div>       
-            
-            <div style="flex: 1; min-width: 130px; position: relative;">
-                <label style="font-size: 0.65rem; color: #64748b; font-weight: 600; text-transform: uppercase; margin-bottom: 4px; display: block; text-align: left;">Status</label>
-                <details id="dropdown-status" onmouseleave="this.removeAttribute('open')" style="background: white; border: 1px solid #cbd5e1; border-radius: 6px; cursor: pointer; user-select: none; height: 34px; box-sizing: border-box;">
-                    <summary style="padding: 0 8px; height: 32px; display: flex; align-items: center; font-size: 0.85rem; font-weight: 500; color: #334155; outline: none; list-style: none;">📑 Selecionar...</summary>
-                    <div style="position: absolute; top: 100%; left: 0; background: white; border: 1px solid #cbd5e1; border-radius: 6px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); padding: 10px; z-index: 100; display: flex; flex-direction: column; gap: 8px; margin-top: 4px; min-width: 150px;">
-                        <label style="display:flex; align-items:center; justify-content:flex-start; gap:8px; margin:0; cursor:pointer; font-size: 0.75rem; font-weight: 600; color: #334155; white-space: nowrap; text-transform: uppercase;"><input type="checkbox" value="solicitado" class="cb-status" style="width: auto; margin: 0; padding: 0;"> Solicitado</label>
-                        <label style="display:flex; align-items:center; justify-content:flex-start; gap:8px; margin:0; cursor:pointer; font-size: 0.75rem; font-weight: 600; color: #334155; white-space: nowrap; text-transform: uppercase;"><input type="checkbox" value="negociacao" class="cb-status" style="width: auto; margin: 0; padding: 0;"> Em Negociação</label>
-                        <label style="display:flex; align-items:center; justify-content:flex-start; gap:8px; margin:0; cursor:pointer; font-size: 0.75rem; font-weight: 600; color: #334155; white-space: nowrap; text-transform: uppercase;"><input type="checkbox" value="agendado" class="cb-status" style="width: auto; margin: 0; padding: 0;"> Agendado</label>
-                        <label style="display:flex; align-items:center; justify-content:flex-start; gap:8px; margin:0; cursor:pointer; font-size: 0.75rem; font-weight: 600; color: #334155; white-space: nowrap; text-transform: uppercase;"><input type="checkbox" value="andamento" class="cb-status" style="width: auto; margin: 0; padding: 0;"> Em Andamento</label>
-                        <label style="display:flex; align-items:center; justify-content:flex-start; gap:8px; margin:0; cursor:pointer; font-size: 0.75rem; font-weight: 600; color: #334155; white-space: nowrap; text-transform: uppercase;"><input type="checkbox" value="impedido" class="cb-status" style="width: auto; margin: 0; padding: 0;"> Impedido</label>
-                        <label style="display:flex; align-items:center; justify-content:flex-start; gap:8px; margin:0; cursor:pointer; font-size: 0.75rem; font-weight: 600; color: #334155; white-space: nowrap; text-transform: uppercase;"><input type="checkbox" value="concluido" class="cb-status" style="width: auto; margin: 0; padding: 0;"> Concluído</label>
-                        <label style="display:flex; align-items:center; justify-content:flex-start; gap:8px; margin:0; cursor:pointer; font-size: 0.75rem; font-weight: 600; color: #334155; white-space: nowrap; text-transform: uppercase;"><input type="checkbox" value="cancelado" class="cb-status" style="width: auto; margin: 0; padding: 0;"> Cancelado</label>
+            <div class="campo-filtro">
+                <label>Ticket</label>
+                <input type="text" id="filtroTicket" placeholder="Nº OS">
+            </div>
+            <div class="campo-filtro">
+                <label>Prestador</label>
+                <details id="dropdown-prestador" onmouseleave="this.removeAttribute('open')" style="background: white; border: 1px solid #cbd5e1; border-radius: 6px; cursor: pointer; position: relative; width: 100%;">
+                    <summary style="padding: 8px; font-size: 0.8rem; list-style: none;">👷 Selecionar...</summary>
+                    <div id="container-prestadores" style="position: absolute; top: 100%; left: 0; background: white; border: 1px solid #cbd5e1; border-radius: 6px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); padding: 10px; z-index: 1000; display: flex; flex-direction: column; gap: 8px; min-width: 180px; max-height: 200px; overflow-y: auto;">
                     </div>
                 </details>
             </div>
-            
-            <div style="flex: 1; min-width: 120px;">
-                <label style="font-size: 0.65rem; color: #64748b; font-weight: 600; text-transform: uppercase; margin-bottom: 4px; display: block;">Solicitante</label>
-                <input type="text" id="filtroSolicitante" placeholder="Pesquisar..." style="margin: 0; padding: 0 8px; width: 100%; height: 34px; box-sizing: border-box; border: 1px solid #cbd5e1; border-radius: 6px; font-family: inherit; font-size: 0.85rem;">
+            <div class="campo-filtro">
+                <label>Status</label>
+                <details id="dropdown-status" onmouseleave="this.removeAttribute('open')" style="background: white; border: 1px solid #cbd5e1; border-radius: 6px; cursor: pointer; position: relative; width: 100%;">
+                    <summary style="padding: 8px; font-size: 0.8rem; list-style: none;">📑 Selecionar...</summary>
+                    <div style="position: absolute; top: 100%; left: 0; background: white; border: 1px solid #cbd5e1; border-radius: 6px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); padding: 10px; z-index: 1000; display: flex; flex-direction: column; gap: 8px; min-width: 160px;">
+                        <label style="display:flex; align-items:center; gap:8px; font-size: 0.7rem; font-weight: 600;"><input type="checkbox" value="solicitado" class="cb-status" style="width:auto; margin:0;"> SOLICITADO</label>
+                        <label style="display:flex; align-items:center; gap:8px; font-size: 0.7rem; font-weight: 600;"><input type="checkbox" value="negociacao" class="cb-status" style="width:auto; margin:0;"> NEGOCIAÇÃO</label>
+                        <label style="display:flex; align-items:center; gap:8px; font-size: 0.7rem; font-weight: 600;"><input type="checkbox" value="agendado" class="cb-status" style="width:auto; margin:0;"> AGENDADO</label>
+                        <label style="display:flex; align-items:center; gap:8px; font-size: 0.7rem; font-weight: 600;"><input type="checkbox" value="andamento" class="cb-status" style="width:auto; margin:0;"> ANDAMENTO</label>
+                        <label style="display:flex; align-items:center; gap:8px; font-size: 0.7rem; font-weight: 600;"><input type="checkbox" value="impedido" class="cb-status" style="width:auto; margin:0;"> IMPEDIDO</label>
+                        <label style="display:flex; align-items:center; gap:8px; font-size: 0.7rem; font-weight: 600;"><input type="checkbox" value="concluido" class="cb-status" style="width:auto; margin:0;"> CONCLUÍDO</label>
+                        <label style="display:flex; align-items:center; gap:8px; font-size: 0.7rem; font-weight: 600;"><input type="checkbox" value="cancelado" class="cb-status" style="width:auto; margin:0;"> CANCELADO</label>
+                    </div>
+                </details>
             </div>
-            
-            <div style="display: flex; gap: 5px; height: 34px;">
-                <button onclick="window.renderPainel(); document.getElementById('dropdown-status').removeAttribute('open'); if(document.getElementById('dropdown-prestador')) document.getElementById('dropdown-prestador').removeAttribute('open');" style="height: 100%; padding: 0 15px; margin: 0; border: none; border-radius: 6px; background: var(--primary); color: white; cursor: pointer; font-size: 0.85rem; font-weight: 600;">Filtrar</button>
-                <button onclick="window.limparFiltros()" style="background:gray; height: 100%; padding: 0 15px; margin: 0; border: none; border-radius: 6px; color: white; cursor: pointer; font-size: 0.85rem; font-weight: 600;">Limpar</button>
+            <div class="campo-filtro">
+                <label>Solicitante</label>
+                <input type="text" id="filtroSolicitante" placeholder="Nome...">
             </div>
-        </div>        
+            <div class="botoes-container">
+                <button onclick="window.renderPainel();" style="flex: 1; height: 100%; background: var(--primary); padding:0;">Filtrar</button>
+                <button onclick="window.limparFiltros()" style="flex: 1; height: 100%; background: gray; padding:0;">Limpar</button>
+            </div>
+        </div>
+        
         <div id="painel-conteudo" style="max-height: 500px; overflow-y: auto;"></div>
     </div>
 
@@ -631,7 +659,7 @@ function getHeaders() {
         {desc:"Coblicam Cabine (2 câmeras)", tempo:90, id_field: "3d4a1cd8-f290-48fb-8e9e-4fa3353d9ab7"},
         {desc:"Coblicam Fadiga (2 câmeras)", tempo:90, id_field: "ce4c9906-84d3-4ff2-a295-8b23f51c5eb2"},
         {desc:"Coblicam-Multi (3 câmeras internas)", tempo:120, id_field: "33eeb8a1-e867-469b-9701-bcfe695c74e5"},
-        {desc:"Coblicam-Multi (2 câmeras + 1 externa)", tempo:240, id_field: "33eeb8a1-e867-469b-9701-bcfe695c74e5"},
+        {desc:"Coblicam-Multi (2 cameras + 1 externa)", tempo:240, id_field: "33eeb8a1-e867-469b-9701-bcfe695c74e5"},
         {desc:"Coblicam-Multi (4 câmeras)", tempo:240, id_field: "33eeb8a1-e867-469b-9701-bcfe695c74e5"},
         {desc:"Coblicam-Multi (5 câmeras)", tempo:300, id_field: "33eeb8a1-e867-469b-9701-bcfe695c74e5"}
     ]
@@ -1100,11 +1128,11 @@ window.mudarEtapa = function(dir){ if (dir > 0 && etapa === 1) { const inputs = 
 window.renderizarListaPrestadores = function(){ 
     document.getElementById("btn-novo-container").innerHTML = isAuthorized ? `<button onclick="window.abrirCadastro()" style="margin-bottom: 20px;">+ Novo Prestador</button>` : '';
     document.getElementById("lista-prestadores").innerHTML = prestadores.map((p, i) => {
-      let btns = `<button onclick="window.abrirDetalhesPrestador(${i})" style="background:#10b981; height: 34px; padding: 0 20px; font-size: 0.9rem; font-weight: 600; border-radius:6px; border:none; color:white; cursor:pointer; display: flex; align-items: center; justify-content: center;">Ver</button>`;  
+        let btns = `<button onclick="window.abrirDetalhesPrestador(${i})" style="background:#10b981; height: 38px; padding: 0 15px; font-size: 0.9rem; border-radius:6px; border:none; color:white; cursor:pointer;">Ver</button>`;  
         if (isAuthorized) {
-            btns += `<button onclick="window.abrirCadastro(${i})" style="background:var(--primary); height: 34px; padding: 0 20px; font-size: 0.9rem; font-weight: 600; border-radius:6px; border:none; color:white; cursor:pointer; display: flex; align-items: center; justify-content: center;">Editar</button>`;
-            btns += `<button onclick="window.excluirPrestador(${i})" style="background:#ef4444; height: 34px; padding: 0 20px; font-size: 0.9rem; font-weight: 600; border-radius:6px; border:none; color:white; cursor:pointer; display: flex; align-items: center; justify-content: center;">Excluir</button>`;
-        }    
+            btns += `<button onclick="window.abrirCadastro(${i})" style="background:var(--primary); height: 38px; padding: 0 15px; font-size: 0.9rem; border-radius:6px; border:none; color:white; cursor:pointer;">Editar</button>`;
+            btns += `<button onclick="window.excluirPrestador(${i})" style="background:#ef4444; height: 38px; padding: 0 15px; font-size: 0.9rem; border-radius:6px; border:none; color:white; cursor:pointer;">Excluir</button>`;
+        }     
         return `<div class="painel-item">
             <div style="flex-grow: 1; font-size: 0.95rem;">
                 <strong>👷 Prestador:</strong> ${p.nome} | 📍 <strong>Local de atuação:</strong> ${p.cidade}/${p.uf}          
@@ -1115,7 +1143,7 @@ window.renderizarListaPrestadores = function(){
                      👥 <strong>Técnicos:</strong> ${p.qtdtecnicos} | 📏 <strong>Raio de atuação:</strong> ${p.range}km
                 </div>
             </div>  
-            <div style="display:flex; align-items: center; gap:5px;">
+            <div style="display:flex; align-items: center; gap:8px;">
                 ${btns}
             </div>
         </div>`; 
@@ -1262,16 +1290,16 @@ window.renderPainel = function(){
                 </div>
             </div>
             
-           <div style="display:flex; align-items: center; gap:8px;">
-                <button title="Sincronizar Status" style="background:#10b981; height: 34px; padding: 0 15px; font-size: 1rem; border-radius:6px; border:none; color:white; cursor:pointer; display: flex; align-items: center; justify-content: center;" onclick="window.sincronizarStatusIndividual('${a.ticket}', this)">🔄</button>
-                <button style="background:var(--primary); height: 34px; padding: 0 20px; font-size: 0.9rem; font-weight: 600; border-radius:6px; border:none; color:white; cursor:pointer; display: flex; align-items: center; justify-content: center;" onclick="window.abrirDetalhesAgendamento(${i})">Ver</button>
+            <div style="display:flex; align-items: center; gap:8px;">
+                <button title="Sincronizar" style="background:#10b981; height: 38px; width: 45px; border-radius:6px; border:none; color:white; cursor:pointer;" onclick="window.sincronizarStatusIndividual('${a.ticket}', this)">🔄</button>
+                <button style="background:var(--primary); height: 38px; padding: 0 15px; font-size: 0.9rem; border-radius:6px; border:none; color:white; cursor:pointer;" onclick="window.abrirDetalhesAgendamento(${i})">Ver</button>
             </div>
         </div>`;
     }).join(''); 
 };
 
 window.atualizarTodosStatus = async function() {
-    const botoesSincronizar = document.querySelectorAll('.painel-item button[title="Sincronizar Status"]');
+    const botoesSincronizar = document.querySelectorAll('.painel-item button[title="Sincronizar"]');
     
     if (botoesSincronizar.length === 0) {
         return window.showMessage("Nenhum ticket visível para atualizar. Limpe os filtros se necessário.");
