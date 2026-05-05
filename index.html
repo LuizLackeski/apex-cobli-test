@@ -67,7 +67,7 @@
         .painel-item { background: white; margin-bottom: 8px; padding: 12px; border-radius: 8px; border: 1px solid #e5e7eb; border-left: 5px solid var(--primary); box-shadow: 0 1px 3px rgba(0,0,0,0.1); display: flex; align-items: center; justify-content: space-between; }
         
         .modal-overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); justify-content:center; align-items:center; z-index:20001; }
-        .modal-card { background: #f0f0f0; color: #334155; padding: 25px; border-radius: 12px; width: 500px; max-width: 90%; max-height: 70vh; overflow-y: auto; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+        .modal-card { background: #f0f0f0; color: #334155; padding: 25px; border-radius: 12px; width: 600px; max-width: 90%; max-height: 90vh; overflow-y: auto; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
         .modal-header { font-size: 1.2rem; font-weight: bold; color: var(--primary); margin-bottom: 15px; }
         .modal-footer { margin-top:20px; text-align: right; }
 
@@ -733,7 +733,26 @@ window.getBlockedHours = function(prestador, data) {
     return blocked;
 };
 
-window.abrirDetalhesPrestador = function(index) { let p = prestadores[index]; let agendaHtml = ''; ["Seg", "Ter", "Qua", "Qui", "Sex", "Sab"].forEach(d => { let slots = p.agenda.filter(a => a.dia === d).map(a => `<div class="cell">${a.hora}</div>`).join(''); if(slots) { agendaHtml += `<div class="agenda-day-card" style="margin-bottom:10px;"><div class="agenda-day-title">${d}</div><div class="slots-wrapper">${slots}</div></div>`; } }); window.exibirModal("Detalhes do Prestador", `<div class="info-group" style="margin-bottom:15px;"><div style="font-weight:bold; font-size:1.1rem;">${p.nome}</div><div style="font-size:0.9rem; color:#64748b;">Resp: ${p.responsavel} | Contato: ${p.contato} | Raio: ${p.range} km</div></div>${agendaHtml}`); };
+window.abrirDetalhesPrestador = function(index) { 
+    let p = prestadores[index]; 
+    let agendaHtml = '';  
+    ["Seg", "Ter", "Qua", "Qui", "Sex", "Sab"].forEach(d => { 
+        // Aqui está a mágica: quadradinhos um pouco menores e com fonte menor
+        let slots = p.agenda.filter(a => a.dia === d).map(a => `<div class="cell" style="width: 38px; height: 20px; font-size: 0.7rem; padding: 2px;">${a.hora}</div>`).join('');     
+        if(slots) { 
+            agendaHtml += `<div class="agenda-day-card" style="margin-bottom:10px; padding: 8px;"><div class="agenda-day-title" style="margin-bottom: 4px;">${d}</div><div class="slots-wrapper" style="gap: 3px;">${slots}</div></div>`; 
+        } 
+    });   
+    let htmlHeader = `
+        <div style="margin-bottom:15px; border-bottom: 1px solid #cbd5e1; padding-bottom: 10px;">
+            <div style="font-weight:bold; font-size:1.1rem; color:var(--primary); margin-bottom: 4px;">${p.nome}</div>
+            <div style="font-size:0.85rem; color:#64748b;">
+                👤 <strong>Resp:</strong> ${p.responsavel} | 📞 <strong>Contato:</strong> ${p.contato} | 📍 <strong>Raio:</strong> ${p.range} km
+            </div>
+        </div>
+    `;
+    window.exibirModal("Detalhes do Prestador", htmlHeader + agendaHtml); 
+};
     
 window.abrirDetalhesAgendamento = function(index) {
     let a = filtradosPainel[index];
