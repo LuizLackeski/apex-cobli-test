@@ -300,38 +300,71 @@
     </div>
 
 <div id="painel" class="aba">
-        <div class="painel-status-bar" id="painel-status-bar" style="align-items: center; flex-wrap: wrap; justify-content: space-between;">
-            <div style="display: flex; flex: 1; gap: 10px; flex-wrap: wrap; min-width: max-content;">
-                <div class="painel-status-item"><div class="painel-status-title">Solicitado</div><div class="painel-status-value" id="st-solicitado">0</div></div>
-                <div class="painel-status-item"><div class="painel-status-title">Em Negociação</div><div class="painel-status-value" id="st-negociacao">0</div></div>
-                <div class="painel-status-item"><div class="painel-status-title">Agendado</div><div class="painel-status-value" id="st-agendado">0</div></div>
-                <div class="painel-status-item"><div class="painel-status-title">Em Andamento</div><div class="painel-status-value" id="st-andamento">0</div></div>
-                <div class="painel-status-item"><div class="painel-status-title">Impedido</div><div class="painel-status-value" id="st-impedido" style="color: #ef4444;">0</div></div>
-                <div class="painel-status-item"><div class="painel-status-title">Concluído</div><div class="painel-status-value" id="st-concluido" style="color: #10b981;">0</div></div>
-                <div class="painel-status-item" style="border-right: none;"><div class="painel-status-title">Cancelado</div><div class="painel-status-value" id="st-cancelado" style="color: #64748b;">0</div></div>
-            </div>
+        
+        <div style="display: flex; align-items: center; background: white; padding: 12px; border-radius: 8px; border: 1px solid #e5e7eb; margin-bottom: 20px; overflow-x: auto;">
             
-            <div style="width: 1px; height: 30px; background: #e5e7eb; margin: 0 15px; display: block;"></div>
-            
-            <div style="display: flex; align-items: center;">
-                <button onclick="window.atualizarTodosStatus()" style="background:#10b981; height: 34px; padding: 0 15px; font-size: 0.8rem; border-radius: 6px; border: none; color: white; cursor: pointer; white-space: nowrap;">
-                    🔄 Update
-                </button>
+            <div style="display: flex; flex: 1; justify-content: space-between; min-width: 650px;">
+                <div style="flex: 1; text-align: center; border-right: 1px solid #e5e7eb; padding: 0 10px;">
+                    <div style="font-size: 0.65rem; color: #64748b; font-weight: 700; text-transform: uppercase;">Solicitado</div>
+                    <div style="font-size: 1.2rem; font-weight: 800; color: var(--primary);" id="st-solicitado">0</div>
+                </div>
+                <div style="flex: 1; text-align: center; border-right: 1px solid #e5e7eb; padding: 0 10px;">
+                    <div style="font-size: 0.65rem; color: #64748b; font-weight: 700; text-transform: uppercase;">Em Negociação</div>
+                    <div style="font-size: 1.2rem; font-weight: 800; color: var(--primary);" id="st-negociacao">0</div>
+                </div>
+                <div style="flex: 1; text-align: center; border-right: 1px solid #e5e7eb; padding: 0 10px;">
+                    <div style="font-size: 0.65rem; color: #64748b; font-weight: 700; text-transform: uppercase;">Agendado</div>
+                    <div style="font-size: 1.2rem; font-weight: 800; color: var(--primary);" id="st-agendado">0</div>
+                </div>
+                <div style="flex: 1; text-align: center; border-right: 1px solid #e5e7eb; padding: 0 10px;">
+                    <div style="font-size: 0.65rem; color: #64748b; font-weight: 700; text-transform: uppercase;">Em Andamento</div>
+                    <div style="font-size: 1.2rem; font-weight: 800; color: var(--primary);" id="st-andamento">0</div>
+                </div>
+                <div style="flex: 1; text-align: center; border-right: 1px solid #e5e7eb; padding: 0 10px;">
+                    <div style="font-size: 0.65rem; color: #64748b; font-weight: 700; text-transform: uppercase;">Impedido</div>
+                    <div style="font-size: 1.2rem; font-weight: 800; color: #ef4444;" id="st-impedido">0</div>
+                </div>
+                <div style="flex: 1; text-align: center; border-right: 1px solid #e5e7eb; padding: 0 10px;">
+                    <div style="font-size: 0.65rem; color: #64748b; font-weight: 700; text-transform: uppercase;">Concluído</div>
+                    <div style="font-size: 1.2rem; font-weight: 800; color: #10b981;" id="st-concluido">0</div>
+                </div>
+                <div style="flex: 1; text-align: center; padding: 0 10px;">
+                    <div style="font-size: 0.65rem; color: #64748b; font-weight: 700; text-transform: uppercase;">Cancelado</div>
+                    <div style="font-size: 1.2rem; font-weight: 800; color: #64748b;" id="st-cancelado">0</div>
+                </div>
             </div>
+
+            <div style="width: 1px; height: 35px; background: #e5e7eb; margin: 0 15px;"></div>
+            <button onclick="window.atualizarTodosStatus()" style="background:#10b981; height: 36px; padding: 0 15px; font-size: 0.85rem; border-radius: 6px; border: none; color: white; cursor: pointer; white-space: nowrap;">
+                🔄 Update
+            </button>
         </div>
 
-        <div class="filtros-painel" style="flex-wrap: wrap; align-items: flex-end;">
+        <div style="display: flex; gap: 10px; margin-bottom: 20px; padding: 12px; background: white; border-radius: 8px; border: 1px solid #e5e7eb; align-items: flex-end; flex-wrap: wrap;">
             
-            <div style="display: flex; gap: 10px; flex: 1.5; min-width: 260px;">
-                <div style="flex: 1;"><label>Início</label><input type="date" id="filtroDataInicio" style="margin: 0; padding: 6px;"></div>
-                <div style="flex: 1;"><label>Fim</label><input type="date" id="filtroDataFim" style="margin: 0; padding: 6px;"></div>
+            <div style="display: flex; gap: 10px; flex: 1.5; min-width: 250px;">
+                <div style="flex: 1;">
+                    <label style="font-size: 0.65rem; color: #64748b; font-weight: 600; text-transform: uppercase; margin-bottom: 2px; display: block;">Início</label>
+                    <input type="date" id="filtroDataInicio" style="margin: 0; padding: 6px; width: 100%; box-sizing: border-box; border: 1px solid #cbd5e1; border-radius: 6px;">
+                </div>
+                <div style="flex: 1;">
+                    <label style="font-size: 0.65rem; color: #64748b; font-weight: 600; text-transform: uppercase; margin-bottom: 2px; display: block;">Fim</label>
+                    <input type="date" id="filtroDataFim" style="margin: 0; padding: 6px; width: 100%; box-sizing: border-box; border: 1px solid #cbd5e1; border-radius: 6px;">
+                </div>
             </div>
             
-            <div style="flex: 1; min-width: 100px;"><label>Ticket</label><input type="text" id="filtroTicket" placeholder="Nº OS" style="margin: 0; padding: 6px;"></div>
-            <div style="flex: 1.5; min-width: 130px;"><label>Prestador</label><select id="filtroPrestador" style="margin: 0; padding: 6px;"><option value="">Todos</option></select></div>       
+            <div style="flex: 1; min-width: 100px;">
+                <label style="font-size: 0.65rem; color: #64748b; font-weight: 600; text-transform: uppercase; margin-bottom: 2px; display: block;">Ticket</label>
+                <input type="text" id="filtroTicket" placeholder="Nº OS" style="margin: 0; padding: 6px; width: 100%; box-sizing: border-box; border: 1px solid #cbd5e1; border-radius: 6px;">
+            </div>
+            
+            <div style="flex: 1.5; min-width: 130px;">
+                <label style="font-size: 0.65rem; color: #64748b; font-weight: 600; text-transform: uppercase; margin-bottom: 2px; display: block;">Prestador</label>
+                <select id="filtroPrestador" style="margin: 0; padding: 6px; width: 100%; box-sizing: border-box; border: 1px solid #cbd5e1; border-radius: 6px;"><option value="">Todos</option></select>
+            </div>       
             
             <div style="flex: 1; min-width: 140px; position: relative;">
-                <label>Status</label>
+                <label style="font-size: 0.65rem; color: #64748b; font-weight: 600; text-transform: uppercase; margin-bottom: 2px; display: block;">Status</label>
                 <details id="dropdown-status" style="background: white; border: 1px solid #cbd5e1; border-radius: 6px; cursor: pointer; user-select: none;">
                     <summary style="padding: 6px; font-size: 0.8rem; font-weight: 500; color: #334155; outline: none; list-style: none;">📑 Selecionar...</summary>
                     <div style="position: absolute; top: 100%; left: 0; background: white; border: 1px solid #cbd5e1; border-radius: 6px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); padding: 8px; z-index: 100; display: flex; flex-direction: column; gap: 8px; margin-top: 2px; min-width: 160px;">
@@ -346,11 +379,14 @@
                 </details>
             </div>
             
-            <div style="flex: 1.5; min-width: 140px;"><label>Solicitante</label><input type="text" id="filtroSolicitante" placeholder="Pesquisar..." style="margin: 0; padding: 6px;"></div>
+            <div style="flex: 1.5; min-width: 140px;">
+                <label style="font-size: 0.65rem; color: #64748b; font-weight: 600; text-transform: uppercase; margin-bottom: 2px; display: block;">Solicitante</label>
+                <input type="text" id="filtroSolicitante" placeholder="Pesquisar..." style="margin: 0; padding: 6px; width: 100%; box-sizing: border-box; border: 1px solid #cbd5e1; border-radius: 6px;">
+            </div>
             
-            <div style="display: flex; gap: 5px;">
-                <button onclick="window.renderPainel(); document.getElementById('dropdown-status').removeAttribute('open');" style="height: 34px; padding: 0 15px;">Filtrar</button>
-                <button onclick="window.limparFiltros()" style="background:gray; height: 34px; padding: 0 15px;">Limpar</button>
+            <div style="display: flex; gap: 5px; height: 31px;">
+                <button onclick="window.renderPainel(); document.getElementById('dropdown-status').removeAttribute('open');" style="height: 100%; padding: 0 15px; margin: 0; border: none; border-radius: 5px; background: var(--primary); color: white; cursor: pointer;">Filtrar</button>
+                <button onclick="window.limparFiltros()" style="background:gray; height: 100%; padding: 0 15px; margin: 0; border: none; border-radius: 5px; color: white; cursor: pointer;">Limpar</button>
             </div>
         </div>
         
