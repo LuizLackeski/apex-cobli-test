@@ -80,7 +80,7 @@
         .switch-off { background-color: #ff4633 !important; color: white !important; } 
 
         /* CSS GRID - BARRA DE FILTROS DO PAINEL */
-            .grid-filtros {
+        .grid-filtros {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
             gap: 15px;
@@ -512,19 +512,26 @@ window.updateSwitchColor = function(el) {
         el.classList.add('switch-off');
     }
 };
+
+    // A MÁGICA DOS BOTÕES RESOLVIDA AQUI: Remove o botão padrão do footer
     window.exibirModal = function(titulo, htmlBody) {
         document.getElementById('modalHeader').innerText = titulo;
         document.getElementById('modalBody').innerHTML = htmlBody;
-        document.getElementById('modalFooter').innerHTML = '<button onclick="window.fecharModal()" style="background:var(--primary)">Fechar</button>';
+        document.getElementById('modalFooter').innerHTML = ''; 
         document.getElementById('modalAviso').style.display = 'flex';
     };
+
     window.fecharModal = function() { document.getElementById('modalAviso').style.display = 'none'; };
+    
+    // showMessage coloca o próprio footer
     window.showMessage = function(msg) {
         document.getElementById('modalHeader').innerText = "Aviso";
         document.getElementById('modalBody').innerHTML = `<p>${msg}</p>`;
         document.getElementById('modalFooter').innerHTML = '<button onclick="window.fecharModal()" style="background:var(--primary)">OK</button>';
         document.getElementById('modalAviso').style.display = 'flex';
     };
+    
+    // showConfirm coloca o próprio footer
     window.showConfirm = function(msg, callbackFn) {
         document.getElementById('modalHeader').innerText = "Confirmação";
         document.getElementById('modalBody').innerHTML = `<p>${msg}</p>`;
@@ -535,6 +542,7 @@ window.updateSwitchColor = function(el) {
         footer.appendChild(btnNao); footer.appendChild(btnSim);
         document.getElementById('modalAviso').style.display = 'flex';
     };
+
     window.showToast = function(msg) { 
         let t = document.getElementById("toast"); 
         if(!t) return;
@@ -542,6 +550,7 @@ window.updateSwitchColor = function(el) {
         t.style.display = "block"; 
         setTimeout(() => { t.style.display = "none"; }, 3000); 
     };
+    
     function extrairNomeDoEmail(email) {
         if (!email) return "";
         const usuario = email.split('@')[0]; 
@@ -550,7 +559,7 @@ window.updateSwitchColor = function(el) {
         return nomeFormatado;
     }
 
-    window.abrirOpcoesPrestador = function(i) {
+window.abrirOpcoesPrestador = function(i) {
     const p = prestadores[i];
     let html = `
         <div style="text-align: center; padding: 10px;">
@@ -863,7 +872,8 @@ window.abrirDetalhesPrestador = function(index) {
             </div>
         </div>
     `;
-    window.exibirModal("Detalhes do Prestador", htmlHeader + agendaHtml); 
+    let htmlBotaoFechar = `<div style="text-align: right; margin-top: 15px;"><button onclick="window.fecharModal()" style="background:var(--primary); padding: 10px 20px;">Fechar</button></div>`;
+    window.exibirModal("Detalhes do Prestador", htmlHeader + agendaHtml + htmlBotaoFechar); 
 };
     
 window.abrirDetalhesAgendamento = function(index) {
@@ -871,6 +881,8 @@ window.abrirDetalhesAgendamento = function(index) {
     const enderecoCompleto = `${a.rua || ''}, ${a.numero || 'S/N'} - ${a.bairro || ''}, ${a.cidade || ''}/${a.uf || ''} - CEP: ${a.cep || ''}`;
     const contatoResponsavel = `${a.acompanhamento || 'Não informado'} | ${a.telefone_responsavel || 'Sem telefone'}`;
     let prodHtml = a.produtos ? a.produtos.replace(/\n/g, '<br>') : 'Sem produtos detalhados';
+
+    let btnExcluirHtml = isAuthorized ? `<button onclick="window.excluirAgendamento(${a.id})" class="btn-cancelar" style="flex:1; padding:10px;">Excluir Agendamento</button>` : '';
 
     let html = `
         <div style="background: white; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 15px;">
@@ -892,8 +904,9 @@ window.abrirDetalhesAgendamento = function(index) {
         <div style="background: #f8fafc; padding: 12px; border-radius: 6px; border: 1px solid #cbd5e1; margin-bottom: 15px; font-size: 0.9rem; line-height: 1.5; color:#475569;">
             ${prodHtml}
         </div>
-        <div style="text-align:center;">
-            <button onclick="window.excluirAgendamento(${a.id})" class="btn-cancelar" style="width: 100%; padding:10px;">Excluir Agendamento</button>
+        <div style="display:flex; gap:10px;">
+            <button onclick="window.fecharModal()" style="background:gray; flex:1; padding:10px;">Fechar</button>
+            ${btnExcluirHtml}
         </div>
     `;
     window.exibirModal("Detalhes do Agendamento", html);
@@ -978,9 +991,11 @@ window.concluirAgendamentoFinal = async function(btn) {
     const slotsSelecionados = Array.from(sel).map(c => c.dataset.hora.substring(0, 5));
     const dataSelecionada = sel.length > 0 ? sel[0].dataset.date : null;
     const prestador = prestadores[prestadorSelecionadoIndex];
-    const dispararSlack = document.getElementById('slackSwitch').value === 'ON';
-    const dispararField = document.getElementById('fieldSwitch').value === 'ON';
-    const dispararBanco = document.getElementById('dbSwitch').value === 'ON';
+    
+    // CORREÇÃO DO BUG DO USUÁRIO NORMAL AQUI! Se não for Admin, manda disparar tudo = TRUE
+    const dispararSlack = isAuthorized ? (document.getElementById('slackSwitch').value === 'ON') : true;
+    const dispararField = isAuthorized ? (document.getElementById('fieldSwitch').value === 'ON') : true;
+    const dispararBanco = isAuthorized ? (document.getElementById('dbSwitch').value === 'ON') : true;
 
     if (!prestador || slotsSelecionados.length === 0) {
         window.showMessage("Erro: Selecione o prestador e o horário.");
@@ -1056,7 +1071,7 @@ window.concluirAgendamentoFinal = async function(btn) {
 window.limparFormulario = function() { itensSelecionados = []; prestadorSelecionadoIndex = null; document.getElementById("lista-produtos").innerHTML = ""; document.getElementById("horasNecessarias").innerText = "0"; document.getElementById("agenda-agendamento").innerHTML = ""; document.getElementById("inputCep").value = ""; document.getElementById("ticket").value = ""; document.getElementById("clienteNome").value = ""; document.getElementById("solicitante").value = ""; document.getElementById("respAcompanhamento").value = ""; document.getElementById("telResponsavel").value = ""; };
 window.trocarAba = function(id, btn){ document.querySelectorAll('.aba').forEach(a => a.classList.remove('ativa')); document.getElementById(id).classList.add('ativa'); document.querySelectorAll('.menu button').forEach(b => b.classList.remove('ativo')); if(btn) btn.classList.add('ativo'); if(id === 'painel') window.atualizarFiltrosPrestador(); if(id === 'dashboard') window.renderDashboard(); };
 window.getNextDates = function(prestador) { let dates = []; let today = new Date(); const daysMap = {"Dom":0, "Seg":1, "Ter":2, "Qua":3, "Qui":4, "Sex":5, "Sab":6}; let agendaDays = (prestador.agenda && Array.isArray(prestador.agenda)) ? [...new Set(prestador.agenda.map(a => a.dia))].map(d => daysMap[d]) : []; let qtdLimit = parseInt(prestador.qtdtecnicos) || 1; for (let i = 0; i < 14; i++) { let d = new Date(); d.setDate(today.getDate() + i); let dStr = d.toLocaleDateString(); let dNome = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sab"][d.getDay()]; let blocked = window.getBlockedHours(prestador, dStr); let slotsDoDia = (prestador.agenda && Array.isArray(prestador.agenda)) ? prestador.agenda.filter(a => a.dia == dNome) : []; let temLivre = slotsDoDia.some(s => (s.hora && !blocked.has(parseInt(s.hora.split(':')[0])) && window.getOcupacaoSlot(prestador, dStr, s.hora) < qtdLimit)); if (agendaDays.includes(d.getDay()) && temLivre) dates.push(dStr.slice(0,5)); } return dates; };
-window.proximoPasso = async function(n) { if(n === 2) { if(prestadores.length === 0) return window.showMessage("Cadastre um prestador!"); const rua = document.getElementById('inputRua').value; const num = document.getElementById('inputNumero').value; const cidade = document.getElementById('inputCidade').value; if(!rua || !num || !cidade) return window.showMessage("Preencha o endereço completo!"); const btn = document.getElementById('btnBuscar'); btn.disabled = true; btn.innerText = "Calculando..."; const enderecoBusca = `${rua}, ${num} - ${cidade} - ${document.getElementById('inputCep').value}`; let prestadoresFiltrados = []; for(let p of prestadores) { if (!p.endereco) continue; const dist = await consultarDistancia(enderecoBusca, p.endereco); let available = window.getNextDates(p); if(dist !== null && dist <= parseFloat(p.range) && available.length > 0) { p.distanciaFinal = dist.toFixed(1); p.nextDates = available.join(', '); prestadoresFiltrados.push(p); } } btn.disabled = false; btn.innerText = "Buscar Prestadores"; if(prestadoresFiltrados.length === 0) { window.exibirModal("Atenção", "Nenhum prestador encontrado no raio de atendimento."); return; } window.renderizarListaPrestadoresSelecao(prestadoresFiltrados); } if(n === 3 && prestadorSelecionadoIndex === null) return window.showMessage("Selecione um prestador!"); document.querySelectorAll('#consulta > div').forEach(div => div.style.display = 'none'); document.getElementById('step-' + n).style.display = 'block'; if (n === 3) { let p = prestadores[prestadorSelecionadoIndex]; document.getElementById("header-prestador-info").innerText = `Prestador: ${p.nome} | Distância: ${p.distanciaFinal} km`; window.rdaAgendamento(); } };
+window.proximoPasso = async function(n) { if(n === 2) { if(prestadores.length === 0) return window.showMessage("Cadastre um prestador!"); const rua = document.getElementById('inputRua').value; const num = document.getElementById('inputNumero').value; const cidade = document.getElementById('inputCidade').value; if(!rua || !num || !cidade) return window.showMessage("Preencha o endereço completo!"); const btn = document.getElementById('btnBuscar'); btn.disabled = true; btn.innerText = "Calculando..."; const enderecoBusca = `${rua}, ${num} - ${cidade} - ${document.getElementById('inputCep').value}`; let prestadoresFiltrados = []; for(let p of prestadores) { if (!p.endereco) continue; const dist = await consultarDistancia(enderecoBusca, p.endereco); let available = window.getNextDates(p); if(dist !== null && dist <= parseFloat(p.range) && available.length > 0) { p.distanciaFinal = dist.toFixed(1); p.nextDates = available.join(', '); prestadoresFiltrados.push(p); } } btn.disabled = false; btn.innerText = "Buscar Prestadores"; if(prestadoresFiltrados.length === 0) { window.showMessage("Nenhum prestador encontrado no raio de atendimento."); return; } window.renderizarListaPrestadoresSelecao(prestadoresFiltrados); } if(n === 3 && prestadorSelecionadoIndex === null) return window.showMessage("Selecione um prestador!"); document.querySelectorAll('#consulta > div').forEach(div => div.style.display = 'none'); document.getElementById('step-' + n).style.display = 'block'; if (n === 3) { let p = prestadores[prestadorSelecionadoIndex]; document.getElementById("header-prestador-info").innerText = `Prestador: ${p.nome} | Distância: ${p.distanciaFinal} km`; window.rdaAgendamento(); } };
 
 window.rdaAgendamento = function() { 
     let p = prestadores[prestadorSelecionadoIndex]; 
