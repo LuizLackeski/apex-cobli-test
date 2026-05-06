@@ -548,6 +548,37 @@ window.updateSwitchColor = function(el) {
         const nomeFormatado = partes.map(p => p.charAt(0).toUpperCase() + p.slice(1).toLowerCase()).join(' ');
         return nomeFormatado;
     }
+
+    window.abrirOpcoesPrestador = function(i) {
+    const p = prestadores[i];
+    let html = `
+        <div style="text-align: center; padding: 10px;">
+            <div style="font-weight: bold; color: var(--primary); margin-bottom: 20px; font-size: 1.1rem; border-bottom: 1px solid #eee; padding-bottom: 10px;">
+                O que deseja fazer com:<br><span style="color:#334155">${p.nome}</span>
+            </div>            
+            <div style="display: flex; flex-direction: column; gap: 12px;">
+                <button onclick="window.fecharModal(); window.abrirDetalhesPrestador(${i})" 
+                        style="background:#10b981; padding: 16px; font-size: 1rem; font-weight:bold; border-radius:8px;">
+                    👁️ Ver Agenda e Detalhes
+                </button>           
+                <button onclick="window.fecharModal(); window.abrirCadastro(${i})" 
+                        style="background:var(--primary); padding: 16px; font-size: 1rem; font-weight:bold; border-radius:8px;">
+                    📝 Editar Cadastro
+                </button>           
+                <button onclick="window.fecharModal(); window.excluirPrestador(${i})" 
+                        style="background:#ef4444; padding: 16px; font-size: 1rem; font-weight:bold; border-radius:8px;">
+                    🗑️ Excluir Prestador
+                </button>          
+                <button onclick="window.fecharModal()" 
+                        style="background:gray; padding: 10px; font-size: 0.9rem; margin-top:10px; opacity:0.7;">
+                    Cancelar
+                </button>
+            </div>
+        </div>
+    `;
+    window.exibirModal("Ações do Prestador", html);
+};
+    
     window.enviarNotificacaoSlack = async function(msg) {
         const SUPABASE_URL = "https://fqaqlofndeihmhkopvan.supabase.co/functions/v1/notificar-slack";
         try {
@@ -1139,30 +1170,33 @@ window.validarEAvancar = function() {
     document.getElementById('step-4').style.display = 'block'; 
 };
 
-window.renderizarListaPrestadoresSelecao = function(lista) { 
-    document.getElementById('lista-prestadores-selecao').innerHTML = lista.map(p => { 
-        const datesArr = p.nextDates.split(', '); 
-        const pills = datesArr.map(d => `<span class="pill">${d}</span>`).join('');  
+window.renderizarListaPrestadores = function(){ 
+    document.getElementById("btn-novo-container").innerHTML = isAuthorized ? `<button onclick="window.abrirCadastro()" style="margin-bottom: 20px;">+ Novo Prestador</button>` : '';
+    
+    document.getElementById("lista-prestadores").innerHTML = prestadores.map((p, i) => {
+        // Define a ação do clique baseada no login
+        const acaoClique = isAuthorized ? `window.abrirOpcoesPrestador(${i})` : `window.abrirDetalhesPrestador(${i})`;
         return `
         <div class="painel-item" 
-             onclick="window.selecionarPrestadorPorObjeto('${p.nome}')" 
-             style="cursor: pointer; flex-direction: column; align-items: flex-start; transition: all 0.2s ease; margin-bottom: 12px;" 
+             onclick="${acaoClique}" 
+             style="cursor: pointer; transition: all 0.2s ease; margin-bottom: 12px; border-left-width: 8px;" 
              onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 6px 15px rgba(0,0,0,0.1)';" 
-             onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 1px 3px rgba(0,0,0,0.1)';">
-            
-            <div style="width: 100%; display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                <div style="font-size: 1.05rem; font-weight: bold; color: var(--primary);">👷 ${p.nome}</div>
-                <div style="font-size: 0.75rem; color: #64748b; font-weight: 700; background: #f1f5f9; padding: 4px 8px; border-radius: 4px; border: 1px solid #e2e8f0;">
-                    📍 ${p.cidade}/${p.uf}
+             onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 1px 3px rgba(0,0,0,0.1)';"
+        >
+            <div style="flex-grow: 1; font-size: 0.95rem;">
+                <div style="width: 100%; display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                    <div style="font-weight: bold; color: var(--primary); font-size: 1.05rem;">👷 ${p.nome}</div>
+                    <div style="font-size: 0.7rem; color: #64748b; font-weight: 700; background: #f1f5f9; padding: 2px 8px; border-radius: 4px; border: 1px solid #e2e8f0;">
+                        📍 ${p.cidade}/${p.uf}
+                    </div>
+                </div>               
+                <div style="font-size: 0.85rem; color: #334155; margin-bottom: 4px;">
+                     👤 <strong>Contato:</strong> ${p.responsavel || 'Não informado'} | 📞 <strong>Tel:</strong> ${p.contato || 'Não informado'}
+                </div>              
+                <div style="font-size: 0.7rem; color: #64748b; border-top: 1px dashed #e2e8f0; padding-top: 6px; margin-top: 6px;">
+                     👥 <strong>Técnicos:</strong> ${p.qtdtecnicos} | 📏 <strong>Raio:</strong> ${p.range}km
                 </div>
-            </div>       
-            <div style="font-size: 0.85rem; color: #334155; margin-bottom: 10px;">
-                📏 <strong>Distância do atendimento:</strong> ${p.distanciaFinal} km
-            </div>          
-            <div style="width: 100%; border-top: 1px dashed #e2e8f0; padding-top: 10px;">
-                <div style="font-size: 0.7rem; color: #64748b; font-weight: 700; text-transform: uppercase; margin-bottom: 6px;">🗓️ Datas Disponíveis</div>
-                <div class="date-pills" style="margin-top: 0;">${pills}</div>
-            </div>          
+            </div>
         </div>`; 
     }).join(''); 
 };
