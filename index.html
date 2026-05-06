@@ -6,7 +6,17 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
     <style>
-        :root { --primary: #2F4EA1; --bg: #f0f2f5; --text: #334155; --cobli-blue: #2F4EA1; }
+        /* PALETA DE CORES OFICIAL COBLI */
+        :root { 
+            --primary: #001BB8;       /* Azul Claro */
+            --cobli-dark: #07074E;    /* Azul Escuro */
+            --cobli-green: #00AE97;   /* Verde */
+            --cobli-red: #FF4633;     /* Vermelho */
+            
+            --bg: #f0f2f5; 
+            --text: #334155; 
+        }
+        
         body { font-family: 'Inter', -apple-system, sans-serif; background:var(--bg); color: var(--text); margin:0; padding:20px; }
         
         #toast {
@@ -16,18 +26,18 @@
             font-weight: 600; text-align: center;
         }
 
-        #login-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #2F4EA1; display: none; align-items: center; justify-content: center; z-index: 20000; }
+        #login-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--primary); display: none; align-items: center; justify-content: center; z-index: 20000; }
         .login-card { background: white; padding: 40px; border-radius: 12px; width: 350px; text-align: center; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2); }
         .login-card h2 { color: var(--primary); border-bottom: none; margin-bottom: 20px; }
 
         /* MENU TOPO NOME E BOTOES */
-        .topo { background: var(--primary); color: white; padding: 15px 30px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        .menu { background: #1F3C88; padding: 0 30px; display: flex; align-items: center; justify-content: space-between; min-height: 45px; }
+        .topo { background: var(--cobli-dark); color: white; padding: 15px 30px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .menu { background: var(--primary); padding: 0 30px; display: flex; align-items: center; justify-content: space-between; min-height: 45px; }
         .menu button { background: none; border: none; color: #cbd5e1; padding: 15px 20px; cursor: pointer; font-size: 0.9rem; transition: 0.3s; }
         .menu-left, .menu-right { display: flex; align-items: center; flex: 1; }
         .menu-right { justify-content: flex-end; }
 
-        .menu button.ativo { color: white; border-bottom: 3px solid #4da3ff; }
+        .menu button.ativo { color: white; border-bottom: 3px solid #809cff; font-weight: bold; }
         .menu button:hover { color: white; }
         .menu .user-info { margin-left: auto; color: #ffffff; font-size: 0.8rem; margin-right: 15px; opacity: 0.8; }
         .menu .btn-sair { color: #ff9999; }
@@ -39,7 +49,7 @@
         .slack-adm-panel span { color: white; font-size: 0.6rem; font-weight: bold; }
         .slack-adm-panel select { width: 60px; height: 19px; padding: 0; font-size: 0.6rem; margin: 0; border-radius: 4px; border: none; background: white; color: var(--primary); cursor: pointer; line-height: 1; }
 
-        button:hover { filter: brightness(1.2); transform: translateY(-1px); box-shadow: 0 2px 4px rgba(0,0,0,0.2); transition: 0.2s; }
+        button:hover { filter: brightness(1.1); transform: translateY(-1px); box-shadow: 0 2px 4px rgba(0,0,0,0.2); transition: 0.2s; }
         button:active { transform: translateY(0); filter: brightness(0.9); }
         .conteudo { padding: 30px; max-width: 1000px; margin: 0 auto; }
         .aba { display: none; } .aba.ativa { display: block; }
@@ -53,7 +63,7 @@
         input, select { width: 100%; padding: 10px; margin: 8px 0; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; }
         label { font-size: 0.75rem; color: #64748b; font-weight: 600; text-transform: uppercase; margin-bottom: 2px; }
         button { cursor: pointer; padding: 8px 16px; background: var(--primary); color: white; border: none; border-radius: 5px; font-weight: 500; }
-        .btn-cancelar { background: #ef4444 !important; }
+        .btn-cancelar { background: var(--cobli-red) !important; }
         
         .agenda-day-card { background: #fafafa; padding: 10px; border-radius: 6px; margin-bottom: 8px; border: 1px solid #e5e7eb; }
         .agenda-day-title { font-weight: 600; color: var(--primary); margin-bottom: 6px; font-size: 0.85rem; }
@@ -74,10 +84,10 @@
         .card-selecao { background: white; padding: 15px; border-radius: 8px; margin-bottom: 10px; border: 1px solid #e5e7eb; cursor: pointer; transition: all 0.2s ease; border-left: 5px solid var(--primary); }
         .card-selecao:hover { transform: translateY(-3px); box-shadow: 0 6px 15px rgba(0,0,0,0.1); border-color: var(--primary); }
         .date-pills { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
-        .pill { background: #dbeafe; color: #1e40af; padding: 4px 10px; border-radius: 6px; font-size: 0.8rem; font-weight: 600; border: 1px solid #bfdbfe; }
+        .pill { background: #e0e6ff; color: var(--primary); padding: 4px 10px; border-radius: 6px; font-size: 0.8rem; font-weight: 600; border: 1px solid #c2d1ff; }
         .bloco-servico { background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #cbd5e1; margin-bottom: 15px; }
-        .switch-on { background-color: #00ae97 !important; color: white !important; } 
-        .switch-off { background-color: #ff4633 !important; color: white !important; } 
+        .switch-on { background-color: var(--cobli-green) !important; color: white !important; } 
+        .switch-off { background-color: var(--cobli-red) !important; color: white !important; } 
 
         /* CSS GRID - BARRA DE FILTROS DO PAINEL */
         .grid-filtros {
@@ -91,39 +101,17 @@
             margin-bottom: 10px; 
             align-items: end;
         }
-        .campo-filtro {
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-        }
-        .campo-filtro label {
-            font-size: 0.65rem;
-            color: #64748b;
-            font-weight: 700;
-            text-transform: uppercase;
-            margin: 0;
-        }
-        .campo-filtro input, 
-        .campo-filtro details {
-            margin: 0 !important;
-            height: 38px !important; 
-            box-sizing: border-box !important;
-        }
-        .grid-filtros .botoes-container {
-            display: flex;
-            gap: 8px;
-            height: 38px;
-        }
+        .campo-filtro { display: flex; flex-direction: column; gap: 5px; }
+        .campo-filtro label { font-size: 0.65rem; color: #64748b; font-weight: 700; text-transform: uppercase; margin: 0; }
+        .campo-filtro input, .campo-filtro details { margin: 0 !important; height: 38px !important; box-sizing: border-box !important; }
+        .grid-filtros .botoes-container { display: flex; gap: 8px; height: 38px; }
         
         /* ANIMAÇÃO DE GIRO PARA O BOTÃO REFRESH */
         @keyframes girar {
             from { transform: rotate(0deg); }
             to { transform: rotate(360deg); }
         }
-        .icone-girando {
-            display: inline-block;
-            animation: girar 1s linear infinite;
-        }
+        .icone-girando { display: inline-block; animation: girar 1s linear infinite; }
     </style>
 </head>
 <body>
@@ -134,7 +122,7 @@
     <div class="login-card">
         <h2 style="border:none;">APEX Cobli</h2>
         <input type="text" id="loginEmail" placeholder="Informe seu E-mail">
-        <button onclick="window.performLogin()" style="width:100%; background: var(--primary); padding: 12px; margin-top:10px;">Entrar</button>
+        <button onclick="window.performLogin()" style="width:100%; background: var(--cobli-dark); padding: 12px; margin-top:10px;">Entrar</button>
     </div>
 </div>
 
@@ -175,7 +163,7 @@
     </div>
     <div class="menu-right">
         <span id="user-display" class="user-info"></span>
-        <button class="btn-sair" onclick="window.logout()">Sair</button>
+        <button class="btn-sair" style="color:var(--cobli-red); font-weight:bold;" onclick="window.logout()">Sair</button>
     </div>
 </div>
 
@@ -196,7 +184,7 @@
            <label>CEP</label>
                 <div style="display: flex; gap: 10px;">
                 <input type="text" id="inputCep" placeholder="00000-000" oninput="window.maskCEP(this)">
-                <button onclick="window.buscarEnderecoPorCep()" id="btnValidarCep" style="background:#10b981; white-space:nowrap;">Validar CEP</button>
+                <button onclick="window.buscarEnderecoPorCep()" id="btnValidarCep" style="background:var(--cobli-green); white-space:nowrap;">Validar CEP</button>
             </div>
 
             <div id="camposEndereco" style="display: none; margin-top: 15px; border-top: 1px solid #eee; padding-top: 15px;">
@@ -275,7 +263,7 @@
             <div id="agenda-agendamento"></div>
             <div style="margin-top:10px;">
                 <button onclick="window.proximoPasso(2)" style="background:gray;">Voltar</button>
-                <button onclick="window.validarEAvancar()" style="background:green;">Próximo</button>
+                <button onclick="window.validarEAvancar()" style="background:var(--cobli-green);">Próximo</button>
                 <button onclick="window.cancelarAgendamento()" class="btn-cancelar">Cancelar</button>
             </div>
         </div>
@@ -283,14 +271,14 @@
         <div id="step-4" class="card" style="display:none;">
             <h2>Dados do Cliente</h2>
             <label>Nº do Ticket</label><div style="display: flex; gap: 8px; margin-bottom: 12px;"><input id="ticket" placeholder="Ex: 123654789" required style="flex: 1;"><button type="button" id="btnChecarSequencia" onclick="verificarSequenciaEFOP()" 
-                style="background:#4f46e5; color:white; padding:0 15px; border-radius:6px; font-size:12px; cursor:pointer; border:none; height: 42px;">Checar Sequência</button></div>
+                style="background:var(--cobli-dark); color:white; padding:0 15px; border-radius:6px; font-size:12px; cursor:pointer; border:none; height: 42px;">Checar Sequência</button></div>
             <label>Nome do Cliente</label><input id="clienteNome" required>
             <label>CNPJ / CPF</label><input id="clienteCnpj" placeholder="00.000.000/0000-00" oninput="window.maskCPFCNPJ(this)" required>
             <label>Responsável pela solicitação (APEX)</label><input id="solicitante" required>
             <label>Responsável pelo acompanhamento (Local)</label><input id="respAcompanhamento" required>
             <label>Telefone do responsável</label><input id="telResponsavel" placeholder="(00) 00000-0000" oninput="window.maskPhone(this)" maxlength="15" required>
             <button onclick="window.proximoPasso(3)" style="background:gray;">Voltar</button>
-            <button id="btnConfirmar" onclick="window.revisarAgendamento(this)" style="background:green;">Confirmar</button>
+            <button id="btnConfirmar" onclick="window.revisarAgendamento(this)" style="background:var(--cobli-green);">Confirmar</button>
             <button onclick="window.cancelarAgendamento()" class="btn-cancelar">Cancelar</button>
         </div>
     </div>
@@ -360,8 +348,8 @@
             <div style="margin-top:20px;">
                 <button id="btn-voltar" onclick="window.mudarEtapa(-1)">Voltar</button>
                 <button id="btn-proximo" onclick="window.mudarEtapa(1)">Próximo</button>
-                <button id="btn-concluir" onclick="window.salvarPrestador(this)" style="background: green;">Concluir</button>
-                <button onclick="window.cancelarCadastro()" style="background:red;">Cancelar</button>
+                <button id="btn-concluir" onclick="window.salvarPrestador(this)" style="background: var(--cobli-green);">Concluir</button>
+                <button onclick="window.cancelarCadastro()" class="btn-cancelar">Cancelar</button>
             </div>
         </div>
     </div>
@@ -388,11 +376,11 @@
                 </div>
                 <div style="flex: 1; text-align: center; border-right: 1px solid #e5e7eb; padding: 0 10px;">
                     <div style="font-size: 0.65rem; color: #64748b; font-weight: 700; text-transform: uppercase;">Impedido</div>
-                    <div style="font-size: 1.2rem; font-weight: 800; color: #ef4444;" id="st-impedido">0</div>
+                    <div style="font-size: 1.2rem; font-weight: 800; color: var(--cobli-red);" id="st-impedido">0</div>
                 </div>
                 <div style="flex: 1; text-align: center; border-right: 1px solid #e5e7eb; padding: 0 10px;">
                     <div style="font-size: 0.65rem; color: #64748b; font-weight: 700; text-transform: uppercase;">Concluído</div>
-                    <div style="font-size: 1.2rem; font-weight: 800; color: #10b981;" id="st-concluido">0</div>
+                    <div style="font-size: 1.2rem; font-weight: 800; color: var(--cobli-green);" id="st-concluido">0</div>
                 </div>
                 <div style="flex: 1; text-align: center; padding: 0 10px;">
                     <div style="font-size: 0.65rem; color: #64748b; font-weight: 700; text-transform: uppercase;">Cancelado</div>
@@ -400,7 +388,7 @@
                 </div>
             </div>
             <div style="width: 1px; height: 35px; background: #e5e7eb; margin: 0 15px;"></div>
-            <button onclick="window.atualizarTodosStatus()" style="background:#10b981; height: 36px; padding: 0 15px; font-size: 0.85rem; border-radius: 6px; border: none; color: white; cursor: pointer; white-space: nowrap;">
+            <button onclick="window.atualizarTodosStatus()" style="background:var(--cobli-green); height: 36px; padding: 0 15px; font-size: 0.85rem; border-radius: 6px; border: none; color: white; cursor: pointer; white-space: nowrap;">
                 🔄 Update
             </button>
         </div>
@@ -451,7 +439,7 @@
             </div>
         </div>
         
-       <div id="indicador-filtro" style="display: none; text-align: center; color: #ef4444; font-size: 0.75rem; font-weight: 700; margin-top: -10px; margin-bottom: 15px; letter-spacing: 1px;">
+       <div id="indicador-filtro" style="display: none; text-align: center; color: var(--cobli-red); font-size: 0.75rem; font-weight: 700; margin-top: -10px; margin-bottom: 15px; letter-spacing: 1px;">
             ⚠️ DADOS FILTRADOS, LIMPE A SELEÇÃO
         </div>
         
@@ -513,7 +501,6 @@ window.updateSwitchColor = function(el) {
     }
 };
 
-    // A MÁGICA DOS BOTÕES RESOLVIDA AQUI: Remove o botão padrão do footer
     window.exibirModal = function(titulo, htmlBody) {
         document.getElementById('modalHeader').innerText = titulo;
         document.getElementById('modalBody').innerHTML = htmlBody;
@@ -523,7 +510,6 @@ window.updateSwitchColor = function(el) {
 
     window.fecharModal = function() { document.getElementById('modalAviso').style.display = 'none'; };
     
-    // showMessage coloca o próprio footer
     window.showMessage = function(msg) {
         document.getElementById('modalHeader').innerText = "Aviso";
         document.getElementById('modalBody').innerHTML = `<p>${msg}</p>`;
@@ -531,7 +517,6 @@ window.updateSwitchColor = function(el) {
         document.getElementById('modalAviso').style.display = 'flex';
     };
     
-    // showConfirm coloca o próprio footer
     window.showConfirm = function(msg, callbackFn) {
         document.getElementById('modalHeader').innerText = "Confirmação";
         document.getElementById('modalBody').innerHTML = `<p>${msg}</p>`;
@@ -568,7 +553,7 @@ window.abrirOpcoesPrestador = function(i) {
             </div>            
             <div style="display: flex; flex-direction: column; gap: 12px;">
                 <button onclick="window.fecharModal(); window.abrirDetalhesPrestador(${i})" 
-                        style="background:#10b981; padding: 16px; font-size: 1rem; font-weight:bold; border-radius:8px;">
+                        style="background:var(--cobli-green); padding: 16px; font-size: 1rem; font-weight:bold; border-radius:8px;">
                     👁️ Ver Agenda e Detalhes
                 </button>            
                 <button onclick="window.fecharModal(); window.abrirCadastro(${i})" 
@@ -576,7 +561,7 @@ window.abrirOpcoesPrestador = function(i) {
                     📝 Editar Cadastro
                 </button>            
                 <button onclick="window.fecharModal(); window.excluirPrestador(${i})" 
-                        style="background:#ef4444; padding: 16px; font-size: 1rem; font-weight:bold; border-radius:8px;">
+                        style="background:var(--cobli-red); padding: 16px; font-size: 1rem; font-weight:bold; border-radius:8px;">
                     🗑️ Excluir Prestador
                 </button>          
                 <button onclick="window.fecharModal()" 
@@ -780,12 +765,12 @@ async function verificarSequenciaEFOP() {
         if (result.sugerido) {
             if (result.sugerido !== baseOriginal) {
                 input.value = result.sugerido;
-                input.style.border = "2px solid #f59e0b";
+                input.style.border = "2px solid var(--cobli-green)";
                 if (!result.warning) {
                     window.showMessage(`🔄 <strong>Sequência encontrada!</strong><br><br>O próximo número sugerido é: <strong>${result.sugerido}</strong>`);
                 }
             } else {
-                input.style.border = "2px solid #10b981";
+                input.style.border = "2px solid var(--cobli-green)";
                 if (!result.warning) {
                     window.showMessage("✅ <strong>Tudo certo!</strong><br><br>Esse número está totalmente disponível para uso.");
                 }
@@ -816,7 +801,7 @@ window.renderDashboard = function() {
     if(myChart) myChart.destroy();
     myChart = new Chart(ctx, {
         type: 'bar',
-        data: { labels: labels, datasets: [{ label: 'Agendamentos', data: data, backgroundColor: '#2F4EA1' }] },
+        data: { labels: labels, datasets: [{ label: 'Agendamentos', data: data, backgroundColor: '#001BB8' }] },
         options: { responsive: true, plugins: { legend: { display: false }, datalabels: { anchor: 'center', align: 'center', color: 'white', formatter: function(value, context) { let percent = totalAgend > 0 ? Math.round((value / totalAgend) * 100) : 0; return `${String(value).padStart(2, '0')} | ${percent}%`; } } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } },
         plugins: [ChartDataLabels]
     });
@@ -966,7 +951,7 @@ window.revisarAgendamento = function() {
         </div>
         <div style="display: flex; gap: 10px;">
             <button onclick="window.fecharModal()" style="background:gray; flex:1;">⬅️ Editar Dados</button>
-            <button onclick="window.confirmarEnvioReal()" style="background:green; flex:1;">✅ Confirmar e Salvar</button>
+            <button onclick="window.confirmarEnvioReal()" style="background:var(--cobli-green); flex:1;">✅ Confirmar e Salvar</button>
         </div>
     `;
     window.exibirModal("Confirme os Dados", html);
@@ -977,6 +962,7 @@ window.confirmarEnvioReal = function() {
     const btn = document.getElementById('btnConfirmar');
     window.concluirAgendamentoFinal(btn);
 };
+
 window.concluirAgendamentoFinal = async function(btn) {
     const elCnpj = document.getElementById('clienteCnpj');   
     if (elCnpj) {
@@ -992,7 +978,7 @@ window.concluirAgendamentoFinal = async function(btn) {
     const dataSelecionada = sel.length > 0 ? sel[0].dataset.date : null;
     const prestador = prestadores[prestadorSelecionadoIndex];
     
-    // CORREÇÃO DO BUG DO USUÁRIO NORMAL AQUI! Se não for Admin, manda disparar tudo = TRUE
+    // CORREÇÃO DO BUG DO USUÁRIO NORMAL: Tudo fica ON automaticamente!
     const dispararSlack = isAuthorized ? (document.getElementById('slackSwitch').value === 'ON') : true;
     const dispararField = isAuthorized ? (document.getElementById('fieldSwitch').value === 'ON') : true;
     const dispararBanco = isAuthorized ? (document.getElementById('dbSwitch').value === 'ON') : true;
@@ -1160,7 +1146,7 @@ window.rdaAgendamento = function() {
         } 
     } 
     if (diasEncontrados === 0) {
-        container.innerHTML = `<div style="color:red; font-size:0.85rem; font-weight:bold;">⚠️ Não há horários disponíveis com ${horasNecessarias}h seguidas para este prestador.</div>`;
+        container.innerHTML = `<div style="color:var(--cobli-red); font-size:0.85rem; font-weight:bold;">⚠️ Não há horários disponíveis com ${horasNecessarias}h seguidas para este prestador.</div>`;
     }
 };
 
@@ -1193,7 +1179,7 @@ window.renderizarListaPrestadoresSelecao = function(lista) {
         return `
         <div class="painel-item" 
              onclick="window.selecionarPrestadorPorObjeto('${p.nome}')" 
-             style="cursor: pointer; flex-direction: column; align-items: flex-start; transition: all 0.2s ease; margin-bottom: 12px;" 
+             style="cursor: pointer; flex-direction: column; align-items: flex-start; transition: all 0.2s ease; margin-bottom: 12px; border-left: 5px solid var(--primary);" 
              onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 6px 15px rgba(0,0,0,0.1)';" 
              onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 1px 3px rgba(0,0,0,0.1)';">
             
@@ -1308,7 +1294,7 @@ window.renderizarProdutos = function() {
                     (Qtd: ${i.qtd} | Total: ${tempoAcumuladoItem}m)
                 </span> 
                 <button onclick="itensSelecionados.splice(${idx},1); window.renderizarProdutos(); window.rdaAgendamento();" 
-                        style="background:red; padding:2px 8px; color:white; border:none; border-radius:4px; cursor:pointer; margin-left:10px;">
+                        style="background:var(--cobli-red); padding:2px 8px; color:white; border:none; border-radius:4px; cursor:pointer; margin-left:10px;">
                     x
                 </button>
             </div>`;
@@ -1387,7 +1373,7 @@ window.renderPainel = function(){
 
         return `<div class="painel-item" data-ticket="${a.ticket}">
             <div style="flex-grow: 1; font-size: 0.95rem;">
-                <strong>🎟️ #${a.ticket}</strong> | 🏷️ Status: <span style="color: #2F4EA1; font-weight: bold;">${a.status || 'SOLICITADO'}</span> | 👤 Cliente: <strong>${a.cliente || 'Não informado'}</strong>
+                <strong>🎟️ #${a.ticket}</strong> | 🏷️ Status: <span style="color: var(--primary); font-weight: bold;">${a.status || 'SOLICITADO'}</span> | 👤 Cliente: <strong>${a.cliente || 'Não informado'}</strong>
                 
                 <div style="margin-top:6px; font-size: 0.85rem; color: #334155;">
                      📅 Agendado: ${a.data} às ${primeiroSlot} | 🛠️ Prestador: ${a.prestador}
@@ -1399,7 +1385,7 @@ window.renderPainel = function(){
             </div>
             
             <div style="display:flex; align-items: center; gap:8px;">
-                <button title="Sincronizar" style="background:#10b981; height: 38px; width: 45px; border-radius:6px; border:none; color:white; cursor:pointer;" onclick="window.sincronizarStatusIndividual('${a.ticket}', this)">🔄</button>
+                <button title="Sincronizar" style="background:var(--cobli-green); height: 38px; width: 45px; border-radius:6px; border:none; color:white; cursor:pointer;" onclick="window.sincronizarStatusIndividual('${a.ticket}', this)">🔄</button>
                 <button style="background:var(--primary); height: 38px; padding: 0 15px; font-size: 0.9rem; border-radius:6px; border:none; color:white; cursor:pointer;" onclick="window.abrirDetalhesAgendamento(${i})">Ver</button>
             </div>
         </div>`;
