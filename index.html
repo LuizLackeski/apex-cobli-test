@@ -19,7 +19,6 @@
         
         body { font-family: 'Inter', -apple-system, sans-serif; background:var(--bg); color: var(--text); margin:0; padding:20px; }
         
-        /* TOAST AJUSTADO COM CORES DA COBLI */
         #toast {
             display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); 
             background: var(--cobli-dark); color: var(--cobli-green); padding: 20px 40px; border-radius: 12px; 
@@ -1096,6 +1095,7 @@ window.concluirAgendamentoFinal = async function(btn) {
 
 window.limparFormulario = function() { itensSelecionados = []; prestadorSelecionadoIndex = null; document.getElementById("lista-produtos").innerHTML = ""; document.getElementById("horasNecessarias").innerText = "0"; document.getElementById("agenda-agendamento").innerHTML = ""; document.getElementById("inputCep").value = ""; document.getElementById("ticket").value = ""; document.getElementById("clienteNome").value = ""; document.getElementById("solicitante").value = ""; document.getElementById("respAcompanhamento").value = ""; document.getElementById("telResponsavel").value = ""; };
 
+// === A FUNÇÃO QUE TINHA SUMIDO ESTÁ AQUI ===
 window.trocarAba = function(id, btn){ 
     document.querySelectorAll('.aba').forEach(a => a.classList.remove('ativa')); 
     document.getElementById(id).classList.add('ativa'); 
@@ -1219,7 +1219,7 @@ window.rdaAgendamento = function() {
         if (allSlots.length === 0) continue;
 
         let horasAgenda = allSlots.map(item => parseInt(item.hora.split(':')[0]));
-        let validStarts = []; // Lista apenas as horas que aguentam o serviço inteiro
+        let validStarts = []; // Lista apenas as horas que aguentam começar o serviço
         
         for (let h of horasAgenda) {
             let seqOk = true;
@@ -1228,13 +1228,20 @@ window.rdaAgendamento = function() {
                 if (!horasAgenda.includes(h + k)) { seqOk = false; break; }
                 testSlots.push(h + k);
             }
-            // Se tem as horas seguidas na agenda, roda o simulador matemático!
             if (seqOk) {
                 if (window.podeAgendar(p, dStr, testSlots)) {
                     validStarts.push(h);
                 }
             }
         }
+
+        // Descobre todas as células que fazem parte de pelo menos um bloco válido
+        let enabledCells = new Set();
+        validStarts.forEach(start => {
+            for (let k = 0; k < horasNecessarias; k++) {
+                enabledCells.add(start + k);
+            }
+        });
 
         if(validStarts.length > 0){ 
             diasEncontrados++;
@@ -1252,15 +1259,28 @@ window.rdaAgendamento = function() {
                 div.dataset.hora = item.hora; 
                 div.dataset.date = dStr; 
                 
-                if (!validStarts.includes(hInt)) {
+                if (!enabledCells.has(hInt)) {
                     div.style.opacity = "0.3";
                     div.style.cursor = "not-allowed";
                     div.onclick = () => window.showToast(`Horário indisponível para ${horasNecessarias}h seguidas ou excedeu a capacidade.`);
                 } else {
                     div.onclick = function() { 
+                        // MÁGICA: Se clicou numa célula habilitada, acha de onde puxar
+                        let horaInicioReal = hInt;
+                        if (!validStarts.includes(hInt)) {
+                            // Se a célula clicada não pode ser o INÍCIO, puxa pra trás
+                            for (let b = 1; b < horasNecessarias; b++) {
+                                let testStart = hInt - b;
+                                if (validStarts.includes(testStart)) {
+                                    horaInicioReal = testStart;
+                                    break;
+                                }
+                            }
+                        }
+                        
                         document.querySelectorAll("#agenda-agendamento .cell").forEach(c => c.classList.remove('selecionado'));
                         for(let m=0; m < horasNecessarias; m++) {
-                            let targetH = `${hInt + m}:00`;
+                            let targetH = `${horaInicioReal + m}:00`;
                             let targetCell = Array.from(wrapper.children).find(c => c.dataset.hora === targetH);
                             if(targetCell) targetCell.classList.add("selecionado");
                         }
@@ -1658,31 +1678,33 @@ window.renderDashboard = function() {
     document.getElementById("dash-concluidos").innerText = concluidosCount;
     document.getElementById("dash-programados").innerText = programadosCount;
     
-    const ctxPrest = document.getElementById('chartPrestadores').getContext('2d');
     if(myChart) myChart.destroy();
-    myChart = new Chart(ctxPrest, {
-        type: 'bar',
-        data: { 
-            labels: Object.keys(distPrest), 
-            datasets: [{ label: 'Agendamentos', data: Object.values(distPrest), backgroundColor: '#001BB8', borderRadius: 4 }] 
-        },
-        options: { 
-            responsive: true, 
-            maintainAspectRatio: false, 
-            plugins: { 
-                legend: { display: false }, 
-                datalabels: { 
-                    anchor: 'center', align: 'center', color: 'white', font: {weight: 'bold', size: 12},
-                    formatter: function(value, context) { 
-                        let percent = totalAgend > 0 ? Math.round((value / totalAgend) * 100) : 0; 
-                        return `${String(value).padStart(2, '0')} | ${percent}%`; 
+    const ctxPrest = document.getElementById('chartPrestadores');
+    if (ctxPrest) {
+        myChart = new Chart(ctxPrest.getContext('2d'), {
+            type: 'bar',
+            data: { 
+                labels: Object.keys(distPrest), 
+                datasets: [{ label: 'Agendamentos', data: Object.values(distPrest), backgroundColor: '#001BB8', borderRadius: 4 }] 
+            },
+            options: { 
+                responsive: true, 
+                maintainAspectRatio: false, 
+                plugins: { 
+                    legend: { display: false }, 
+                    datalabels: { 
+                        anchor: 'center', align: 'center', color: 'white', font: {weight: 'bold', size: 12},
+                        formatter: function(value, context) { 
+                            let percent = totalAgend > 0 ? Math.round((value / totalAgend) * 100) : 0; 
+                            return `${String(value).padStart(2, '0')} | ${percent}%`; 
+                        } 
                     } 
-                } 
-            }, 
-            scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } 
-        },
-        plugins: [ChartDataLabels]
-    });
+                }, 
+                scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } 
+            },
+            plugins: [ChartDataLabels]
+        });
+    }
 
     let servicosOrdenados = Object.entries(distServ).sort((a,b) => b[1] - a[1]);
     let listaHtml = servicosOrdenados.map(s => {
@@ -1699,29 +1721,32 @@ window.renderDashboard = function() {
     }).join('');
     
     if (!listaHtml) listaHtml = `<div style="font-size:0.85rem; color:#64748b; padding: 10px;">Nenhum serviço computado ainda.</div>`;
-    document.getElementById('lista-dashboard-servicos').innerHTML = listaHtml;
+    const listaServicosElement = document.getElementById('lista-dashboard-servicos');
+    if (listaServicosElement) listaServicosElement.innerHTML = listaHtml;
 
     let locaisOrdenados = Object.entries(distLocais).sort((a,b) => b[1] - a[1]).slice(0, 10); 
     
-    const ctxLocais = document.getElementById('chartLocais').getContext('2d');
-    if(window.chartLocais) window.chartLocais.destroy();
-    window.chartLocais = new Chart(ctxLocais, {
-        type: 'bar',
-        data: { 
-            labels: locaisOrdenados.map(l => l[0]), 
-            datasets: [{ label: 'Atendimentos', data: locaisOrdenados.map(l => l[1]), backgroundColor: '#00AE97', borderRadius: 4 }] 
-        },
-        options: { 
-            responsive: true, 
-            maintainAspectRatio: false, 
-            plugins: { 
-                legend: { display: false }, 
-                datalabels: { color: 'white', font: {weight: 'bold', size: 12} } 
-            }, 
-            scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } 
-        },
-        plugins: [ChartDataLabels]
-    });
+    if(chartLocais) chartLocais.destroy();
+    const ctxLocais = document.getElementById('chartLocais');
+    if (ctxLocais) {
+        chartLocais = new Chart(ctxLocais.getContext('2d'), {
+            type: 'bar',
+            data: { 
+                labels: locaisOrdenados.map(l => l[0]), 
+                datasets: [{ label: 'Atendimentos', data: locaisOrdenados.map(l => l[1]), backgroundColor: '#00AE97', borderRadius: 4 }] 
+            },
+            options: { 
+                responsive: true, 
+                maintainAspectRatio: false, 
+                plugins: { 
+                    legend: { display: false }, 
+                    datalabels: { color: 'white', font: {weight: 'bold', size: 12} } 
+                }, 
+                scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } 
+            },
+            plugins: [ChartDataLabels]
+        });
+    }
 };
 </script>
 </body>
