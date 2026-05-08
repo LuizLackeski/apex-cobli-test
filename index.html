@@ -886,12 +886,18 @@ window.abrirDetalhesAgendamento = function(index) {
     const contatoResponsavel = `${a.acompanhamento || 'Não informado'} | ${a.telefone_responsavel || 'Sem telefone'}`;
     let prodHtml = a.produtos ? a.produtos.replace(/\n/g, '<br>') : 'Sem produtos detalhados';
 
-    let btnExcluirHtml = isAuthorized ? `<button onclick="window.excluirAgendamento(${a.id}, '${a.data}')" class="btn-cancelar" style="flex:1; padding:10px;">Excluir Agendamento</button>` : '';
+    let btnSincronizarHtml = `<button onclick="event.stopPropagation(); window.sincronizarStatusModal('${a.ticket}', this, ${index})" style="background:var(--cobli-green); flex:1; padding:10px;">🔄 Atualizar Status</button>`;
+    let btnExcluirHtml = isAuthorized ? `<button onclick="window.excluirAgendamento(${a.id}, '${a.data}')" class="btn-cancelar" style="flex:1; padding:10px;">Excluir</button>` : '';
 
     let html = `
         <div style="background: white; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 15px;">
-            <div style="font-weight:bold; font-size:1.1rem; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px; margin-bottom: 8px; color:var(--primary);">
-                🎟️ Ticket: ${a.ticket}
+            <div style="display:flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px; margin-bottom: 8px;">
+                <div style="font-weight:bold; font-size:1.1rem; color:var(--primary);">
+                    🎟️ Ticket: ${a.ticket}
+                </div>
+                <div id="modal-status-badge" style="font-size: 0.75rem; color: white; font-weight: 700; background: var(--primary); padding: 4px 10px; border-radius: 6px;">
+                    ${a.status || 'SOLICITADO'}
+                </div>
             </div>
             <div style="font-size:0.9rem; line-height:1.6;">
                 👤 <strong>Cliente:</strong> ${a.cliente}<br>
@@ -908,12 +914,41 @@ window.abrirDetalhesAgendamento = function(index) {
         <div style="background: #f8fafc; padding: 12px; border-radius: 6px; border: 1px solid #cbd5e1; margin-bottom: 15px; font-size: 0.9rem; line-height: 1.5; color:#475569;">
             ${prodHtml}
         </div>
-        <div style="display:flex; gap:10px;">
+        <div style="display:flex; gap:10px; flex-wrap: wrap;">
             <button onclick="window.fecharModal()" style="background:gray; flex:1; padding:10px;">Fechar</button>
+            ${btnSincronizarHtml}
             ${btnExcluirHtml}
         </div>
     `;
     window.exibirModal("Detalhes do Agendamento", html);
+};
+
+window.sincronizarStatusModal = async function(ticket, btn, index) {
+    const originalText = btn.innerHTML;
+    btn.innerHTML = `<span class="icone-girando">🔄</span> Atualizando...`;
+    btn.disabled = true;
+    
+    try {
+        const response = await fetch(EDGE_URL, {
+            method: 'POST',
+            headers: getHeaders(),
+            body: JSON.stringify({ acao: 'sincronizar_status', ticket: ticket })
+        });
+        const result = await response.json();
+        if (response.ok) {
+            window.showToast(`✅ Ticket ${ticket} atualizado para: ${result.status}`);
+            const badge = document.getElementById('modal-status-badge');
+            if(badge) badge.innerText = result.status;
+            await carregarDadosDoBanco(); 
+        } else {
+            window.showMessage("❌ Erro ao sincronizar: " + result.error);
+        }
+    } catch (err) {
+        window.showMessage("❌ Erro de conexão.");
+    } finally {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+    }
 };
 
 window.excluirAgendamento = function(id, dataStr) { 
@@ -1518,47 +1553,57 @@ window.renderPainel = function(){
     document.getElementById('st-concluido').innerText = counts.concluido;
     document.getElementById('st-cancelado').innerText = counts.cancelado;
 
+    // --- PAINEL REESTRUTURADO (SEM BOTÕES E COM EFEITO VERDINHO) ---
     document.getElementById("painel-conteudo").innerHTML = filtradosPainel.map((a, i) => {
         let primeiroSlot = Array.isArray(a.slots) ? a.slots[0] : (String(a.slots).split(',')[0] || 'N/A');
         let dataRegistro = a.created_at ? new Date(a.created_at).toLocaleString('pt-BR') : 'N/A';
 
-        return `<div class="painel-item" data-ticket="${a.ticket}">
-            <div style="flex-grow: 1; font-size: 0.95rem;">
-                <strong>🎟️ #${a.ticket}</strong> | 🏷️ Status: <span style="color: var(--primary); font-weight: bold;">${a.status || 'SOLICITADO'}</span> | 👤 Cliente: <strong>${a.cliente || 'Não informado'}</strong>
-                
-                <div style="margin-top:6px; font-size: 0.85rem; color: #334155;">
-                     📅 Agendado: ${a.data} às ${primeiroSlot} | 🛠️ Prestador: ${a.prestador}
-                </div>
-                
-                <div style="margin-top: 6px; font-size: 0.7rem; color: #64748b; border-top: 1px dashed #e2e8f0; padding-top: 6px;">
-                     Registrado em: ${dataRegistro} (via APEX) | 🙋‍♂️ Solicitado por: ${a.solicitante}
+        return `<div class="painel-item" data-ticket="${a.ticket}" 
+             onclick="window.abrirDetalhesAgendamento(${i})" 
+             style="cursor: pointer; flex-direction: column; align-items: flex-start; transition: all 0.2s ease; margin-bottom: 12px; border-left: 5px solid var(--primary); background-color: white;" 
+             onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 6px 15px rgba(0,0,0,0.1)'; this.style.backgroundColor='#ebfcf9'; this.style.borderLeftColor='var(--cobli-green)';" 
+             onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 1px 3px rgba(0,0,0,0.1)'; this.style.backgroundColor='white'; this.style.borderLeftColor='var(--primary)';">
+            
+            <div style="width: 100%; display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <div style="font-size: 1.05rem; font-weight: bold; color: var(--primary);">🎟️ #${a.ticket}</div>
+                <div style="font-size: 0.75rem; color: #64748b; font-weight: 700; background: #f1f5f9; padding: 4px 8px; border-radius: 4px; border: 1px solid #e2e8f0;">
+                    ${a.status || 'SOLICITADO'}
                 </div>
             </div>
             
-            <div style="display:flex; align-items: center; gap:8px;">
-                <button title="Sincronizar" style="background:var(--cobli-green); height: 38px; width: 45px; border-radius:6px; border:none; color:white; cursor:pointer;" onclick="window.sincronizarStatusIndividual('${a.ticket}', this)">🔄</button>
-                <button style="background:var(--primary); height: 38px; padding: 0 15px; font-size: 0.9rem; border-radius:6px; border:none; color:white; cursor:pointer;" onclick="window.abrirDetalhesAgendamento(${i})">Ver</button>
+            <div style="font-size: 0.85rem; color: #334155; margin-bottom: 6px; width: 100%;">
+                 👤 <strong>Cliente:</strong> ${a.cliente || 'Não informado'} <br>
+                 📅 <strong>Agendado:</strong> ${a.data} às ${primeiroSlot} | 🛠️ <strong>Prestador:</strong> ${a.prestador}
+            </div>
+            
+            <div style="width: 100%; border-top: 1px dashed #e2e8f0; padding-top: 8px; margin-top: 4px; font-size: 0.7rem; color: #64748b;">
+                 Registrado em: ${dataRegistro} (via APEX) | 🙋‍♂️ Solicitante: ${a.solicitante}
             </div>
         </div>`;
     }).join(''); 
 };
 
+// --- FUNÇÃO DE UPDATE GERAL CORRIGIDA PARA RODAR SEM BOTÕES NO HTML ---
 window.atualizarTodosStatus = async function() {
-    const botoesSincronizar = document.querySelectorAll('.painel-item button[title="Sincronizar"]');
-    
-    if (botoesSincronizar.length === 0) {
+    if (filtradosPainel.length === 0) {
         return window.showMessage("Nenhum ticket visível para atualizar. Limpe os filtros se necessário.");
     }
     
-    window.showConfirm(`Deseja verificar o status dos ${botoesSincronizar.length} tickets visíveis?`, async () => {
+    window.showConfirm(`Deseja verificar o status dos ${filtradosPainel.length} tickets visíveis no painel?`, async () => {
         window.showToast("Iniciando varredura em massa...");
-        for (let btn of botoesSincronizar) {
-            const divCard = btn.closest('.painel-item');
-            const ticket = divCard.dataset.ticket;
-            if (ticket) {
-                await window.sincronizarStatusIndividual(ticket, btn);
+        
+        for (let a of filtradosPainel) {
+            if (a.ticket) {
+                try {
+                    await fetch(EDGE_URL, {
+                        method: 'POST',
+                        headers: getHeaders(),
+                        body: JSON.stringify({ acao: 'sincronizar_status', ticket: a.ticket })
+                    });
+                } catch(e) {}
             }
         }
+        
         window.showToast("✅ Varredura completa!");
         await carregarDadosDoBanco(); 
     });
@@ -1591,35 +1636,6 @@ window.atualizarFiltrosPrestador = function(){
             <input type="checkbox" value="${p}" class="cb-prestador" style="width: auto; margin: 0; padding: 0;"> ${p}
         </label>`;
     });
-};
-
-window.sincronizarStatusIndividual = async function(ticket, btn) {
-    const originalText = btn.innerHTML;
-    btn.innerHTML = `<span class="icone-girando">🔄</span>`;
-    btn.disabled = true;
-    
-    try {
-        const response = await fetch(EDGE_URL, {
-            method: 'POST',
-            headers: getHeaders(),
-            body: JSON.stringify({ 
-                acao: 'sincronizar_status', 
-                ticket: ticket 
-            })
-        });
-        const result = await response.json();
-        if (response.ok) {
-            window.showToast(`✅ Ticket ${ticket} atualizado para: ${result.status}`);
-            await carregarDadosDoBanco(); 
-        } else {
-            window.showMessage("❌ Erro ao sincronizar: " + result.error);
-        }
-    } catch (err) {
-        window.showMessage("❌ Erro de conexão.");
-    } finally {
-        btn.innerHTML = originalText;
-        btn.disabled = false;
-    }
 };
 
 window.renderDashboard = function() {
