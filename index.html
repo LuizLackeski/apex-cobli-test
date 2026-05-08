@@ -917,7 +917,6 @@ window.renderDashboard = function() {
         },
         plugins: [ChartDataLabels]
     });
-    };
 
     // ==========================================
     // LISTA 2: Tipos de Serviços/Manutenção
@@ -958,54 +957,6 @@ window.renderDashboard = function() {
             plugins: { 
                 legend: { display: false }, 
                 datalabels: { color: 'white', font: {weight: 'bold', size: 12} } 
-            }, 
-            scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } 
-        },
-        plugins: [ChartDataLabels]
-    });
-};
-
-    // ==========================================
-    // LISTA 2: Tipos de Serviços/Manutenção
-    // ==========================================
-    // Ordena do que tem mais saída para o que tem menos
-    let servicosOrdenados = Object.entries(distServ).sort((a,b) => b[1] - a[1]);
-    let listaHtml = servicosOrdenados.map(s => {
-        let qtd = s[1];
-        let percent = totalServicosGeral > 0 ? Math.round((qtd / totalServicosGeral) * 100) : 0;
-        
-        return `
-        <div style="display: flex; justify-content: space-between; align-items: center; background: #f8fafc; padding: 12px; border-radius: 6px; border: 1px solid #e2e8f0;">
-            <div style="font-size: 0.8rem; font-weight: 600; color: var(--cobli-dark); flex: 1; padding-right: 10px;">${s[0]}</div>
-            <div style="font-size: 0.9rem; font-weight: bold; color: var(--primary); background: #e0e6ff; padding: 4px 10px; border-radius: 6px; border: 1px solid #c2d1ff; white-space: nowrap;">
-                ${qtd} <span style="color: #64748b; font-weight: 600; font-size: 0.75rem;">(${percent}%)</span>
-            </div>
-        </div>`;
-    }).join('');
-    
-    if (!listaHtml) listaHtml = `<div style="font-size:0.85rem; color:#64748b; padding: 10px;">Nenhum serviço computado ainda.</div>`;
-    document.getElementById('lista-dashboard-servicos').innerHTML = listaHtml;
-
-    // ==========================================
-    // GRÁFICO 3: Localidades (Barras Verdes Top 10)
-    // ==========================================
-    let locaisOrdenados = Object.entries(distLocais).sort((a,b) => b[1] - a[1]).slice(0, 10); 
-    
-    // (Atenção: Garanta que você declarou "let chartLocais = null;" no topo do seu código junto com myChart!)
-    const ctxLocais = document.getElementById('chartLocais').getContext('2d');
-    if(window.chartLocais) window.chartLocais.destroy();
-    window.chartLocais = new Chart(ctxLocais, {
-        type: 'bar',
-        data: { 
-            labels: locaisOrdenados.map(l => l[0]), 
-            datasets: [{ label: 'Atendimentos', data: locaisOrdenados.map(l => l[1]), backgroundColor: 'var(--cobli-green)', borderRadius: 4 }] 
-        },
-        options: { 
-            responsive: true, 
-            maintainAspectRatio: false, 
-            plugins: { 
-                legend: { display: false }, 
-                datalabels: { color: 'white', font: {weight: 'bold'} } 
             }, 
             scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } 
         },
