@@ -895,6 +895,60 @@ async function verificarSequenciaEFOP() {
 }
 
 function parseDateToObj(dateStr) { const [d, m, y] = dateStr.split('/'); return new Date(y, m - 1, d); }
+window.getOcupacaoSlot = function(prestador, data, hora) { 
+    if (!agendamentos || agendamentos.length === 0) return 0;
+    return agendamentos.filter(a => {
+        const mesmoPrestador = (a.prestador === prestador.nome);
+        const mesmaData = (a.data === data || a.rawdate === data);
+        let contemHora = false;
+        if (Array.isArray(a.slots)) {
+            contemHora = a.slots.includes(hora);
+        } else if (typeof a.slots === 'string') {
+            contemHora = a.slots.split(', ').includes(hora);
+        }
+        return mesmoPrestador && mesmaData && contemHora;
+    }).length; 
+};
+
+window.getBlockedHours = function(prestador, data) {
+    let blocked = new Set();
+    let cap = parseInt(prestador.qtdtecnicos) || 1;
+    agendamentos.filter(a => a.prestador === prestador.nome && (a.data === data || a.rawdate === data)).forEach(a => {
+        let slotsArray = Array.isArray(a.slots) ? a.slots : (typeof a.slots === 'string' ? a.slots.split(', ') : []);
+        slotsArray.forEach(s => {
+            if (window.getOcupacaoSlot(prestador, data, s) >= cap) {
+                let h = parseInt(s.split(':')[0]);
+                blocked.add(h);     
+                blocked.add(h - 1); 
+                blocked.add(h + 1); 
+            }
+        });
+    });
+    return blocked;
+};
+
+// --- FUNÇÃO AUXILIAR DOS BLOQUEIOS (CORRIGIDA E INCLUÍDA) ---
+window.getAusenciasDoDia = function(prestador, dStr) {
+    if (!prestador.agenda || !Array.isArray(prestador.agenda)) return { total: false, horasBloqueadas: new Set() };
+    
+    let ausencias = prestador.agenda.filter(a => a.isAbsence && a.data === dStr);
+    let total = false;
+    let horasBloqueadas = new Set();
+    let cap = parseInt(prestador.qtdtecnicos) || 1;
+
+    ausencias.forEach(a => {
+        let q = parseInt(a.qtd) || 1;
+        if (a.tipo === 'total' && q >= cap) {
+            total = true; 
+        } else if (a.tipo === 'parcial' && q >= cap) {
+            for (let h = parseInt(a.inicio); h < parseInt(a.fim); h++) {
+                horasBloqueadas.add(h);
+            }
+        }
+    });
+    
+    return { total, horasBloqueadas };
+};
 
 window.abrirDetalhesPrestador = function(index) { 
     let p = prestadores[index]; 
@@ -1013,7 +1067,9 @@ window.salvarPrestador = async function(btn) {
     btn.disabled = true; 
     try { 
         const inputs = document.querySelectorAll('#etapa-1 input'); 
-        for(let i of inputs) if(!i.value.trim()) { window.showMessage("Preencha todos os campos!"); return; } 
+        for(let i of inputs) {
+            if(!i.value.trim()) { window.showMessage("Preencha todos os campos!"); return; } 
+        }
         
         let agenda = [...document.querySelectorAll('#agenda-cadastro .cell.selecionado')].map(c => ({ dia: c.dataset.dia, hora: c.dataset.hora })); 
         
@@ -1216,7 +1272,19 @@ window.concluirAgendamentoFinal = async function(btn) {
     }
 };
 
-window.limparFormulario = function() { itensSelecionados = []; prestadorSelecionadoIndex = null; document.getElementById("lista-produtos").innerHTML = ""; document.getElementById("horasNecessarias").innerText = "0"; document.getElementById("agenda-agendamento").innerHTML = ""; document.getElementById("inputCep").value = ""; document.getElementById("ticket").value = ""; document.getElementById("clienteNome").value = ""; document.getElementById("solicitante").value = ""; document.getElementById("respAcompanhamento").value = ""; document.getElementById("telResponsavel").value = ""; };
+window.limparFormulario = function() { 
+    itensSelecionados = []; 
+    prestadorSelecionadoIndex = null; 
+    document.getElementById("lista-produtos").innerHTML = ""; 
+    document.getElementById("horasNecessarias").innerText = "0"; 
+    document.getElementById("agenda-agendamento").innerHTML = ""; 
+    document.getElementById("inputCep").value = ""; 
+    document.getElementById("ticket").value = ""; 
+    document.getElementById("clienteNome").value = ""; 
+    document.getElementById("solicitante").value = ""; 
+    document.getElementById("respAcompanhamento").value = ""; 
+    document.getElementById("telResponsavel").value = ""; 
+};
 
 window.trocarAba = function(id, btn){ 
     document.querySelectorAll('.aba').forEach(a => a.classList.remove('ativa')); 
@@ -1246,7 +1314,6 @@ window.podeAgendar = function(prestador, data, novosSlotsInt) {
         intervalos.push({ start: ints[0], end: ints[ints.length - 1], type: 'job' });
     }
 
-    // Injeta os bloqueios / ausências como se fossem agendamentos!
     if (prestador.agenda) {
         let ausenciasDia = prestador.agenda.filter(a => a.isAbsence && a.data === data);
         ausenciasDia.forEach(a => {
@@ -1268,7 +1335,6 @@ window.podeAgendar = function(prestador, data, novosSlotsInt) {
         let assigned = false;
         for (let t = 0; t < cap; t++) {
             let tech = techEnds[t];
-            // Se o último trabalho foi um Job e o novo é um Job, pede 1h de viagem. Se não, 0h.
             let gap = (tech.type === 'job' && job.type === 'job') ? 1 : 0;
             
             if (tech.end + gap < job.start) {
@@ -1293,10 +1359,15 @@ window.getNextDates = function(prestador) {
         let d = new Date(); d.setDate(today.getDate() + i); let dStr = d.toLocaleDateString(); let dNome = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sab"][d.getDay()]; 
         if (!agendaDays.includes(d.getDay())) continue;
         
+        let { total: diaBloqueado, horasBloqueadas } = window.getAusenciasDoDia(prestador, dStr);
+        if (diaBloqueado) continue;
+
         let slotsDoDia = agendaNormal.filter(a => a.dia == dNome); 
         let temLivre = false;
         for(let s of slotsDoDia) {
             let hInt = parseInt(s.hora.split(':')[0]);
+            if (horasBloqueadas.has(hInt)) continue;
+
             if (window.podeAgendar(prestador, dStr, [hInt])) {
                 temLivre = true; break;
             }
@@ -1306,30 +1377,95 @@ window.getNextDates = function(prestador) {
     return dates; 
 };
 
+window.updateButtons = function() { 
+    document.getElementById('btn-voltar').style.display = (etapa === 1) ? 'none' : 'inline-block'; 
+    document.getElementById('btn-proximo').style.display = (etapa === 1) ? 'inline-block' : 'none'; 
+    document.getElementById('btn-concluir').style.display = (etapa === 2) ? 'inline-block' : 'none'; 
+};
+
+window.renderizarListaPrestadoresSelecao = function(lista) { 
+    document.getElementById('lista-prestadores-selecao').innerHTML = lista.map(p => { 
+        const datesArr = p.nextDates.split(', '); 
+        const pills = datesArr.map(d => `<span class="pill">${d}</span>`).join(''); 
+        
+        return `
+        <div class="painel-item" 
+             onclick="window.selecionarPrestadorPorObjeto('${p.nome}')" 
+             style="cursor: pointer; flex-direction: column; align-items: flex-start; transition: all 0.2s ease; margin-bottom: 12px; border-left: 5px solid var(--primary); background-color: white;" 
+             onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 6px 15px rgba(0,0,0,0.1)'; this.style.backgroundColor='#ebfcf9'; this.style.borderLeftColor='var(--cobli-green)';" 
+             onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 1px 3px rgba(0,0,0,0.1)'; this.style.backgroundColor='white'; this.style.borderLeftColor='var(--primary)';">
+            
+            <div style="width: 100%; display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <div style="font-size: 1.05rem; font-weight: bold; color: var(--primary);">👷 ${p.nome}</div>
+                <div style="font-size: 0.75rem; color: #64748b; font-weight: 700; background: #f1f5f9; padding: 4px 8px; border-radius: 4px; border: 1px solid #e2e8f0;">
+                    📍 ${p.cidade}/${p.uf}
+                </div>
+            </div>
+            <div style="font-size: 0.85rem; color: #334155; margin-bottom: 10px;">
+                📏 <strong>Distância do atendimento:</strong> ${p.distanciaFinal} km
+            </div>
+            <div style="width: 100%; border-top: 1px dashed #e2e8f0; padding-top: 10px;">
+                <div style="font-size: 0.7rem; color: #64748b; font-weight: 700; text-transform: uppercase; margin-bottom: 6px;">🗓️ Datas Disponíveis</div>
+                <div class="date-pills" style="margin-top: 0;">${pills}</div>
+            </div>
+        </div>`; 
+    }).join(''); 
+};
+
+window.selecionarPrestadorPorObjeto = function(nome) { 
+    prestadorSelecionadoIndex = prestadores.findIndex(p => p.nome === nome); 
+    window.proximoPasso(3); 
+};
+
 window.proximoPasso = async function(n) { 
     if(n === 2) { 
         if(prestadores.length === 0) return window.showMessage("Cadastre um prestador!"); 
-        const rua = document.getElementById('inputRua').value; const num = document.getElementById('inputNumero').value; const cidade = document.getElementById('inputCidade').value; 
+        const rua = document.getElementById('inputRua').value; 
+        const num = document.getElementById('inputNumero').value; 
+        const cidade = document.getElementById('inputCidade').value; 
         if(!rua || !num || !cidade) return window.showMessage("Preencha o endereço completo!"); 
         
-        const btn = document.getElementById('btnBuscar'); btn.disabled = true; btn.innerText = "Calculando..."; 
+        const btn = document.getElementById('btnBuscar'); 
+        btn.disabled = true; 
+        btn.innerText = "Calculando..."; 
         const enderecoBusca = `${rua}, ${num} - ${cidade} - ${document.getElementById('inputCep').value}`; 
+        
         let prestadoresFiltrados = []; 
         for(let p of prestadores) { 
             if (!p.endereco) continue; 
-            const dist = await consultarDistancia(enderecoBusca, p.endereco); let available = window.getNextDates(p); 
+            const dist = await consultarDistancia(enderecoBusca, p.endereco); 
+            let available = window.getNextDates(p); 
             if(dist !== null && dist <= parseFloat(p.range) && available.length > 0) { 
-                p.distanciaFinal = dist.toFixed(1); p.nextDates = available.join(', '); prestadoresFiltrados.push(p); 
+                p.distanciaFinal = dist.toFixed(1); 
+                p.nextDates = available.join(', '); 
+                prestadoresFiltrados.push(p); 
             } 
         } 
-        btn.disabled = false; btn.innerText = "Buscar Prestadores"; 
-        if(prestadoresFiltrados.length === 0) { window.showMessage("Nenhum prestador encontrado no raio de atendimento."); return; } 
+        
+        btn.disabled = false; 
+        btn.innerText = "Buscar Prestadores"; 
+        
+        if(prestadoresFiltrados.length === 0) { 
+            window.showMessage("Nenhum prestador encontrado no raio de atendimento."); 
+            return; 
+        } 
         
         prestadoresFiltrados.sort((a, b) => parseFloat(a.distanciaFinal) - parseFloat(b.distanciaFinal));
         window.renderizarListaPrestadoresSelecao(prestadoresFiltrados); 
     } 
-    if(n === 3 && prestadorSelecionadoIndex === null) return window.showMessage("Selecione um prestador!"); document.querySelectorAll('#consulta > div').forEach(div => div.style.display = 'none'); document.getElementById('step-' + n).style.display = 'block'; 
-    if (n === 3) { let p = prestadores[prestadorSelecionadoIndex]; document.getElementById("header-prestador-info").innerText = `Prestador: ${p.nome} | Distância: ${p.distanciaFinal} km`; window.rdaAgendamento(); } 
+    
+    if(n === 3 && prestadorSelecionadoIndex === null) {
+        return window.showMessage("Selecione um prestador!"); 
+    }
+    
+    document.querySelectorAll('#consulta > div').forEach(div => div.style.display = 'none'); 
+    document.getElementById('step-' + n).style.display = 'block'; 
+    
+    if (n === 3) { 
+        let p = prestadores[prestadorSelecionadoIndex]; 
+        document.getElementById("header-prestador-info").innerText = `Prestador: ${p.nome} | Distância: ${p.distanciaFinal} km`; 
+        window.rdaAgendamento(); 
+    } 
 };
 
 window.rdaAgendamento = function() { 
@@ -1354,10 +1490,13 @@ window.rdaAgendamento = function() {
         let dStr = data.toLocaleDateString(); 
         let dNome = diasSemana[data.getDay()]; 
         
+        let { total: diaBloqueado, horasBloqueadas } = window.getAusenciasDoDia(p, dStr);
+        if (diaBloqueado) continue;
+
         let allSlots = (p.agenda && Array.isArray(p.agenda)) ? p.agenda.filter(a => !a.isAbsence && a.dia == dNome) : []; 
         if (allSlots.length === 0) continue;
 
-        let horasAgenda = allSlots.map(item => parseInt(item.hora.split(':')[0]));
+        let horasAgenda = allSlots.map(item => parseInt(item.hora.split(':')[0])).filter(h => !horasBloqueadas.has(h));
         let validStarts = []; 
         
         for (let h of horasAgenda) {
@@ -1397,7 +1536,7 @@ window.rdaAgendamento = function() {
                 div.dataset.hora = item.hora; 
                 div.dataset.date = dStr; 
                 
-                if (!enabledCells.has(hInt)) {
+                if (!enabledCells.has(hInt) || horasBloqueadas.has(hInt)) {
                     div.style.opacity = "0.3";
                     div.style.cursor = "not-allowed";
                     div.onclick = () => window.showToast(`Horário indisponível para ${horasNecessarias}h seguidas ou excedeu a capacidade.`);
@@ -1433,7 +1572,31 @@ window.rdaAgendamento = function() {
     }
 };
 
-// --- FUNÇÕES DE INTERFACE DO BLOQUEIO DE AGENDA ---
+window.validarEAvancar = function() { 
+    if (itensSelecionados.length === 0) return window.showMessage("Adicione pelo menos um serviço!"); 
+    let totalMinutos = itensSelecionados.reduce((a, b) => a + (b.tempo * b.qtd), 0); 
+    let horas = Math.ceil(totalMinutos / 60); 
+    let sel = document.querySelectorAll("#agenda-agendamento .cell.selecionado"); 
+    if (sel.length === 0) return window.showMessage("Selecione horário!"); 
+    if (sel.length !== horas && horas > 0) return window.showMessage("Selecione exatamente " + horas + " hora(s)!"); 
+    
+    const emailLogado = localStorage.getItem('userEmail');
+    const campoSolicitante = document.getElementById('solicitante');
+        if (emailLogado && campoSolicitante) {
+        campoSolicitante.value = extrairNomeDoEmail(emailLogado);
+        campoSolicitante.readOnly = true; 
+        campoSolicitante.style.background = "#f1f5f9"; 
+        campoSolicitante.style.cursor = "not-allowed";
+    }
+    
+    document.querySelectorAll('#consulta > div').forEach(div => div.style.display = 'none'); 
+    document.getElementById('step-4').style.display = 'block'; 
+};
+
+window.limparAgendaCadastro = function() {
+    document.querySelectorAll('#agenda-cadastro .cell.selecionado').forEach(c => c.classList.remove('selecionado'));
+};
+
 window.toggleTipoBloqueio = function() {
     let tipo = document.getElementById('tipoBloqueio').value;
     document.getElementById('boxHoraBloqueio').style.display = tipo === 'parcial' ? 'flex' : 'none';
@@ -1504,23 +1667,21 @@ window.abrirCadastro = function(index = -1){
         document.getElementById("fieldIdField").value = p.field_id || ""; 
         
         if(p.agenda) { 
-            // 1. Carrega os horários normais na grade
             p.agenda.forEach(item => { 
-                if (item.isAbsence) return; // Pula as ausências para não pintar a grade
+                if (item.isAbsence) return; 
                 let cells = document.querySelectorAll("#agenda-cadastro .cell"); 
                 cells.forEach(c => { if(c.dataset.dia == item.dia && c.dataset.hora == item.hora) c.classList.add("selecionado"); }); 
             }); 
             
-            // 2. Extrai e limpa as ausências passadas automaticamente!
             let hoje = new Date();
             hoje.setHours(0,0,0,0);
             
             datasBloqueadasTemp = p.agenda.filter(a => a.isAbsence).map(a => ({
                 data: a.data, tipo: a.tipo, inicio: a.inicio, fim: a.fim, qtd: a.qtd
             })).filter(b => {
-                let [d, m, y] = b.data.split('/');
-                let dataB = new Date(y, m - 1, d);
-                return dataB >= hoje; // Só mantém as datas que ainda não passaram
+                let parts = b.data.split('/');
+                let dataB = new Date(parts[2], parts[1] - 1, parts[0]);
+                return dataB >= hoje; 
             });
             window.renderizarDatasBloqueadas();
         } 
@@ -1536,7 +1697,11 @@ window.abrirCadastro = function(index = -1){
     window.updateButtons(); 
 };
 
-window.cancelarCadastro = function() { document.getElementById("cadastro-flow").style.display="none"; document.getElementById("lista-prestadores-view").style.display="block"; editingIndex = -1; };
+window.cancelarCadastro = function() { 
+    document.getElementById("cadastro-flow").style.display="none"; 
+    document.getElementById("lista-prestadores-view").style.display="block"; 
+    editingIndex = -1; 
+};
 
 window.criarGridCadastro = function(id){ 
     let grid = document.getElementById(id); 
@@ -1597,7 +1762,20 @@ window.criarGridCadastro = function(id){
     }); 
 };
 
-window.mudarEtapa = function(dir){ if (dir > 0 && etapa === 1) { const inputs = document.querySelectorAll("#etapa-1 input"); for(let i of inputs) if(!i.value.trim()) return window.showMessage("Preencha todos os campos!"); } document.getElementById("etapa-"+etapa).style.display="none"; etapa += dir; if(etapa < 1) etapa = 1; if(etapa > 2) etapa = 2; document.getElementById("etapa-"+etapa).style.display="block"; window.updateButtons(); };
+window.mudarEtapa = function(dir) { 
+    if (dir > 0 && etapa === 1) { 
+        const inputs = document.querySelectorAll("#etapa-1 input"); 
+        for(let i of inputs) {
+            if(!i.value.trim()) return window.showMessage("Preencha todos os campos!"); 
+        }
+    } 
+    document.getElementById("etapa-"+etapa).style.display="none"; 
+    etapa += dir; 
+    if(etapa < 1) etapa = 1; 
+    if(etapa > 2) etapa = 2; 
+    document.getElementById("etapa-"+etapa).style.display="block"; 
+    window.updateButtons(); 
+};
 
 window.renderizarListaPrestadores = function(){ 
     document.getElementById("btn-novo-container").innerHTML = isAuthorized ? `<button onclick="window.abrirCadastro()" style="margin-bottom: 20px;">+ Novo Prestador</button>` : '';
