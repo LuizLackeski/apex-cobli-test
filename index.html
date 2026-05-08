@@ -1105,9 +1105,64 @@ window.trocarAba = function(id, btn){
     if(id === 'dashboard') window.renderDashboard(); 
 };
 
-window.getNextDates = function(prestador) { let dates = []; let today = new Date(); const daysMap = {"Dom":0, "Seg":1, "Ter":2, "Qua":3, "Qui":4, "Sex":5, "Sab":6}; let agendaDays = (prestador.agenda && Array.isArray(prestador.agenda)) ? [...new Set(prestador.agenda.map(a => a.dia))].map(d => daysMap[d]) : []; let qtdLimit = parseInt(prestador.qtdtecnicos) || 1; 
+// --- NOVO MOTOR MATEMÁTICO DE AGENDA ---
+window.podeAgendar = function(prestador, data, novosSlotsInt) {
+    let cap = parseInt(prestador.qtdtecnicos) || 1;
+    let agendamentosDoDia = agendamentos.filter(a => a.prestador === prestador.nome && (a.data === data || a.rawdate === data));
+
+    let intervalos = [];
+    // Pega todos os agendamentos que já existem no dia
+    agendamentosDoDia.forEach(a => {
+        let slotsArray = Array.isArray(a.slots) ? a.slots : (typeof a.slots === 'string' ? a.slots.split(', ') : []);
+        if (slotsArray.length > 0) {
+            let ints = slotsArray.map(s => parseInt(s.split(':')[0])).sort((x,y) => x-y);
+            intervalos.push({ start: ints[0], end: ints[ints.length - 1] });
+        }
+    });
+
+    // Adiciona o novo que estamos testando
+    if (novosSlotsInt && novosSlotsInt.length > 0) {
+        let ints = [...novosSlotsInt].sort((x,y) => x-y);
+        intervalos.push({ start: ints[0], end: ints[ints.length - 1] });
+    }
+
+    // Ordena os serviços por hora de início
+    intervalos.sort((a, b) => a.start - b.start);
+
+    // Simula a alocação dos técnicos para ver se a conta fecha
+    let techEnds = Array(cap).fill(-999);
+    for (let i = 0; i < intervalos.length; i++) {
+        let job = intervalos[i];
+        let assigned = false;
+        for (let t = 0; t < cap; t++) {
+            // Regra da Viagem: O fim do último serviço + 1 hora deve ser menor que o início do novo
+            if (techEnds[t] + 1 < job.start) {
+                techEnds[t] = job.end;
+                assigned = true;
+                break;
+            }
+        }
+        if (!assigned) return false; // Se nenhum técnico conseguir fazer, bloqueia!
+    }
+    return true; // Conta fechou, horário liberado!
+};
+
+window.getNextDates = function(prestador) { 
+    let dates = []; let today = new Date(); const daysMap = {"Dom":0, "Seg":1, "Ter":2, "Qua":3, "Qui":4, "Sex":5, "Sab":6}; 
+    let agendaDays = (prestador.agenda && Array.isArray(prestador.agenda)) ? [...new Set(prestador.agenda.map(a => a.dia))].map(d => daysMap[d]) : []; 
     for (let i = 2; i < 16; i++) { 
-        let d = new Date(); d.setDate(today.getDate() + i); let dStr = d.toLocaleDateString(); let dNome = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sab"][d.getDay()]; let blocked = window.getBlockedHours(prestador, dStr); let slotsDoDia = (prestador.agenda && Array.isArray(prestador.agenda)) ? prestador.agenda.filter(a => a.dia == dNome) : []; let temLivre = slotsDoDia.some(s => (s.hora && !blocked.has(parseInt(s.hora.split(':')[0])) && window.getOcupacaoSlot(prestador, dStr, s.hora) < qtdLimit)); if (agendaDays.includes(d.getDay()) && temLivre) dates.push(dStr.slice(0,5)); 
+        let d = new Date(); d.setDate(today.getDate() + i); let dStr = d.toLocaleDateString(); let dNome = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sab"][d.getDay()]; 
+        if (!agendaDays.includes(d.getDay())) continue;
+        let slotsDoDia = (prestador.agenda && Array.isArray(prestador.agenda)) ? prestador.agenda.filter(a => a.dia == dNome) : []; 
+        let temLivre = false;
+        for(let s of slotsDoDia) {
+            let hInt = parseInt(s.hora.split(':')[0]);
+            // Usa o novo motor matemático para saber se tem vaga pra um serviço rápido de 1h
+            if (window.podeAgendar(prestador, dStr, [hInt])) {
+                temLivre = true; break;
+            }
+        }
+        if (temLivre) dates.push(dStr.slice(0,5)); 
     } 
     return dates; 
 };
@@ -1132,7 +1187,6 @@ window.proximoPasso = async function(n) {
         if(prestadoresFiltrados.length === 0) { window.showMessage("Nenhum prestador encontrado no raio de atendimento."); return; } 
         
         prestadoresFiltrados.sort((a, b) => parseFloat(a.distanciaFinal) - parseFloat(b.distanciaFinal));
-        
         window.renderizarListaPrestadoresSelecao(prestadoresFiltrados); 
     } 
     if(n === 3 && prestadorSelecionadoIndex === null) return window.showMessage("Selecione um prestador!"); document.querySelectorAll('#consulta > div').forEach(div => div.style.display = 'none'); document.getElementById('step-' + n).style.display = 'block'; 
@@ -1145,13 +1199,14 @@ window.rdaAgendamento = function() {
     container.innerHTML = ""; 
     let hoje = new Date(); 
     const diasSemana = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sab"]; 
-    let cap = parseInt(p.qtdtecnicos) || 1; 
+    
     let totalMinutos = itensSelecionados.reduce((a, b) => a + (b.tempo * b.qtd), 0);
     let horasNecessarias = Math.ceil(totalMinutos / 60);
     if (itensSelecionados.length === 0) {
         container.innerHTML = `<div style="font-weight:600; color:var(--primary);">Inclua o serviço para verificar a agenda.</div>`;
         return;
     }
+    
     let diasEncontrados = 0;
     
     for(let i=2; i<16; i++){ 
@@ -1159,26 +1214,36 @@ window.rdaAgendamento = function() {
         data.setDate(hoje.getDate() + i); 
         let dStr = data.toLocaleDateString(); 
         let dNome = diasSemana[data.getDay()]; 
-        let blocked = window.getBlockedHours(p, dStr); 
+        
         let allSlots = (p.agenda && Array.isArray(p.agenda)) ? p.agenda.filter(a => a.dia == dNome) : []; 
-        let hoursAvailable = allSlots
-            .filter(item => window.getOcupacaoSlot(p, dStr, item.hora) < cap && !blocked.has(parseInt(item.hora.split(':')[0])))
-            .map(item => parseInt(item.hora.split(':')[0]));
-        let temJanelaValida = false;
-        for (let h of hoursAvailable) {
-            let seq = true;
+        if (allSlots.length === 0) continue;
+
+        let horasAgenda = allSlots.map(item => parseInt(item.hora.split(':')[0]));
+        let validStarts = []; // Lista apenas as horas que aguentam o serviço inteiro
+        
+        for (let h of horasAgenda) {
+            let seqOk = true;
+            let testSlots = [];
             for (let k = 0; k < horasNecessarias; k++) {
-                if (!hoursAvailable.includes(h + k)) { seq = false; break; }
+                if (!horasAgenda.includes(h + k)) { seqOk = false; break; }
+                testSlots.push(h + k);
             }
-            if (seq) { temJanelaValida = true; break; }
+            // Se tem as horas seguidas na agenda, roda o simulador matemático!
+            if (seqOk) {
+                if (window.podeAgendar(p, dStr, testSlots)) {
+                    validStarts.push(h);
+                }
+            }
         }
-        if(temJanelaValida){ 
+
+        if(validStarts.length > 0){ 
             diasEncontrados++;
             let card = document.createElement("div"); 
             card.className = "agenda-day-card"; 
             card.innerHTML = `<div class="agenda-day-title">${dStr} (${dNome})</div>`; 
             let wrapper = document.createElement("div"); 
             wrapper.className = "slots-wrapper"; 
+            
             allSlots.forEach(item => { 
                 let hInt = parseInt(item.hora.split(':')[0]);
                 let div = document.createElement("div"); 
@@ -1186,40 +1251,21 @@ window.rdaAgendamento = function() {
                 div.innerText = item.hora; 
                 div.dataset.hora = item.hora; 
                 div.dataset.date = dStr; 
-                if (!hoursAvailable.includes(hInt)) {
-                    div.style.opacity = "0.2";
+                
+                if (!validStarts.includes(hInt)) {
+                    div.style.opacity = "0.3";
                     div.style.cursor = "not-allowed";
-                }
-                div.onclick = function() { 
-                    if (!hoursAvailable.includes(hInt)) return;
-                    let selecionados = [];
-                    let cabeFrente = true;
-                    for(let f=0; f < horasNecessarias; f++) {
-                        if(!hoursAvailable.includes(hInt + f)) { cabeFrente = false; break; }
-                    }
-                    let horaInicioReal = hInt;
-                    if(!cabeFrente) {
-                        for(let b = horasNecessarias - 1; b >= 0; b--) {
-                            let testeInicio = hInt - b;
-                            let seqOk = true;
-                            for(let k=0; k < horasNecessarias; k++) {
-                                if(!hoursAvailable.includes(testeInicio + k)) { seqOk = false; break; }
-                            }
-                            if(seqOk) { horaInicioReal = testeInicio; break; }
+                    div.onclick = () => window.showToast(`Horário indisponível para ${horasNecessarias}h seguidas ou excedeu a capacidade.`);
+                } else {
+                    div.onclick = function() { 
+                        document.querySelectorAll("#agenda-agendamento .cell").forEach(c => c.classList.remove('selecionado'));
+                        for(let m=0; m < horasNecessarias; m++) {
+                            let targetH = `${hInt + m}:00`;
+                            let targetCell = Array.from(wrapper.children).find(c => c.dataset.hora === targetH);
+                            if(targetCell) targetCell.classList.add("selecionado");
                         }
-                    }
-                    let checkFinal = true;
-                    for(let m=0; m<horasNecessarias; m++) {
-                        if(!hoursAvailable.includes(horaInicioReal + m)) checkFinal = false;
-                    }
-                    if(!checkFinal) return window.showMessage("Este horário não possui janela de " + horasNecessarias + "h livre.");
-                    document.querySelectorAll("#agenda-agendamento .cell").forEach(c => c.classList.remove('selecionado'));
-                    for(let m=0; m < horasNecessarias; m++) {
-                        let targetH = `${horaInicioReal + m}:00`;
-                        let targetCell = Array.from(wrapper.children).find(c => c.dataset.hora === targetH);
-                        if(targetCell) targetCell.classList.add("selecionado");
-                    }
-                }; 
+                    }; 
+                }
                 wrapper.appendChild(div); 
             }); 
             card.appendChild(wrapper); 
@@ -1618,7 +1664,8 @@ window.renderDashboard = function() {
         type: 'bar',
         data: { 
             labels: Object.keys(distPrest), 
-            datasets: [{ label: 'Agendamentos', data: Object.values(distPrest), backgroundColor: 'var(--primary)', borderRadius: 4 }] 
+            // CORREÇÃO: Azul hexadecimal direto aqui
+            datasets: [{ label: 'Agendamentos', data: Object.values(distPrest), backgroundColor: '#001BB8', borderRadius: 4 }] 
         },
         options: { 
             responsive: true, 
@@ -1637,6 +1684,47 @@ window.renderDashboard = function() {
         },
         plugins: [ChartDataLabels]
     });
+
+    let servicosOrdenados = Object.entries(distServ).sort((a,b) => b[1] - a[1]);
+    let listaHtml = servicosOrdenados.map(s => {
+        let qtd = s[1];
+        let percent = totalServicosGeral > 0 ? Math.round((qtd / totalServicosGeral) * 100) : 0;
+        
+        return `
+        <div style="display: flex; justify-content: space-between; align-items: center; background: #f8fafc; padding: 12px; border-radius: 6px; border: 1px solid #e2e8f0;">
+            <div style="font-size: 0.8rem; font-weight: 600; color: var(--cobli-dark); flex: 1; padding-right: 10px; line-height: 1.4;">${s[0]}</div>
+            <div style="font-size: 0.95rem; font-weight: bold; color: var(--primary); background: #e0e6ff; padding: 6px 12px; border-radius: 6px; border: 1px solid #c2d1ff; white-space: nowrap;">
+                ${qtd} <span style="color: #64748b; font-weight: 600; font-size: 0.75rem; margin-left: 4px;">(${percent}%)</span>
+            </div>
+        </div>`;
+    }).join('');
+    
+    if (!listaHtml) listaHtml = `<div style="font-size:0.85rem; color:#64748b; padding: 10px;">Nenhum serviço computado ainda.</div>`;
+    document.getElementById('lista-dashboard-servicos').innerHTML = listaHtml;
+
+    let locaisOrdenados = Object.entries(distLocais).sort((a,b) => b[1] - a[1]).slice(0, 10); 
+    
+    const ctxLocais = document.getElementById('chartLocais').getContext('2d');
+    if(window.chartLocais) window.chartLocais.destroy();
+    window.chartLocais = new Chart(ctxLocais, {
+        type: 'bar',
+        data: { 
+            labels: locaisOrdenados.map(l => l[0]), 
+            // CORREÇÃO: Verde hexadecimal direto aqui
+            datasets: [{ label: 'Atendimentos', data: locaisOrdenados.map(l => l[1]), backgroundColor: '#00AE97', borderRadius: 4 }] 
+        },
+        options: { 
+            responsive: true, 
+            maintainAspectRatio: false, 
+            plugins: { 
+                legend: { display: false }, 
+                datalabels: { color: 'white', font: {weight: 'bold', size: 12} } 
+            }, 
+            scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } 
+        },
+        plugins: [ChartDataLabels]
+    });
+};
 
     let servicosOrdenados = Object.entries(distServ).sort((a,b) => b[1] - a[1]);
     let listaHtml = servicosOrdenados.map(s => {
