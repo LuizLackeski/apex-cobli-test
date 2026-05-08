@@ -60,7 +60,11 @@
         .card-actions { display: flex; gap: 8px; flex-wrap: wrap; }
         
         h2 { font-size: 1.1rem; margin-top: 0; color: #1e293b; border-bottom: 1px solid #f1f5f9; padding-bottom: 10px; }
-        input, select { width: 100%; padding: 10px; margin: 8px 0; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; }
+        
+        /* ASTERISCO DE CAMPO OBRIGATÓRIO */
+        label.req::after { content: " *"; color: var(--cobli-red); font-weight: bold; }
+        
+        input, select { width: 100%; padding: 10px; margin: 8px 0; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; transition: 0.3s; }
         label { font-size: 0.75rem; color: #64748b; font-weight: 600; text-transform: uppercase; margin-bottom: 2px; }
         button { cursor: pointer; padding: 8px 16px; background: var(--primary); color: white; border: none; border-radius: 5px; font-weight: 500; }
         .btn-cancelar { background: var(--cobli-red) !important; }
@@ -106,7 +110,6 @@
         .campo-filtro input, .campo-filtro details { margin: 0 !important; height: 38px !important; box-sizing: border-box !important; }
         .grid-filtros .botoes-container { display: flex; gap: 8px; height: 38px; }
         
-        /* ANIMAÇÃO DE GIRO PARA O BOTÃO REFRESH */
         @keyframes girar {
             from { transform: rotate(0deg); }
             to { transform: rotate(360deg); }
@@ -181,36 +184,36 @@
         <div id="step-1" class="card">
             <h2>Localização do Atendimento</h2>
             
-           <label>CEP</label>
+           <label class="req">CEP</label>
                 <div style="display: flex; gap: 10px;">
-                <input type="text" id="inputCep" placeholder="00000-000" oninput="window.maskCEP(this)">
+                <input type="text" id="inputCep" placeholder="00000-000" oninput="window.maskCEP(this)" required>
                 <button onclick="window.buscarEnderecoPorCep()" id="btnValidarCep" style="background:var(--cobli-green); white-space:nowrap;">Validar CEP</button>
             </div>
 
             <div id="camposEndereco" style="display: none; margin-top: 15px; border-top: 1px solid #eee; padding-top: 15px;">
                 <div style="display: flex; gap: 10px;">
                     <div style="flex: 3;">
-                        <label>Endereço (Rua/Av)</label>
-                        <input type="text" id="inputRua" placeholder="Ex: Av. Paulista">
+                        <label class="req">Endereço (Rua/Av)</label>
+                        <input type="text" id="inputRua" placeholder="Ex: Av. Paulista" required>
                     </div>
                     <div style="flex: 1;">
-                        <label>Nº</label>
-                        <input type="text" id="inputNumero" placeholder="123">
+                        <label class="req">Nº</label>
+                        <input type="text" id="inputNumero" placeholder="123" required>
                     </div>
                 </div>
 
                 <div style="display: flex; gap: 10px;">
                     <div style="flex: 2;">
-                        <label>Bairro</label>
-                        <input type="text" id="inputBairro" placeholder="Ex: Centro">
+                        <label class="req">Bairro</label>
+                        <input type="text" id="inputBairro" placeholder="Ex: Centro" required>
                     </div>
                     <div style="flex: 2;">
-                        <label>Cidade</label>
-                        <input type="text" id="inputCidade" placeholder="Ex: São Paulo">
+                        <label class="req">Cidade</label>
+                        <input type="text" id="inputCidade" placeholder="Ex: São Paulo" required>
                     </div>
                     <div style="flex: 1;">
-                        <label>UF</label>
-                        <input type="text" id="inputUf" placeholder="SP" maxlength="2">
+                        <label class="req">UF</label>
+                        <input type="text" id="inputUf" placeholder="SP" maxlength="2" required>
                     </div>
                 </div>
 
@@ -272,16 +275,22 @@
         
         <div id="step-4" class="card" style="display:none;">
             <h2>Dados do Cliente</h2>
-            <label>Nº do Ticket</label><div style="display: flex; gap: 8px; margin-bottom: 12px;"><input id="ticket" placeholder="Ex: 123654789" required style="flex: 1;"><button type="button" id="btnChecarSequencia" onclick="verificarSequenciaEFOP()" 
-                style="background:var(--cobli-dark); color:white; padding:0 15px; border-radius:6px; font-size:12px; cursor:pointer; border:none; height: 42px;">Checar Sequência</button></div>
-            <label>Nome do Cliente</label><input id="clienteNome" required>
-            <label>CNPJ / CPF</label><input id="clienteCnpj" placeholder="00.000.000/0000-00" oninput="window.maskCPFCNPJ(this)" required>
-            <label>Responsável pela solicitação (APEX)</label><input id="solicitante" required>
-            <label>Responsável pelo acompanhamento (Local)</label><input id="respAcompanhamento" required>
-            <label>Telefone do responsável</label><input id="telResponsavel" placeholder="(00) 00000-0000" oninput="window.maskPhone(this)" maxlength="15" required>
-            <button onclick="window.proximoPasso(3)" style="background:gray;">Voltar</button>
-            <button id="btnConfirmar" onclick="window.revisarAgendamento(this)" style="background:var(--cobli-green);">Confirmar</button>
-            <button onclick="window.cancelarAgendamento()" class="btn-cancelar">Cancelar</button>
+            <label class="req">Nº do Ticket</label>
+            <div style="display: flex; gap: 8px; margin-bottom: 12px;">
+                <input id="ticket" placeholder="Ex: 123654789" required style="flex: 1;">
+                <button type="button" id="btnChecarSequencia" onclick="verificarSequenciaEFOP()" style="background:var(--cobli-dark); color:white; padding:0 15px; border-radius:6px; font-size:12px; cursor:pointer; border:none; height: 42px;">Checar Sequência</button>
+            </div>
+            <label class="req">Nome do Cliente</label><input id="clienteNome" required>
+            <label class="req">CNPJ / CPF</label><input id="clienteCnpj" placeholder="00.000.000/0000-00" oninput="window.maskCPFCNPJ(this)" required>
+            <label class="req">Responsável pela solicitação (APEX)</label><input id="solicitante" required>
+            <label class="req">Responsável pelo acompanhamento (Local)</label><input id="respAcompanhamento" required>
+            <label class="req">Telefone do responsável</label><input id="telResponsavel" placeholder="(00) 00000-0000" oninput="window.maskPhone(this)" maxlength="15" required>
+            
+            <div style="margin-top:15px;">
+                <button onclick="window.proximoPasso(3)" style="background:gray;">Voltar</button>
+                <button id="btnConfirmar" onclick="window.revisarAgendamento(this)" style="background:var(--cobli-green);">Confirmar</button>
+                <button onclick="window.cancelarAgendamento()" class="btn-cancelar">Cancelar</button>
+            </div>
         </div>
     </div>
 
@@ -295,50 +304,50 @@
             <div id="etapa-1">
                 <h3 style="margin-bottom: 20px; color: var(--primary);">Dados do Prestador</h3>
                 
-                <label>Nome / Empresa</label>
+                <label class="req">Nome / Empresa</label>
                 <input id="nomeEmpresa" required style="margin-bottom: 12px;">
                 
-                <label>Endereço Completo (Ex: R. Lourenço Marques, 297 - Vila Olímpia)</label>
+                <label class="req">Endereço Completo (Ex: R. Lourenço Marques, 297 - Vila Olímpia)</label>
                 <input id="endereco" required style="margin-bottom: 12px;">
                 
                 <div style="display: flex; gap: 10px; margin-bottom: 12px;">
                     <div style="flex: 2;">
-                        <label>Cidade</label>
+                        <label class="req">Cidade</label>
                         <input id="cidade" required>
                     </div>
                     <div style="flex: 1;">
-                        <label>UF</label>
+                        <label class="req">UF</label>
                         <input id="uf" required maxlength="2" placeholder="SP">
                     </div>
                     <div style="flex: 1.5;">
-                        <label>CEP</label>
+                        <label class="req">CEP</label>
                         <input id="cep" required oninput="window.maskCEP(this)" placeholder="00000-000">
                     </div>
                 </div>
 
                 <div style="display: flex; gap: 10px; margin-bottom: 12px;">
                     <div style="flex: 1;">
-                        <label>Responsável</label>
+                        <label class="req">Responsável</label>
                         <input id="responsavel" required>
                     </div>
                     <div style="flex: 1;">
-                        <label>Telefone</label>
+                        <label class="req">Telefone</label>
                         <input id="contatoResponsavel" required oninput="window.maskPhone(this)" placeholder="(00) 00000-0000">
                     </div>
                 </div>
 
                 <div style="display: flex; gap: 10px; margin-bottom: 15px;">
                     <div style="flex: 1;">
-                        <label>Qtd Técnicos</label>
+                        <label class="req">Qtd Técnicos</label>
                         <input id="qtdTecnicos" type="number" required>
                     </div>
                     <div style="flex: 1;">
-                        <label>Raio de Atuação (Km)</label>
+                        <label class="req">Raio de Atuação (Km)</label>
                         <input id="rangeAtendimento" type="number" required>
                     </div>
                     <div style="flex: 1.5;">
                         <label>ID Field Control</label>
-                        <input id="fieldIdField" placeholder="Informe o ID da Field">
+                        <input id="fieldIdField" placeholder="Opcional">
                     </div>
                 </div>
             </div>
@@ -351,8 +360,12 @@
                 <div style="background: #fff5f5; border: 1px solid #fecaca; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
                     <div style="display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap;">
                         <div style="flex: 1; min-width: 120px;">
-                            <label style="color: var(--cobli-red);">Data</label>
+                            <label style="color: var(--cobli-red);">Data Inicial</label>
                             <input type="date" id="dataBloqueio" style="border-color: #fca5a5; background: white;">
+                        </div>
+                        <div style="flex: 1; min-width: 120px;">
+                            <label style="color: var(--cobli-red);">Data Final (Opcional)</label>
+                            <input type="date" id="dataBloqueioFim" style="border-color: #fca5a5; background: white;">
                         </div>
                         <div style="flex: 1; min-width: 120px;">
                             <label style="color: var(--cobli-red);">Tipo</label>
@@ -405,7 +418,7 @@
                     </div>
                     <div id="lista-datas-bloqueadas" style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 15px;"></div>
                 </div>
-                </div>
+            </div>
             <div style="margin-top:20px; display: flex; gap: 8px; flex-wrap: wrap;">
                 <button id="btn-voltar" onclick="window.mudarEtapa(-1)">Voltar</button>
                 <button id="btn-proximo" onclick="window.mudarEtapa(1)">Próximo</button>
@@ -417,7 +430,6 @@
     </div>
 
     <div id="painel" class="aba">
-        
         <div style="display: flex; align-items: center; background: white; padding: 12px; border-radius: 8px; border: 1px solid #e5e7eb; margin-bottom: 10px; overflow-x: auto;">
             <div style="display: flex; flex: 1; justify-content: space-between; min-width: 650px;">
                 <div style="flex: 1; text-align: center; border-right: 1px solid #e5e7eb; padding: 0 10px;">
@@ -544,19 +556,14 @@
     let myChart = null; 
     let chartLocais = null;
 
-    // --- NOVA VARIÁVEL GLOBAL PARA O ARRASTE DOS HORÁRIOS ---
     let isDraggingAgenda = false;
     let dragActionAgenda = true; 
     window.addEventListener('mouseup', () => { isDraggingAgenda = false; });
 
-    // --- VARIÁVEL GLOBAL PARA BLOQUEIOS ---
     let datasBloqueadasTemp = [];
-
-    // --- VARIÁVEIS GLOBAIS DA PAGINAÇÃO ---
     window.agendaDiasDisponiveis = [];
     window.agendaPaginaAtual = 0;
 
-    // --- NOVA FUNÇÃO DE FORMATAR TEMPO ---
     function formatarTempo(minutos) {
         if (minutos === 0) return "0h";
         let h = Math.floor(minutos / 60);
@@ -568,11 +575,11 @@
 
 window.maskCPFCNPJ = function(i) {
     let v = i.value.replace(/\D/g, "");
-    if (v.length <= 11) { // CPF
+    if (v.length <= 11) {
         v = v.replace(/(\={3})(\d)/, "$1.$2");
         v = v.replace(/(\d{3})(\d)/, "$1.$2");
         v = v.replace(/(\d{3})(\d{1,2})$/, "$1-$2");
-    } else { // CNPJ
+    } else {
         v = v.replace(/^(\d{2})(\d)/, "$1.$2");
         v = v.replace(/^(\d{2})\.(\d{3})(\d)/, "$1.$2.$3");
         v = v.replace(/\.(\d{3})(\d)/, ".$1/$2");
@@ -639,6 +646,23 @@ window.updateSwitchColor = function(el) {
         t.style.display = "block"; 
         setTimeout(() => { t.style.display = "none"; }, 3000); 
     };
+
+    window.validarCampos = function(selector) {
+        let container = document.querySelector(selector);
+        let reqs = container.querySelectorAll('[required]');
+        let isValid = true;
+        reqs.forEach(el => {
+            if (!el.value.trim()) {
+                el.style.borderColor = 'var(--cobli-red)';
+                el.style.backgroundColor = '#fff5f5';
+                isValid = false;
+            } else {
+                el.style.borderColor = '#cbd5e1';
+                el.style.backgroundColor = 'white';
+            }
+        });
+        return isValid;
+    };
     
     function extrairNomeDoEmail(email) {
         if (!email) return "";
@@ -687,13 +711,6 @@ window.abrirOpcoesPrestador = function(i) {
                 headers: getHeaders(), 
                 body: JSON.stringify({ text: msg })
             });
-            
-            if (!res.ok) {
-                const erroSupabase = await res.text();
-                console.error("❌ A Edge Function do Slack recusou:", erroSupabase);
-            } else {
-                console.log("✅ Slack enviado com sucesso para a Edge!");
-            }
         } catch (e) { 
             console.error("❌ Erro de conexão ao tentar o Slack:", e); 
         }
@@ -730,7 +747,6 @@ window.buscarEnderecoPorCep = async function() {
             window.showToast("Endereço localizado!");
         }
     } catch (error) {
-        console.error("Erro ao buscar CEP:", error);
         window.showMessage("Erro ao consultar o CEP. Tente preencher manualmente.");
         document.getElementById('camposEndereco').style.display = 'block';
     } finally {
@@ -864,34 +880,24 @@ async function verificarSequenciaEFOP() {
         const response = await fetch(EDGE_URL, {
             method: 'POST',
             headers: getHeaders(), 
-            body: JSON.stringify({ 
-                acao: 'checar_sequencia', 
-                ticket_base: baseOriginal 
-            })
+            body: JSON.stringify({ acao: 'checar_sequencia', ticket_base: baseOriginal })
         });
         
         const result = await response.json();
         
-        if (result.warning) {
-            window.showMessage(result.warning);
-        }
+        if (result.warning) window.showMessage(result.warning);
 
         if (result.sugerido) {
             if (result.sugerido !== baseOriginal) {
                 input.value = result.sugerido;
                 input.style.border = "2px solid #f59e0b";
-                if (!result.warning) {
-                    window.showMessage(`🔄 <strong>Sequência encontrada!</strong><br><br>O próximo número sugerido é: <strong>${result.sugerido}</strong>`);
-                }
+                if (!result.warning) window.showMessage(`🔄 <strong>Sequência encontrada!</strong><br><br>O próximo número sugerido é: <strong>${result.sugerido}</strong>`);
             } else {
                 input.style.border = "2px solid var(--cobli-green)";
-                if (!result.warning) {
-                    window.showMessage("✅ <strong>Tudo certo!</strong><br><br>Esse número está totalmente disponível para uso.");
-                }
+                if (!result.warning) window.showMessage("✅ <strong>Tudo certo!</strong><br><br>Esse número está totalmente disponível para uso.");
             }
         }
     } catch (err) {
-        console.error(err);
         window.showMessage("❌ Erro de conexão ao tentar verificar a sequência.");
     } finally {
         btn.innerText = "Checar Sequência";
@@ -907,11 +913,8 @@ window.getOcupacaoSlot = function(prestador, data, hora) {
         const mesmoPrestador = (a.prestador === prestador.nome);
         const mesmaData = (a.data === data || a.rawdate === data);
         let contemHora = false;
-        if (Array.isArray(a.slots)) {
-            contemHora = a.slots.includes(hora);
-        } else if (typeof a.slots === 'string') {
-            contemHora = a.slots.split(', ').includes(hora);
-        }
+        if (Array.isArray(a.slots)) contemHora = a.slots.includes(hora);
+        else if (typeof a.slots === 'string') contemHora = a.slots.split(', ').includes(hora);
         return mesmoPrestador && mesmaData && contemHora;
     }).length; 
 };
@@ -924,16 +927,13 @@ window.getBlockedHours = function(prestador, data) {
         slotsArray.forEach(s => {
             if (window.getOcupacaoSlot(prestador, data, s) >= cap) {
                 let h = parseInt(s.split(':')[0]);
-                blocked.add(h);     
-                blocked.add(h - 1); 
-                blocked.add(h + 1); 
+                blocked.add(h); blocked.add(h - 1); blocked.add(h + 1); 
             }
         });
     });
     return blocked;
 };
 
-// --- FUNÇÃO AUXILIAR DOS BLOQUEIOS ---
 window.getAusenciasDoDia = function(prestador, dStr) {
     if (!prestador.agenda || !Array.isArray(prestador.agenda)) return { total: false, horasBloqueadas: new Set() };
     
@@ -965,6 +965,30 @@ window.abrirDetalhesPrestador = function(index) {
             agendaHtml += `<div class="agenda-day-card" style="margin-bottom:10px; padding: 8px;"><div class="agenda-day-title" style="margin-bottom: 4px;">${d}</div><div class="slots-wrapper" style="gap: 3px;">${slots}</div></div>`; 
         } 
     });   
+    
+    let ausenciasHtml = '';
+    if (p.agenda) {
+        let hoje = new Date();
+        hoje.setHours(0,0,0,0);
+        let ausencias = p.agenda.filter(a => a.isAbsence).filter(b => {
+            let parts = b.data.split('/');
+            let dataB = new Date(parts[2], parts[1] - 1, parts[0]);
+            return dataB >= hoje; 
+        });
+
+        if (ausencias.length > 0) {
+            ausenciasHtml = `<div style="margin-top: 15px; border-top: 1px solid #cbd5e1; padding-top: 10px;">
+                <div style="font-weight:bold; font-size:0.9rem; color:var(--cobli-red); margin-bottom: 8px;">🛑 Ausências Programadas</div>
+                <div style="display: flex; flex-wrap: wrap; gap: 6px;">`;
+            ausenciasHtml += ausencias.map(b => {
+                let texto = b.tipo === 'total' ? `${b.data} (Dia Inteiro)` : `${b.data} (${b.inicio}h às ${b.fim}h)`;
+                texto += ` | ${b.qtd} Téc.`;
+                return `<span class="pill" style="background: #fee2e2; color: var(--cobli-red); border: 1px solid #fca5a5; font-size: 0.7rem;">${texto}</span>`;
+            }).join('');
+            ausenciasHtml += `</div></div>`;
+        }
+    }
+
     let htmlHeader = `
         <div style="margin-bottom:15px; border-bottom: 1px solid #cbd5e1; padding-bottom: 10px;">
             <div style="font-weight:bold; font-size:1.1rem; color:var(--primary); margin-bottom: 4px;">${p.nome}</div>
@@ -974,7 +998,7 @@ window.abrirDetalhesPrestador = function(index) {
         </div>
     `;
     let htmlBotaoFechar = `<div style="text-align: right; margin-top: 15px;"><button onclick="window.fecharModal()" style="background:var(--primary); padding: 10px 20px;">Fechar</button></div>`;
-    window.exibirModal("Detalhes do Prestador", htmlHeader + agendaHtml + htmlBotaoFechar); 
+    window.exibirModal("Detalhes do Prestador", htmlHeader + agendaHtml + ausenciasHtml + htmlBotaoFechar); 
 };
     
 window.abrirDetalhesAgendamento = function(index) {
@@ -1070,9 +1094,8 @@ window.salvarPrestador = async function(btn) {
     btn.innerText = "Salvando..."; 
     btn.disabled = true; 
     try { 
-        const inputs = document.querySelectorAll('#etapa-1 input'); 
-        for(let i of inputs) {
-            if(!i.value.trim()) { window.showMessage("Preencha todos os campos!"); return; } 
+        if(!window.validarCampos('#etapa-1')) {
+            return window.showMessage("Preencha todos os campos obrigatórios marcados em vermelho!");
         }
         
         let agenda = [...document.querySelectorAll('#agenda-cadastro .cell.selecionado')].map(c => ({ dia: c.dataset.dia, hora: c.dataset.hora })); 
@@ -1120,6 +1143,10 @@ window.confirmarExclusaoPrestador = async function(i) { await fetch(`${API_URL}/
 window.confirmarExclusaoAgendamento = async function(id) { await fetch(`${API_URL}/agendamentos/${id}`, { method: 'DELETE', headers: getHeaders() }); await carregarDadosDoBanco(); window.showToast("Agendamento excluído!"); window.fecharModal(); };
     
 window.revisarAgendamento = function() {
+    if(!window.validarCampos('#step-4')) {
+        return window.showMessage("Preencha todos os campos obrigatórios marcados em vermelho!");
+    }
+
     const sel = document.querySelectorAll("#agenda-agendamento .cell.selecionado");
     const dataSelecionada = sel.length > 0 ? sel[0].dataset.date : 'N/A';
     const slotsSelecionados = Array.from(sel).map(c => c.dataset.hora).join(', ');
@@ -1392,7 +1419,6 @@ window.updateButtons = function() {
 
 window.renderizarListaPrestadoresSelecao = function(lista) { 
     document.getElementById('lista-prestadores-selecao').innerHTML = lista.map(p => { 
-        // As p.nextDates já vêm limitadas a no máximo 10 pelo getNextDates, garantindo o visual do card!
         const datesArr = p.nextDates.split(', ').filter(Boolean); 
         const pills = datesArr.map(d => `<span class="pill">${d}</span>`).join(''); 
         
@@ -1427,11 +1453,15 @@ window.selecionarPrestadorPorObjeto = function(nome) {
 
 window.proximoPasso = async function(n) { 
     if(n === 2) { 
+        if(!window.validarCampos('#step-1') || !document.getElementById('inputCep').value.trim()) {
+            document.getElementById('inputCep').style.borderColor = !document.getElementById('inputCep').value.trim() ? 'var(--cobli-red)' : '#cbd5e1';
+            return window.showMessage("Preencha todos os campos obrigatórios em vermelho para buscar os prestadores!");
+        }
+
         if(prestadores.length === 0) return window.showMessage("Cadastre um prestador!"); 
         const rua = document.getElementById('inputRua').value; 
         const num = document.getElementById('inputNumero').value; 
         const cidade = document.getElementById('inputCidade').value; 
-        if(!rua || !num || !cidade) return window.showMessage("Preencha o endereço completo!"); 
         
         const btn = document.getElementById('btnBuscar'); 
         btn.disabled = true; 
@@ -1663,29 +1693,45 @@ window.toggleTipoBloqueio = function() {
 
 window.adicionarBloqueioData = function() {
     let inputData = document.getElementById('dataBloqueio').value;
+    let inputDataFim = document.getElementById('dataBloqueioFim').value;
     let tipo = document.getElementById('tipoBloqueio').value;
     let qtd = parseInt(document.getElementById('qtdBloqueio').value) || 1;
 
-    if (!inputData) return window.showMessage("Selecione uma data no calendário!");
-    
-    let [y, m, d] = inputData.split('-');
-    let dataFormatada = `${d}/${m}/${y}`;
-    
-    let objBloqueio = { data: dataFormatada, tipo: tipo, qtd: qtd };
+    if (!inputData) return window.showMessage("Selecione a data inicial no calendário!");
 
-    if (tipo === 'parcial') {
-        let hInicio = parseInt(document.getElementById('horaInicioBloqueio').value);
-        let hFim = parseInt(document.getElementById('horaFimBloqueio').value);
-        if (isNaN(hInicio) || isNaN(hFim) || hInicio >= hFim) {
-            return window.showMessage("Selecione um intervalo de horas válido! (Início deve ser menor que o Fim)");
+    let dataInicio = new Date(inputData + 'T00:00:00');
+    let dataFim = inputDataFim ? new Date(inputDataFim + 'T00:00:00') : new Date(dataInicio);
+
+    if (dataFim < dataInicio) return window.showMessage("A data final não pode ser menor que a inicial!");
+
+    let dataAtual = new Date(dataInicio);
+    while (dataAtual <= dataFim) {
+        let d = String(dataAtual.getDate()).padStart(2, '0');
+        let m = String(dataAtual.getMonth() + 1).padStart(2, '0');
+        let y = dataAtual.getFullYear();
+        let dataFormatada = `${d}/${m}/${y}`;
+
+        let objBloqueio = { data: dataFormatada, tipo: tipo, qtd: qtd };
+
+        if (tipo === 'parcial') {
+            let hInicio = parseInt(document.getElementById('horaInicioBloqueio').value);
+            let hFim = parseInt(document.getElementById('horaFimBloqueio').value);
+            if (isNaN(hInicio) || isNaN(hFim) || hInicio >= hFim) {
+                return window.showMessage("Selecione um intervalo de horas válido! (Início deve ser menor que o Fim)");
+            }
+            objBloqueio.inicio = hInicio;
+            objBloqueio.fim = hFim;
         }
-        objBloqueio.inicio = hInicio;
-        objBloqueio.fim = hFim;
+
+        let existe = datasBloqueadasTemp.find(b => b.data === objBloqueio.data && b.tipo === objBloqueio.tipo && b.inicio === objBloqueio.inicio && b.fim === objBloqueio.fim);
+        if(!existe) datasBloqueadasTemp.push(objBloqueio);
+
+        dataAtual.setDate(dataAtual.getDate() + 1);
     }
 
-    datasBloqueadasTemp.push(objBloqueio);
     window.renderizarDatasBloqueadas();
     document.getElementById('dataBloqueio').value = '';
+    document.getElementById('dataBloqueioFim').value = '';
 };
 
 window.removerBloqueioData = function(index) {
@@ -1726,12 +1772,14 @@ window.abrirCadastro = function(index = -1){
         document.getElementById("fieldIdField").value = p.field_id || ""; 
         
         if(p.agenda) { 
+            // 1. Carrega os horários normais na grade
             p.agenda.forEach(item => { 
-                if (item.isAbsence) return; 
+                if (item.isAbsence) return; // Pula as ausências para não pintar a grade
                 let cells = document.querySelectorAll("#agenda-cadastro .cell"); 
                 cells.forEach(c => { if(c.dataset.dia == item.dia && c.dataset.hora == item.hora) c.classList.add("selecionado"); }); 
             }); 
             
+            // 2. Extrai e limpa as ausências passadas automaticamente!
             let hoje = new Date();
             hoje.setHours(0,0,0,0);
             
@@ -1740,7 +1788,7 @@ window.abrirCadastro = function(index = -1){
             })).filter(b => {
                 let parts = b.data.split('/');
                 let dataB = new Date(parts[2], parts[1] - 1, parts[0]);
-                return dataB >= hoje; 
+                return dataB >= hoje; // Só mantém as datas que ainda não passaram
             });
             window.renderizarDatasBloqueadas();
         } 
@@ -1750,8 +1798,16 @@ window.abrirCadastro = function(index = -1){
         window.renderizarDatasBloqueadas();
     } 
     document.getElementById('dataBloqueio').value = '';
+    document.getElementById('dataBloqueioFim').value = '';
     document.getElementById('tipoBloqueio').value = 'total';
     document.getElementById('qtdBloqueio').value = '1';
+    
+    // Limpa bordas vermelhas que possam ter ficado de outro cadastro
+    document.querySelectorAll('#etapa-1 input').forEach(el => {
+        el.style.borderColor = '#cbd5e1';
+        el.style.backgroundColor = 'white';
+    });
+
     window.toggleTipoBloqueio();
     window.updateButtons(); 
 };
@@ -1823,9 +1879,8 @@ window.criarGridCadastro = function(id){
 
 window.mudarEtapa = function(dir) { 
     if (dir > 0 && etapa === 1) { 
-        const inputs = document.querySelectorAll("#etapa-1 input"); 
-        for(let i of inputs) {
-            if(!i.value.trim()) return window.showMessage("Preencha todos os campos!"); 
+        if(!window.validarCampos('#etapa-1')) {
+            return window.showMessage("Preencha todos os campos obrigatórios marcados em vermelho!");
         }
     } 
     document.getElementById("etapa-"+etapa).style.display="none"; 
@@ -1851,7 +1906,7 @@ window.renderizarListaPrestadores = function(){
             
             <div style="width: 100%; display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
                 <div style="font-weight: bold; color: var(--primary); font-size: 1.05rem;">👷 ${p.nome}</div>
-                <div style="font-size: 0.7rem; color: #64748b; font-weight: 700; background: #f1f5f9; padding: 2px 8px; border-radius: 4px; border: 1px solid #e2e8f0;">
+                <div style="font-size: 0.7rem; color: #64748b; font-weight: 700; background: #f1f5f9; padding: 4px 8px; border-radius: 4px; border: 1px solid #e2e8f0;">
                     📍 ${p.cidade}/${p.uf}
                 </div>
             </div>
