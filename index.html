@@ -359,11 +359,15 @@
                                 <option value="parcial">Horário Específico</option>
                             </select>
                         </div>
+                        <div style="flex: 0.5; min-width: 80px;">
+                            <label style="color: var(--cobli-red);">Qtd. Téc.</label>
+                            <input type="number" id="qtdBloqueio" value="1" min="1" style="border-color: #fca5a5; background: white;">
+                        </div>
                         <div id="boxHoraBloqueio" style="display: none; gap: 10px; flex: 2; min-width: 200px;">
                             <div style="flex: 1;">
                                 <label style="color: var(--cobli-red);">Início</label>
                                 <select id="horaInicioBloqueio" style="border-color: #fca5a5; background: white;">
-                                    <option value="">Selecione...</option>
+                                    <option value="">Sel...</option>
                                     <option value="8">08:00</option>
                                     <option value="9">09:00</option>
                                     <option value="10">10:00</option>
@@ -380,7 +384,7 @@
                             <div style="flex: 1;">
                                 <label style="color: var(--cobli-red);">Fim</label>
                                 <select id="horaFimBloqueio" style="border-color: #fca5a5; background: white;">
-                                    <option value="">Selecione...</option>
+                                    <option value="">Sel...</option>
                                     <option value="9">09:00</option>
                                     <option value="10">10:00</option>
                                     <option value="11">11:00</option>
@@ -891,62 +895,13 @@ async function verificarSequenciaEFOP() {
 }
 
 function parseDateToObj(dateStr) { const [d, m, y] = dateStr.split('/'); return new Date(y, m - 1, d); }
-window.getOcupacaoSlot = function(prestador, data, hora) { 
-    if (!agendamentos || agendamentos.length === 0) return 0;
-    return agendamentos.filter(a => {
-        const mesmoPrestador = (a.prestador === prestador.nome);
-        const mesmaData = (a.data === data || a.rawdate === data);
-        let contemHora = false;
-        if (Array.isArray(a.slots)) {
-            contemHora = a.slots.includes(hora);
-        } else if (typeof a.slots === 'string') {
-            contemHora = a.slots.split(', ').includes(hora);
-        }
-        return mesmoPrestador && mesmaData && contemHora;
-    }).length; 
-};
-
-window.getBlockedHours = function(prestador, data) {
-    let blocked = new Set();
-    let cap = parseInt(prestador.qtdtecnicos) || 1;
-    agendamentos.filter(a => a.prestador === prestador.nome && (a.data === data || a.rawdate === data)).forEach(a => {
-        let slotsArray = Array.isArray(a.slots) ? a.slots : (typeof a.slots === 'string' ? a.slots.split(', ') : []);
-        slotsArray.forEach(s => {
-            if (window.getOcupacaoSlot(prestador, data, s) >= cap) {
-                let h = parseInt(s.split(':')[0]);
-                blocked.add(h);     
-                blocked.add(h - 1); 
-                blocked.add(h + 1); 
-            }
-        });
-    });
-    return blocked;
-};
-
-// --- FUNÇÃO AUXILIAR DOS BLOQUEIOS ---
-window.getAusenciasDoDia = function(prestador, dStr) {
-    if (!prestador.ausencias) return { total: false, horasBloqueadas: new Set() };
-    let ausencias = prestador.ausencias.filter(a => a.data === dStr);
-    if (ausencias.length === 0) return { total: false, horasBloqueadas: new Set() };
-    
-    let total = false;
-    let horasBloqueadas = new Set();
-    ausencias.forEach(a => {
-        if (a.tipo === 'total') total = true;
-        if (a.tipo === 'parcial') {
-            for (let h = a.inicio; h < a.fim; h++) {
-                horasBloqueadas.add(h);
-            }
-        }
-    });
-    return { total, horasBloqueadas };
-};
 
 window.abrirDetalhesPrestador = function(index) { 
     let p = prestadores[index]; 
     let agendaHtml = '';  
     ["Seg", "Ter", "Qua", "Qui", "Sex", "Sab"].forEach(d => { 
-        let slots = p.agenda.filter(a => a.dia === d).map(a => `<div class="cell" style="width: 38px; height: 20px; font-size: 0.7rem; padding: 2px;">${a.hora}</div>`).join('');     
+        // Filtra para mostrar apenas os horários de trabalho, ignorando as ausências no popup
+        let slots = p.agenda.filter(a => a.dia === d && !a.isAbsence).map(a => `<div class="cell" style="width: 38px; height: 20px; font-size: 0.7rem; padding: 2px;">${a.hora}</div>`).join('');     
         if(slots) { 
             agendaHtml += `<div class="agenda-day-card" style="margin-bottom:10px; padding: 8px;"><div class="agenda-day-title" style="margin-bottom: 4px;">${d}</div><div class="slots-wrapper" style="gap: 3px;">${slots}</div></div>`; 
         } 
@@ -1050,7 +1005,57 @@ window.excluirAgendamento = function(id, dataStr) {
 window.cancelarAgendamento = function() { window.showConfirm("Deseja realmente cancelar este agendamento?", window.realizarCancelamento); };
 window.realizarCancelamento = function() { window.limparFormulario(); window.proximoPasso(1); };
 async function consultarDistancia(cepOrigem, enderecoPrestador) { try { const response = await fetch(`${API_URL}/distancia`, { method: 'POST', headers: getHeaders(), body: JSON.stringify({ origin: cepOrigem, destination: enderecoPrestador }) }); const data = await response.json(); return (data.status === 'OK') ? parseFloat(data.rows[0].elements[0].distance.value) / 1000 : null; } catch (e) { return null; } }
-window.salvarPrestador = async function(btn) { const originalText = btn.innerText; btn.innerText = "Salvando..."; btn.disabled = true; try { const inputs = document.querySelectorAll('#etapa-1 input'); for(let i of inputs) if(!i.value.trim()) { window.showMessage("Preencha todos os campos!"); return; } let agenda = [...document.querySelectorAll('#agenda-cadastro .cell.selecionado')].map(c => ({ dia: c.dataset.dia, hora: c.dataset.hora })); let p = { nome: document.getElementById("nomeEmpresa").value, endereco: document.getElementById("endereco").value, cidade: document.getElementById("cidade").value, uf: document.getElementById("uf").value, cep: document.getElementById("cep").value, responsavel: document.getElementById("responsavel").value, contato: document.getElementById("contatoResponsavel").value, qtdtecnicos: parseInt(document.getElementById("qtdTecnicos").value), range: document.getElementById("rangeAtendimento").value, field_id: document.getElementById("fieldIdField").value, agenda: agenda, ausencias: datasBloqueadasTemp }; const url = (editingIndex !== -1) ? `${API_URL}/prestadores/${prestadores[editingIndex].id}` : `${API_URL}/prestadores`; await fetch(url, { method: (editingIndex !== -1) ? 'PUT' : 'POST', headers: getHeaders(), body: JSON.stringify(p) }); editingIndex = -1; await carregarDadosDoBanco(); document.getElementById("cadastro-flow").style.display="none"; document.getElementById("lista-prestadores-view").style.display="block"; window.showToast("Prestador salvo com sucesso!"); } finally { btn.disabled = false; btn.innerText = originalText; } };
+
+// --- MÁGICA: SALVAR AUSÊNCIAS DENTRO DO ARRAY DE AGENDA ---
+window.salvarPrestador = async function(btn) { 
+    const originalText = btn.innerText; 
+    btn.innerText = "Salvando..."; 
+    btn.disabled = true; 
+    try { 
+        const inputs = document.querySelectorAll('#etapa-1 input'); 
+        for(let i of inputs) if(!i.value.trim()) { window.showMessage("Preencha todos os campos!"); return; } 
+        
+        let agenda = [...document.querySelectorAll('#agenda-cadastro .cell.selecionado')].map(c => ({ dia: c.dataset.dia, hora: c.dataset.hora })); 
+        
+        // Empacota as datas bloqueadas dentro do JSON da agenda para o banco aceitar sem chiar!
+        datasBloqueadasTemp.forEach(b => {
+            agenda.push({
+                isAbsence: true,
+                data: b.data,
+                tipo: b.tipo,
+                inicio: b.inicio,
+                fim: b.fim,
+                qtd: b.qtd
+            });
+        });
+
+        let p = { 
+            nome: document.getElementById("nomeEmpresa").value, 
+            endereco: document.getElementById("endereco").value, 
+            cidade: document.getElementById("cidade").value, 
+            uf: document.getElementById("uf").value, 
+            cep: document.getElementById("cep").value, 
+            responsavel: document.getElementById("responsavel").value, 
+            contato: document.getElementById("contatoResponsavel").value, 
+            qtdtecnicos: parseInt(document.getElementById("qtdTecnicos").value), 
+            range: document.getElementById("rangeAtendimento").value, 
+            field_id: document.getElementById("fieldIdField").value, 
+            agenda: agenda 
+        }; 
+        
+        const url = (editingIndex !== -1) ? `${API_URL}/prestadores/${prestadores[editingIndex].id}` : `${API_URL}/prestadores`; 
+        await fetch(url, { method: (editingIndex !== -1) ? 'PUT' : 'POST', headers: getHeaders(), body: JSON.stringify(p) }); 
+        
+        editingIndex = -1; 
+        await carregarDadosDoBanco(); 
+        document.getElementById("cadastro-flow").style.display="none"; 
+        document.getElementById("lista-prestadores-view").style.display="block"; 
+        window.showToast("Prestador salvo com sucesso!"); 
+    } finally { 
+        btn.disabled = false; btn.innerText = originalText; 
+    } 
+};
+
 window.excluirPrestador = async function(i) { window.showConfirm("Tem certeza que deseja excluir?", () => window.confirmarExclusaoPrestador(i)); };
 window.confirmarExclusaoPrestador = async function(i) { await fetch(`${API_URL}/prestadores/${prestadores[i].id}`, { method: 'DELETE', headers: getHeaders() }); await carregarDadosDoBanco(); window.showToast("Prestador excluído com sucesso!"); };
 window.confirmarExclusaoAgendamento = async function(id) { await fetch(`${API_URL}/agendamentos/${id}`, { method: 'DELETE', headers: getHeaders() }); await carregarDadosDoBanco(); window.showToast("Agendamento excluído!"); window.fecharModal(); };
@@ -1222,34 +1227,53 @@ window.trocarAba = function(id, btn){
     if(id === 'dashboard') window.renderDashboard(); 
 };
 
-// --- NOVO MOTOR MATEMÁTICO DE AGENDA ---
+// --- NOVO MOTOR MATEMÁTICO DE AGENDA COM AUSÊNCIAS (FANTASMAS) ---
 window.podeAgendar = function(prestador, data, novosSlotsInt) {
     let cap = parseInt(prestador.qtdtecnicos) || 1;
-    let agendamentosDoDia = agendamentos.filter(a => a.prestador === prestador.nome && (a.data === data || a.rawdate === data));
-
     let intervalos = [];
+
+    let agendamentosDoDia = agendamentos.filter(a => a.prestador === prestador.nome && (a.data === data || a.rawdate === data));
     agendamentosDoDia.forEach(a => {
         let slotsArray = Array.isArray(a.slots) ? a.slots : (typeof a.slots === 'string' ? a.slots.split(', ') : []);
         if (slotsArray.length > 0) {
             let ints = slotsArray.map(s => parseInt(s.split(':')[0])).sort((x,y) => x-y);
-            intervalos.push({ start: ints[0], end: ints[ints.length - 1] });
+            intervalos.push({ start: ints[0], end: ints[ints.length - 1], type: 'job' });
         }
     });
 
     if (novosSlotsInt && novosSlotsInt.length > 0) {
         let ints = [...novosSlotsInt].sort((x,y) => x-y);
-        intervalos.push({ start: ints[0], end: ints[ints.length - 1] });
+        intervalos.push({ start: ints[0], end: ints[ints.length - 1], type: 'job' });
+    }
+
+    // Injeta os bloqueios / ausências como se fossem agendamentos!
+    if (prestador.agenda) {
+        let ausenciasDia = prestador.agenda.filter(a => a.isAbsence && a.data === data);
+        ausenciasDia.forEach(a => {
+            let q = parseInt(a.qtd) || 1;
+            let start = a.tipo === 'total' ? 0 : parseInt(a.inicio);
+            let end = a.tipo === 'total' ? 24 : parseInt(a.fim) - 1; 
+            for(let i=0; i<q; i++) {
+                intervalos.push({ start: start, end: end, type: 'absence' });
+            }
+        });
     }
 
     intervalos.sort((a, b) => a.start - b.start);
 
-    let techEnds = Array(cap).fill(-999);
+    let techEnds = Array(cap).fill().map(() => ({ end: -999, type: 'none' }));
+    
     for (let i = 0; i < intervalos.length; i++) {
         let job = intervalos[i];
         let assigned = false;
         for (let t = 0; t < cap; t++) {
-            if (techEnds[t] + 1 < job.start) {
-                techEnds[t] = job.end;
+            let tech = techEnds[t];
+            // Se o último trabalho foi um Job e o novo é um Job, pede 1h de viagem. Se não, 0h.
+            let gap = (tech.type === 'job' && job.type === 'job') ? 1 : 0;
+            
+            if (tech.end + gap < job.start) {
+                tech.end = job.end;
+                tech.type = job.type;
                 assigned = true;
                 break;
             }
@@ -1261,20 +1285,18 @@ window.podeAgendar = function(prestador, data, novosSlotsInt) {
 
 window.getNextDates = function(prestador) { 
     let dates = []; let today = new Date(); const daysMap = {"Dom":0, "Seg":1, "Ter":2, "Qua":3, "Qui":4, "Sex":5, "Sab":6}; 
-    let agendaDays = (prestador.agenda && Array.isArray(prestador.agenda)) ? [...new Set(prestador.agenda.map(a => a.dia))].map(d => daysMap[d]) : []; 
+    
+    let agendaNormal = (prestador.agenda && Array.isArray(prestador.agenda)) ? prestador.agenda.filter(a => !a.isAbsence) : [];
+    let agendaDays = [...new Set(agendaNormal.map(a => a.dia))].map(d => daysMap[d]); 
+    
     for (let i = 2; i < 16; i++) { 
         let d = new Date(); d.setDate(today.getDate() + i); let dStr = d.toLocaleDateString(); let dNome = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sab"][d.getDay()]; 
         if (!agendaDays.includes(d.getDay())) continue;
         
-        let { total: diaBloqueado, horasBloqueadas } = window.getAusenciasDoDia(prestador, dStr);
-        if (diaBloqueado) continue;
-
-        let slotsDoDia = (prestador.agenda && Array.isArray(prestador.agenda)) ? prestador.agenda.filter(a => a.dia == dNome) : []; 
+        let slotsDoDia = agendaNormal.filter(a => a.dia == dNome); 
         let temLivre = false;
         for(let s of slotsDoDia) {
             let hInt = parseInt(s.hora.split(':')[0]);
-            if (horasBloqueadas.has(hInt)) continue;
-
             if (window.podeAgendar(prestador, dStr, [hInt])) {
                 temLivre = true; break;
             }
@@ -1332,13 +1354,10 @@ window.rdaAgendamento = function() {
         let dStr = data.toLocaleDateString(); 
         let dNome = diasSemana[data.getDay()]; 
         
-        let { total: diaBloqueado, horasBloqueadas } = window.getAusenciasDoDia(p, dStr);
-        if (diaBloqueado) continue;
-
-        let allSlots = (p.agenda && Array.isArray(p.agenda)) ? p.agenda.filter(a => a.dia == dNome) : []; 
+        let allSlots = (p.agenda && Array.isArray(p.agenda)) ? p.agenda.filter(a => !a.isAbsence && a.dia == dNome) : []; 
         if (allSlots.length === 0) continue;
 
-        let horasAgenda = allSlots.map(item => parseInt(item.hora.split(':')[0])).filter(h => !horasBloqueadas.has(h));
+        let horasAgenda = allSlots.map(item => parseInt(item.hora.split(':')[0]));
         let validStarts = []; 
         
         for (let h of horasAgenda) {
@@ -1378,7 +1397,7 @@ window.rdaAgendamento = function() {
                 div.dataset.hora = item.hora; 
                 div.dataset.date = dStr; 
                 
-                if (!enabledCells.has(hInt) || horasBloqueadas.has(hInt)) {
+                if (!enabledCells.has(hInt)) {
                     div.style.opacity = "0.3";
                     div.style.cursor = "not-allowed";
                     div.onclick = () => window.showToast(`Horário indisponível para ${horasNecessarias}h seguidas ou excedeu a capacidade.`);
@@ -1414,62 +1433,7 @@ window.rdaAgendamento = function() {
     }
 };
 
-window.validarEAvancar = function() { 
-    if (itensSelecionados.length === 0) return window.showMessage("Adicione pelo menos um serviço!"); 
-    let totalMinutos = itensSelecionados.reduce((a, b) => a + (b.tempo * b.qtd), 0); 
-    let horas = Math.ceil(totalMinutos / 60); 
-    let sel = document.querySelectorAll("#agenda-agendamento .cell.selecionado"); 
-    if (sel.length === 0) return window.showMessage("Selecione horário!"); 
-    if (sel.length !== horas && horas > 0) return window.showMessage("Selecione exatamente " + horas + " hora(s)!"); 
-    
-    const emailLogado = localStorage.getItem('userEmail');
-    const campoSolicitante = document.getElementById('solicitante');
-        if (emailLogado && campoSolicitante) {
-        campoSolicitante.value = extrairNomeDoEmail(emailLogado);
-        campoSolicitante.readOnly = true; 
-        campoSolicitante.style.background = "#f1f5f9"; 
-        campoSolicitante.style.cursor = "not-allowed";
-    }
-    
-    document.querySelectorAll('#consulta > div').forEach(div => div.style.display = 'none'); 
-    document.getElementById('step-4').style.display = 'block'; 
-};
-
-window.renderizarListaPrestadoresSelecao = function(lista) { 
-    document.getElementById('lista-prestadores-selecao').innerHTML = lista.map(p => { 
-        const datesArr = p.nextDates.split(', '); 
-        const pills = datesArr.map(d => `<span class="pill">${d}</span>`).join(''); 
-        
-        return `
-        <div class="painel-item" 
-             onclick="window.selecionarPrestadorPorObjeto('${p.nome}')" 
-             style="cursor: pointer; flex-direction: column; align-items: flex-start; transition: all 0.2s ease; margin-bottom: 12px; border-left: 5px solid var(--primary); background-color: white;" 
-             onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 6px 15px rgba(0,0,0,0.1)'; this.style.backgroundColor='#ebfcf9'; this.style.borderLeftColor='var(--cobli-green)';" 
-             onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 1px 3px rgba(0,0,0,0.1)'; this.style.backgroundColor='white'; this.style.borderLeftColor='var(--primary)';">
-            
-            <div style="width: 100%; display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                <div style="font-size: 1.05rem; font-weight: bold; color: var(--primary);">👷 ${p.nome}</div>
-                <div style="font-size: 0.75rem; color: #64748b; font-weight: 700; background: #f1f5f9; padding: 4px 8px; border-radius: 4px; border: 1px solid #e2e8f0;">
-                    📍 ${p.cidade}/${p.uf}
-                </div>
-            </div>
-            <div style="font-size: 0.85rem; color: #334155; margin-bottom: 10px;">
-                📏 <strong>Distância do atendimento:</strong> ${p.distanciaFinal} km
-            </div>
-            <div style="width: 100%; border-top: 1px dashed #e2e8f0; padding-top: 10px;">
-                <div style="font-size: 0.7rem; color: #64748b; font-weight: 700; text-transform: uppercase; margin-bottom: 6px;">🗓️ Datas Disponíveis</div>
-                <div class="date-pills" style="margin-top: 0;">${pills}</div>
-            </div>
-        </div>`; 
-    }).join(''); 
-};
-window.selecionarPrestadorPorObjeto = function(nome) { prestadorSelecionadoIndex = prestadores.findIndex(p => p.nome === nome); window.proximoPasso(3); };
-window.updateButtons = function() { document.getElementById('btn-voltar').style.display = (etapa === 1) ? 'none' : 'inline-block'; document.getElementById('btn-proximo').style.display = (etapa === 1) ? 'inline-block' : 'none'; document.getElementById('btn-concluir').style.display = (etapa === 2) ? 'inline-block' : 'none'; };
-
-window.limparAgendaCadastro = function() {
-    document.querySelectorAll('#agenda-cadastro .cell.selecionado').forEach(c => c.classList.remove('selecionado'));
-};
-
+// --- FUNÇÕES DE INTERFACE DO BLOQUEIO DE AGENDA ---
 window.toggleTipoBloqueio = function() {
     let tipo = document.getElementById('tipoBloqueio').value;
     document.getElementById('boxHoraBloqueio').style.display = tipo === 'parcial' ? 'flex' : 'none';
@@ -1478,12 +1442,14 @@ window.toggleTipoBloqueio = function() {
 window.adicionarBloqueioData = function() {
     let inputData = document.getElementById('dataBloqueio').value;
     let tipo = document.getElementById('tipoBloqueio').value;
+    let qtd = parseInt(document.getElementById('qtdBloqueio').value) || 1;
+
     if (!inputData) return window.showMessage("Selecione uma data no calendário!");
     
     let [y, m, d] = inputData.split('-');
     let dataFormatada = `${d}/${m}/${y}`;
     
-    let objBloqueio = { data: dataFormatada, tipo: tipo };
+    let objBloqueio = { data: dataFormatada, tipo: tipo, qtd: qtd };
 
     if (tipo === 'parcial') {
         let hInicio = parseInt(document.getElementById('horaInicioBloqueio').value);
@@ -1497,7 +1463,6 @@ window.adicionarBloqueioData = function() {
 
     datasBloqueadasTemp.push(objBloqueio);
     window.renderizarDatasBloqueadas();
-    
     document.getElementById('dataBloqueio').value = '';
 };
 
@@ -1509,6 +1474,7 @@ window.removerBloqueioData = function(index) {
 window.renderizarDatasBloqueadas = function() {
     document.getElementById('lista-datas-bloqueadas').innerHTML = datasBloqueadasTemp.map((b, i) => {
         let texto = b.tipo === 'total' ? `${b.data} (Dia Inteiro)` : `${b.data} (${b.inicio}h às ${b.fim}h)`;
+        texto += ` | ${b.qtd} Téc.`;
         return `<span class="pill" style="background: var(--cobli-red); color: white; border: none; display: flex; align-items: center; gap: 6px;">
             ${texto} <span style="cursor:pointer; font-weight:bold; padding-left: 4px; border-left: 1px solid rgba(255,255,255,0.4);" onclick="window.removerBloqueioData(${i})">X</span>
         </span>`;
@@ -1536,14 +1502,28 @@ window.abrirCadastro = function(index = -1){
         document.getElementById("qtdTecnicos").value = p.qtdtecnicos; 
         document.getElementById("rangeAtendimento").value = p.range; 
         document.getElementById("fieldIdField").value = p.field_id || ""; 
+        
         if(p.agenda) { 
+            // 1. Carrega os horários normais na grade
             p.agenda.forEach(item => { 
+                if (item.isAbsence) return; // Pula as ausências para não pintar a grade
                 let cells = document.querySelectorAll("#agenda-cadastro .cell"); 
                 cells.forEach(c => { if(c.dataset.dia == item.dia && c.dataset.hora == item.hora) c.classList.add("selecionado"); }); 
             }); 
+            
+            // 2. Extrai e limpa as ausências passadas automaticamente!
+            let hoje = new Date();
+            hoje.setHours(0,0,0,0);
+            
+            datasBloqueadasTemp = p.agenda.filter(a => a.isAbsence).map(a => ({
+                data: a.data, tipo: a.tipo, inicio: a.inicio, fim: a.fim, qtd: a.qtd
+            })).filter(b => {
+                let [d, m, y] = b.data.split('/');
+                let dataB = new Date(y, m - 1, d);
+                return dataB >= hoje; // Só mantém as datas que ainda não passaram
+            });
+            window.renderizarDatasBloqueadas();
         } 
-        datasBloqueadasTemp = p.ausencias || [];
-        window.renderizarDatasBloqueadas();
     } else { 
         document.querySelectorAll('input').forEach(i => i.value = ""); 
         datasBloqueadasTemp = [];
@@ -1551,6 +1531,7 @@ window.abrirCadastro = function(index = -1){
     } 
     document.getElementById('dataBloqueio').value = '';
     document.getElementById('tipoBloqueio').value = 'total';
+    document.getElementById('qtdBloqueio').value = '1';
     window.toggleTipoBloqueio();
     window.updateButtons(); 
 };
