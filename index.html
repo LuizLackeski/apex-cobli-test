@@ -260,8 +260,10 @@
 
             <div id="lista-produtos"></div>
             <p>Horas Necessárias: <strong><span id="horasNecessarias">0</span></strong></p>
+            
             <div id="agenda-agendamento"></div>
-            <div style="margin-top:10px;">
+            
+            <div style="margin-top:15px; border-top: 1px solid #e2e8f0; padding-top: 15px;">
                 <button onclick="window.proximoPasso(2)" style="background:gray;">Voltar</button>
                 <button onclick="window.validarEAvancar()" style="background:var(--cobli-green);">Próximo</button>
                 <button onclick="window.cancelarAgendamento()" class="btn-cancelar">Cancelar</button>
@@ -408,7 +410,7 @@
                 <button id="btn-voltar" onclick="window.mudarEtapa(-1)">Voltar</button>
                 <button id="btn-proximo" onclick="window.mudarEtapa(1)">Próximo</button>
                 <button id="btn-concluir" onclick="window.salvarPrestador(this)" style="background: var(--cobli-green);">Concluir</button>
-                <button onclick="window.limparAgendaCadastro()" style="background: #f59e0b; color: white; border: none;">🧹 Limpar Agenda</button>
+                <button id="btn-limpar-agenda" onclick="window.limparAgendaCadastro()" style="background: #f59e0b; color: white; border: none; display:none;">🧹 Limpar Agenda</button>
                 <button onclick="window.cancelarCadastro()" class="btn-cancelar">Cancelar</button>
             </div>
         </div>
@@ -549,6 +551,10 @@
 
     // --- VARIÁVEL GLOBAL PARA BLOQUEIOS ---
     let datasBloqueadasTemp = [];
+
+    // --- VARIÁVEIS GLOBAIS DA PAGINAÇÃO ---
+    window.agendaDiasDisponiveis = [];
+    window.agendaPaginaAtual = 0;
 
     // --- NOVA FUNÇÃO DE FORMATAR TEMPO ---
     function formatarTempo(minutos) {
@@ -927,7 +933,7 @@ window.getBlockedHours = function(prestador, data) {
     return blocked;
 };
 
-// --- FUNÇÃO AUXILIAR DOS BLOQUEIOS (CORRIGIDA E INCLUÍDA) ---
+// --- FUNÇÃO AUXILIAR DOS BLOQUEIOS ---
 window.getAusenciasDoDia = function(prestador, dStr) {
     if (!prestador.agenda || !Array.isArray(prestador.agenda)) return { total: false, horasBloqueadas: new Set() };
     
@@ -954,7 +960,6 @@ window.abrirDetalhesPrestador = function(index) {
     let p = prestadores[index]; 
     let agendaHtml = '';  
     ["Seg", "Ter", "Qua", "Qui", "Sex", "Sab"].forEach(d => { 
-        // Filtra para mostrar apenas os horários de trabalho, ignorando as ausências no popup
         let slots = p.agenda.filter(a => a.dia === d && !a.isAbsence).map(a => `<div class="cell" style="width: 38px; height: 20px; font-size: 0.7rem; padding: 2px;">${a.hora}</div>`).join('');     
         if(slots) { 
             agendaHtml += `<div class="agenda-day-card" style="margin-bottom:10px; padding: 8px;"><div class="agenda-day-title" style="margin-bottom: 4px;">${d}</div><div class="slots-wrapper" style="gap: 3px;">${slots}</div></div>`; 
@@ -1060,7 +1065,6 @@ window.cancelarAgendamento = function() { window.showConfirm("Deseja realmente c
 window.realizarCancelamento = function() { window.limparFormulario(); window.proximoPasso(1); };
 async function consultarDistancia(cepOrigem, enderecoPrestador) { try { const response = await fetch(`${API_URL}/distancia`, { method: 'POST', headers: getHeaders(), body: JSON.stringify({ origin: cepOrigem, destination: enderecoPrestador }) }); const data = await response.json(); return (data.status === 'OK') ? parseFloat(data.rows[0].elements[0].distance.value) / 1000 : null; } catch (e) { return null; } }
 
-// --- MÁGICA: SALVAR AUSÊNCIAS DENTRO DO ARRAY DE AGENDA ---
 window.salvarPrestador = async function(btn) { 
     const originalText = btn.innerText; 
     btn.innerText = "Salvando..."; 
@@ -1073,7 +1077,6 @@ window.salvarPrestador = async function(btn) {
         
         let agenda = [...document.querySelectorAll('#agenda-cadastro .cell.selecionado')].map(c => ({ dia: c.dataset.dia, hora: c.dataset.hora })); 
         
-        // Empacota as datas bloqueadas dentro do JSON da agenda para o banco aceitar sem chiar!
         datasBloqueadasTemp.forEach(b => {
             agenda.push({
                 isAbsence: true,
@@ -1295,7 +1298,7 @@ window.trocarAba = function(id, btn){
     if(id === 'dashboard') window.renderDashboard(); 
 };
 
-// --- NOVO MOTOR MATEMÁTICO DE AGENDA COM AUSÊNCIAS (FANTASMAS) ---
+// --- NOVO MOTOR MATEMÁTICO DE AGENDA ---
 window.podeAgendar = function(prestador, data, novosSlotsInt) {
     let cap = parseInt(prestador.qtdtecnicos) || 1;
     let intervalos = [];
@@ -1355,7 +1358,10 @@ window.getNextDates = function(prestador) {
     let agendaNormal = (prestador.agenda && Array.isArray(prestador.agenda)) ? prestador.agenda.filter(a => !a.isAbsence) : [];
     let agendaDays = [...new Set(agendaNormal.map(a => a.dia))].map(d => daysMap[d]); 
     
-    for (let i = 2; i < 16; i++) { 
+    // Busca até 60 dias para frente, mas PARA quando achar as primeiras 10 opções válidas!
+    for (let i = 2; i < 60; i++) { 
+        if(dates.length >= 10) break;
+        
         let d = new Date(); d.setDate(today.getDate() + i); let dStr = d.toLocaleDateString(); let dNome = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sab"][d.getDay()]; 
         if (!agendaDays.includes(d.getDay())) continue;
         
@@ -1381,11 +1387,13 @@ window.updateButtons = function() {
     document.getElementById('btn-voltar').style.display = (etapa === 1) ? 'none' : 'inline-block'; 
     document.getElementById('btn-proximo').style.display = (etapa === 1) ? 'inline-block' : 'none'; 
     document.getElementById('btn-concluir').style.display = (etapa === 2) ? 'inline-block' : 'none'; 
+    document.getElementById('btn-limpar-agenda').style.display = (etapa === 2) ? 'inline-block' : 'none'; 
 };
 
 window.renderizarListaPrestadoresSelecao = function(lista) { 
     document.getElementById('lista-prestadores-selecao').innerHTML = lista.map(p => { 
-        const datesArr = p.nextDates.split(', '); 
+        // As p.nextDates já vêm limitadas a no máximo 10 pelo getNextDates, garantindo o visual do card!
+        const datesArr = p.nextDates.split(', ').filter(Boolean); 
         const pills = datesArr.map(d => `<span class="pill">${d}</span>`).join(''); 
         
         return `
@@ -1468,10 +1476,15 @@ window.proximoPasso = async function(n) {
     } 
 };
 
+// --- VARIÁVEIS GLOBAIS DA PAGINAÇÃO ---
+window.agendaDiasDisponiveis = [];
+window.agendaPaginaAtual = 0;
+
 window.rdaAgendamento = function() { 
     let p = prestadores[prestadorSelecionadoIndex]; 
     let container = document.getElementById("agenda-agendamento"); 
-    container.innerHTML = ""; 
+    container.innerHTML = `<div style="text-align:center; padding:20px; font-weight:bold; color:var(--primary);">Calculando horários na nuvem...</div>`; 
+    
     let hoje = new Date(); 
     const diasSemana = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sab"]; 
     
@@ -1482,9 +1495,10 @@ window.rdaAgendamento = function() {
         return;
     }
     
-    let diasEncontrados = 0;
+    window.agendaDiasDisponiveis = [];
     
-    for(let i=2; i<16; i++){ 
+    // Busca até 60 dias pra frente no banco de dados para formar a paginação completa
+    for(let i=2; i<60; i++){ 
         let data = new Date(); 
         data.setDate(hoje.getDate() + i); 
         let dStr = data.toLocaleDateString(); 
@@ -1521,55 +1535,100 @@ window.rdaAgendamento = function() {
         });
 
         if(validStarts.length > 0){ 
-            diasEncontrados++;
-            let card = document.createElement("div"); 
-            card.className = "agenda-day-card"; 
-            card.innerHTML = `<div class="agenda-day-title">${dStr} (${dNome})</div>`; 
-            let wrapper = document.createElement("div"); 
-            wrapper.className = "slots-wrapper"; 
-            
-            allSlots.forEach(item => { 
-                let hInt = parseInt(item.hora.split(':')[0]);
-                let div = document.createElement("div"); 
-                div.className = "cell"; 
-                div.innerText = item.hora; 
-                div.dataset.hora = item.hora; 
-                div.dataset.date = dStr; 
-                
-                if (!enabledCells.has(hInt) || horasBloqueadas.has(hInt)) {
-                    div.style.opacity = "0.3";
-                    div.style.cursor = "not-allowed";
-                    div.onclick = () => window.showToast(`Horário indisponível para ${horasNecessarias}h seguidas ou excedeu a capacidade.`);
-                } else {
-                    div.onclick = function() { 
-                        let horaInicioReal = hInt;
-                        if (!validStarts.includes(hInt)) {
-                            for (let b = 1; b < horasNecessarias; b++) {
-                                let testStart = hInt - b;
-                                if (validStarts.includes(testStart)) {
-                                    horaInicioReal = testStart;
-                                    break;
-                                }
-                            }
-                        }
-                        
-                        document.querySelectorAll("#agenda-agendamento .cell").forEach(c => c.classList.remove('selecionado'));
-                        for(let m=0; m < horasNecessarias; m++) {
-                            let targetH = `${horaInicioReal + m}:00`;
-                            let targetCell = Array.from(wrapper.children).find(c => c.dataset.hora === targetH);
-                            if(targetCell) targetCell.classList.add("selecionado");
-                        }
-                    }; 
-                }
-                wrapper.appendChild(div); 
-            }); 
-            card.appendChild(wrapper); 
-            container.appendChild(card); 
+            window.agendaDiasDisponiveis.push({ dStr, dNome, allSlots, validStarts, enabledCells, horasNecessarias });
         } 
     } 
-    if (diasEncontrados === 0) {
-        container.innerHTML = `<div style="color:var(--cobli-red); font-size:0.85rem; font-weight:bold;">⚠️ Não há horários disponíveis com ${horasNecessarias}h seguidas para este prestador.</div>`;
+
+    window.agendaPaginaAtual = 0;
+    window.renderizarAgendaPaginada();
+};
+
+window.renderizarAgendaPaginada = function() {
+    let container = document.getElementById("agenda-agendamento");
+    container.innerHTML = "";
+    
+    if (window.agendaDiasDisponiveis.length === 0) {
+        container.innerHTML = `<div style="color:var(--cobli-red); font-size:0.85rem; font-weight:bold;">⚠️ Não há horários disponíveis com as horas necessárias seguidas.</div>`;
+        return;
     }
+
+    let startIndex = window.agendaPaginaAtual * 5;
+    let endIndex = startIndex + 5;
+    let diasPagina = window.agendaDiasDisponiveis.slice(startIndex, endIndex);
+
+    diasPagina.forEach(diaInfo => {
+        let card = document.createElement("div"); 
+        card.className = "agenda-day-card"; 
+        card.innerHTML = `<div class="agenda-day-title">${diaInfo.dStr} (${diaInfo.dNome})</div>`; 
+        let wrapper = document.createElement("div"); 
+        wrapper.className = "slots-wrapper"; 
+        
+        diaInfo.allSlots.forEach(item => { 
+            let hInt = parseInt(item.hora.split(':')[0]);
+            let div = document.createElement("div"); 
+            div.className = "cell"; 
+            div.innerText = item.hora; 
+            div.dataset.hora = item.hora; 
+            div.dataset.date = diaInfo.dStr; 
+            
+            if (!diaInfo.enabledCells.has(hInt)) {
+                div.style.opacity = "0.3";
+                div.style.cursor = "not-allowed";
+                div.onclick = () => window.showToast(`Horário indisponível para ${diaInfo.horasNecessarias}h seguidas ou excedeu a capacidade.`);
+            } else {
+                div.onclick = function() { 
+                    let horaInicioReal = hInt;
+                    if (!diaInfo.validStarts.includes(hInt)) {
+                        for (let b = 1; b < diaInfo.horasNecessarias; b++) {
+                            let testStart = hInt - b;
+                            if (diaInfo.validStarts.includes(testStart)) {
+                                horaInicioReal = testStart;
+                                break;
+                            }
+                        }
+                    }
+                    
+                    document.querySelectorAll("#agenda-agendamento .cell").forEach(c => c.classList.remove('selecionado'));
+                    for(let m=0; m < diaInfo.horasNecessarias; m++) {
+                        let targetH = `${horaInicioReal + m}:00`;
+                        let targetCell = Array.from(wrapper.children).find(c => c.dataset.hora === targetH);
+                        if(targetCell) targetCell.classList.add("selecionado");
+                    }
+                }; 
+            }
+            wrapper.appendChild(div); 
+        }); 
+        card.appendChild(wrapper); 
+        container.appendChild(card); 
+    });
+
+    // CONTROLES DE PAGINAÇÃO CHIQÚERRIMOS
+    let paginacaoHtml = document.createElement("div");
+    paginacaoHtml.style.display = "flex";
+    paginacaoHtml.style.justifyContent = "space-between";
+    paginacaoHtml.style.marginTop = "15px";
+    
+    let btnAnt = document.createElement("button");
+    btnAnt.innerText = "⬅️ Anteriores";
+    btnAnt.style.background = "#64748b";
+    btnAnt.style.padding = "8px 16px";
+    btnAnt.style.borderRadius = "6px";
+    btnAnt.disabled = window.agendaPaginaAtual === 0;
+    if(btnAnt.disabled) btnAnt.style.opacity = "0.5";
+    btnAnt.onclick = () => { window.agendaPaginaAtual--; window.renderizarAgendaPaginada(); };
+
+    let btnProx = document.createElement("button");
+    btnProx.innerText = "Próximos ➡️";
+    btnProx.style.background = "var(--primary)";
+    btnProx.style.padding = "8px 16px";
+    btnProx.style.borderRadius = "6px";
+    btnProx.disabled = endIndex >= window.agendaDiasDisponiveis.length;
+    if(btnProx.disabled) btnProx.style.opacity = "0.5";
+    btnProx.onclick = () => { window.agendaPaginaAtual++; window.renderizarAgendaPaginada(); };
+
+    paginacaoHtml.appendChild(btnAnt);
+    paginacaoHtml.appendChild(btnProx);
+    container.appendChild(paginacaoHtml);
 };
 
 window.validarEAvancar = function() { 
