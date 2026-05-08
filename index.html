@@ -584,15 +584,25 @@ window.abrirOpcoesPrestador = function(i) {
     window.exibirModal("Ações do Prestador", html);
 };
     
-    window.enviarNotificacaoSlack = async function(msg) {
+window.enviarNotificacaoSlack = async function(msg) {
         const SUPABASE_URL = "https://fqaqlofndeihmhkopvan.supabase.co/functions/v1/notificar-slack";
         try {
-            await fetch(SUPABASE_URL, {
+            console.log("🚀 Disparando para o Slack..."); // Vai aparecer no F12
+            const res = await fetch(SUPABASE_URL, {
                 method: 'POST',
                 headers: getHeaders(), 
                 body: JSON.stringify({ text: msg })
             });
-        } catch (e) { console.error("Erro ao enviar para o Slack:", e); }
+            
+            if (!res.ok) {
+                const erroSupabase = await res.text();
+                console.error("❌ A Edge Function do Slack recusou:", erroSupabase);
+            } else {
+                console.log("✅ Slack enviado com sucesso para a Edge!");
+            }
+        } catch (e) { 
+            console.error("❌ Erro de conexão ao tentar o Slack:", e); 
+        }
     };
 
 window.buscarEnderecoPorCep = async function() {
@@ -1043,9 +1053,9 @@ window.concluirAgendamentoFinal = async function(btn) {
             body: JSON.stringify(agendamento)
         });
         const result = await response.json(); 
-        if (response.ok) {
-            if (dispararSlack && dispararBanco) {
-                // NOTIFICAÇÃO SLACK PADRONIZADA 
+       if (response.ok) {
+            // AGORA SÓ DEPENDE DO SLACK ESTAR ON!
+            if (dispararSlack) {
                 let produtosFormatados = itensOrdenados.map(i => `[${i.nomeManutencao.toUpperCase()}] ${i.desc} (${i.qtd}x)`).join(', ');
                 const msgSlack = `✅ *Novo Agendamento - Ticket: ${result.ticket}*\n` +
                                  `*Cliente:* ${agendamento.cliente}\n` +
@@ -1238,9 +1248,9 @@ window.renderizarListaPrestadoresSelecao = function(lista) {
         return `
         <div class="painel-item" 
              onclick="window.selecionarPrestadorPorObjeto('${p.nome}')" 
-             style="cursor: pointer; flex-direction: column; align-items: flex-start; transition: all 0.2s ease; margin-bottom: 12px; border-left: 5px solid var(--primary);" 
-             onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 6px 15px rgba(0,0,0,0.1)';" 
-             onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 1px 3px rgba(0,0,0,0.1)';">
+             style="cursor: pointer; flex-direction: column; align-items: flex-start; transition: all 0.2s ease; margin-bottom: 12px; border-left: 5px solid var(--primary); background-color: white;" 
+             onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 6px 15px rgba(0,0,0,0.1)'; this.style.backgroundColor='#ebfcf9'; this.style.borderLeftColor='var(--cobli-green)';" 
+             onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 1px 3px rgba(0,0,0,0.1)'; this.style.backgroundColor='white'; this.style.borderLeftColor='var(--primary)';">
             
             <div style="width: 100%; display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                 <div style="font-size: 1.05rem; font-weight: bold; color: var(--primary);">👷 ${p.nome}</div>
