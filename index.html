@@ -887,7 +887,8 @@ window.abrirDetalhesAgendamento = function(index) {
     const contatoResponsavel = `${a.acompanhamento || 'Não informado'} | ${a.telefone_responsavel || 'Sem telefone'}`;
     let prodHtml = a.produtos ? a.produtos.replace(/\n/g, '<br>') : 'Sem produtos detalhados';
 
-    let btnExcluirHtml = isAuthorized ? `<button onclick="window.excluirAgendamento(${a.id})" class="btn-cancelar" style="flex:1; padding:10px;">Excluir Agendamento</button>` : '';
+    // AQUI: Adicionei o '${a.data}' no clique do botão para sabermos quando foi
+    let btnExcluirHtml = isAuthorized ? `<button onclick="window.excluirAgendamento(${a.id}, '${a.data}')" class="btn-cancelar" style="flex:1; padding:10px;">Excluir Agendamento</button>` : '';
 
     let html = `
         <div style="background: white; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 15px;">
@@ -917,7 +918,23 @@ window.abrirDetalhesAgendamento = function(index) {
     window.exibirModal("Detalhes do Agendamento", html);
 };
 
-window.excluirAgendamento = function(id) { window.showConfirm("Tem certeza que deseja excluir?", () => window.confirmarExclusaoAgendamento(id)); };
+window.excluirAgendamento = function(id, dataStr) { 
+    // SE TEM DATA, VERIFICA SE JÁ PASSOU
+    if (dataStr && dataStr !== 'N/A') {
+        const [d, m, y] = dataStr.split('/');
+        const dataAgendamento = new Date(y, m - 1, d);    
+        const hoje = new Date();
+        hoje.setHours(0, 0, 0, 0); // Zera as horas pra não dar conflito
+      
+        // Se a data for menor que hoje E o usuário NÃO for admin, BLOQUEIA!
+        if (dataAgendamento < hoje && !isAuthorized) {
+            return window.showMessage("❌ <strong>Ação Negada:</strong><br><br>Não é permitido excluir agendamentos com data retroativa para preservar o histórico da operação.");
+        }
+    }
+    
+    // Se a data for de hoje pra frente, OU se for Admin, permite excluir normal
+    window.showConfirm("Tem certeza que deseja excluir este agendamento?", () => window.confirmarExclusaoAgendamento(id)); 
+};
 window.cancelarAgendamento = function() { window.showConfirm("Deseja realmente cancelar este agendamento?", window.realizarCancelamento); };
 window.realizarCancelamento = function() { window.limparFormulario(); window.proximoPasso(1); };
 async function consultarDistancia(cepOrigem, enderecoPrestador) { try { const response = await fetch(`${API_URL}/distancia`, { method: 'POST', headers: getHeaders(), body: JSON.stringify({ origin: cepOrigem, destination: enderecoPrestador }) }); const data = await response.json(); return (data.status === 'OK') ? parseFloat(data.rows[0].elements[0].distance.value) / 1000 : null; } catch (e) { return null; } }
