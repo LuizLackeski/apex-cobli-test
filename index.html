@@ -1130,7 +1130,6 @@ window.concluirAgendamentoFinal = async function(btn) {
 
 window.limparFormulario = function() { itensSelecionados = []; prestadorSelecionadoIndex = null; document.getElementById("lista-produtos").innerHTML = ""; document.getElementById("horasNecessarias").innerText = "0"; document.getElementById("agenda-agendamento").innerHTML = ""; document.getElementById("inputCep").value = ""; document.getElementById("ticket").value = ""; document.getElementById("clienteNome").value = ""; document.getElementById("solicitante").value = ""; document.getElementById("respAcompanhamento").value = ""; document.getElementById("telResponsavel").value = ""; };
 
-// === A FUNÇÃO QUE TINHA SUMIDO ESTÁ AQUI ===
 window.trocarAba = function(id, btn){ 
     document.querySelectorAll('.aba').forEach(a => a.classList.remove('ativa')); 
     document.getElementById(id).classList.add('ativa'); 
@@ -1553,37 +1552,31 @@ window.renderPainel = function(){
     document.getElementById('st-concluido').innerText = counts.concluido;
     document.getElementById('st-cancelado').innerText = counts.cancelado;
 
-    // --- PAINEL REESTRUTURADO (SEM BOTÕES E COM EFEITO VERDINHO) ---
     document.getElementById("painel-conteudo").innerHTML = filtradosPainel.map((a, i) => {
         let primeiroSlot = Array.isArray(a.slots) ? a.slots[0] : (String(a.slots).split(',')[0] || 'N/A');
         let dataRegistro = a.created_at ? new Date(a.created_at).toLocaleString('pt-BR') : 'N/A';
 
         return `<div class="painel-item" data-ticket="${a.ticket}" 
              onclick="window.abrirDetalhesAgendamento(${i})" 
-             style="cursor: pointer; flex-direction: column; align-items: flex-start; transition: all 0.2s ease; margin-bottom: 12px; border-left: 5px solid var(--primary); background-color: white;" 
+             style="cursor: pointer; transition: all 0.2s ease; margin-bottom: 8px; border-left: 5px solid var(--primary); background-color: white;" 
              onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 6px 15px rgba(0,0,0,0.1)'; this.style.backgroundColor='#ebfcf9'; this.style.borderLeftColor='var(--cobli-green)';" 
              onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 1px 3px rgba(0,0,0,0.1)'; this.style.backgroundColor='white'; this.style.borderLeftColor='var(--primary)';">
             
-            <div style="width: 100%; display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                <div style="font-size: 1.05rem; font-weight: bold; color: var(--primary);">🎟️ #${a.ticket}</div>
-                <div style="font-size: 0.75rem; color: #64748b; font-weight: 700; background: #f1f5f9; padding: 4px 8px; border-radius: 4px; border: 1px solid #e2e8f0;">
-                    ${a.status || 'SOLICITADO'}
+            <div style="flex-grow: 1; font-size: 0.95rem;">
+                <strong>🎟️ #${a.ticket}</strong> | 🏷️ Status: <span style="color: var(--primary); font-weight: bold;">${a.status || 'SOLICITADO'}</span> | 👤 Cliente: <strong>${a.cliente || 'Não informado'}</strong>
+                
+                <div style="margin-top:6px; font-size: 0.85rem; color: #334155;">
+                     📅 Agendado: ${a.data} às ${primeiroSlot} | 🛠️ Prestador: ${a.prestador}
                 </div>
-            </div>
-            
-            <div style="font-size: 0.85rem; color: #334155; margin-bottom: 6px; width: 100%;">
-                 👤 <strong>Cliente:</strong> ${a.cliente || 'Não informado'} <br>
-                 📅 <strong>Agendado:</strong> ${a.data} às ${primeiroSlot} | 🛠️ <strong>Prestador:</strong> ${a.prestador}
-            </div>
-            
-            <div style="width: 100%; border-top: 1px dashed #e2e8f0; padding-top: 8px; margin-top: 4px; font-size: 0.7rem; color: #64748b;">
-                 Registrado em: ${dataRegistro} (via APEX) | 🙋‍♂️ Solicitante: ${a.solicitante}
+                
+                <div style="margin-top: 6px; font-size: 0.7rem; color: #64748b; border-top: 1px dashed #e2e8f0; padding-top: 6px;">
+                     Registrado em: ${dataRegistro} (via APEX) | 🙋‍♂️ Solicitado por: ${a.solicitante}
+                </div>
             </div>
         </div>`;
     }).join(''); 
 };
 
-// --- FUNÇÃO DE UPDATE GERAL CORRIGIDA PARA RODAR SEM BOTÕES NO HTML ---
 window.atualizarTodosStatus = async function() {
     if (filtradosPainel.length === 0) {
         return window.showMessage("Nenhum ticket visível para atualizar. Limpe os filtros se necessário.");
