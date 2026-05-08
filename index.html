@@ -462,6 +462,16 @@
     let filtradosPainel = []; 
     let myChart = null; 
 
+    // --- NOVA FUNÇÃO DE FORMATAR TEMPO ---
+    function formatarTempo(minutos) {
+        if (minutos === 0) return "0h";
+        let h = Math.floor(minutos / 60);
+        let m = minutos % 60;
+        if (h > 0 && m > 0) return `${h}h ${m}m`;
+        if (h > 0) return `${h}h`;
+        return `${m}m`;
+    }
+
 window.maskCPFCNPJ = function(i) {
     let v = i.value.replace(/\D/g, "");
     if (v.length <= 11) { // CPF
@@ -765,7 +775,7 @@ async function verificarSequenciaEFOP() {
         if (result.sugerido) {
             if (result.sugerido !== baseOriginal) {
                 input.value = result.sugerido;
-                input.style.border = "2px solid var(--cobli-green)";
+                input.style.border = "2px solid #f59e0b";
                 if (!result.warning) {
                     window.showMessage(`🔄 <strong>Sequência encontrada!</strong><br><br>O próximo número sugerido é: <strong>${result.sugerido}</strong>`);
                 }
@@ -926,9 +936,12 @@ window.revisarAgendamento = function() {
     const cep = document.getElementById('inputCep').value;
     const endereco = `${rua}, ${numero} - ${bairro}, ${cidade}/${uf} - CEP: ${cep}`;
 
-    let prodHtml = itensSelecionados.map(i => 
-        `<div style="margin-bottom:5px;">• [${i.nomeManutencao.toUpperCase()}] ${i.desc} <strong>(Qtd: ${i.qtd} | ${i.tempo * i.qtd}m)</strong></div>`
-    ).join('');
+    let prodHtml = itensSelecionados.map(i => {
+        // Formata o tempo para o layout (ex: 5h, 2h 30m)
+        let tempoTotalFormatado = formatarTempo(i.tempo * i.qtd);
+        return `<div style="margin-bottom:5px;">• [${i.nomeManutencao.toUpperCase()}] ${i.desc} <strong>(Qtd: ${i.qtd} | ${tempoTotalFormatado})</strong></div>`;
+    }).join('');
+    
     let html = `
         <div style="background: white; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 15px; text-align: left;">
             <div style="font-weight:bold; font-size:1.1rem; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px; margin-bottom: 8px; color:var(--primary);">
@@ -978,7 +991,6 @@ window.concluirAgendamentoFinal = async function(btn) {
     const dataSelecionada = sel.length > 0 ? sel[0].dataset.date : null;
     const prestador = prestadores[prestadorSelecionadoIndex];
     
-    // CORREÇÃO DO BUG DO USUÁRIO NORMAL: Tudo fica ON automaticamente!
     const dispararSlack = isAuthorized ? (document.getElementById('slackSwitch').value === 'ON') : true;
     const dispararField = isAuthorized ? (document.getElementById('fieldSwitch').value === 'ON') : true;
     const dispararBanco = isAuthorized ? (document.getElementById('dbSwitch').value === 'ON') : true;
@@ -987,6 +999,9 @@ window.concluirAgendamentoFinal = async function(btn) {
         window.showMessage("Erro: Selecione o prestador e o horário.");
         return;
     }
+
+    // PRIORIDADE FIELD: Ordenando a lista do maior tempo pro menor tempo
+    let itensOrdenados = [...itensSelecionados].sort((a, b) => b.tempo - a.tempo);
 
     const agendamento = {
         prestador: prestador.nome,
@@ -1006,15 +1021,19 @@ window.concluirAgendamentoFinal = async function(btn) {
         cep: document.getElementById('inputCep').value,
         acompanhamento: document.getElementById('respAcompanhamento').value,
         telefone_responsavel: document.getElementById('telResponsavel').value,
-        segment: itensSelecionados[0]?.nomeManutencao || "", 
-        tipo_servico: itensSelecionados[0]?.desc || "Manutenção",
+        
+        // Pega sempre o [0] que agora será sempre o de maior tempo!
+        segment: itensOrdenados[0]?.nomeManutencao || "", 
+        tipo_servico: itensOrdenados[0]?.desc || "Manutenção",
         field_id: prestador.field_id,
-        produtos_texto: itensSelecionados.map(i => `• [${i.nomeManutencao.toUpperCase()}] ${i.desc} (Qtd: ${i.qtd})`).join('\n'),
-        segment_id_field: itensSelecionados[0]?.segment_id || "",
-        maintenance_id_field: document.getElementById('tipoManutencao').value,
+        produtos_texto: itensOrdenados.map(i => `• [${i.nomeManutencao.toUpperCase()}] ${i.desc} (Qtd: ${i.qtd})`).join('\n'),
+        segment_id_field: itensOrdenados[0]?.segment_id || "",
+        maintenance_id_field: itensOrdenados[0]?.maintenance_id || document.getElementById('tipoManutencao').value,
+        
         executar_field: dispararField,
         executar_banco: dispararBanco
     };
+    
     const originalText = btn.innerText;
     btn.innerText = "Processando..."; btn.disabled = true;
     try {
@@ -1026,10 +1045,15 @@ window.concluirAgendamentoFinal = async function(btn) {
         const result = await response.json(); 
         if (response.ok) {
             if (dispararSlack && dispararBanco) {
-                const msgSlack = `✅ *Novo Agendamento: ${result.ticket}*\n` +
-                                 `*Status:* ${result.status}\n` +
-                                 `*Origem:* ${result.origin}\n` +
-                                 `*Cliente:* ${agendamento.cliente}`;
+                // NOTIFICAÇÃO SLACK PADRONIZADA 
+                let produtosFormatados = itensOrdenados.map(i => `[${i.nomeManutencao.toUpperCase()}] ${i.desc} (${i.qtd}x)`).join(', ');
+                const msgSlack = `✅ *Novo Agendamento - Ticket: ${result.ticket}*\n` +
+                                 `*Cliente:* ${agendamento.cliente}\n` +
+                                 `*Prestador:* ${agendamento.prestador}\n` +
+                                 `*Data:* ${agendamento.data} | ${agendamento.slots[0]}\n` +
+                                 `*Produtos:* ${produtosFormatados}\n` +
+                                 `*Solicitante:* ${agendamento.solicitante}`;
+                                 
                 await window.enviarNotificacaoSlack(msgSlack);
             }
             let statusMsg = `🚀 **Sucesso!**\n\n`;
@@ -1056,8 +1080,41 @@ window.concluirAgendamentoFinal = async function(btn) {
 
 window.limparFormulario = function() { itensSelecionados = []; prestadorSelecionadoIndex = null; document.getElementById("lista-produtos").innerHTML = ""; document.getElementById("horasNecessarias").innerText = "0"; document.getElementById("agenda-agendamento").innerHTML = ""; document.getElementById("inputCep").value = ""; document.getElementById("ticket").value = ""; document.getElementById("clienteNome").value = ""; document.getElementById("solicitante").value = ""; document.getElementById("respAcompanhamento").value = ""; document.getElementById("telResponsavel").value = ""; };
 window.trocarAba = function(id, btn){ document.querySelectorAll('.aba').forEach(a => a.classList.remove('ativa')); document.getElementById(id).classList.add('ativa'); document.querySelectorAll('.menu button').forEach(b => b.classList.remove('ativo')); if(btn) btn.classList.add('ativo'); if(id === 'painel') window.atualizarFiltrosPrestador(); if(id === 'dashboard') window.renderDashboard(); };
-window.getNextDates = function(prestador) { let dates = []; let today = new Date(); const daysMap = {"Dom":0, "Seg":1, "Ter":2, "Qua":3, "Qui":4, "Sex":5, "Sab":6}; let agendaDays = (prestador.agenda && Array.isArray(prestador.agenda)) ? [...new Set(prestador.agenda.map(a => a.dia))].map(d => daysMap[d]) : []; let qtdLimit = parseInt(prestador.qtdtecnicos) || 1; for (let i = 0; i < 14; i++) { let d = new Date(); d.setDate(today.getDate() + i); let dStr = d.toLocaleDateString(); let dNome = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sab"][d.getDay()]; let blocked = window.getBlockedHours(prestador, dStr); let slotsDoDia = (prestador.agenda && Array.isArray(prestador.agenda)) ? prestador.agenda.filter(a => a.dia == dNome) : []; let temLivre = slotsDoDia.some(s => (s.hora && !blocked.has(parseInt(s.hora.split(':')[0])) && window.getOcupacaoSlot(prestador, dStr, s.hora) < qtdLimit)); if (agendaDays.includes(d.getDay()) && temLivre) dates.push(dStr.slice(0,5)); } return dates; };
-window.proximoPasso = async function(n) { if(n === 2) { if(prestadores.length === 0) return window.showMessage("Cadastre um prestador!"); const rua = document.getElementById('inputRua').value; const num = document.getElementById('inputNumero').value; const cidade = document.getElementById('inputCidade').value; if(!rua || !num || !cidade) return window.showMessage("Preencha o endereço completo!"); const btn = document.getElementById('btnBuscar'); btn.disabled = true; btn.innerText = "Calculando..."; const enderecoBusca = `${rua}, ${num} - ${cidade} - ${document.getElementById('inputCep').value}`; let prestadoresFiltrados = []; for(let p of prestadores) { if (!p.endereco) continue; const dist = await consultarDistancia(enderecoBusca, p.endereco); let available = window.getNextDates(p); if(dist !== null && dist <= parseFloat(p.range) && available.length > 0) { p.distanciaFinal = dist.toFixed(1); p.nextDates = available.join(', '); prestadoresFiltrados.push(p); } } btn.disabled = false; btn.innerText = "Buscar Prestadores"; if(prestadoresFiltrados.length === 0) { window.showMessage("Nenhum prestador encontrado no raio de atendimento."); return; } window.renderizarListaPrestadoresSelecao(prestadoresFiltrados); } if(n === 3 && prestadorSelecionadoIndex === null) return window.showMessage("Selecione um prestador!"); document.querySelectorAll('#consulta > div').forEach(div => div.style.display = 'none'); document.getElementById('step-' + n).style.display = 'block'; if (n === 3) { let p = prestadores[prestadorSelecionadoIndex]; document.getElementById("header-prestador-info").innerText = `Prestador: ${p.nome} | Distância: ${p.distanciaFinal} km`; window.rdaAgendamento(); } };
+window.getNextDates = function(prestador) { let dates = []; let today = new Date(); const daysMap = {"Dom":0, "Seg":1, "Ter":2, "Qua":3, "Qui":4, "Sex":5, "Sab":6}; let agendaDays = (prestador.agenda && Array.isArray(prestador.agenda)) ? [...new Set(prestador.agenda.map(a => a.dia))].map(d => daysMap[d]) : []; let qtdLimit = parseInt(prestador.qtdtecnicos) || 1; 
+    // REGRA D+2: Laço começa no dia 2 em vez de 0. Assim nunca pega hoje nem amanhã.
+    for (let i = 2; i < 16; i++) { 
+        let d = new Date(); d.setDate(today.getDate() + i); let dStr = d.toLocaleDateString(); let dNome = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sab"][d.getDay()]; let blocked = window.getBlockedHours(prestador, dStr); let slotsDoDia = (prestador.agenda && Array.isArray(prestador.agenda)) ? prestador.agenda.filter(a => a.dia == dNome) : []; let temLivre = slotsDoDia.some(s => (s.hora && !blocked.has(parseInt(s.hora.split(':')[0])) && window.getOcupacaoSlot(prestador, dStr, s.hora) < qtdLimit)); if (agendaDays.includes(d.getDay()) && temLivre) dates.push(dStr.slice(0,5)); 
+    } 
+    return dates; 
+};
+
+window.proximoPasso = async function(n) { 
+    if(n === 2) { 
+        if(prestadores.length === 0) return window.showMessage("Cadastre um prestador!"); 
+        const rua = document.getElementById('inputRua').value; const num = document.getElementById('inputNumero').value; const cidade = document.getElementById('inputCidade').value; 
+        if(!rua || !num || !cidade) return window.showMessage("Preencha o endereço completo!"); 
+        
+        const btn = document.getElementById('btnBuscar'); btn.disabled = true; btn.innerText = "Calculando..."; 
+        const enderecoBusca = `${rua}, ${num} - ${cidade} - ${document.getElementById('inputCep').value}`; 
+        let prestadoresFiltrados = []; 
+        for(let p of prestadores) { 
+            if (!p.endereco) continue; 
+            const dist = await consultarDistancia(enderecoBusca, p.endereco); let available = window.getNextDates(p); 
+            if(dist !== null && dist <= parseFloat(p.range) && available.length > 0) { 
+                p.distanciaFinal = dist.toFixed(1); p.nextDates = available.join(', '); prestadoresFiltrados.push(p); 
+            } 
+        } 
+        btn.disabled = false; btn.innerText = "Buscar Prestadores"; 
+        if(prestadoresFiltrados.length === 0) { window.showMessage("Nenhum prestador encontrado no raio de atendimento."); return; } 
+        
+        // ORDENANDO POR MENOR DISTÂNCIA
+        prestadoresFiltrados.sort((a, b) => parseFloat(a.distanciaFinal) - parseFloat(b.distanciaFinal));
+        
+        window.renderizarListaPrestadoresSelecao(prestadoresFiltrados); 
+    } 
+    if(n === 3 && prestadorSelecionadoIndex === null) return window.showMessage("Selecione um prestador!"); document.querySelectorAll('#consulta > div').forEach(div => div.style.display = 'none'); document.getElementById('step-' + n).style.display = 'block'; 
+    if (n === 3) { let p = prestadores[prestadorSelecionadoIndex]; document.getElementById("header-prestador-info").innerText = `Prestador: ${p.nome} | Distância: ${p.distanciaFinal} km`; window.rdaAgendamento(); } 
+};
 
 window.rdaAgendamento = function() { 
     let p = prestadores[prestadorSelecionadoIndex]; 
@@ -1073,7 +1130,9 @@ window.rdaAgendamento = function() {
         return;
     }
     let diasEncontrados = 0;
-    for(let i=0; i<14; i++){ 
+    
+    // REGRA D+2: Laço começa no 2 para não mostrar hoje nem amanhã
+    for(let i=2; i<16; i++){ 
         let data = new Date(); 
         data.setDate(hoje.getDate() + i); 
         let dStr = data.toLocaleDateString(); 
@@ -1264,15 +1323,20 @@ window.adicionarProduto = function() {
     let idSegmento = optionSelecionada.dataset.idField;
     let descBase = optionSelecionada.text;
     let nomeManutencao = selectManutencao.options[selectManutencao.selectedIndex].text;
+    let idManutencao = selectManutencao.value;
     let qtd = parseInt(document.getElementById("quantidade").value) || 1;
     let tempoBase = parseInt(select.value);
-    let itemExistente = itensSelecionados.find(i => i.segment_id === idSegmento && i.desc === descBase);
+    
+    // CORREÇÃO DO BUG 11: Agora a busca considera a DESCRIÇÃO E o TIPO DE MANUTENÇÃO para somar
+    let itemExistente = itensSelecionados.find(i => i.segment_id === idSegmento && i.desc === descBase && i.nomeManutencao === nomeManutencao);
+    
     if (itemExistente) {
         itemExistente.qtd += qtd; 
     } else {
         itensSelecionados.push({
             desc: descBase,
             nomeManutencao: nomeManutencao,
+            maintenance_id: idManutencao,
             tempo: tempoBase,
             qtd: qtd,
             segment_id: idSegmento 
@@ -1291,7 +1355,7 @@ window.renderizarProdutos = function() {
             <div class="item-lista">
                 <span>
                     <strong>Serviço:</strong> [${i.nomeManutencao.toUpperCase()}] ${i.desc} 
-                    (Qtd: ${i.qtd} | Total: ${tempoAcumuladoItem}m)
+                    (Qtd: ${i.qtd} | Tempo: ${formatarTempo(tempoAcumuladoItem)})
                 </span> 
                 <button onclick="itensSelecionados.splice(${idx},1); window.renderizarProdutos(); window.rdaAgendamento();" 
                         style="background:var(--cobli-red); padding:2px 8px; color:white; border:none; border-radius:4px; cursor:pointer; margin-left:10px;">
