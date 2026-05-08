@@ -446,21 +446,39 @@
         <div id="painel-conteudo" style="max-height: 500px; overflow-y: auto;"></div>
     </div>
 
-    <div id="dashboard" class="aba">
+<div id="dashboard" class="aba">
         <div class="flex-cards">
             <div class="stats-card">Agendamentos<br><strong id="dash-agend">0</strong></div>
             <div class="stats-card">Serviços Programados<br><strong id="dash-serv">0</strong></div>
-        </div>
+        </div>    
+        <div style="display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap;">
+            <div class="card" style="flex: 1; min-width: 300px; margin-bottom: 0;">
+                <h2 style="font-size: 1rem;">Distribuição por Prestador</h2>
+                <div style="position: relative; height: 250px; width: 100%;">
+                    <canvas id="chartPrestadores"></canvas>
+                </div>
+            </div>      
+            <div class="card" style="flex: 1; min-width: 300px; margin-bottom: 0;">
+                <h2 style="font-size: 1rem;">Tipos de Serviços/Manutenção</h2>
+                <div style="position: relative; height: 250px; width: 100%;">
+                    <canvas id="chartServicos"></canvas>
+                </div>
+            </div>
+        </div>    
         <div class="card">
-            <h2>Distribuição por Prestador</h2>
-            <canvas id="chartPrestadores" style="max-height: 300px; width: 100%;"></canvas>
+            <h2 style="font-size: 1rem;">Volume por Localidade (Top 10)</h2>
+            <div style="position: relative; height: 250px; width: 100%;">
+                <canvas id="chartLocais"></canvas>
+            </div>
         </div>
     </div>
-</div>
 
 <script>
+ 
     let filtradosPainel = []; 
     let myChart = null; 
+    let chartServicos = null; 
+    let chartLocais = null;
 
     // --- NOVA FUNÇÃO DE FORMATAR TEMPO ---
     function formatarTempo(minutos) {
@@ -808,21 +826,106 @@ async function verificarSequenciaEFOP() {
 window.renderDashboard = function() {
     let totalAgend = agendamentos.length;
     let totalServ = 0;
+    
     let distPrest = {};
+    let distServ = {};
+    let distLocais = {};
+
     agendamentos.forEach(a => {
-        if(Array.isArray(a.produtos)) a.produtos.forEach(p => totalServ += p.qtd);
-        distPrest[a.prestador] = (distPrest[a.prestador] || 0) + 1;
+        // Conta prestadores
+        if(a.prestador) distPrest[a.prestador] = (distPrest[a.prestador] || 0) + 1;
+        
+        // Conta Localidades (Cidade - UF)
+        if(a.cidade && a.uf) {
+            let local = `${a.cidade}/${a.uf}`.toUpperCase();
+            distLocais[local] = (distLocais[local] || 0) + 1;
+        }
+
+        // Conta Serviços/Produtos
+        if(Array.isArray(a.produtos)) {
+            a.produtos.forEach(p => totalServ += p.qtd);
+        } else {
+            // Fallback caso não seja array
+            totalServ += 1; 
+        }
+        
+        // Pega o Segmento (Se não tiver, vai para "Outros")
+        let segmento = a.segment || 'Outros';
+        distServ[segmento] = (distServ[segmento] || 0) + 1;
     });
+
     document.getElementById("dash-agend").innerText = totalAgend;
     document.getElementById("dash-serv").innerText = totalServ;
-    const labels = Object.keys(distPrest);
-    const data = Object.values(distPrest);
-    const ctx = document.getElementById('chartPrestadores').getContext('2d');
+    
+    // ==========================================
+    // 1. Gráfico Prestadores (Barras Azul)
+    // ==========================================
+    const ctxPrest = document.getElementById('chartPrestadores').getContext('2d');
     if(myChart) myChart.destroy();
-    myChart = new Chart(ctx, {
+    myChart = new Chart(ctxPrest, {
         type: 'bar',
-        data: { labels: labels, datasets: [{ label: 'Agendamentos', data: data, backgroundColor: '#001BB8' }] },
-        options: { responsive: true, plugins: { legend: { display: false }, datalabels: { anchor: 'center', align: 'center', color: 'white', formatter: function(value, context) { let percent = totalAgend > 0 ? Math.round((value / totalAgend) * 100) : 0; return `${String(value).padStart(2, '0')} | ${percent}%`; } } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } },
+        data: { 
+            labels: Object.keys(distPrest), 
+            datasets: [{ label: 'Agendamentos', data: Object.values(distPrest), backgroundColor: '#001BB8', borderRadius: 4 }] 
+        },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, datalabels: { color: 'white', font: {weight: 'bold'} } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } },
+        plugins: [ChartDataLabels]
+    });
+
+    // ==========================================
+// ==========================================
+    // 2. Gráfico Serviços (Barras Horizontais)
+    // ==========================================
+    const ctxServ = document.getElementById('chartServicos').getContext('2d');
+    if(chartServicos) chartServicos.destroy();
+    
+    // Pegar o Top 6 serviços para não amassar o gráfico
+    let servicosOrdenados = Object.entries(distServ).sort((a,b) => b[1] - a[1]).slice(0, 6);
+
+    chartServicos = new Chart(ctxServ, {
+        type: 'bar',
+        data: { 
+            labels: servicosOrdenados.map(s => s[0]), 
+            datasets: [{ 
+                label: 'Agendamentos',
+                data: servicosOrdenados.map(s => s[1]), 
+                backgroundColor: ['#001BB8', '#00AE97', '#FF4633', '#07074E', '#3b82f6', '#10b981'],
+                borderRadius: 4
+            }] 
+        },
+        options: { 
+            indexAxis: 'y', // Mágica que deita o gráfico!
+            responsive: true, 
+            maintainAspectRatio: false, 
+            plugins: { 
+                legend: { display: false }, 
+                datalabels: { 
+                    anchor: 'end', 
+                    align: 'left', 
+                    color: 'white', 
+                    font: {weight: 'bold'} 
+                } 
+            },
+            scales: { x: { beginAtZero: true, ticks: { stepSize: 1 } } }
+        },
+        plugins: [ChartDataLabels]
+    });
+
+    // ==========================================
+    // 3. Gráfico Localidades (Barras Verde)
+    // ==========================================
+    // Vamos pegar só o Top 10 cidades pra não espremer o gráfico se o Brasil todo começar a pedir
+    let locaisOrdenados = Object.entries(distLocais).sort((a,b) => b[1] - a[1]).slice(0, 10); 
+    
+    const ctxLocais = document.getElementById('chartLocais').getContext('2d');
+    if(chartLocais) chartLocais.destroy();
+    chartLocais = new Chart(ctxLocais, {
+        type: 'bar',
+        data: { 
+            labels: locaisOrdenados.map(l => l[0]), 
+            datasets: [{ label: 'Atendimentos', data: locaisOrdenados.map(l => l[1]), backgroundColor: '#00AE97', borderRadius: 4 }] 
+        },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, datalabels: { color: 'white', font: {weight: 'bold'} } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } },
         plugins: [ChartDataLabels]
     });
 };
@@ -918,23 +1021,7 @@ window.abrirDetalhesAgendamento = function(index) {
     window.exibirModal("Detalhes do Agendamento", html);
 };
 
-window.excluirAgendamento = function(id, dataStr) { 
-    // SE TEM DATA, VERIFICA SE JÁ PASSOU
-    if (dataStr && dataStr !== 'N/A') {
-        const [d, m, y] = dataStr.split('/');
-        const dataAgendamento = new Date(y, m - 1, d);    
-        const hoje = new Date();
-        hoje.setHours(0, 0, 0, 0); // Zera as horas pra não dar conflito
-      
-        // Se a data for menor que hoje E o usuário NÃO for admin, BLOQUEIA!
-        if (dataAgendamento < hoje && !isAuthorized) {
-            return window.showMessage("❌ <strong>Ação Negada:</strong><br><br>Não é permitido excluir agendamentos com data retroativa para preservar o histórico da operação.");
-        }
-    }
-    
-    // Se a data for de hoje pra frente, OU se for Admin, permite excluir normal
-    window.showConfirm("Tem certeza que deseja excluir este agendamento?", () => window.confirmarExclusaoAgendamento(id)); 
-};
+window.excluirAgendamento = function(id) {window.showConfirm("Tem certeza que deseja excluir?", () => window.confirmarExclusaoAgendamento(id)); };
 window.cancelarAgendamento = function() { window.showConfirm("Deseja realmente cancelar este agendamento?", window.realizarCancelamento); };
 window.realizarCancelamento = function() { window.limparFormulario(); window.proximoPasso(1); };
 async function consultarDistancia(cepOrigem, enderecoPrestador) { try { const response = await fetch(`${API_URL}/distancia`, { method: 'POST', headers: getHeaders(), body: JSON.stringify({ origin: cepOrigem, destination: enderecoPrestador }) }); const data = await response.json(); return (data.status === 'OK') ? parseFloat(data.rows[0].elements[0].distance.value) / 1000 : null; } catch (e) { return null; } }
