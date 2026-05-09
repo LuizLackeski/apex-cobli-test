@@ -672,7 +672,7 @@ async function checkSession() {
     }
 }
 
-async function definingPermissoes(email, uid) {
+async function definirPermissoes(email, uid) {
     const { data, error } = await supabaseClient.from('perfis_usuarios').select('nivel').eq('id', uid).maybeSingle();
     
     if (data) {
