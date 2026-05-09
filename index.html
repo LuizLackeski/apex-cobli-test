@@ -205,7 +205,7 @@
             <button id="btn-painel" onclick="window.trocarAba('painel', this)">Painel</button>
             <button id="btn-dashboard" onclick="window.trocarAba('dashboard', this)">Dashboard</button>
             <button id="btn-usuarios" onclick="window.trocarAba('usuarios', this)">Usuários</button>
-        </div>
+            </div>
 
         <div id="integrations-control" class="slack-adm-panel">
             <div class="label-integracoes">Integrações</div>
@@ -497,6 +497,41 @@
             </div>
         </div>
         
+        <div id="disponibilidade" class="aba">
+            <div class="card">
+                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; padding-bottom: 15px; margin-bottom: 15px;">
+                    <h2 style="border:none; margin:0;">Gestão de Ausências</h2>
+                </div>
+                <p style="font-size: 0.85rem; color: #64748b; margin-bottom: 20px;">Adicione feriados, férias ou imprevistos para bloquear sua agenda.</p>
+                
+                <div style="background: #fff5f5; border: 1px solid #fecaca; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                    <div style="display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap;">
+                        <div style="flex: 1; min-width: 120px;"><label style="color: var(--cobli-red);">Data Inicial</label><input type="date" id="meuDataBloqueio" style="border-color: #fca5a5; background: white;"></div>
+                        <div style="flex: 1; min-width: 120px;"><label style="color: var(--cobli-red);">Data Final (Opcional)</label><input type="date" id="meuDataBloqueioFim" style="border-color: #fca5a5; background: white;"></div>
+                        <div style="flex: 1; min-width: 120px;">
+                            <label style="color: var(--cobli-red);">Tipo</label>
+                            <select id="meuTipoBloqueio" onchange="document.getElementById('meuBoxHoraBloqueio').style.display = this.value === 'parcial' ? 'flex' : 'none';" style="border-color: #fca5a5; background: white;">
+                                <option value="total">Dia Inteiro</option><option value="parcial">Horário Específico</option>
+                            </select>
+                        </div>
+                        <div style="flex: 1; min-width: 120px;">
+                            <label style="color: var(--cobli-red);">Aplicar a</label>
+                            <select id="meuTecnicoBloqueio" style="border-color: #fca5a5; background: white;">
+                                <option value="Todos">Todos</option>
+                            </select>
+                        </div>
+
+                        <div id="meuBoxHoraBloqueio" style="display: none; gap: 10px; flex: 2; min-width: 200px;">
+                            <div style="flex: 1;"><label style="color: var(--cobli-red);">Início</label><select id="meuHoraInicioBloqueio" style="border-color: #fca5a5; background: white;"><option value="">Sel...</option><option value="8">08:00</option><option value="9">09:00</option><option value="10">10:00</option><option value="11">11:00</option><option value="12">12:00</option><option value="13">13:00</option><option value="14">14:00</option><option value="15">15:00</option><option value="16">16:00</option><option value="17">17:00</option><option value="18">18:00</option></select></div>
+                            <div style="flex: 1;"><label style="color: var(--cobli-red);">Fim</label><select id="meuHoraFimBloqueio" style="border-color: #fca5a5; background: white;"><option value="">Sel...</option><option value="9">09:00</option><option value="10">10:00</option><option value="11">11:00</option><option value="12">12:00</option><option value="13">13:00</option><option value="14">14:00</option><option value="15">15:00</option><option value="16">16:00</option><option value="17">17:00</option><option value="18">18:00</option><option value="19">19:00</option></select></div>
+                        </div>
+                        <button onclick="window.adicionarMeuBloqueioData()" style="height: 42px; background: var(--cobli-red); min-width: 100px;">Adicionar Bloqueio</button>
+                    </div>
+                    <div id="lista-meus-bloqueios-ui" style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 15px;"></div>
+                </div>
+            </div>
+        </div>
+        
     </div>
 </div>
 
@@ -527,6 +562,7 @@ let datasBloqueadasTemp = [], agendaDiasDisponiveis = [], agendaPaginaAtual = 0;
 // CONTROLE DE MÚLTIPLOS TÉCNICOS
 window.agendaCadastroObj = {};
 window.currentTech = 1;
+window.meuPrestadorLogado = null; // ✅ Referência rápida para o Prestador logado
 
 const serviçosDisponíveis = {
     "Telemetria": [{desc:"Instalado veículos leves ou pesados", tempo:40, id_field: "b2098d2f-c060-445b-8e4b-bdcc5b6e613a"}, {desc:"Instalado motos ou maquinários", tempo:40, id_field: "fe2057ba-abd5-44b6-9686-2f50e7717f16"}, {desc:"Leves ou pesados + CAN", tempo:60, id_field: "b04b9472-5663-4d77-8dc9-a79b2f06aa28"}], 
@@ -671,7 +707,7 @@ async function checkSession() {
     }
 }
 
-// CORRIGIDO: Nome da função de definirPermissoes
+// ✅ CORRIGIDO O NOME DA FUNÇÃO
 async function definirPermissoes(email, uid) {
     const { data, error } = await supabaseClient.from('perfis_usuarios').select('nivel').eq('id', uid).maybeSingle();
     
@@ -694,10 +730,16 @@ async function definirPermissoes(email, uid) {
         document.getElementById('btn-usuarios').style.display = 'none';
     }
     
+    // ✅ NOVO: Exibe a aba de Disponibilidade para o Prestador
     if (userRole === 'PRESTADOR') {
         document.getElementById('btn-consulta').style.display = 'none';
         document.getElementById('btn-cadastro').style.display = 'none';
         document.getElementById('btn-dashboard').style.display = 'none';
+        
+        let menuLeft = document.getElementById('main-menu');
+        if(!document.getElementById('btn-disponibilidade')) {
+            menuLeft.innerHTML += `<button id="btn-disponibilidade" onclick="window.trocarAba('disponibilidade', this)">Ausências</button>`;
+        }
         window.trocarAba('painel', document.getElementById('btn-painel'));
     }
 }
@@ -771,6 +813,13 @@ window.carregarDadosDoBanco = async function() {
         const resA = await fetch(`${DB_URL}/agendamentos?select=*&order=created_at.desc`, { method: 'GET', headers: getHeaders() }); 
         const dataAgend = await resA.json(); agendamentos = Array.isArray(dataAgend) ? dataAgend : [];
         
+        // ✅ NOVO: Identifica e armazena os dados do prestador logado
+        if (userRole === 'PRESTADOR' && currentUser) {
+            let emailLogado = currentUser.email.toLowerCase();
+            window.meuPrestadorLogado = prestadores.find(p => p.usuario_apex && p.usuario_apex.toLowerCase() === emailLogado);
+            if(window.meuPrestadorLogado) window.renderizarMinhaDisponibilidade();
+        }
+
         window.renderPainel(); 
         if (userRole !== 'PRESTADOR') window.renderDashboard(); 
         
@@ -824,11 +873,20 @@ window.getOcupacaoSlot = function(prestador, data, hora) {
     }).length; 
 };
 
-// NOVO: Motor Inteligente de Agendamento (Cruza técnicos, vagas, faltas e trava de 1h antes/depois)
+window.getAusenciasDoDia = function(prestador, dStr) {
+    if (!prestador.agenda || !Array.isArray(prestador.agenda)) return { total: false, horasBloqueadas: new Set() };
+    let ausencias = prestador.agenda.filter(a => a.isAbsence && a.data === dStr);
+    
+    let bloqueioTotalEmpresa = ausencias.some(a => a.tipo === 'total' && (a.tecnico === 'Todos' || !a.tecnico));
+    if (bloqueioTotalEmpresa) return { total: true, horasBloqueadas: new Set() };
+    
+    return { total: false, horasBloqueadas: new Set() };
+};
+
+// ✅ CORRIGIDO: Motor Inteligente que avalia Férias, Folga de 1h, Agendamentos e Turnos por Técnico.
 window.podeAgendar = function(prestador, data, novosSlotsInt, dNome) {
     let maxT = parseInt(prestador.qtdtecnicos) || 1;
     
-    // Captura os agendamentos já marcados para o dia (ordenando pelo início)
     let jobs = [];
     agendamentos.filter(a => a.prestador === prestador.nome && (a.data === data || a.rawdate === data)).forEach(a => {
         let slotsArr = Array.isArray(a.slots) ? a.slots : (typeof a.slots === 'string' ? a.slots.split(', ') : []);
@@ -838,13 +896,11 @@ window.podeAgendar = function(prestador, data, novosSlotsInt, dNome) {
         }
     });
     
-    // Adiciona o novo agendamento que estamos tentando marcar
     if (novosSlotsInt && novosSlotsInt.length > 0) {
         let ints = [...novosSlotsInt].sort((x,y) => x-y);
         jobs.push({ start: ints[0], end: ints[ints.length - 1] });
     }
 
-    // Cria a Matriz de Ausências bloqueando hora a hora o que foi colocado de Férias/Feriado
     let absenceMatrix = Array.from({length: maxT + 1}, () => new Set());
     if (prestador.agenda) {
         prestador.agenda.filter(a => a.isAbsence && a.data === data).forEach(a => {
@@ -857,7 +913,7 @@ window.podeAgendar = function(prestador, data, novosSlotsInt, dNome) {
                 for(let t=1; t<=maxT; t++) {
                     for(let i=start; i<end; i++) absenceMatrix[t].add(i);
                 }
-            } else if (a.qtd) { // Legado
+            } else if (a.qtd) { 
                 for(let t=1; t<=Math.min(maxT, parseInt(a.qtd)); t++) {
                     for(let i=start; i<end; i++) absenceMatrix[t].add(i);
                 }
@@ -865,7 +921,6 @@ window.podeAgendar = function(prestador, data, novosSlotsInt, dNome) {
         });
     }
     
-    // Cria a agenda disponível para o dia cruzando Matriz de Escala x Ausências
     let techs = [];
     let tem_tecnico_especifico = prestador.agenda && prestador.agenda.some(a => a.tecnico);
     
@@ -876,25 +931,22 @@ window.podeAgendar = function(prestador, data, novosSlotsInt, dNome) {
         } else {
             worksHours = prestador.agenda ? prestador.agenda.filter(a => a.dia === dNome && !a.isAbsence).map(a => parseInt(a.hora)) : [];
         }
-        // Remove as horas que o técnico está ausente
         let availableHours = worksHours.filter(h => !absenceMatrix[t].has(h));
         techs.push(availableHours);
     }
 
-    // Tenta distribuir os Jobs nos Técnicos disponíveis (incluindo a Trava de Segurança de 1h)
     jobs.sort((a, b) => a.start - b.start);
     let techEnds = Array(maxT).fill(-999);
     
     for (let job of jobs) {
         let assigned = false;
         for (let t = 0; t < maxT; t++) {
-            // Checa se o técnico trabalha em todas as horas que o serviço precisa
             let worksAll = true;
             for(let h = job.start; h <= job.end; h++) {
                 if (!techs[t].includes(h)) { worksAll = false; break; }
             }
             
-            // TRAVA DE SEGURANÇA: Se o horário do último serviço finalizado + 1h for MENOR que o começo deste serviço, pode assumir
+            // Folga de 1h antes e depois mantida intacta
             if (worksAll && techEnds[t] + 1 < job.start) {
                 techEnds[t] = job.end;
                 assigned = true;
@@ -921,7 +973,6 @@ window.getNextDates = function(prestador) {
         
         let temLivre = false;
         for(let hInt of uniqueHoras) {
-            // Delega a avaliação fina de técnico por técnico para o PodeAgendar
             if (window.podeAgendar(prestador, dStr, [hInt], dNome)) {
                 temLivre = true; break;
             }
@@ -1479,23 +1530,31 @@ window.abrirOpcoesPrestador = function(i) {
     window.exibirModal("Ações do Prestador", html);
 };
 
+// ✅ CORRIGIDO: Popup do prestador agora suporta ABAS de técnicos e BOTÃO atalho de bloqueio
 window.abrirDetalhesPrestador = function(index) { 
     let p = prestadores[index]; 
     let agendaHtml = '';  
     let qtd = parseInt(p.qtdtecnicos) || 1;
     let temTecnicos = p.agenda && p.agenda.some(a => a.tecnico);
 
-    if (temTecnicos) {
+    if (temTecnicos || qtd > 1) {
+        agendaHtml += '<div style="display:flex; gap:5px; margin-bottom:15px; border-bottom:1px solid #cbd5e1; padding-bottom:10px; overflow-x:auto;">';
         for (let t = 1; t <= qtd; t++) {
-            agendaHtml += `<div style="font-weight:bold; margin-top:10px; color:var(--cobli-dark); border-bottom:1px solid #ccc; padding-bottom:5px; margin-bottom:10px;">Técnico ${t}</div>`;
+            agendaHtml += `<button onclick="window.mudarAbaModalTecnico(${t}, ${qtd})" id="btn-mod-tec-${t}" style="padding:6px 12px; border:none; border-radius:4px; font-weight:bold; cursor:pointer; background:${t===1?'var(--primary)':'#cbd5e1'}; color:white; transition:0.2s;">Técnico ${t}</button>`;
+        }
+        agendaHtml += '</div>';
+
+        for (let t = 1; t <= qtd; t++) {
+            agendaHtml += `<div id="mod-tec-${t}" style="display:${t===1?'block':'none'};">`;
             ["Seg", "Ter", "Qua", "Qui", "Sex", "Sab"].forEach(d => { 
-                let slots = p.agenda.filter(a => a.dia === d && a.tecnico === t && !a.isAbsence)
+                let slots = p.agenda.filter(a => a.dia === d && a.tecnico == t && !a.isAbsence)
                                     .sort((a,b) => parseInt(a.hora) - parseInt(b.hora))
                                     .map(a => `<div class="cell" style="width: 38px; height: 20px; font-size: 0.7rem; padding: 2px;">${a.hora}</div>`).join('');     
                 if(slots) { 
                     agendaHtml += `<div class="agenda-day-card" style="margin-bottom:5px; padding: 8px;"><div class="agenda-day-title" style="margin-bottom: 4px;">${d}</div><div class="slots-wrapper" style="gap: 3px;">${slots}</div></div>`; 
                 } 
             });
+            agendaHtml += `</div>`;
         }
     } else {
         ["Seg", "Ter", "Qua", "Qui", "Sex", "Sab"].forEach(d => { 
@@ -1539,8 +1598,25 @@ window.abrirDetalhesPrestador = function(index) {
             </div>
         </div>
     `;
-    let htmlBotaoFechar = `<div style="text-align: right; margin-top: 15px;"><button onclick="window.fecharModal()" style="background:var(--primary); padding: 10px 20px;">Fechar</button></div>`;
+    
+    // Botão de atalho para adicionar bloqueio rapidamente
+    let htmlBotaoFechar = `
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 15px;">
+            ${userRole === 'ADMIN' ? `<button onclick="window.fecharModal(); window.abrirCadastro(${index}); setTimeout(()=>window.mudarEtapa(1), 100);" style="background:var(--cobli-red); padding: 10px 20px;">➕ Adicionar Bloqueio</button>` : '<div></div>'}
+            <button onclick="window.fecharModal()" style="background:var(--primary); padding: 10px 20px;">Fechar</button>
+        </div>
+    `;
     window.exibirModal("Detalhes do Prestador", htmlHeader + agendaHtml + ausenciasHtml + htmlBotaoFechar); 
+};
+
+// Aba do Modal
+window.mudarAbaModalTecnico = function(tId, total) {
+    for(let i=1; i<=total; i++) {
+        let div = document.getElementById('mod-tec-'+i);
+        let btn = document.getElementById('btn-mod-tec-'+i);
+        if(div) div.style.display = (i === tId) ? 'block' : 'none';
+        if(btn) btn.style.background = (i === tId) ? 'var(--primary)' : '#cbd5e1';
+    }
 };
 
 window.renderTechTabs = function(qtd) {
@@ -1886,6 +1962,148 @@ window.salvarPrestador = async function(btn) {
 window.excluirPrestador = async function(i) { window.showConfirm("Tem certeza que deseja excluir?", `fetch('${API_URL}/prestadores/${prestadores[i].id}', { method: 'DELETE', headers: getHeaders() }).then(async () => { await window.carregarDadosDoBanco(); window.showToast("Prestador excluído com sucesso!"); })`); };
 
 // ==========================================
+// ✅ ABA DE DISPONIBILIDADE DO PRESTADOR
+// ==========================================
+window.renderizarMinhaDisponibilidade = function() {
+    let p = window.meuPrestadorLogado;
+    if (!p) return;
+    
+    let qtd = parseInt(p.qtdtecnicos) || 1;
+    let selectTec = document.getElementById('meuTecnicoBloqueio');
+    if(selectTec) {
+        selectTec.innerHTML = '<option value="Todos">Todos</option>';
+        for(let i=1; i<=qtd; i++) {
+            selectTec.innerHTML += `<option value="${i}">Técnico ${i}</option>`;
+        }
+    }
+    
+    let ausencias = p.agenda ? p.agenda.filter(a => a.isAbsence) : [];
+    let hoje = new Date(); hoje.setHours(0,0,0,0);
+    
+    ausencias = ausencias.filter(b => {
+        let parts = b.data.split('/');
+        let dataB = new Date(parts[2], parts[1] - 1, parts[0]);
+        return dataB >= hoje;
+    });
+
+    document.getElementById('lista-meus-bloqueios-ui').innerHTML = ausencias.map((b, i) => {
+        let texto = b.tipo === 'total' ? `${b.data} (Dia Inteiro)` : `${b.data} (${b.inicio}h às ${b.fim}h)`;
+        texto += ` | Afeta: ${b.tecnico === 'Todos' ? 'Todos' : 'Téc ' + b.tecnico}`;
+        return `<span class="pill" style="background: var(--cobli-red); color: white; border: none; display: flex; align-items: center; gap: 6px;">
+            ${texto} <span style="cursor:pointer; font-weight:bold; padding-left: 4px; border-left: 1px solid rgba(255,255,255,0.4);" onclick="window.removerMeuBloqueio(${i})">X</span>
+        </span>`;
+    }).join('');
+};
+
+window.adicionarMeuBloqueioData = async function() {
+    let p = window.meuPrestadorLogado;
+    if(!p) return window.showMessage("Sua conta não está vinculada a nenhum prestador ativo no momento.");
+    
+    let inputData = document.getElementById('meuDataBloqueio').value;
+    let inputDataFim = document.getElementById('meuDataBloqueioFim').value;
+    let tipo = document.getElementById('meuTipoBloqueio').value;
+    let tecnicoSel = document.getElementById('meuTecnicoBloqueio').value;
+
+    if (!inputData) return window.showMessage("Selecione a data inicial!");
+
+    let dataInicio = new Date(inputData + 'T00:00:00');
+    let dataFim = inputDataFim ? new Date(inputDataFim + 'T00:00:00') : new Date(dataInicio);
+
+    if (dataFim < dataInicio) return window.showMessage("A data final não pode ser menor que a inicial!");
+
+    let novosBloqueios = [];
+    let temConflitoAgendamento = false;
+
+    let dataAtual = new Date(dataInicio);
+    while (dataAtual <= dataFim) {
+        let d = String(dataAtual.getDate()).padStart(2, '0');
+        let m = String(dataAtual.getMonth() + 1).padStart(2, '0');
+        let y = dataAtual.getFullYear();
+        let dataFormatada = `${d}/${m}/${y}`;
+
+        let objBloqueio = { isAbsence: true, data: dataFormatada, tipo: tipo, tecnico: tecnicoSel };
+
+        if (tipo === 'parcial') {
+            let hInicio = parseInt(document.getElementById('meuHoraInicioBloqueio').value);
+            let hFim = parseInt(document.getElementById('meuHoraFimBloqueio').value);
+            if (isNaN(hInicio) || isNaN(hFim) || hInicio >= hFim) {
+                return window.showMessage("Selecione um intervalo de horas válido!");
+            }
+            objBloqueio.inicio = hInicio;
+            objBloqueio.fim = hFim;
+        }
+
+        // VERIFICAÇÃO DE CONFLITO
+        agendamentos.forEach(a => {
+            if (a.prestador === p.nome && a.data === dataFormatada) {
+                if (tipo === 'total') {
+                    temConflitoAgendamento = true;
+                } else if (tipo === 'parcial') {
+                    let slotsArr = Array.isArray(a.slots) ? a.slots : (typeof a.slots === 'string' ? a.slots.split(', ') : []);
+                    slotsArr.forEach(s => {
+                        let slotHora = parseInt(s.split(':')[0]);
+                        if(slotHora >= objBloqueio.inicio && slotHora < objBloqueio.fim) temConflitoAgendamento = true;
+                    });
+                }
+            }
+        });
+
+        novosBloqueios.push(objBloqueio);
+        dataAtual.setDate(dataAtual.getDate() + 1);
+    }
+
+    if(!p.agenda) p.agenda = [];
+    p.agenda = p.agenda.concat(novosBloqueios);
+
+    const btn = event.target;
+    const originalText = btn.innerText;
+    btn.innerText = "Salvando..."; btn.disabled = true;
+
+    try {
+        await fetch(`${API_URL}/prestadores/${p.id}`, { method: 'PUT', headers: getHeaders(), body: JSON.stringify(p) });
+        await window.carregarDadosDoBanco(); 
+        
+        document.getElementById('meuDataBloqueio').value = '';
+        document.getElementById('meuDataBloqueioFim').value = '';
+        
+        if(temConflitoAgendamento) {
+            window.showMessage("⚠️ <strong>Bloqueio salvo com sucesso!</strong><br><br>No entanto, identificamos que você possui agendamentos no período bloqueado. O bloqueio impedirá novas marcações, mas os serviços já agendados não serão cancelados automaticamente. Caso não possa atendê-los, contate a Cobli imediatamente.");
+        } else {
+            window.showToast("Ausência registrada com sucesso!");
+        }
+    } catch(e) {
+        window.showMessage("Erro ao salvar o bloqueio.");
+    } finally {
+        btn.innerText = originalText; btn.disabled = false;
+    }
+};
+
+window.removerMeuBloqueio = async function(indexVisivel) {
+    let p = window.meuPrestadorLogado;
+    if (!p || !p.agenda) return;
+
+    let ausencias = p.agenda.filter(a => a.isAbsence);
+    let hoje = new Date(); hoje.setHours(0,0,0,0);
+    
+    let validAbsences = ausencias.filter(b => {
+        let parts = b.data.split('/');
+        let dataB = new Date(parts[2], parts[1] - 1, parts[0]);
+        return dataB >= hoje;
+    });
+
+    let toRemove = validAbsences[indexVisivel];
+    p.agenda = p.agenda.filter(a => !(a.isAbsence && a.data === toRemove.data && a.tipo === toRemove.tipo && a.tecnico === toRemove.tecnico));
+
+    try {
+        await fetch(`${API_URL}/prestadores/${p.id}`, { method: 'PUT', headers: getHeaders(), body: JSON.stringify(p) });
+        await window.carregarDadosDoBanco();
+        window.showToast("Ausência removida com sucesso!");
+    } catch(e) {
+        window.showMessage("Erro ao remover o bloqueio.");
+    }
+};
+
+// ==========================================
 // 8. PAINEL - DETALHES E EXCLUSÃO DE AGENDAMENTO
 // ==========================================
 window.excluirAgendamento = function(id, data) {
@@ -2182,7 +2400,7 @@ window.renderDashboard = function() {
     let totalServicosGeral = 0;
 
     agendamentos.forEach(a => {
-        // ✅ CORRIGIDO: Se for USUARIO comum, filtra só o que ele pediu
+        // Se for USUÁRIO comum, filtra só o que ele mesmo pediu
         if (isUserDashboard) {
             let sol = String(a.solicitante || '').toLowerCase();
             if (!sol.includes(nomeLogado)) return; 
