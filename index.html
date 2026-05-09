@@ -1,4 +1,3 @@
-este logou, ver erro de usuário
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -117,7 +116,7 @@ este logou, ver erro de usuário
         .campo-filtro label { font-size: 0.65rem; color: #64748b; font-weight: 700; text-transform: uppercase; margin: 0; }
         .campo-filtro input, .campo-filtro details { margin: 0 !important; height: 38px !important; box-sizing: border-box !important; }
         .grid-filtros .botoes-container { display: flex; gap: 8px; height: 38px; }
-        
+
         @keyframes girar { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         .icone-girando { display: inline-block; animation: girar 1s linear infinite; }
         
@@ -134,6 +133,7 @@ este logou, ver erro de usuário
 
 <div id="toast"></div>
 
+<!-- OVERLAY DE LOGIN COM SUPABASE -->
 <div id="auth-overlay">
     <div class="auth-card" id="card-login">
         <div class="logo-circle"></div>
@@ -142,49 +142,36 @@ este logou, ver erro de usuário
         <div class="input-group"><label>E-mail</label><input type="email" id="login-email" placeholder="seu.nome@cobli.co"></div>
         <div class="input-group">
             <label>Senha</label><input type="password" id="login-password" placeholder="••••••••">
-            <span class="pass-toggle" onclick="togglePass('login-password')">👁️</span>
+            <span class="pass-toggle" onclick="window.togglePass('login-password')">👁️</span>
         </div>
-        <button class="auth-btn" id="btnLogin" onclick="authAction('login')">Entrar</button>
+        <button class="auth-btn" id="btnLogin" onclick="window.authAction('login')">Entrar</button>
         <div id="login-error" style="color: var(--cobli-red); font-size: 0.8rem; margin-top: 10px; display: none; font-weight: bold;">Credenciais inválidas.</div>
         <div class="auth-links">
-            <a onclick="showAuthCard('card-forgot')">Esqueci minha senha</a>
-            <a onclick="showAuthCard('card-signup')">Não tem conta? <span>Cadastre-se</span></a>
+            <a onclick="window.showAuthCard('card-forgot')">Esqueci minha senha</a>
+            <a onclick="window.showAuthCard('card-signup')">Não tem conta? <span>Cadastre-se</span></a>
         </div>
     </div>
 
     <div class="auth-card" id="card-signup" style="display:none;">
         <div class="logo-circle"></div>
         <h2>Criar Conta</h2>
-        <p>Use seu e-mail @cobli.co ou @apex.co</p>
+        <p>Use seu e-mail corporativo</p>
         <div class="input-group"><label>E-mail</label><input type="email" id="signup-email" placeholder="nome@cobli.co"></div>
         <div class="input-group">
             <label>Senha</label><input type="password" id="signup-password" placeholder="Mínimo de 6 caracteres">
-            <span class="pass-toggle" onclick="togglePass('signup-password')">👁️</span>
+            <span class="pass-toggle" onclick="window.togglePass('signup-password')">👁️</span>
         </div>
-        <button class="auth-btn" id="btnSignup" onclick="authAction('signup')">Criar Acesso</button>
-        <div class="auth-links"><a onclick="showAuthCard('card-login')">Já possui conta? <span>Faça login</span></a></div>
+        <button class="auth-btn" id="btnSignup" onclick="window.authAction('signup')">Criar Acesso</button>
+        <div class="auth-links"><a onclick="window.showAuthCard('card-login')">Já possui conta? <span>Faça login</span></a></div>
     </div>
 
-<div class="auth-card" id="card-forgot" style="display:none;">
+    <div class="auth-card" id="card-forgot" style="display:none;">
         <div class="logo-circle"></div>
         <h2>Recuperar Senha</h2>
         <p>Enviaremos um link para o seu e-mail</p>
         <div class="input-group"><label>E-mail Cadastrado</label><input type="email" id="reset-email" placeholder="seu@email.co"></div>
-        <button class="auth-btn" id="btnReset" onclick="authAction('reset')">Enviar Link</button>
-        <div class="auth-links"><a onclick="showAuthCard('card-login')">⬅ Voltar ao Login</a></div>
-    </div>
-
-    <div class="auth-card" id="card-update-password" style="display:none;">
-        <div class="logo-circle"></div>
-        <h2>Criar Nova Senha</h2>
-        <p>Digite sua nova senha de acesso.</p>
-        <div class="input-group">
-            <label>Nova Senha</label>
-            <input type="password" id="new-password" placeholder="Mínimo de 6 caracteres">
-            <span class="pass-toggle" onclick="togglePass('new-password')">👁️</span>
-        </div>
-        <button class="auth-btn" id="btnUpdatePass" onclick="authAction('update_pass')">Salvar Nova Senha</button>
-        <div class="auth-links"><a onclick="showAuthCard('card-login')">⬅ Voltar ao Login</a></div>
+        <button class="auth-btn" id="btnReset" onclick="window.authAction('reset')">Enviar Link</button>
+        <div class="auth-links"><a onclick="window.showAuthCard('card-login')">⬅ Voltar ao Login</a></div>
     </div>
 </div>
 
@@ -200,7 +187,7 @@ este logou, ver erro de usuário
             <button id="btn-cadastro" onclick="window.trocarAba('cadastro', this)">Prestadores</button>
             <button id="btn-painel" onclick="window.trocarAba('painel', this)">Painel</button>
             <button id="btn-dashboard" onclick="window.trocarAba('dashboard', this)">Dashboard</button>
-            <button id="btn-usuarios" onclick="window.trocarAba('usuarios', this)">Usuários</button>
+            <button id="btn-usuarios" onclick="window.trocarAba('usuarios', this)" style="display: none;">Usuários</button>
         </div>
 
         <div id="integrations-control" class="slack-adm-panel">
@@ -221,7 +208,7 @@ este logou, ver erro de usuário
             </div>
         </div>
         <div class="menu-right">
-            <button class="btn-sair" onclick="handleLogout()" style="color:var(--cobli-red); font-weight:bold; background:none; border:none; cursor:pointer;">Sair</button>
+            <button class="btn-sair" onclick="window.handleLogout()" style="color:var(--cobli-red); font-weight:bold; background:none; border:none; cursor:pointer;">Sair</button>
         </div>
     </div>
 
@@ -344,13 +331,13 @@ este logou, ver erro de usuário
                     <div style="display: flex; gap: 10px; margin-bottom: 12px;">
                         <div style="flex: 1;"><label class="req">Responsável</label><input id="responsavel" required></div>
                         <div style="flex: 1;"><label class="req">Telefone</label><input id="contatoResponsavel" required oninput="window.maskPhone(this)" placeholder="(00) 00000-0000"></div>
-                        <div style="flex: 1.5;"><label>Usuário no Sistema (@apex.co)</label><input id="usuarioApex" placeholder="prestador@apex.co"></div>
                     </div>
 
                     <div style="display: flex; gap: 10px; margin-bottom: 15px;">
                         <div style="flex: 1;"><label class="req">Qtd Técnicos</label><input id="qtdTecnicos" type="number" required></div>
-                        <div style="flex: 1;"><label class="req">Raio de Atuação (Km)</label><input id="rangeAtendimento" type="number" required></div>
-                        <div style="flex: 1.5;"><label>ID Field Control</label><input id="fieldIdField" placeholder="Opcional"></div>
+                        <div style="flex: 1;"><label class="req">Raio (Km)</label><input id="rangeAtendimento" type="number" required></div>
+                        <div style="flex: 1;"><label>ID Field Control</label><input id="fieldIdField" placeholder="Opcional"></div>
+                        <div style="flex: 1.5;"><label>E-mail Acesso (@apex.co)</label><input id="usuarioApex" placeholder="prestador@apex.co"></div>
                     </div>
                 </div>
         
@@ -476,7 +463,8 @@ este logou, ver erro de usuário
                         <tr>
                             <th style="text-align: left; background: #f1f5f9; padding: 12px; font-size: 0.75rem; color: #64748b; text-transform: uppercase; border-radius: 6px 0 0 0;">Usuário / E-mail</th>
                             <th style="text-align: left; background: #f1f5f9; padding: 12px; font-size: 0.75rem; color: #64748b; text-transform: uppercase;">Nível de Acesso</th>
-                            <th style="text-align: left; background: #f1f5f9; padding: 12px; font-size: 0.75rem; color: #64748b; text-transform: uppercase; border-radius: 0 6px 0 0;">Data de Criação</th>
+                            <th style="text-align: left; background: #f1f5f9; padding: 12px; font-size: 0.75rem; color: #64748b; text-transform: uppercase;">Data de Criação</th>
+                            <th style="text-align: center; background: #f1f5f9; padding: 12px; font-size: 0.75rem; color: #64748b; text-transform: uppercase; border-radius: 0 6px 0 0;">Ações</th>
                         </tr>
                     </thead>
                     <tbody id="tabela-usuarios-body"></tbody>
@@ -488,7 +476,6 @@ este logou, ver erro de usuário
 </div>
 
 <script>
-
 // ==========================================
 // 1. CONFIGURAÇÕES DO SUPABASE
 // ==========================================
@@ -539,12 +526,12 @@ window.validarCampos = function(selector) { let container = document.querySelect
 // ==========================================
 // 3. MÓDULO DE AUTENTICAÇÃO E SESSÃO
 // ==========================================
-function showAuthCard(id) { document.querySelectorAll('.auth-card').forEach(c => c.style.display = 'none'); document.getElementById(id).style.display = 'block'; }
-function togglePass(id) { const el = document.getElementById(id); el.type = el.type === 'password' ? 'text' : 'password'; }
+window.showAuthCard = function(id) { document.querySelectorAll('.auth-card').forEach(c => c.style.display = 'none'); document.getElementById(id).style.display = 'block'; };
+window.togglePass = function(id) { const el = document.getElementById(id); el.type = el.type === 'password' ? 'text' : 'password'; };
 
 window.authAction = async function(type) {
     if (type === 'signup') {
-        const email = document.getElementById('signup-email').value, password = document.getElementById('signup-password').value, btn = document.getElementById('btnSignup');
+        const email = document.getElementById('signup-email').value.trim().toLowerCase(), password = document.getElementById('signup-password').value, btn = document.getElementById('btnSignup');
         if(!email || password.length < 6) return window.showMessage("E-mail e senha de 6 dígitos são obrigatórios.");
         
         btn.innerText = "Criando...";
@@ -555,10 +542,10 @@ window.authAction = async function(type) {
         
         window.showToast("Cadastro realizado com sucesso! Faça login.");
         document.getElementById('login-email').value = email;
-        showAuthCard('card-login');
+        window.showAuthCard('card-login');
     } 
     else if (type === 'login') {
-        const email = document.getElementById('login-email').value, password = document.getElementById('login-password').value, btn = document.getElementById('btnLogin'), errDiv = document.getElementById('login-error');
+        const email = document.getElementById('login-email').value.trim().toLowerCase(), password = document.getElementById('login-password').value, btn = document.getElementById('btnLogin'), errDiv = document.getElementById('login-error');
         
         btn.innerText = "Autenticando...";
         errDiv.style.display = 'none';
@@ -573,39 +560,14 @@ window.authAction = async function(type) {
             window.location.reload();
         }
     }
-} else if (type === 'reset') {
-        const em = document.getElementById('reset-email').value, btn = document.getElementById('btnReset');
-        if(!em) return window.showMessage("Digite o e-mail.");
+    else if (type === 'reset') {
+        const email = document.getElementById('reset-email').value.trim().toLowerCase(), btn = document.getElementById('btnReset');
+        if(!email) return window.showMessage("Digite o e-mail cadastrado.");
         
-        // PONTO 2: TRAVA PARA E-MAIL DO PRESTADOR FAKE (@apex.co)
-        if(em.toLowerCase().includes('@apex.co')) {
-            return window.showMessage("⚠️ E-mail de prestador identificado.<br><br>Entre em contato com a equipe da Cobli para redefinir sua senha internamente.");
+        // PONTO 4: TRAVA PARA E-MAIL FAKE DO PRESTADOR
+        if(email.endsWith('@apex.co')) {
+            return window.showMessage("⚠️ E-mail de prestador identificado.<br><br>Sua conta de prestador não recebe e-mails externos. Entre em contato com a equipe da Cobli (APEX) para redefinir sua senha.");
         }
-
-        btn.innerText = "Enviando..."; const { error } = await supabaseClient.auth.resetPasswordForEmail(em); btn.innerText = "Enviar Link";
-        if(error) return window.showMessage("Erro: " + error.message); window.showToast("Link enviado!"); showAuthCard('card-login');
-    } else if (type === 'update_pass') {
-        const npw = document.getElementById('new-password').value, btn = document.getElementById('btnUpdatePass');
-        if(npw.length < 6) return window.showMessage("A senha deve ter no mínimo 6 caracteres.");
-        btn.innerText = "Salvando...";
-        const { error } = await supabaseClient.auth.updateUser({ password: npw });
-        if(error) {
-            btn.innerText = "Salvar Nova Senha";
-            return window.showMessage("Erro ao salvar: " + error.message);
-        }
-        window.showToast("Senha atualizada! Faça o login.");
-        showAuthCard('card-login');
-    }
-}
-
-// INCEPTADOR DE ROTA DE RECUPERAÇÃO DE SENHA DO SUPABASE
-supabaseClient.auth.onAuthStateChange((event, session) => {
-    if (event === 'PASSWORD_RECOVERY') {
-        document.getElementById('auth-overlay').style.display = 'flex';
-        document.getElementById('app-content').style.display = 'none';
-        showAuthCard('card-update-password');
-    }
-});
 
         btn.innerText = "Enviando...";
         const { error } = await supabaseClient.auth.resetPasswordForEmail(email);
@@ -613,9 +575,9 @@ supabaseClient.auth.onAuthStateChange((event, session) => {
         
         if (error) return window.showMessage("Erro: " + error.message);
         window.showToast("Link de recuperação enviado para o seu e-mail!");
-        showAuthCard('card-login');
+        window.showAuthCard('card-login');
     }
-}
+};
 
 async function checkSession() {
     const { data: { session } } = await supabaseClient.auth.getSession();
@@ -673,7 +635,7 @@ async function definirPermissoes(email, uid) {
 window.handleLogout = async function() {
     await supabaseClient.auth.signOut();
     window.location.reload();
-}
+};
 
 window.carregarListaUsuarios = async function() {
     const tbody = document.getElementById('tabela-usuarios-body');
@@ -1383,11 +1345,14 @@ window.cancelarAgendamento = function() { window.showConfirm("Deseja realmente c
 // ==========================================
 // 7. CADASTRO DE PRESTADOR E AUSÊNCIAS (ABA 2)
 // ==========================================
+
+// PONTO 2: EXIBINDO USUÁRIO VINCULADO NA LISTA
 window.renderizarListaPrestadores = function(){ 
     document.getElementById("btn-novo-container").innerHTML = (userRole === 'ADMIN') ? `<button onclick="window.abrirCadastro()" style="margin-bottom: 20px;">+ Novo Prestador</button>` : '';
     
     document.getElementById("lista-prestadores").innerHTML = prestadores.map((p, i) => {
         const acaoClique = (userRole === 'ADMIN') ? `window.abrirOpcoesPrestador(${i})` : `window.abrirDetalhesPrestador(${i})`;
+        const usuarioAcesso = p.usuario_apex ? `🔑 <strong>Acesso:</strong> ${p.usuario_apex}` : `🔑 Sem acesso vinculado`;
 
         return `
         <div class="painel-item" 
@@ -1408,7 +1373,7 @@ window.renderizarListaPrestadores = function(){
             </div>
             
             <div style="font-size: 0.7rem; color: #64748b; border-top: 1px dashed #e2e8f0; padding-top: 6px; margin-top: 6px; width: 100%;">
-                 👥 <strong>Técnicos:</strong> ${p.qtdtecnicos} | 📏 <strong>Raio:</strong> ${p.range}km
+                 👥 <strong>Técnicos:</strong> ${p.qtdtecnicos} | 📏 <strong>Raio:</strong> ${p.range}km | ${usuarioAcesso}
             </div>
         </div>`; 
     }).join(''); 
@@ -1489,6 +1454,7 @@ window.abrirDetalhesPrestador = function(index) {
     window.exibirModal("Detalhes do Prestador", htmlHeader + agendaHtml + ausenciasHtml + htmlBotaoFechar); 
 };
 
+// PONTO 2: PREENCHENDO CAMPO USUARIO APEX
 window.abrirCadastro = function(index = -1){ 
     editingIndex = index; 
     document.getElementById("lista-prestadores-view").style.display="none"; 
@@ -1507,10 +1473,10 @@ window.abrirCadastro = function(index = -1){
         document.getElementById("cep").value = p.cep; 
         document.getElementById("responsavel").value = p.responsavel; 
         document.getElementById("contatoResponsavel").value = p.contato; 
-        document.getElementById("usuarioApex").value = p.usuario_apex || "";
         document.getElementById("qtdTecnicos").value = p.qtdtecnicos; 
         document.getElementById("rangeAtendimento").value = p.range; 
         document.getElementById("fieldIdField").value = p.field_id || ""; 
+        document.getElementById("usuarioApex").value = p.usuario_apex || ""; 
         
         if(p.agenda) { 
             p.agenda.forEach(item => { 
@@ -1703,6 +1669,7 @@ window.renderizarDatasBloqueadas = function() {
     }).join('');
 };
 
+// PONTO 2: SALVANDO O CAMPO USUARIO APEX
 window.salvarPrestador = async function(btn) { 
     const originalText = btn.innerText; 
     btn.innerText = "Salvando..."; 
@@ -1733,10 +1700,10 @@ window.salvarPrestador = async function(btn) {
             cep: document.getElementById("cep").value, 
             responsavel: document.getElementById("responsavel").value, 
             contato: document.getElementById("contatoResponsavel").value, 
-            usuario_apex: document.getElementById("usuarioApex").value.toLowerCase().trim(),
             qtdtecnicos: parseInt(document.getElementById("qtdTecnicos").value), 
             range: document.getElementById("rangeAtendimento").value, 
             field_id: document.getElementById("fieldIdField").value, 
+            usuario_apex: document.getElementById("usuarioApex").value.trim().toLowerCase(),
             agenda: agenda 
         }; 
         
@@ -1752,237 +1719,6 @@ window.salvarPrestador = async function(btn) {
         btn.disabled = false; btn.innerText = originalText; 
     } 
 };
-
-window.excluirPrestador = async function(i) { window.showConfirm("Tem certeza que deseja excluir?", `fetch('${API_URL}/prestadores/${prestadores[i].id}', { method: 'DELETE', headers: getHeaders() }).then(async () => { await window.carregarDadosDoBanco(); window.showToast("Prestador excluído com sucesso!"); })`); };
-
-// PONTO 1: FUNÇÃO ABRIR DETALHES DE AGENDAMENTO (GLOBAL)
-window.abrirDetalhesAgendamento = function(index) {
-    let a = filtradosPainel[index];
-    if(!a) return;
-    
-    const enderecoCompleto = `${a.rua || ''}, ${a.numero || 'S/N'} - ${a.bairro || ''}, ${a.cidade || ''}/${a.uf || ''} - CEP: ${a.cep || ''}`;
-    const contatoResponsavel = `${a.acompanhamento || 'Não informado'} | ${a.telefone_responsavel || 'Sem telefone'}`;
-    let prodHtml = a.produtos_texto ? a.produtos_texto.replace(/\n/g, '<br>') : 'Sem produtos detalhados';
-
-    let btnSincronizarHtml = (userRole === 'ADMIN' || userRole === 'USUARIO') ? `<button onclick="event.stopPropagation(); window.sincronizarStatusModal('${a.ticket}', this, ${index})" style="background:var(--cobli-green); flex:1; padding:10px;">🔄 Atualizar Status</button>` : '';
-    let btnExcluirHtml = (userRole === 'ADMIN') ? `<button onclick="window.excluirAgendamento(${a.id}, '${a.data}')" class="btn-cancelar" style="flex:1; padding:10px;">Excluir</button>` : '';
-
-    let html = `
-        <div style="background: white; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 15px;">
-            <div style="display:flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px; margin-bottom: 8px;">
-                <div style="font-weight:bold; font-size:1.1rem; color:var(--primary);">
-                    🎟️ Ticket: ${a.ticket}
-                </div>
-                <div id="modal-status-badge" style="font-size: 0.75rem; color: white; font-weight: 700; background: var(--primary); padding: 4px 10px; border-radius: 6px;">
-                    ${a.status || 'SOLICITADO'}
-                </div>
-            </div>
-            <div style="font-size:0.9rem; line-height:1.6;">
-                👤 <strong>Cliente:</strong> ${a.cliente}<br>
-                👔 <strong>Solicitante:</strong> ${a.solicitante}<br>
-                🛠️ <strong>Prestador:</strong> ${a.prestador}<br>
-                📅 <strong>Data do Atendimento:</strong> ${a.data}<br>
-                ⏰ <strong>Horários:</strong> ${Array.isArray(a.slots) ? a.slots.join(', ') : (a.slots || 'N/A')}<br>
-                <hr style="border:0; border-top:1px solid #f1f5f9; margin:8px 0;">
-                📍 <strong>Endereço:</strong> ${enderecoCompleto}<br>
-                📞 <strong>Responsável:</strong> ${contatoResponsavel}
-            </div>
-        </div>
-        <div style="font-weight:600; margin-bottom:5px; color:#334155;">📦 Serviços/Produtos Solicitados:</div>
-        <div style="background: #f8fafc; padding: 12px; border-radius: 6px; border: 1px solid #cbd5e1; margin-bottom: 15px; font-size: 0.9rem; line-height: 1.5; color:#475569;">
-            ${prodHtml}
-        </div>
-        <div style="display:flex; gap:10px; flex-wrap: wrap;">
-            <button onclick="window.fecharModal()" style="background:gray; flex:1; padding:10px;">Fechar</button>
-            ${btnSincronizarHtml}
-            ${btnExcluirHtml}
-        </div>
-    `;
-    window.exibirModal("Detalhes do Agendamento", html);
-};
-
-window.confirmarExclusaoAgendamento = async function(id) { 
-    await fetch(`${API_URL}/agendamentos/${id}`, { method: 'DELETE', headers: getHeaders() }); 
-    await window.carregarDadosDoBanco(); 
-    window.showToast("Agendamento excluído!"); 
-    window.fecharModal(); 
-};
-    
-window.revisarAgendamento = function() {
-    if(!window.validarCampos('#step-4')) {
-        return window.showMessage("Preencha todos os campos obrigatórios marcados em vermelho!");
-    }
-
-    const sel = document.querySelectorAll("#agenda-agendamento .cell.selecionado");
-    const dataSelecionada = sel.length > 0 ? sel[0].dataset.date : 'N/A';
-    const slotsSelecionados = Array.from(sel).map(c => c.dataset.hora).join(', ');
-    const prestador = prestadores[prestadorSelecionadoIndex]?.nome || 'Não selecionado';
-    
-    const ticket = document.getElementById('ticket').value;
-    const cliente = document.getElementById('clienteNome').value;
-    const solicitante = document.getElementById('solicitante').value;
-    const responsavel = document.getElementById('respAcompanhamento').value;
-    const telefone = document.getElementById('telResponsavel').value;
-    
-    const rua = document.getElementById('inputRua').value;
-    const numero = document.getElementById('inputNumero').value;
-    const bairro = document.getElementById('inputBairro').value;
-    const cidade = document.getElementById('inputCidade').value;
-    const uf = document.getElementById('inputUf').value;
-    const cep = document.getElementById('inputCep').value;
-    const endereco = `${rua}, ${numero} - ${bairro}, ${cidade}/${uf} - CEP: ${cep}`;
-
-    let prodHtml = itensSelecionados.map(i => {
-        let tempoTotalFormatado = formatarTempo(i.tempo * i.qtd);
-        return `<div style="margin-bottom:5px;">• [${i.nomeManutencao.toUpperCase()}] ${i.desc} <strong>(Qtd: ${i.qtd} | ${tempoTotalFormatado})</strong></div>`;
-    }).join('');
-    
-    let html = `
-        <div style="background: white; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 15px; text-align: left;">
-            <div style="font-weight:bold; font-size:1.1rem; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px; margin-bottom: 8px; color:var(--primary);">
-                📝 Revisão do Agendamento
-            </div>
-            <div style="font-size:0.9rem; line-height:1.6;">
-                <strong>🎟️ Ticket:</strong> ${ticket}<br>
-                <strong>👤 Cliente:</strong> ${cliente}<br>
-                <strong>🛠️ Prestador:</strong> ${prestador}<br>
-                <strong>📅 Data:</strong> ${dataSelecionada}<br>
-                <strong>⏰ Horários:</strong> ${slotsSelecionados}<br>
-                <hr style="border:0; border-top:1px solid #f1f5f9; margin:8px 0;">
-                <strong>📍 Local:</strong> ${endereco}<br>
-                <strong>📞 Contato:</strong> ${responsavel} | ${telefone}
-            </div>
-        </div>
-        <div style="font-weight:600; margin-bottom:5px; text-align: left;">📦 Serviços:</div>
-        <div style="background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #cbd5e1; margin-bottom: 20px; font-size: 0.85rem; text-align: left;">
-            ${prodHtml}
-        </div>
-        <div style="display: flex; gap: 10px;">
-            <button onclick="window.fecharModal()" style="background:gray; flex:1;">⬅️ Editar Dados</button>
-            <button onclick="window.confirmarEnvioReal()" style="background:var(--cobli-green); flex:1;">✅ Confirmar e Salvar</button>
-        </div>
-    `;
-    window.exibirModal("Confirme os Dados", html);
-};
-    
-window.confirmarEnvioReal = function() {
-    window.fecharModal();
-    const btn = document.getElementById('btnConfirmar');
-    window.concluirAgendamentoFinal(btn);
-};
-
-window.concluirAgendamentoFinal = async function(btn) {
-    const elCnpj = document.getElementById('clienteCnpj');   
-    if (elCnpj) {
-        const documentoNumeros = elCnpj.value.replace(/\D/g, '');        
-        if (documentoNumeros.length > 0 && documentoNumeros.length !== 14) {
-            window.showMessage("❌ O CNPJ está incompleto! Digite todos os 14 números.");
-            return; 
-        }
-    }
-    
-    const sel = document.querySelectorAll("#agenda-agendamento .cell.selecionado");
-    const slotsSelecionados = Array.from(sel).map(c => c.dataset.hora.substring(0, 5));
-    const dataSelecionada = sel.length > 0 ? sel[0].dataset.date : null;
-    const prestador = prestadores[prestadorSelecionadoIndex];
-    
-    const dispararSlack = (userRole === 'ADMIN') ? (document.getElementById('slackSwitch').value === 'ON') : true;
-    const dispararField = (userRole === 'ADMIN') ? (document.getElementById('fieldSwitch').value === 'ON') : true;
-    const dispararBanco = (userRole === 'ADMIN') ? (document.getElementById('dbSwitch').value === 'ON') : true;
-
-    if (!prestador || slotsSelecionados.length === 0) {
-        window.showMessage("Erro: Selecione o prestador e o horário.");
-        return;
-    }
-
-    let itensOrdenados = [...itensSelecionados].sort((a, b) => b.tempo - a.tempo);
-
-    const agendamento = {
-        prestador: prestador.nome,
-        qtdtecnicos: prestador.qtdtecnicos,
-        ticket: document.getElementById('ticket').value,
-        cliente: document.getElementById('clienteNome').value,
-        cnpj: document.getElementById('clienteCnpj').value,
-        solicitante: document.getElementById('solicitante').value,
-        data: dataSelecionada, 
-        rawdate: dataSelecionada,
-        slots: slotsSelecionados,
-        rua: document.getElementById('inputRua').value,
-        numero: document.getElementById('inputNumero').value,
-        bairro: document.getElementById('inputBairro').value,
-        cidade: document.getElementById('inputCidade').value,
-        uf: document.getElementById('inputUf').value,
-        cep: document.getElementById('inputCep').value,
-        acompanhamento: document.getElementById('respAcompanhamento').value,
-        telefone_responsavel: document.getElementById('telResponsavel').value,
-        segment: itensOrdenados[0]?.nomeManutencao || "", 
-        tipo_servico: itensOrdenados[0]?.desc || "Manutenção",
-        field_id: prestador.field_id,
-        produtos_texto: itensOrdenados.map(i => `• [${i.nomeManutencao.toUpperCase()}] ${i.desc} (Qtd: ${i.qtd})`).join('\n'),
-        segment_id_field: itensOrdenados[0]?.segment_id || "",
-        maintenance_id_field: itensOrdenados[0]?.maintenance_id || document.getElementById('tipoManutencao').value,
-        executar_field: dispararField,
-        executar_banco: dispararBanco
-    };
-    
-    const originalText = btn.innerText;
-    btn.innerText = "Processando..."; btn.disabled = true;
-    try {
-        const response = await fetch(EDGE_URL, {
-            method: 'POST',
-            headers: getHeaders(),
-            body: JSON.stringify(agendamento)
-        });
-        const result = await response.json(); 
-        if (response.ok) {
-            if (dispararSlack) {
-                let produtosFormatados = itensOrdenados.map(i => `[${i.nomeManutencao.toUpperCase()}] ${i.desc} (${i.qtd}x)`).join(', ');
-                const msgSlack = `✅ *Novo Agendamento - Ticket: ${result.ticket}*\n` +
-                                 `*Cliente:* ${agendamento.cliente}\n` +
-                                 `*Prestador:* ${agendamento.prestador}\n` +
-                                 `*Data:* ${agendamento.data} | ${agendamento.slots[0]}\n` +
-                                 `*Produtos:* ${produtosFormatados}\n` +
-                                 `*Solicitante:* ${agendamento.solicitante}`;
-                                 
-                await window.enviarNotificacaoSlack(msgSlack);
-            }
-            let statusMsg = `🚀 **Sucesso!**\n\n`;
-            statusMsg += `🎫 **Ticket:** ${result.ticket}\n`;
-            statusMsg += `📊 **Status EFOP:** ${result.status}\n`;
-            statusMsg += `📍 **Origem:** ${result.origin}\n`;
-            statusMsg += `\nSincronização: ` + 
-                         (dispararBanco ? "Banco [OK] " : "") + 
-                         (dispararField ? "Field [OK]" : "");
-            window.showMessage(statusMsg, "success");
-            await window.carregarDadosDoBanco();
-            
-            setTimeout(() => window.location.reload(), 2000); 
-        } else {
-            window.showMessage("❌ Erro: " + (result.error || "Erro na integração"), "error");
-        }
-    } catch (error) {
-        console.error("Erro na chamada:", error);
-        window.showMessage("Erro de conexão com a Edge Function.");
-    } finally {
-        btn.innerText = originalText; btn.disabled = false;
-    }
-};
-
-window.limparFormulario = function() { 
-    itensSelecionados = []; 
-    prestadorSelecionadoIndex = null; 
-    document.getElementById("lista-produtos").innerHTML = ""; 
-    document.getElementById("horasNecessarias").innerText = "0"; 
-    document.getElementById("agenda-agendamento").innerHTML = ""; 
-    document.getElementById("inputCep").value = ""; 
-    document.getElementById("ticket").value = ""; 
-    document.getElementById("clienteNome").value = ""; 
-    document.getElementById("solicitante").value = currentUser ? extrairNomeDoEmail(currentUser.email) : ""; 
-    document.getElementById("respAcompanhamento").value = ""; 
-    document.getElementById("telResponsavel").value = ""; 
-};
-
-window.cancelarAgendamento = function() { window.showConfirm("Deseja realmente cancelar este agendamento?", "window.limparFormulario(); window.proximoPasso(1);"); };
 
 // ==========================================
 // 8. PAINEL E DASHBOARD (ABAS 3 E 4)
@@ -2015,14 +1751,13 @@ window.renderPainel = function(){
     let indicador = document.getElementById('indicador-filtro');
     if(indicador) indicador.style.display = temFiltroAtivo ? 'block' : 'none';
 
-filtradosPainel = agendamentos.filter(a => { 
+    filtradosPainel = agendamentos.filter(a => { 
         if(!a.data || !a.ticket) return false;
         
+        // PONTO 2: VINCULAÇÃO REAL DO PRESTADOR AO USUÁRIO
         if(userRole === 'PRESTADOR') {
-            // Acha qual prestador tem o e-mail logado agora no campo "usuario_apex"
-            let prestadorLogado = prestadores.find(p => p.usuario_apex === currentUser.email);
-            if (!prestadorLogado) return false; // Se ele não tem vínculo, não vê nada
-            if (a.prestador !== prestadorLogado.nome) return false; // Só vê a OS se o nome bater
+            const meusPrestadores = prestadores.filter(p => p.usuario_apex && p.usuario_apex.toLowerCase() === currentUser.email.toLowerCase()).map(p => p.nome);
+            if(!meusPrestadores.includes(a.prestador)) return false;
         }
 
         let [d, m, y] = a.data.split('/'); 
@@ -2071,12 +1806,17 @@ filtradosPainel = agendamentos.filter(a => {
     document.getElementById('st-concluido').innerText = counts.concluido;
     document.getElementById('st-cancelado').innerText = counts.cancelado;
 
+    // PONTO 1 E 2: BIND CORRETO DO ONCLICK DE ABRIR DETALHES AGENDAMENTO
     document.getElementById("painel-conteudo").innerHTML = filtradosPainel.map((a, i) => {
         let primeiroSlot = Array.isArray(a.slots) ? a.slots[0] : (String(a.slots).split(',')[0] || 'N/A');
         let dataRegistro = a.created_at ? new Date(a.created_at).toLocaleString('pt-BR') : 'N/A';
 
-return `
-        <div class="painel-item" style="margin-bottom: 8px; border-left: 5px solid var(--primary); background-color: white;">
+        return `<div class="painel-item" data-ticket="${a.ticket}" 
+             onclick="window.abrirDetalhesAgendamento(${i})" 
+             style="cursor: pointer; transition: all 0.2s ease; margin-bottom: 8px; border-left: 5px solid var(--primary); background-color: white;" 
+             onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 6px 15px rgba(0,0,0,0.1)'; this.style.backgroundColor='#ebfcf9'; this.style.borderLeftColor='var(--cobli-green)';" 
+             onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 1px 3px rgba(0,0,0,0.1)'; this.style.backgroundColor='white'; this.style.borderLeftColor='var(--primary)';">
+            
             <div style="flex-grow: 1; font-size: 0.95rem;">
                 <strong>🎟️ #${a.ticket}</strong> | 🏷️ Status: <span style="color: var(--primary); font-weight: bold;">${a.status || 'SOLICITADO'}</span> | 👤 Cliente: <strong>${a.cliente || 'Não informado'}</strong>
                 
@@ -2088,39 +1828,8 @@ return `
                      Registrado em: ${dataRegistro} (via APEX) | 🙋‍♂️ Solicitado por: ${a.solicitante}
                 </div>
             </div>
-            <div style="padding-left: 15px;">
-                <button onclick="window.abrirDetalhesAgendamento(${i})" style="background: var(--cobli-dark); padding: 8px 12px; font-size: 0.8rem; border-radius: 6px;">👁️ Ver OS</button>
-            </div>
         </div>`;
     }).join(''); 
-};
-    
-window.sincronizarStatusModal = async function(ticket, btn, index) {
-    const originalText = btn.innerHTML;
-    btn.innerHTML = `<span class="icone-girando">🔄</span> Atualizando...`;
-    btn.disabled = true;
-    
-    try {
-        const response = await fetch(EDGE_URL, {
-            method: 'POST',
-            headers: getHeaders(),
-            body: JSON.stringify({ acao: 'sincronizar_status', ticket: ticket })
-        });
-        const result = await response.json();
-        if (response.ok) {
-            window.showToast(`✅ Ticket ${ticket} atualizado para: ${result.status}`);
-            const badge = document.getElementById('modal-status-badge');
-            if(badge) badge.innerText = result.status;
-            await window.carregarDadosDoBanco(); 
-        } else {
-            window.showMessage("❌ Erro ao sincronizar: " + result.error);
-        }
-    } catch (err) {
-        window.showMessage("❌ Erro de conexão.");
-    } finally {
-        btn.innerHTML = originalText;
-        btn.disabled = false;
-    }
 };
 
 window.atualizarTodosStatus = async function() {
