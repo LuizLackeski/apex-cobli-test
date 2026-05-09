@@ -360,6 +360,9 @@
         
                 <div id="etapa-2" style="display:none;">
                     <h3>Agenda Base</h3>
+                    
+                    <div id="tabs-tecnicos" style="margin-bottom: 15px; display:flex; gap:5px; overflow-x:auto;"></div>
+                    
                     <div id="agenda-cadastro"></div>
                     
                     <h3 style="margin-top: 30px; border-top: 1px solid #cbd5e1; padding-top: 20px; color: var(--cobli-red);">🛑 Ausências (Feriados / Férias / Imprevistos)</h3>
@@ -387,7 +390,7 @@
                     <button id="btn-voltar" onclick="window.mudarEtapa(-1)">Voltar</button>
                     <button id="btn-proximo" onclick="window.mudarEtapa(1)">Próximo</button>
                     <button id="btn-concluir" onclick="window.salvarPrestador(this)" style="background: var(--cobli-green);">Concluir</button>
-                    <button id="btn-limpar-agenda" onclick="window.limparAgendaCadastro()" style="background: #f59e0b; color: white; border: none; display:none;">🧹 Limpar Agenda</button>
+                    <button id="btn-limpar-agenda" onclick="window.limparAgendaCadastro()" style="background: #f59e0b; color: white; border: none; display:none;">🧹 Limpar Agenda Atual</button>
                     <button onclick="window.cancelarCadastro()" class="btn-cancelar">Cancelar</button>
                 </div>
             </div>
@@ -492,8 +495,7 @@
 </div>
 
 <script>
-
-    // ==========================================
+// ==========================================
 // 1. CONFIGURAÇÕES DO SUPABASE
 // ==========================================
 const SUPABASE_URL = 'https://fqaqlofndeihmhkopvan.supabase.co'; 
@@ -509,12 +511,16 @@ const ADMIN_EMAILS = ["luiz.lackeski@cobli.co", "fernando.souza@cobli.co", "anni
 let currentUser = null;
 let userRole = 'PRESTADOR';
 
-// VARIÁVEIS GLOBAIS DA AGENDA
+// VARIÁVEIS GLOBAIS DA AGENDA E CADASTRO DINÂMICO
 let prestadores = [], itensSelecionados = [], agendamentos = [], etapa = 1, editingIndex = -1, prestadorSelecionadoIndex = null;
 let filtradosPainel = [], myChart = null, chartLocais = null;
 let isDraggingAgenda = false, dragActionAgenda = true; 
 window.addEventListener('mouseup', () => { isDraggingAgenda = false; });
 let datasBloqueadasTemp = [], agendaDiasDisponiveis = [], agendaPaginaAtual = 0;
+
+// ✅ NOVO: Controle de Múltiplos Técnicos
+window.agendaCadastroObj = {};
+window.currentTech = 1;
 
 const serviçosDisponíveis = {
     "Telemetria": [{desc:"Instalado veículos leves ou pesados", tempo:40, id_field: "b2098d2f-c060-445b-8e4b-bdcc5b6e613a"}, {desc:"Instalado motos ou maquinários", tempo:40, id_field: "fe2057ba-abd5-44b6-9686-2f50e7717f16"}, {desc:"Leves ou pesados + CAN", tempo:60, id_field: "b04b9472-5663-4d77-8dc9-a79b2f06aa28"}], 
@@ -543,8 +549,6 @@ window.validarCampos = function(selector) { let container = document.querySelect
 // ==========================================
 // 3. MÓDULO DE AUTENTICAÇÃO E SESSÃO
 // ==========================================
-
-// ✅ NOVO: Função para salvar nova senha (via link de recuperação)
 window.salvarNovaSenha = async function() {
     const nova = document.getElementById('new-password').value;
     const confirma = document.getElementById('confirm-password').value;
@@ -773,7 +777,7 @@ window.enviarNotificacaoSlack = async function(msg) {
 };
 
 // ==========================================
-// 5. MOTOR DE AGENDA E DISTÂNCIA
+// 5. MOTOR DE AGENDA, DISTÂNCIA E MULTI-TÉCNICO
 // ==========================================
 window.buscarEnderecoPorCep = async function() {
     const cep = document.getElementById('inputCep').value.replace(/\D/g, ''); 
@@ -801,7 +805,6 @@ window.verificarSequenciaEFOP = async function() {
     } catch(e){} finally { btn.innerText="Checar"; btn.disabled=false; setTimeout(()=>document.getElementById('ticket').style.border="",3000); }
 };
 
-function parseDateToObj(dateStr) { const [d, m, y] = dateStr.split('/'); return new Date(y, m - 1, d); }
 window.getOcupacaoSlot = function(prestador, data, hora) { 
     if (!agendamentos || agendamentos.length === 0) return 0;
     return agendamentos.filter(a => {
@@ -812,21 +815,6 @@ window.getOcupacaoSlot = function(prestador, data, hora) {
         else if (typeof a.slots === 'string') contemHora = a.slots.split(', ').includes(hora);
         return mesmoPrestador && mesmaData && contemHora;
     }).length; 
-};
-
-window.getBlockedHours = function(prestador, data) {
-    let blocked = new Set();
-    let cap = parseInt(prestador.qtdtecnicos) || 1;
-    agendamentos.filter(a => a.prestador === prestador.nome && (a.data === data || a.rawdate === data)).forEach(a => {
-        let slotsArray = Array.isArray(a.slots) ? a.slots : (typeof a.slots === 'string' ? a.slots.split(', ') : []);
-        slotsArray.forEach(s => {
-            if (window.getOcupacaoSlot(prestador, data, s) >= cap) {
-                let h = parseInt(s.split(':')[0]);
-                blocked.add(h); blocked.add(h - 1); blocked.add(h + 1); 
-            }
-        });
-    });
-    return blocked;
 };
 
 window.getAusenciasDoDia = function(prestador, dStr) {
@@ -841,50 +829,36 @@ window.getAusenciasDoDia = function(prestador, dStr) {
     return { total, horasBloqueadas };
 };
 
-window.podeAgendar = function(prestador, data, novosSlotsInt) {
-    let cap = parseInt(prestador.qtdtecnicos) || 1;
-    let intervalos = [];
-
-    let agendamentosDoDia = agendamentos.filter(a => a.prestador === prestador.nome && (a.data === data || a.rawdate === data));
-    agendamentosDoDia.forEach(a => {
-        let slotsArray = Array.isArray(a.slots) ? a.slots : (typeof a.slots === 'string' ? a.slots.split(', ') : []);
-        if (slotsArray.length > 0) {
-            let ints = slotsArray.map(s => parseInt(s.split(':')[0])).sort((x,y) => x-y);
-            intervalos.push({ start: ints[0], end: ints[ints.length - 1], type: 'job' });
+// ✅ NOVO MOTOR DE AGENDA: Avalia capacidade exata HORA POR HORA e por TÉCNICO
+window.podeAgendar = function(prestador, data, novosSlotsInt, dNome) {
+    let maxT = parseInt(prestador.qtdtecnicos) || 1;
+    
+    for (let hInt of novosSlotsInt) {
+        let hStr = hInt + ':00';
+        
+        let cap_base = 0;
+        if (prestador.agenda && prestador.agenda.some(a => a.tecnico)) {
+            cap_base = prestador.agenda.filter(a => a.dia === dNome && a.hora === hStr && !a.isAbsence).length;
+        } else {
+            let hasSlot = prestador.agenda && prestador.agenda.some(a => a.dia === dNome && a.hora === hStr && !a.isAbsence);
+            cap_base = hasSlot ? maxT : 0;
         }
-    });
-
-    if (novosSlotsInt && novosSlotsInt.length > 0) {
-        let ints = [...novosSlotsInt].sort((x,y) => x-y);
-        intervalos.push({ start: ints[0], end: ints[ints.length - 1], type: 'job' });
-    }
-
-    if (prestador.agenda) {
-        let ausenciasDia = prestador.agenda.filter(a => a.isAbsence && a.data === data);
-        ausenciasDia.forEach(a => {
-            let q = parseInt(a.qtd) || 1;
-            let start = a.tipo === 'total' ? 0 : parseInt(a.inicio);
-            let end = a.tipo === 'total' ? 24 : parseInt(a.fim) - 1; 
-            for(let i=0; i<q; i++) {
-                intervalos.push({ start: start, end: end, type: 'absence' });
-            }
-        });
-    }
-
-    intervalos.sort((a, b) => a.start - b.start);
-
-    let techEnds = Array(cap).fill(-999);
-    for (let i = 0; i < intervalos.length; i++) {
-        let job = intervalos[i];
-        let assigned = false;
-        for (let t = 0; t < cap; t++) {
-            if (techEnds[t] + 1 < job.start) {
-                techEnds[t] = job.end;
-                assigned = true;
-                break;
-            }
+        
+        if (cap_base === 0) return false; // Ninguém trabalha nessa hora
+        
+        let ausencias = 0;
+        if (prestador.agenda) {
+            prestador.agenda.filter(a => a.isAbsence && a.data === data).forEach(a => {
+                if (a.tipo === 'total') ausencias += (parseInt(a.qtd) || 1);
+                else if (a.tipo === 'parcial' && hInt >= parseInt(a.inicio) && hInt < parseInt(a.fim)) ausencias += (parseInt(a.qtd) || 1);
+            });
         }
-        if (!assigned) return false; 
+        
+        let ocupacao = window.getOcupacaoSlot(prestador, data, hStr);
+        
+        if (ocupacao + 1 > (cap_base - ausencias)) {
+            return false; // Lotado nessa hora
+        }
     }
     return true; 
 };
@@ -893,6 +867,7 @@ window.getNextDates = function(prestador) {
     let dates = []; let today = new Date(); const daysMap = {"Dom":0, "Seg":1, "Ter":2, "Qua":3, "Qui":4, "Sex":5, "Sab":6}; 
     let agendaNormal = (prestador.agenda && Array.isArray(prestador.agenda)) ? prestador.agenda.filter(a => !a.isAbsence) : [];
     let agendaDays = [...new Set(agendaNormal.map(a => a.dia))].map(d => daysMap[d]); 
+    
     for (let i = 2; i < 60; i++) { 
         if(dates.length >= 10) break;
         let d = new Date(); d.setDate(today.getDate() + i); let dStr = d.toLocaleDateString(); let dNome = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sab"][d.getDay()]; 
@@ -901,11 +876,12 @@ window.getNextDates = function(prestador) {
         if (diaBloqueado) continue;
 
         let slotsDoDia = agendaNormal.filter(a => a.dia == dNome); 
+        let uniqueHoras = [...new Set(slotsDoDia.map(s => parseInt(s.hora.split(':')[0])))];
+        
         let temLivre = false;
-        for(let s of slotsDoDia) {
-            let hInt = parseInt(s.hora.split(':')[0]);
+        for(let hInt of uniqueHoras) {
             if (horasBloqueadas.has(hInt)) continue;
-            if (window.podeAgendar(prestador, dStr, [hInt])) {
+            if (window.podeAgendar(prestador, dStr, [hInt], dNome)) {
                 temLivre = true; break;
             }
         }
@@ -1088,10 +1064,11 @@ window.rdaAgendamento = function() {
         let { total: diaBloqueado, horasBloqueadas } = window.getAusenciasDoDia(p, dStr);
         if (diaBloqueado) continue;
 
-        let allSlots = (p.agenda && Array.isArray(p.agenda)) ? p.agenda.filter(a => !a.isAbsence && a.dia == dNome) : []; 
-        if (allSlots.length === 0) continue;
+        let allSlotsRaw = (p.agenda && Array.isArray(p.agenda)) ? p.agenda.filter(a => !a.isAbsence && a.dia == dNome) : []; 
+        if (allSlotsRaw.length === 0) continue;
 
-        let horasAgenda = allSlots.map(item => parseInt(item.hora.split(':')[0])).filter(h => !horasBloqueadas.has(h));
+        let horasAgendaSet = new Set(allSlotsRaw.map(item => parseInt(item.hora.split(':')[0])));
+        let horasAgenda = Array.from(horasAgendaSet).filter(h => !horasBloqueadas.has(h)).sort((a,b)=>a-b);
         let validStarts = []; 
         
         for (let h of horasAgenda) {
@@ -1102,7 +1079,7 @@ window.rdaAgendamento = function() {
                 testSlots.push(h + k);
             }
             if (seqOk) {
-                if (window.podeAgendar(p, dStr, testSlots)) {
+                if (window.podeAgendar(p, dStr, testSlots, dNome)) {
                     validStarts.push(h);
                 }
             }
@@ -1116,6 +1093,7 @@ window.rdaAgendamento = function() {
         });
 
         if(validStarts.length > 0){ 
+            let allSlots = Array.from(horasAgendaSet).sort((a,b)=>a-b).map(h => ({hora: h + ':00'}));
             window.agendaDiasDisponiveis.push({ dStr, dNome, allSlots, validStarts, enabledCells, horasNecessarias });
         } 
     } 
@@ -1333,9 +1311,7 @@ window.concluirAgendamentoFinal = async function(btn) {
         segment: itensOrdenados[0]?.nomeManutencao || "", 
         tipo_servico: itensOrdenados[0]?.desc || "Manutenção",
         field_id: prestador.field_id,
-        
         produtos_texto: itensOrdenados.map(i => `• [${i.nomeManutencao.toUpperCase()}] ${i.desc} (Qtd: ${i.qtd} | Tempo: ${formatarTempo(i.tempo * i.qtd)})`).join('\n'),
-        
         segment_id_field: itensOrdenados[0]?.segment_id || "",
         maintenance_id_field: itensOrdenados[0]?.maintenance_id || document.getElementById('tipoManutencao').value,
         executar_field: dispararField,
@@ -1468,13 +1444,32 @@ window.abrirOpcoesPrestador = function(i) {
 window.abrirDetalhesPrestador = function(index) { 
     let p = prestadores[index]; 
     let agendaHtml = '';  
-    ["Seg", "Ter", "Qua", "Qui", "Sex", "Sab"].forEach(d => { 
-        let slots = p.agenda.filter(a => a.dia === d && !a.isAbsence).map(a => `<div class="cell" style="width: 38px; height: 20px; font-size: 0.7rem; padding: 2px;">${a.hora}</div>`).join('');     
-        if(slots) { 
-            agendaHtml += `<div class="agenda-day-card" style="margin-bottom:10px; padding: 8px;"><div class="agenda-day-title" style="margin-bottom: 4px;">${d}</div><div class="slots-wrapper" style="gap: 3px;">${slots}</div></div>`; 
-        } 
-    });    
-    
+    let qtd = parseInt(p.qtdtecnicos) || 1;
+    let temTecnicos = p.agenda && p.agenda.some(a => a.tecnico);
+
+    if (temTecnicos) {
+        for (let t = 1; t <= qtd; t++) {
+            agendaHtml += `<div style="font-weight:bold; margin-top:10px; color:var(--cobli-dark); border-bottom:1px solid #ccc; padding-bottom:5px; margin-bottom:10px;">Técnico ${t}</div>`;
+            ["Seg", "Ter", "Qua", "Qui", "Sex", "Sab"].forEach(d => { 
+                let slots = p.agenda.filter(a => a.dia === d && a.tecnico === t && !a.isAbsence)
+                                    .sort((a,b) => parseInt(a.hora) - parseInt(b.hora))
+                                    .map(a => `<div class="cell" style="width: 38px; height: 20px; font-size: 0.7rem; padding: 2px;">${a.hora}</div>`).join('');     
+                if(slots) { 
+                    agendaHtml += `<div class="agenda-day-card" style="margin-bottom:5px; padding: 8px;"><div class="agenda-day-title" style="margin-bottom: 4px;">${d}</div><div class="slots-wrapper" style="gap: 3px;">${slots}</div></div>`; 
+                } 
+            });
+        }
+    } else {
+        ["Seg", "Ter", "Qua", "Qui", "Sex", "Sab"].forEach(d => { 
+            let slots = p.agenda.filter(a => a.dia === d && !a.isAbsence)
+                                .sort((a,b) => parseInt(a.hora) - parseInt(b.hora))
+                                .map(a => `<div class="cell" style="width: 38px; height: 20px; font-size: 0.7rem; padding: 2px;">${a.hora}</div>`).join('');     
+            if(slots) { 
+                agendaHtml += `<div class="agenda-day-card" style="margin-bottom:10px; padding: 8px;"><div class="agenda-day-title" style="margin-bottom: 4px;">${d}</div><div class="slots-wrapper" style="gap: 3px;">${slots}</div></div>`; 
+            } 
+        });
+    }
+
     let ausenciasHtml = '';
     if (p.agenda) {
         let hoje = new Date();
@@ -1510,6 +1505,47 @@ window.abrirDetalhesPrestador = function(index) {
     window.exibirModal("Detalhes do Prestador", htmlHeader + agendaHtml + ausenciasHtml + htmlBotaoFechar); 
 };
 
+// ✅ NOVO: Renderiza as Abas dos Técnicos
+window.renderTechTabs = function(qtd) {
+    let container = document.getElementById("tabs-tecnicos");
+    container.innerHTML = "";
+    for(let i=1; i<=qtd; i++) {
+        if(!window.agendaCadastroObj[i]) window.agendaCadastroObj[i] = [];
+        let btn = document.createElement("button");
+        btn.innerText = "Técnico " + i;
+        btn.className = "btn-tech-tab";
+        btn.style.cssText = "padding: 8px 15px; border:none; border-radius:6px; cursor:pointer; font-weight:bold; color:white; transition: 0.3s;";
+        btn.style.background = (i === window.currentTech) ? 'var(--primary)' : '#cbd5e1';
+        btn.onclick = (e) => {
+            e.preventDefault();
+            window.saveCurrentTechGrid();
+            window.loadTechGrid(i);
+        };
+        container.appendChild(btn);
+    }
+};
+
+window.saveCurrentTechGrid = function() {
+    let selected = [...document.querySelectorAll('#agenda-cadastro .cell.selecionado')].map(c => `${c.dataset.dia}-${c.dataset.hora}`);
+    window.agendaCadastroObj[window.currentTech] = selected;
+};
+
+window.loadTechGrid = function(techId) {
+    window.currentTech = techId;
+    document.querySelectorAll('.btn-tech-tab').forEach((b, idx) => {
+        b.style.background = (idx + 1 === techId) ? 'var(--primary)' : '#cbd5e1';
+    });
+    
+    document.querySelectorAll('#agenda-cadastro .cell').forEach(c => c.classList.remove('selecionado'));
+    
+    let slots = window.agendaCadastroObj[techId] || [];
+    slots.forEach(s => {
+        let [dia, hora] = s.split('-');
+        let cell = document.querySelector(`#agenda-cadastro .cell[data-dia="${dia}"][data-hora="${hora}"]`);
+        if(cell) cell.classList.add('selecionado');
+    });
+};
+
 window.abrirCadastro = function(index = -1){ 
     editingIndex = index; 
     document.getElementById("lista-prestadores-view").style.display="none"; 
@@ -1519,6 +1555,9 @@ window.abrirCadastro = function(index = -1){
     document.getElementById("etapa-2").style.display="none"; 
     window.criarGridCadastro("agenda-cadastro"); 
     
+    window.agendaCadastroObj = {};
+    window.currentTech = 1;
+
     if(index !== -1){ 
         let p = prestadores[index]; 
         document.getElementById("nomeEmpresa").value = p.nome; 
@@ -1533,12 +1572,19 @@ window.abrirCadastro = function(index = -1){
         document.getElementById("rangeAtendimento").value = p.range; 
         document.getElementById("fieldIdField").value = p.field_id || ""; 
         
+        let qtd = parseInt(p.qtdtecnicos) || 1;
+        for(let i=1; i<=qtd; i++) window.agendaCadastroObj[i] = [];
+
         if(p.agenda) { 
-            p.agenda.forEach(item => { 
-                if (item.isAbsence) return; 
-                let cells = document.querySelectorAll("#agenda-cadastro .cell"); 
-                cells.forEach(c => { if(c.dataset.dia == item.dia && c.dataset.hora == item.hora) c.classList.add("selecionado"); }); 
-            }); 
+            p.agenda.forEach(item => {
+                if (item.isAbsence) return;
+                if (item.tecnico) {
+                    if (!window.agendaCadastroObj[item.tecnico]) window.agendaCadastroObj[item.tecnico] = [];
+                    window.agendaCadastroObj[item.tecnico].push(`${item.dia}-${item.hora}`);
+                } else {
+                    for(let i=1; i<=qtd; i++) window.agendaCadastroObj[i].push(`${item.dia}-${item.hora}`);
+                }
+            });
             
             let hoje = new Date();
             hoje.setHours(0,0,0,0);
@@ -1641,6 +1687,9 @@ window.mudarEtapa = function(dir) {
         if(!window.validarCampos('#etapa-1')) {
             return window.showMessage("Preencha todos os campos obrigatórios marcados em vermelho!");
         }
+        let qtd = parseInt(document.getElementById("qtdTecnicos").value) || 1;
+        window.renderTechTabs(qtd);
+        window.loadTechGrid(window.currentTech || 1);
     } 
     document.getElementById("etapa-"+etapa).style.display="none"; 
     etapa += dir; 
@@ -1659,6 +1708,7 @@ window.updateButtons = function() {
 
 window.limparAgendaCadastro = function() {
     document.querySelectorAll('#agenda-cadastro .cell.selecionado').forEach(c => c.classList.remove('selecionado'));
+    window.agendaCadastroObj[window.currentTech] = [];
 };
 
 window.toggleTipoBloqueio = function() {
@@ -1733,7 +1783,19 @@ window.salvarPrestador = async function(btn) {
             return window.showMessage("Preencha todos os campos obrigatórios marcados em vermelho!");
         }
         
-        let agenda = [...document.querySelectorAll('#agenda-cadastro .cell.selecionado')].map(c => ({ dia: c.dataset.dia, hora: c.dataset.hora })); 
+        window.saveCurrentTechGrid();
+        
+        let agenda = []; 
+        let maxT = parseInt(document.getElementById("qtdTecnicos").value) || 1;
+        
+        for (let t = 1; t <= maxT; t++) {
+            if (window.agendaCadastroObj[t]) {
+                window.agendaCadastroObj[t].forEach(slot => {
+                    let [dia, hora] = slot.split('-');
+                    agenda.push({ dia: dia, hora: hora, tecnico: parseInt(t) });
+                });
+            }
+        }
         
         datasBloqueadasTemp.forEach(b => {
             agenda.push({
@@ -1755,7 +1817,7 @@ window.salvarPrestador = async function(btn) {
             responsavel: document.getElementById("responsavel").value, 
             contato: document.getElementById("contatoResponsavel").value, 
             usuario_apex: document.getElementById("usuarioApex").value.toLowerCase().trim(),
-            qtdtecnicos: parseInt(document.getElementById("qtdTecnicos").value),
+            qtdtecnicos: maxT,
             range: document.getElementById("rangeAtendimento").value, 
             field_id: document.getElementById("fieldIdField").value, 
             agenda: agenda 
@@ -1801,7 +1863,6 @@ window.abrirDetalhesAgendamento = function(index) {
     const enderecoCompleto = `${a.rua || ''}, ${a.numero || 'S/N'} - ${a.bairro || ''}, ${a.cidade || ''}/${a.uf || ''} - CEP: ${a.cep || ''}`;
     const contatoResponsavel = `${a.acompanhamento || 'Não informado'} | ${a.telefone_responsavel || 'Sem telefone'}`;
     
-    // ✅ A MÁGICA: Tenta pegar o campo novo (produtos_texto) OU o antigo (produtos)
     let txt = a.produtos_texto || a.produtos || '';
     txt = String(txt).trim();
     
@@ -1812,7 +1873,6 @@ window.abrirDetalhesAgendamento = function(index) {
             .filter(l => l.trim())
             .map(l => {
                 let limpo = l.replace('•', '').trim();
-                // Destaca em negrito a Quantidade e o Tempo (se existirem)
                 limpo = limpo.replace(/(\(Qtd:.*?\))/ig, '<strong>$1</strong>');
                 return `<div style="margin-bottom:6px; font-size: 0.95rem;">• ${limpo}</div>`;
             })
@@ -1968,7 +2028,7 @@ window.renderPainel = function(){
                 <div style="margin-top:6px; font-size: 0.85rem; color: #334155;">
                      📅 Agendado: ${a.data} às ${primeiroSlot} | 🛠️ Prestador: ${a.prestador}
                 </div>
-                
+                                       
                 <div style="margin-top: 6px; font-size: 0.7rem; color: #64748b; border-top: 1px dashed #e2e8f0; padding-top: 6px;">
                      Registrado em: ${dataRegistro} (via APEX) | 🙋‍♂️ Solicitado por: ${a.solicitante}
                 </div>
