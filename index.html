@@ -2152,6 +2152,48 @@ window.renderDashboard = function() {
             plugins: [ChartDataLabels]
         });
     }
+
+    let servicosOrdenados = Object.entries(distServ).sort((a,b) => b[1] - a[1]);
+    let listaHtml = servicosOrdenados.map(s => {
+        let qtd = s[1];
+        let percent = totalServicosGeral > 0 ? Math.round((qtd / totalServicosGeral) * 100) : 0;
+        
+        return `
+        <div style="display: flex; justify-content: space-between; align-items: center; background: #f8fafc; padding: 12px; border-radius: 6px; border: 1px solid #e2e8f0; margin-bottom: 8px;">
+            <div style="font-size: 0.8rem; font-weight: 600; color: var(--cobli-dark); flex: 1; padding-right: 10px; line-height: 1.4;">${s[0]}</div>
+            <div style="font-size: 0.95rem; font-weight: bold; color: var(--primary); background: #e0e6ff; padding: 6px 12px; border-radius: 6px; border: 1px solid #c2d1ff; white-space: nowrap;">
+                ${qtd} <span style="color: #64748b; font-weight: 600; font-size: 0.75rem; margin-left: 4px;">(${percent}%)</span>
+            </div>
+        </div>`;
+    }).join('');
+    
+    if (!listaHtml) listaHtml = `<div style="font-size:0.85rem; color:#64748b; padding: 10px;">Nenhum serviço computado ainda.</div>`;
+    const listaServicosElement = document.getElementById('lista-dashboard-servicos');
+    if (listaServicosElement) listaServicosElement.innerHTML = listaHtml;
+
+    let locaisOrdenados = Object.entries(distLocais).sort((a,b) => b[1] - a[1]).slice(0, 10); 
+    
+    if(chartLocais) chartLocais.destroy();
+    const ctxLocais = document.getElementById('chartLocais');
+    if (ctxLocais) {
+        chartLocais = new Chart(ctxLocais.getContext('2d'), {
+            type: 'bar',
+            data: { 
+                labels: locaisOrdenados.map(l => l[0]), 
+                datasets: [{ label: 'Atendimentos', data: locaisOrdenados.map(l => l[1]), backgroundColor: '#00AE97', borderRadius: 4 }] 
+            },
+            options: { 
+                responsive: true, 
+                maintainAspectRatio: false, 
+                plugins: { 
+                    legend: { display: false }, 
+                    datalabels: { color: 'white', font: {weight: 'bold', size: 12} } 
+                }, 
+                scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } 
+            },
+            plugins: [ChartDataLabels]
+        });
+    }
 };
 
     let servicosOrdenados = Object.entries(distServ).sort((a,b) => b[1] - a[1]);
