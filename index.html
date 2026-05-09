@@ -1337,7 +1337,10 @@ window.concluirAgendamentoFinal = async function(btn) {
         segment: itensOrdenados[0]?.nomeManutencao || "", 
         tipo_servico: itensOrdenados[0]?.desc || "Manutenção",
         field_id: prestador.field_id,
-        produtos_texto: itensOrdenados.map(i => `• [${i.nomeManutencao.toUpperCase()}] ${i.desc} (Qtd: ${i.qtd})`).join('\n'),
+        
+        // ✅ CORRIGIDO: Salvando exatamente no formato solicitado com o Tempo
+        produtos_texto: itensOrdenados.map(i => `• [${i.nomeManutencao.toUpperCase()}] ${i.desc} (Qtd: ${i.qtd} | Tempo: ${formatarTempo(i.tempo * i.qtd)})`).join('\n'),
+        
         segment_id_field: itensOrdenados[0]?.segment_id || "",
         maintenance_id_field: itensOrdenados[0]?.maintenance_id || document.getElementById('tipoManutencao').value,
         executar_field: dispararField,
@@ -1806,21 +1809,25 @@ window.abrirDetalhesAgendamento = function(index) {
     
     const enderecoCompleto = `${a.rua || ''}, ${a.numero || 'S/N'} - ${a.bairro || ''}, ${a.cidade || ''}/${a.uf || ''} - CEP: ${a.cep || ''}`;
     const contatoResponsavel = `${a.acompanhamento || 'Não informado'} | ${a.telefone_responsavel || 'Sem telefone'}`;
-    let prodHtml = '';
     
+    // ✅ CORRIGIDO: Destaca QTD/Tempo em Negrito e previne o erro de campo vazio
+    let prodHtml = '';
     if (a.produtos_texto && a.produtos_texto.trim()) {
         prodHtml = a.produtos_texto
             .split('\n')
             .filter(l => l.trim())
-            .map(l => `<div style="margin-bottom:4px;">${l.trim()}</div>`)
+            .map(l => {
+                let limpo = l.trim();
+                limpo = limpo.replace(/\(Qtd:(.*?)\)/g, '<strong>(Qtd:$1)</strong>');
+                return `<div style="margin-bottom:6px; font-size: 0.95rem;">${limpo}</div>`;
+            })
             .join('');
     } else if (a.segment && a.tipo_servico) {
-        prodHtml = `<div>• [${(a.segment || '').toUpperCase()}] ${a.tipo_servico}</div>`;
+        prodHtml = `<div style="margin-bottom:6px; font-size: 0.95rem;">• [${(a.segment || '').toUpperCase()}] ${a.tipo_servico}</div>`;
     } else {
-        prodHtml = '<div style="color:#64748b;">Sem produtos detalhados</div>';
+        prodHtml = '<div style="color:#64748b; font-style: italic;">Sem produtos detalhados</div>';
     }
 
-    // ✅ CORRIGIDO: Removido event.stopPropagation() que estava quebrando o clique do botão
     let btnSincronizarHtml = (userRole === 'ADMIN' || userRole === 'USUARIO') ? `<button onclick="window.sincronizarStatusModal('${a.ticket}', this, ${index})" style="background:var(--cobli-green); flex:1; padding:10px; color:white; border:none; border-radius:5px; cursor:pointer;">🔄 Atualizar Status</button>` : '';
     let btnExcluirHtml = (userRole === 'ADMIN') ? `<button onclick="window.excluirAgendamento(${a.id}, '${a.data}')" class="btn-cancelar" style="flex:1; padding:10px; color:white; border:none; border-radius:5px; cursor:pointer;">Excluir</button>` : '';
 
@@ -2089,14 +2096,15 @@ window.renderDashboard = function() {
         if (typeof a.produtos_texto === 'string' && a.produtos_texto.includes('•')) {
             let linhas = a.produtos_texto.split('\n');
             linhas.forEach(linha => {
-                let match = linha.match(/• \[(.*?)\] (.*?) \(Qtd: (\d+)\)/);
+                // ✅ CORRIGIDO: Regex flexível para ler a Quantidade mesmo tendo "Tempo" no meio do texto
+                let match = linha.match(/• \[(.*?)\] (.*?)\s*\(Qtd:\s*(\d+)/);
                 if (match) {
                     let nomeServ = `[${match[1]}] ${match[2]}`.trim();
                     let qtd = parseInt(match[3]) || 1;
                     distServ[nomeServ] = (distServ[nomeServ] || 0) + qtd;
                     totalServicosGeral += qtd;
                 } else {
-                    let limpo = linha.replace('•', '').trim();
+                    let limpo = linha.replace('•', '').replace(/\(Qtd:.*?\)/, '').trim();
                     if (limpo) {
                         distServ[limpo] = (distServ[limpo] || 0) + 1;
                         totalServicosGeral += 1;
@@ -2135,7 +2143,7 @@ window.renderDashboard = function() {
                         anchor: 'center', align: 'center', color: 'white', font: {weight: 'bold', size: 12},
                         formatter: function(value, context) { 
                             let percent = totalAgend > 0 ? Math.round((value / totalAgend) * 100) : 0; 
-                            return `${String(value).padStart(2, '00')} | ${percent}%`; 
+                            return `${String(value).padStart(2, '0')} | ${percent}%`; 
                         } 
                     } 
                 }, 
@@ -2144,6 +2152,49 @@ window.renderDashboard = function() {
             plugins: [ChartDataLabels]
         });
     }
+
+    let servicosOrdenados = Object.entries(distServ).sort((a,b) => b[1] - a[1]);
+    let listaHtml = servicosOrdenados.map(s => {
+        let qtd = s[1];
+        let percent = totalServicosGeral > 0 ? Math.round((qtd / totalServicosGeral) * 100) : 0;
+        
+        return `
+        <div style="display: flex; justify-content: space-between; align-items: center; background: #f8fafc; padding: 12px; border-radius: 6px; border: 1px solid #e2e8f0; margin-bottom: 8px;">
+            <div style="font-size: 0.8rem; font-weight: 600; color: var(--cobli-dark); flex: 1; padding-right: 10px; line-height: 1.4;">${s[0]}</div>
+            <div style="font-size: 0.95rem; font-weight: bold; color: var(--primary); background: #e0e6ff; padding: 6px 12px; border-radius: 6px; border: 1px solid #c2d1ff; white-space: nowrap;">
+                ${qtd} <span style="color: #64748b; font-weight: 600; font-size: 0.75rem; margin-left: 4px;">(${percent}%)</span>
+            </div>
+        </div>`;
+    }).join('');
+    
+    if (!listaHtml) listaHtml = `<div style="font-size:0.85rem; color:#64748b; padding: 10px;">Nenhum serviço computado ainda.</div>`;
+    const listaServicosElement = document.getElementById('lista-dashboard-servicos');
+    if (listaServicosElement) listaServicosElement.innerHTML = listaHtml;
+
+    let locaisOrdenados = Object.entries(distLocais).sort((a,b) => b[1] - a[1]).slice(0, 10); 
+    
+    if(chartLocais) chartLocais.destroy();
+    const ctxLocais = document.getElementById('chartLocais');
+    if (ctxLocais) {
+        chartLocais = new Chart(ctxLocais.getContext('2d'), {
+            type: 'bar',
+            data: { 
+                labels: locaisOrdenados.map(l => l[0]), 
+                datasets: [{ label: 'Atendimentos', data: locaisOrdenados.map(l => l[1]), backgroundColor: '#00AE97', borderRadius: 4 }] 
+            },
+            options: { 
+                responsive: true, 
+                maintainAspectRatio: false, 
+                plugins: { 
+                    legend: { display: false }, 
+                    datalabels: { color: 'white', font: {weight: 'bold', size: 12} } 
+                }, 
+                scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } 
+            },
+            plugins: [ChartDataLabels]
+        });
+    }
+};
 
     let servicosOrdenados = Object.entries(distServ).sort((a,b) => b[1] - a[1]);
     let listaHtml = servicosOrdenados.map(s => {
