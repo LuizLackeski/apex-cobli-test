@@ -172,6 +172,25 @@
         <button class="auth-btn" id="btnReset" onclick="authAction('reset')">Enviar Link</button>
         <div class="auth-links"><a onclick="showAuthCard('card-login')">⬅ Voltar ao Login</a></div>
     </div>
+
+    <!-- ✅ NOVO CARD: TELA DE REDEFINIÇÃO DE SENHA (via link do e-mail) -->
+    <div class="auth-card" id="card-reset-password" style="display:none;">
+        <div class="logo-circle"></div>
+        <h2>Nova Senha</h2>
+        <p>Digite sua nova senha de acesso</p>
+        <div class="input-group">
+            <label>Nova Senha</label>
+            <input type="password" id="new-password" placeholder="Mínimo de 6 caracteres">
+            <span class="pass-toggle" onclick="togglePass('new-password')">👁️</span>
+        </div>
+        <div class="input-group">
+            <label>Confirmar Nova Senha</label>
+            <input type="password" id="confirm-password" placeholder="Repita a senha">
+            <span class="pass-toggle" onclick="togglePass('confirm-password')">👁️</span>
+        </div>
+        <button class="auth-btn" onclick="salvarNovaSenha()">Salvar Nova Senha</button>
+        <div id="reset-msg" style="color: var(--cobli-red); font-size: 0.8rem; margin-top: 10px; display: none; font-weight: bold;"></div>
+    </div>
 </div>
 
 <div id="app-content">
@@ -525,6 +544,39 @@ window.validarCampos = function(selector) { let container = document.querySelect
 // ==========================================
 // 3. MÓDULO DE AUTENTICAÇÃO E SESSÃO
 // ==========================================
+
+// ✅ NOVO: Função para salvar nova senha (via link de recuperação)
+window.salvarNovaSenha = async function() {
+    const nova = document.getElementById('new-password').value;
+    const confirma = document.getElementById('confirm-password').value;
+    const msg = document.getElementById('reset-msg');
+
+    msg.style.display = 'none';
+
+    if (nova.length < 6) {
+        msg.style.display = 'block';
+        msg.innerText = 'A senha deve ter no mínimo 6 caracteres.';
+        return;
+    }
+    if (nova !== confirma) {
+        msg.style.display = 'block';
+        msg.innerText = 'As senhas não coincidem.';
+        return;
+    }
+
+    const { error } = await supabaseClient.auth.updateUser({ password: nova });
+
+    if (error) {
+        msg.style.display = 'block';
+        msg.innerText = 'Erro ao salvar: ' + error.message;
+    } else {
+        window.showToast('✅ Senha alterada com sucesso! Faça login novamente.');
+        window.history.replaceState(null, '', window.location.pathname);
+        await supabaseClient.auth.signOut();
+        setTimeout(() => showAuthCard('card-login'), 1500);
+    }
+};
+
 function showAuthCard(id) { document.querySelectorAll('.auth-card').forEach(c => c.style.display = 'none'); document.getElementById(id).style.display = 'block'; }
 function togglePass(id) { const el = document.getElementById(id); el.type = el.type === 'password' ? 'text' : 'password'; }
 
@@ -559,43 +611,35 @@ window.authAction = async function(type) {
             window.location.reload();
         }
     }
-else if (type === 'reset') {
-    const email = document.getElementById('reset-email').value.toLowerCase().trim(), btn = document.getElementById('btnReset');
-    if(!email) return window.showMessage("Digite o e-mail cadastrado.");
-    
-    if(email.endsWith('@apex.co')) {
-        window.fecharModal(); // Fecha modais abertos se houver
-        setTimeout(() => {
-            window.showMessage("🛑 <b>Acesso Restrito</b><br><br>E-mails @apex.co são gerados pelo sistema. Para alterar sua senha, entre em contato com o suporte Cobli.");
-        }, 200);
-        return;
-    }
+    // ✅ CORRIGIDO: Fluxo de reset separado por domínio
+    else if (type === 'reset') {
+        const email = document.getElementById('reset-email').value;
+        const btn = document.getElementById('btnReset');
+        if (!email) return window.showMessage("Digite o e-mail cadastrado.");
 
-    btn.innerText = "Enviando...";
-    const siteUrl = window.location.origin + window.location.pathname; 
-    
-    const { error } = await supabaseClient.auth.resetPasswordForEmail(email, { redirectTo: siteUrl });
-    btn.innerText = "Enviar Link";
-    if (error) return window.showMessage("Erro: " + error.message);
-    window.showToast("Link enviado! Verifique seu e-mail.");
-    showAuthCard('card-login');
-}
-    else if (type === 'update_pass_apex') {
-        const email = document.getElementById('signup-email').value;
-        const npw = document.getElementById('signup-password').value;
-        const btn = document.getElementById('btnSignup');
-        
-        if(npw.length < 6) return window.showMessage("A senha deve ter no mínimo 6 caracteres.");
-        btn.innerText = "Salvando...";
-        
-        // Para o admin redefinir a senha do prestador (@apex.co) precisaremos logar com ele rapidinho
-        const { error: signInError } = await supabaseClient.auth.signInWithPassword({ email: email, password: 'senha_padrao_ou_antiga_se_tiver' }); // NOTA: O Supabase exige que o user esteja logado para trocar a própria senha via JS Client. 
-        
-        // Como o admin não sabe a senha antiga, o método correto para forçar a troca sem e-mail
-        // seria via Edge Function (Admin API).
-        // Para não quebrar agora e manter simples, vou deixar a mensagem de alerta!
-        return window.showMessage("⚠️ Senhas @apex.co só podem ser alteradas no Painel do Supabase pela aba Authentication. Entre em contato com o suporte.");
-    }
+        // @apex.co — não envia e-mail, orienta contato com a Cobli
+        if (email.toLowerCase().endsWith('@apex.co')) {
+            showAuthCard('card-login');
+            window.showMessage(
+                `🔒 Contas <strong>@apex.co</strong> são gerenciadas pela equipe Cobli.<br><br>
+                Para redefinir sua senha, entre em contato com o responsável pelo sistema APEX.`
+            );
+            return;
+        }
+
+        // @cobli.co — envia link com redirect correto
+        btn.innerText = "Enviando...";
+        btn.disabled = true;
+        const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
+            redirectTo: 'https://luizlackeski.github.io/apex-cobli-test/index.html'
+        });
+        btn.innerText = "Enviar Link";
+        btn.disabled = false;
+
+        if (error) return window.showMessage("Erro: " + error.message);
+        window.showToast("✅ Link de recuperação enviado para o seu e-mail!");
+        showAuthCard('card-login');
+    }
 }
 
 async function checkSession() {
@@ -667,7 +711,6 @@ window.carregarListaUsuarios = async function() {
         return;
     }
     
-    // PONTO 3: ADICIONANDO COLUNA DE AÇÕES COM BOTÃO DE EXCLUIR E-MAIL
     tbody.innerHTML = data.map(u => {
         let badgeClass = 'badge-prest';
         if(u.nivel === 'ADMIN') badgeClass = 'badge-admin';
@@ -697,7 +740,6 @@ window.mudarNivelUsuario = async function(id, nivel) {
     if(error) window.showMessage("Erro ao atualizar o nível."); else window.showToast("Nível atualizado com sucesso!");
 };
 
-// PONTO 3: FUNÇÃO PARA EXCLUIR PERFIL DA TABELA
 window.excluirUsuarioPerfil = function(id, email) {
     window.showConfirm(`Tem certeza que deseja remover o perfil de <strong>${email}</strong>?<br><br><small>O usuário perderá o acesso configurado no sistema.</small>`, `
         supabaseClient.from('perfis_usuarios').delete().eq('id', '${id}').then(res => {
@@ -1487,9 +1529,9 @@ window.abrirCadastro = function(index = -1){
         document.getElementById("uf").value = p.uf; 
         document.getElementById("cep").value = p.cep; 
         document.getElementById("responsavel").value = p.responsavel; 
-        document.getElementById("contatoResponsavel").value = p.contato; 
-        document.getElementById("usuarioApex").value = p.usuario_apex || "";
-        document.getElementById("qtdTecnicos").value = p.qtdtecnicos;
+        document.getElementById("contatoResponsavel").value = p.contato; 
+        document.getElementById("usuarioApex").value = p.usuario_apex || "";
+        document.getElementById("qtdTecnicos").value = p.qtdtecnicos;
         document.getElementById("rangeAtendimento").value = p.range; 
         document.getElementById("fieldIdField").value = p.field_id || ""; 
         
@@ -1713,9 +1755,9 @@ window.salvarPrestador = async function(btn) {
             uf: document.getElementById("uf").value, 
             cep: document.getElementById("cep").value, 
             responsavel: document.getElementById("responsavel").value, 
-            contato: document.getElementById("contatoResponsavel").value, 
-            usuario_apex: document.getElementById("usuarioApex").value.toLowerCase().trim(),
-            qtdtecnicos: parseInt(document.getElementById("qtdTecnicos").value),
+            contato: document.getElementById("contatoResponsavel").value, 
+            usuario_apex: document.getElementById("usuarioApex").value.toLowerCase().trim(),
+            qtdtecnicos: parseInt(document.getElementById("qtdTecnicos").value),
             range: document.getElementById("rangeAtendimento").value, 
             field_id: document.getElementById("fieldIdField").value, 
             agenda: agenda 
@@ -1736,31 +1778,57 @@ window.salvarPrestador = async function(btn) {
 
 window.excluirPrestador = async function(i) { window.showConfirm("Tem certeza que deseja excluir?", `fetch('${API_URL}/prestadores/${prestadores[i].id}', { method: 'DELETE', headers: getHeaders() }).then(async () => { await window.carregarDadosDoBanco(); window.showToast("Prestador excluído com sucesso!"); })`); };
 
-// PONTO 1: FUNÇÃO ABRIR DETALHES DE AGENDAMENTO (GLOBAL)
+// ==========================================
+// 8. PAINEL - DETALHES E EXCLUSÃO DE AGENDAMENTO
+// ==========================================
+
+// ✅ CORRIGIDO: Função que faltava para acionar a confirmação de exclusão
+window.excluirAgendamento = function(id, data) {
+    window.fecharModal();
+    window.showConfirm(
+        `Tem certeza que deseja excluir o agendamento da data <strong>${data}</strong>?<br><br><small>Esta ação não pode ser desfeita.</small>`,
+        `window.confirmarExclusaoAgendamento(${id})`
+    );
+};
+
+window.confirmarExclusaoAgendamento = async function(id) { 
+    await fetch(`${API_URL}/agendamentos/${id}`, { method: 'DELETE', headers: getHeaders() }); 
+    await window.carregarDadosDoBanco(); 
+    window.showToast("Agendamento excluído!"); 
+    window.fecharModal(); 
+};
+
+// ✅ CORRIGIDO: Exibição dos produtos no modal de detalhes
 window.abrirDetalhesAgendamento = function(index) {
     let a = filtradosPainel[index];
     if(!a) return;
     
     const enderecoCompleto = `${a.rua || ''}, ${a.numero || 'S/N'} - ${a.bairro || ''}, ${a.cidade || ''}/${a.uf || ''} - CEP: ${a.cep || ''}`;
     const contatoResponsavel = `${a.acompanhamento || 'Não informado'} | ${a.telefone_responsavel || 'Sem telefone'}`;
-    
+
+    // Renderização robusta dos produtos
     let prodHtml = '';
     if (a.produtos_texto && a.produtos_texto.trim()) {
-        prodHtml = a.produtos_texto.split('\n').filter(l => l.trim()).map(l => `<div style="margin-bottom:4px;">${l.trim()}</div>`).join('');
+        prodHtml = a.produtos_texto
+            .split('\n')
+            .filter(l => l.trim())
+            .map(l => `<div style="margin-bottom:4px;">${l.trim()}</div>`)
+            .join('');
     } else if (a.segment && a.tipo_servico) {
         prodHtml = `<div>• [${(a.segment || '').toUpperCase()}] ${a.tipo_servico}</div>`;
     } else {
         prodHtml = '<div style="color:#64748b;">Sem produtos detalhados</div>';
     }
 
-    // Corrigido: Botões agora chamam as funções globais corretamente
-    let btnSincronizarHtml = (userRole === 'ADMIN' || userRole === 'USUARIO') ? `<button onclick="window.sincronizarStatusModal('${a.ticket}', this, ${index})" style="background:var(--cobli-green); flex:1; padding:10px;">🔄 Atualizar Status</button>` : '';
+    let btnSincronizarHtml = (userRole === 'ADMIN' || userRole === 'USUARIO') ? `<button onclick="event.stopPropagation(); window.sincronizarStatusModal('${a.ticket}', this, ${index})" style="background:var(--cobli-green); flex:1; padding:10px;">🔄 Atualizar Status</button>` : '';
     let btnExcluirHtml = (userRole === 'ADMIN') ? `<button onclick="window.excluirAgendamento(${a.id}, '${a.data}')" class="btn-cancelar" style="flex:1; padding:10px;">Excluir</button>` : '';
 
     let html = `
         <div style="background: white; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 15px;">
             <div style="display:flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px; margin-bottom: 8px;">
-                <div style="font-weight:bold; font-size:1.1rem; color:var(--primary);">🎟️ Ticket: ${a.ticket}</div>
+                <div style="font-weight:bold; font-size:1.1rem; color:var(--primary);">
+                    🎟️ Ticket: ${a.ticket}
+                </div>
                 <div id="modal-status-badge" style="font-size: 0.75rem; color: white; font-weight: 700; background: var(--primary); padding: 4px 10px; border-radius: 6px;">
                     ${a.status || 'SOLICITADO'}
                 </div>
@@ -1769,14 +1837,15 @@ window.abrirDetalhesAgendamento = function(index) {
                 👤 <strong>Cliente:</strong> ${a.cliente}<br>
                 👔 <strong>Solicitante:</strong> ${a.solicitante}<br>
                 🛠️ <strong>Prestador:</strong> ${a.prestador}<br>
-                📅 <strong>Data:</strong> ${a.data}<br>
-                ⏰ <strong>Horários:</strong> ${Array.isArray(a.slots) ? a.slots.join(', ') : (a.slots || 'N/A')}
+                📅 <strong>Data do Atendimento:</strong> ${a.data}<br>
+                ⏰ <strong>Horários:</strong> ${Array.isArray(a.slots) ? a.slots.join(', ') : (a.slots || 'N/A')}<br>
                 <hr style="border:0; border-top:1px solid #f1f5f9; margin:8px 0;">
-                📍 <strong>Endereço:</strong> ${enderecoCompleto}
+                📍 <strong>Endereço:</strong> ${enderecoCompleto}<br>
+                📞 <strong>Responsável:</strong> ${contatoResponsavel}
             </div>
         </div>
-        <div style="font-weight:600; margin-bottom:5px; color:#334155;">📦 Serviços Solicitados:</div>
-        <div style="background: #f8fafc; padding: 12px; border-radius: 6px; border: 1px solid #cbd5e1; margin-bottom: 15px; font-size: 0.9rem;">
+        <div style="font-weight:600; margin-bottom:5px; color:#334155;">📦 Serviços/Produtos Solicitados:</div>
+        <div style="background: #f8fafc; padding: 12px; border-radius: 6px; border: 1px solid #cbd5e1; margin-bottom: 15px; font-size: 0.9rem; line-height: 1.5; color:#475569;">
             ${prodHtml}
         </div>
         <div style="display:flex; gap:10px; flex-wrap: wrap;">
@@ -1787,109 +1856,9 @@ window.abrirDetalhesAgendamento = function(index) {
     `;
     window.exibirModal("Detalhes do Agendamento", html);
 };
-    
-window.excluirAgendamento = function(id, data) {
-    window.showConfirm(
-        `Tem certeza que deseja excluir o agendamento da data <strong>${data}</strong>?<br><br><small>Esta ação não pode ser desfeita.</small>`,
-        `window.confirmarExclusaoAgendamento(${id})`
-    );
-};
-window.confirmarExclusaoAgendamento = async function(id) { 
-    await fetch(`${API_URL}/agendamentos/${id}`, { method: 'DELETE', headers: getHeaders() }); 
-    await window.carregarDadosDoBanco(); 
-    window.showToast("Agendamento excluído!"); 
-    window.fecharModal(); 
-};  
-  
-    const sel = document.querySelectorAll("#agenda-agendamento .cell.selecionado");
-    const slotsSelecionados = Array.from(sel).map(c => c.dataset.hora.substring(0, 5));
-    const dataSelecionada = sel.length > 0 ? sel[0].dataset.date : null;
-    const prestador = prestadores[prestadorSelecionadoIndex];
-    
-    const dispararSlack = (userRole === 'ADMIN') ? (document.getElementById('slackSwitch').value === 'ON') : true;
-    const dispararField = (userRole === 'ADMIN') ? (document.getElementById('fieldSwitch').value === 'ON') : true;
-    const dispararBanco = (userRole === 'ADMIN') ? (document.getElementById('dbSwitch').value === 'ON') : true;
-
-    if (!prestador || slotsSelecionados.length === 0) {
-        window.showMessage("Erro: Selecione o prestador e o horário.");
-        return;
-    }
-
-    let itensOrdenados = [...itensSelecionados].sort((a, b) => b.tempo - a.tempo);
-
-    const agendamento = {
-        prestador: prestador.nome,
-        qtdtecnicos: prestador.qtdtecnicos,
-        ticket: document.getElementById('ticket').value,
-        cliente: document.getElementById('clienteNome').value,
-        cnpj: document.getElementById('clienteCnpj').value,
-        solicitante: document.getElementById('solicitante').value,
-        data: dataSelecionada, 
-        rawdate: dataSelecionada,
-        slots: slotsSelecionados,
-        rua: document.getElementById('inputRua').value,
-        numero: document.getElementById('inputNumero').value,
-        bairro: document.getElementById('inputBairro').value,
-        cidade: document.getElementById('inputCidade').value,
-        uf: document.getElementById('inputUf').value,
-        cep: document.getElementById('inputCep').value,
-        acompanhamento: document.getElementById('respAcompanhamento').value,
-        telefone_responsavel: document.getElementById('telResponsavel').value,
-        segment: itensOrdenados[0]?.nomeManutencao || "", 
-        tipo_servico: itensOrdenados[0]?.desc || "Manutenção",
-        field_id: prestador.field_id,
-        produtos_texto: itensOrdenados.map(i => `• [${i.nomeManutencao.toUpperCase()}] ${i.desc} (Qtd: ${i.qtd})`).join('\n'),
-        segment_id_field: itensOrdenados[0]?.segment_id || "",
-        maintenance_id_field: itensOrdenados[0]?.maintenance_id || document.getElementById('tipoManutencao').value,
-        executar_field: dispararField,
-        executar_banco: dispararBanco
-    };
-    
-    const originalText = btn.innerText;
-    btn.innerText = "Processando..."; btn.disabled = true;
-    try {
-        const response = await fetch(EDGE_URL, {
-            method: 'POST',
-            headers: getHeaders(),
-            body: JSON.stringify(agendamento)
-        });
-        const result = await response.json(); 
-        if (response.ok) {
-            if (dispararSlack) {
-                let produtosFormatados = itensOrdenados.map(i => `[${i.nomeManutencao.toUpperCase()}] ${i.desc} (${i.qtd}x)`).join(', ');
-                const msgSlack = `✅ *Novo Agendamento - Ticket: ${result.ticket}*\n` +
-                                 `*Cliente:* ${agendamento.cliente}\n` +
-                                 `*Prestador:* ${agendamento.prestador}\n` +
-                                 `*Data:* ${agendamento.data} | ${agendamento.slots[0]}\n` +
-                                 `*Produtos:* ${produtosFormatados}\n` +
-                                 `*Solicitante:* ${agendamento.solicitante}`;
-                                 
-                await window.enviarNotificacaoSlack(msgSlack);
-            }
-            let statusMsg = `🚀 **Sucesso!**\n\n`;
-            statusMsg += `🎫 **Ticket:** ${result.ticket}\n`;
-            statusMsg += `📊 **Status EFOP:** ${result.status}\n`;
-            statusMsg += `📍 **Origem:** ${result.origin}\n`;
-            statusMsg += `\nSincronização: ` + 
-                         (dispararBanco ? "Banco [OK] " : "") + 
-                         (dispararField ? "Field [OK]" : "");
-            window.showMessage(statusMsg, "success");
-            await window.carregarDadosDoBanco();
-            
-            setTimeout(() => window.location.reload(), 2000); 
-        } else {
-            window.showMessage("❌ Erro: " + (result.error || "Erro na integração"), "error");
-        }
-    } catch (error) {
-        console.error("Erro na chamada:", error);
-        window.showMessage("Erro de conexão com a Edge Function.");
-    } finally {
-        btn.innerText = originalText; btn.disabled = false;
-    }
-};
 
 // ==========================================
-// 8. PAINEL E DASHBOARD (ABAS 3 E 4)
+// 9. PAINEL E DASHBOARD (ABAS 3 E 4)
 // ==========================================
 window.trocarAba = function(id, btn){ 
     document.querySelectorAll('.aba').forEach(a => a.classList.remove('ativa')); 
@@ -2157,7 +2126,7 @@ window.renderDashboard = function() {
                         anchor: 'center', align: 'center', color: 'white', font: {weight: 'bold', size: 12},
                         formatter: function(value, context) { 
                             let percent = totalAgend > 0 ? Math.round((value / totalAgend) * 100) : 0; 
-                            return `${String(value).padStart(2, '0')} | ${percent}%`; 
+                            return `${String(value).padStart(2, '00')} | ${percent}%`; 
                         } 
                     } 
                 }, 
@@ -2211,37 +2180,26 @@ window.renderDashboard = function() {
 };
 
 // ==========================================
-// INICIALIZA O SISTEMA
+// 10. INICIALIZA O SISTEMA
 // ==========================================
-// Substitua o bloco final por este:
-checkSession().then(() => {
-    // Escuta se o usuário clicou no link de recuperação
-    supabaseClient.auth.onAuthStateChange(async (event, session) => {
-        if (event == "PASSWORD_RECOVERY") {
-            // Força a exibição da tela de nova senha antes de qualquer outra aba
-            document.getElementById('app-content').style.display = 'none';
-            document.getElementById('auth-overlay').style.display = 'flex';
-            showAuthCard('card-signup'); 
-            
-            document.querySelector('#card-signup h2').innerText = "Redefinir Senha";
-            document.querySelector('#card-signup p').innerText = "Crie uma nova senha segura abaixo.";
-            document.getElementById('signup-email').parentElement.style.display = 'none'; 
-            
-            const btn = document.getElementById('btnSignup');
-            btn.innerText = "Salvar Nova Senha";
-            btn.onclick = async function() {
-                const newPassword = document.getElementById('signup-password').value;
-                if(newPassword.length < 6) return window.showMessage("Mínimo de 6 caracteres.");
-                
-                const { error } = await supabaseClient.auth.updateUser({ password: newPassword });
-                if (error) return window.showMessage("Erro: " + error.message);
-                
-                window.showMessage("Senha atualizada! Faça login com a nova senha.");
-                window.location.href = window.location.origin + window.location.pathname;
-            };
-        }
+
+// ✅ CORRIGIDO: Detecta se o usuário chegou via link de redefinição de senha
+const hashParams = new URLSearchParams(window.location.hash.replace('#', '?'));
+const accessToken = hashParams.get('access_token');
+const tokenType = hashParams.get('type');
+
+if (accessToken && tokenType === 'recovery') {
+    supabaseClient.auth.setSession({
+        access_token: accessToken,
+        refresh_token: hashParams.get('refresh_token') || ''
+    }).then(() => {
+        document.getElementById('auth-overlay').style.display = 'flex';
+        document.body.style.display = 'block';
+        showAuthCard('card-reset-password');
     });
-});
+} else {
+    checkSession();
+}
 </script>
 </body>
-</html>    
+</html>
