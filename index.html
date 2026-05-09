@@ -376,7 +376,14 @@
                                     <option value="total">Dia Inteiro</option><option value="parcial">Horário Específico</option>
                                 </select>
                             </div>
-                            <div style="flex: 0.5; min-width: 80px;"><label style="color: var(--cobli-red);">Qtd. Téc.</label><input type="number" id="qtdBloqueio" value="1" min="1" style="border-color: #fca5a5; background: white;"></div>
+                            
+                            <div style="flex: 1; min-width: 120px;">
+                                <label style="color: var(--cobli-red);">Aplicar a</label>
+                                <select id="tecnicoBloqueio" style="border-color: #fca5a5; background: white;">
+                                    <option value="Todos">Todos (Empresa)</option>
+                                </select>
+                            </div>
+
                             <div id="boxHoraBloqueio" style="display: none; gap: 10px; flex: 2; min-width: 200px;">
                                 <div style="flex: 1;"><label style="color: var(--cobli-red);">Início</label><select id="horaInicioBloqueio" style="border-color: #fca5a5; background: white;"><option value="">Sel...</option><option value="8">08:00</option><option value="9">09:00</option><option value="10">10:00</option><option value="11">11:00</option><option value="12">12:00</option><option value="13">13:00</option><option value="14">14:00</option><option value="15">15:00</option><option value="16">16:00</option><option value="17">17:00</option><option value="18">18:00</option></select></div>
                                 <div style="flex: 1;"><label style="color: var(--cobli-red);">Fim</label><select id="horaFimBloqueio" style="border-color: #fca5a5; background: white;"><option value="">Sel...</option><option value="9">09:00</option><option value="10">10:00</option><option value="11">11:00</option><option value="12">12:00</option><option value="13">13:00</option><option value="14">14:00</option><option value="15">15:00</option><option value="16">16:00</option><option value="17">17:00</option><option value="18">18:00</option><option value="19">19:00</option></select></div>
@@ -665,7 +672,7 @@ async function checkSession() {
     }
 }
 
-async function definirPermissoes(email, uid) {
+async function definingPermissoes(email, uid) {
     const { data, error } = await supabaseClient.from('perfis_usuarios').select('nivel').eq('id', uid).maybeSingle();
     
     if (data) {
@@ -820,13 +827,13 @@ window.getOcupacaoSlot = function(prestador, data, hora) {
 window.getAusenciasDoDia = function(prestador, dStr) {
     if (!prestador.agenda || !Array.isArray(prestador.agenda)) return { total: false, horasBloqueadas: new Set() };
     let ausencias = prestador.agenda.filter(a => a.isAbsence && a.data === dStr);
-    let total = false, horasBloqueadas = new Set(), cap = parseInt(prestador.qtdtecnicos) || 1;
-    ausencias.forEach(a => {
-        let q = parseInt(a.qtd) || 1;
-        if (a.tipo === 'total' && q >= cap) { total = true; } 
-        else if (a.tipo === 'parcial' && q >= cap) { for (let h = parseInt(a.inicio); h < parseInt(a.fim); h++) horasBloqueadas.add(h); }
-    });
-    return { total, horasBloqueadas };
+    
+    // Se "Todos" tem bloqueio total, o dia inteiro está perdido
+    let bloqueioTotalEmpresa = ausencias.some(a => a.tipo === 'total' && (a.tecnico === 'Todos' || !a.tecnico));
+    if (bloqueioTotalEmpresa) return { total: true, horasBloqueadas: new Set() };
+    
+    // O bloqueio fino hora a hora será feito no motor de agendamento (podeAgendar)
+    return { total: false, horasBloqueadas: new Set() };
 };
 
 // ✅ NOVO MOTOR DE AGENDA: Avalia capacidade exata HORA POR HORA e por TÉCNICO
@@ -844,20 +851,34 @@ window.podeAgendar = function(prestador, data, novosSlotsInt, dNome) {
             cap_base = hasSlot ? maxT : 0;
         }
         
-        if (cap_base === 0) return false; // Ninguém trabalha nessa hora
+        if (cap_base === 0) return false; 
         
-        let ausencias = 0;
+        let techsAusentes = new Set();
+        let ausenciasGlobais = 0; 
+        
         if (prestador.agenda) {
             prestador.agenda.filter(a => a.isAbsence && a.data === data).forEach(a => {
-                if (a.tipo === 'total') ausencias += (parseInt(a.qtd) || 1);
-                else if (a.tipo === 'parcial' && hInt >= parseInt(a.inicio) && hInt < parseInt(a.fim)) ausencias += (parseInt(a.qtd) || 1);
+                let matchesTime = false;
+                if (a.tipo === 'total') matchesTime = true;
+                else if (a.tipo === 'parcial' && hInt >= parseInt(a.inicio) && hInt < parseInt(a.fim)) matchesTime = true;
+
+                if (matchesTime) {
+                    if (a.tecnico === 'Todos' || (!a.tecnico && !a.qtd)) {
+                        ausenciasGlobais = maxT; // Bloqueia todos
+                    } else if (a.tecnico) {
+                        techsAusentes.add(a.tecnico); // Bloqueia técnico específico
+                    } else if (a.qtd) {
+                        ausenciasGlobais += parseInt(a.qtd); // Legado
+                    }
+                }
             });
         }
         
+        let ausenciasTotaisNestaHora = Math.min(maxT, ausenciasGlobais + techsAusentes.size);
         let ocupacao = window.getOcupacaoSlot(prestador, data, hStr);
         
-        if (ocupacao + 1 > (cap_base - ausencias)) {
-            return false; // Lotado nessa hora
+        if (ocupacao + 1 > (cap_base - ausenciasTotaisNestaHora)) {
+            return false; // Estourou a capacidade de técnicos disponíveis nesta hora
         }
     }
     return true; 
@@ -1486,7 +1507,7 @@ window.abrirDetalhesPrestador = function(index) {
                 <div style="display: flex; flex-wrap: wrap; gap: 6px;">`;
             ausenciasHtml += ausencias.map(b => {
                 let texto = b.tipo === 'total' ? `${b.data} (Dia Inteiro)` : `${b.data} (${b.inicio}h às ${b.fim}h)`;
-                texto += ` | ${b.qtd} Téc.`;
+                texto += ` | Afeta: ${b.tecnico === 'Todos' ? 'Todos' : 'Téc ' + b.tecnico}`;
                 return `<span class="pill" style="background: #fee2e2; color: var(--cobli-red); border: 1px solid #fca5a5; font-size: 0.7rem;">${texto}</span>`;
             }).join('');
             ausenciasHtml += `</div></div>`;
@@ -1505,10 +1526,16 @@ window.abrirDetalhesPrestador = function(index) {
     window.exibirModal("Detalhes do Prestador", htmlHeader + agendaHtml + ausenciasHtml + htmlBotaoFechar); 
 };
 
-// ✅ NOVO: Renderiza as Abas dos Técnicos
+// ✅ NOVO: Renderiza as Abas dos Técnicos E Atualiza o Select de Bloqueio
 window.renderTechTabs = function(qtd) {
     let container = document.getElementById("tabs-tecnicos");
     container.innerHTML = "";
+    
+    let selectBloqueio = document.getElementById("tecnicoBloqueio");
+    if(selectBloqueio) {
+        selectBloqueio.innerHTML = '<option value="Todos">Todos (Empresa)</option>';
+    }
+
     for(let i=1; i<=qtd; i++) {
         if(!window.agendaCadastroObj[i]) window.agendaCadastroObj[i] = [];
         let btn = document.createElement("button");
@@ -1522,6 +1549,10 @@ window.renderTechTabs = function(qtd) {
             window.loadTechGrid(i);
         };
         container.appendChild(btn);
+        
+        if(selectBloqueio) {
+            selectBloqueio.innerHTML += `<option value="${i}">Técnico ${i}</option>`;
+        }
     }
 };
 
@@ -1590,7 +1621,7 @@ window.abrirCadastro = function(index = -1){
             hoje.setHours(0,0,0,0);
             
             datasBloqueadasTemp = p.agenda.filter(a => a.isAbsence).map(a => ({
-                data: a.data, tipo: a.tipo, inicio: a.inicio, fim: a.fim, qtd: a.qtd
+                data: a.data, tipo: a.tipo, inicio: a.inicio, fim: a.fim, tecnico: a.tecnico || (a.qtd ? 'Todos' : 'Todos')
             })).filter(b => {
                 let parts = b.data.split('/');
                 let dataB = new Date(parts[2], parts[1] - 1, parts[0]);
@@ -1606,7 +1637,7 @@ window.abrirCadastro = function(index = -1){
     document.getElementById('dataBloqueio').value = '';
     document.getElementById('dataBloqueioFim').value = '';
     document.getElementById('tipoBloqueio').value = 'total';
-    document.getElementById('qtdBloqueio').value = '1';
+    if(document.getElementById('tecnicoBloqueio')) document.getElementById('tecnicoBloqueio').value = 'Todos';
     
     document.querySelectorAll('#etapa-1 input').forEach(el => {
         el.style.borderColor = '#cbd5e1';
@@ -1720,7 +1751,7 @@ window.adicionarBloqueioData = function() {
     let inputData = document.getElementById('dataBloqueio').value;
     let inputDataFim = document.getElementById('dataBloqueioFim').value;
     let tipo = document.getElementById('tipoBloqueio').value;
-    let qtd = parseInt(document.getElementById('qtdBloqueio').value) || 1;
+    let tecnicoSel = document.getElementById('tecnicoBloqueio').value;
 
     if (!inputData) return window.showMessage("Selecione a data inicial no calendário!");
 
@@ -1736,7 +1767,7 @@ window.adicionarBloqueioData = function() {
         let y = dataAtual.getFullYear();
         let dataFormatada = `${d}/${m}/${y}`;
 
-        let objBloqueio = { data: dataFormatada, tipo: tipo, qtd: qtd };
+        let objBloqueio = { data: dataFormatada, tipo: tipo, tecnico: tecnicoSel };
 
         if (tipo === 'parcial') {
             let hInicio = parseInt(document.getElementById('horaInicioBloqueio').value);
@@ -1748,7 +1779,7 @@ window.adicionarBloqueioData = function() {
             objBloqueio.fim = hFim;
         }
 
-        let existe = datasBloqueadasTemp.find(b => b.data === objBloqueio.data && b.tipo === objBloqueio.tipo && b.inicio === objBloqueio.inicio && b.fim === objBloqueio.fim);
+        let existe = datasBloqueadasTemp.find(b => b.data === objBloqueio.data && b.tipo === objBloqueio.tipo && b.inicio === objBloqueio.inicio && b.fim === objBloqueio.fim && b.tecnico === objBloqueio.tecnico);
         if(!existe) datasBloqueadasTemp.push(objBloqueio);
 
         dataAtual.setDate(dataAtual.getDate() + 1);
@@ -1767,7 +1798,7 @@ window.removerBloqueioData = function(index) {
 window.renderizarDatasBloqueadas = function() {
     document.getElementById('lista-datas-bloqueadas').innerHTML = datasBloqueadasTemp.map((b, i) => {
         let texto = b.tipo === 'total' ? `${b.data} (Dia Inteiro)` : `${b.data} (${b.inicio}h às ${b.fim}h)`;
-        texto += ` | ${b.qtd} Téc.`;
+        texto += ` | Afeta: ${b.tecnico === 'Todos' ? 'Todos' : 'Téc ' + b.tecnico}`;
         return `<span class="pill" style="background: var(--cobli-red); color: white; border: none; display: flex; align-items: center; gap: 6px;">
             ${texto} <span style="cursor:pointer; font-weight:bold; padding-left: 4px; border-left: 1px solid rgba(255,255,255,0.4);" onclick="window.removerBloqueioData(${i})">X</span>
         </span>`;
@@ -1804,7 +1835,7 @@ window.salvarPrestador = async function(btn) {
                 tipo: b.tipo,
                 inicio: b.inicio,
                 fim: b.fim,
-                qtd: b.qtd
+                tecnico: b.tecnico
             });
         });
 
@@ -2028,7 +2059,7 @@ window.renderPainel = function(){
                 <div style="margin-top:6px; font-size: 0.85rem; color: #334155;">
                      📅 Agendado: ${a.data} às ${primeiroSlot} | 🛠️ Prestador: ${a.prestador}
                 </div>
-                                       
+                
                 <div style="margin-top: 6px; font-size: 0.7rem; color: #64748b; border-top: 1px dashed #e2e8f0; padding-top: 6px;">
                      Registrado em: ${dataRegistro} (via APEX) | 🙋‍♂️ Solicitado por: ${a.solicitante}
                 </div>
@@ -2248,7 +2279,7 @@ window.renderDashboard = function() {
         });
     }
 };
-
+    
 // ==========================================
 // 10. INICIALIZA O SISTEMA
 // ==========================================
