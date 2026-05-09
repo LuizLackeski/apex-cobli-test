@@ -2126,53 +2126,35 @@ window.abrirDetalhesAgendamento = function(index) {
     const contatoResponsavel = `${a.acompanhamento || 'Não informado'} | ${a.telefone_responsavel || 'Sem telefone'}`;
     
     let txt = a.produtos_texto || a.produtos || '';
-    txt = String(txt).trim();
-    
-    let prodHtml = '';
-    
-    if (txt.length > 0) {
-        prodHtml = txt.split('\n')
-            .filter(l => l.trim())
-            .map(l => {
-                let limpo = l.replace('•', '').trim();
-                limpo = limpo.replace(/(\(Qtd:.*?\))/ig, '<strong>$1</strong>');
-                return `<div style="margin-bottom:6px; font-size: 0.95rem;">• ${limpo}</div>`;
-            })
-            .join('');
-    } else if (a.segment && a.tipo_servico) {
-        prodHtml = `<div style="margin-bottom:6px; font-size: 0.95rem;">• [${String(a.segment).toUpperCase()}] ${a.tipo_servico}</div>`;
-    } else {
-        prodHtml = '<div style="color:#64748b; font-style: italic;">Sem produtos detalhados</div>';
-    }
+    let prodHtml = String(txt).trim().length > 0 
+        ? String(txt).split('\n').map(l => `<div style="margin-bottom:6px;">• ${l.replace('•', '').trim().replace(/(\(Qtd:.*?\))/ig, '<strong>$1</strong>')}</div>`).join('')
+        : '<div style="color:#64748b; font-style: italic;">Sem produtos detalhados</div>';
 
-    let btnSincronizarHtml = (userRole === 'ADMIN' || userRole === 'USUARIO') ? `<button onclick="event.stopPropagation(); window.sincronizarStatusModal('${a.ticket}', this, ${index})" style="background:var(--cobli-green); flex:1; padding:10px; color:white; border:none; border-radius:5px; cursor:pointer;">🔄 Atualizar Status</button>` : '';
-    let btnExcluirHtml = (userRole === 'ADMIN') ? `<button onclick="window.excluirAgendamento(${a.id}, '${a.data}')" class="btn-cancelar" style="flex:1; padding:10px; color:white; border:none; border-radius:5px; cursor:pointer;">Excluir</button>` : '';
+    // Botão de atualizar status disponível para Admin e Usuário, sem travas de data aqui (manual é sempre permitido)
+    let btnSincronizarHtml = (userRole === 'ADMIN' || userRole === 'USUARIO') 
+        ? `<button onclick="event.stopPropagation(); window.sincronizarStatusModal('${a.ticket}', this, ${index})" style="background:var(--cobli-green); flex:1; padding:10px; color:white; border:none; border-radius:5px; cursor:pointer;">🔄 Atualizar Status</button>` 
+        : '';
+        
+    let btnExcluirHtml = (userRole === 'ADMIN') 
+        ? `<button onclick="window.excluirAgendamento(${a.id}, '${a.data}')" class="btn-cancelar" style="flex:1; padding:10px; color:white; border:none; border-radius:5px; cursor:pointer;">Excluir</button>` 
+        : '';
 
     let html = `
         <div style="background: white; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 15px;">
             <div style="display:flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px; margin-bottom: 8px;">
-                <div style="font-weight:bold; font-size:1.1rem; color:var(--primary);">
-                    🎟️ Ticket: ${a.ticket}
-                </div>
-                <div id="modal-status-badge" style="font-size: 0.75rem; color: white; font-weight: 700; background: var(--primary); padding: 4px 10px; border-radius: 6px;">
-                    ${a.status || 'SOLICITADO'}
-                </div>
+                <div style="font-weight:bold; font-size:1.1rem; color:var(--primary);">🎟️ Ticket: ${a.ticket}</div>
+                <div id="modal-status-badge" style="font-size: 0.75rem; color: white; font-weight: 700; background: var(--primary); padding: 4px 10px; border-radius: 6px;">${a.status || 'SOLICITADO'}</div>
             </div>
             <div style="font-size:0.9rem; line-height:1.6;">
                 👤 <strong>Cliente:</strong> ${a.cliente}<br>
                 👔 <strong>Solicitante:</strong> ${a.solicitante}<br>
                 🛠️ <strong>Prestador:</strong> ${a.prestador}<br>
-                📅 <strong>Data do Atendimento:</strong> ${a.data}<br>
-                ⏰ <strong>Horários:</strong> ${Array.isArray(a.slots) ? a.slots.join(', ') : (a.slots || 'N/A')}<br>
-                <hr style="border:0; border-top:1px solid #f1f5f9; margin:8px 0;">
-                📍 <strong>Endereço:</strong> ${enderecoCompleto}<br>
-                📞 <strong>Responsável:</strong> ${contatoResponsavel}
+                📅 <strong>Data:</strong> ${a.data}<br>
+                ⏰ <strong>Horários:</strong> ${Array.isArray(a.slots) ? a.slots.join(', ') : (a.slots || 'N/A')}
             </div>
         </div>
-        <div style="font-weight:600; margin-bottom:5px; color:#334155;">📦 Serviços/Produtos Solicitados:</div>
-        <div style="background: #f8fafc; padding: 12px; border-radius: 6px; border: 1px solid #cbd5e1; margin-bottom: 15px; font-size: 0.9rem; line-height: 1.5; color:#475569;">
-            ${prodHtml}
-        </div>
+        <div style="font-weight:600; margin-bottom:5px;">📦 Serviços Solicitados:</div>
+        <div style="background: #f8fafc; padding: 12px; border-radius: 6px; border: 1px solid #cbd5e1; margin-bottom: 15px; font-size: 0.9rem;">${prodHtml}</div>
         <div style="display:flex; gap:10px; flex-wrap: wrap;">
             <button onclick="window.fecharModal()" style="background:gray; flex:1; padding:10px; color:white; border:none; border-radius:5px; cursor:pointer;">Fechar</button>
             ${btnSincronizarHtml}
