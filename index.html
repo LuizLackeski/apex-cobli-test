@@ -1801,14 +1801,18 @@ window.abrirDetalhesAgendamento = function(index) {
     const enderecoCompleto = `${a.rua || ''}, ${a.numero || 'S/N'} - ${a.bairro || ''}, ${a.cidade || ''}/${a.uf || ''} - CEP: ${a.cep || ''}`;
     const contatoResponsavel = `${a.acompanhamento || 'Não informado'} | ${a.telefone_responsavel || 'Sem telefone'}`;
     
-    let txt = a.produtos_texto ? String(a.produtos_texto) : '';
+    // ✅ A MÁGICA: Tenta pegar o campo novo (produtos_texto) OU o antigo (produtos)
+    let txt = a.produtos_texto || a.produtos || '';
+    txt = String(txt).trim();
+    
     let prodHtml = '';
     
-    if (txt.trim().length > 0) {
+    if (txt.length > 0) {
         prodHtml = txt.split('\n')
             .filter(l => l.trim())
             .map(l => {
                 let limpo = l.replace('•', '').trim();
+                // Destaca em negrito a Quantidade e o Tempo (se existirem)
                 limpo = limpo.replace(/(\(Qtd:.*?\))/ig, '<strong>$1</strong>');
                 return `<div style="margin-bottom:6px; font-size: 0.95rem;">• ${limpo}</div>`;
             })
@@ -1819,7 +1823,6 @@ window.abrirDetalhesAgendamento = function(index) {
         prodHtml = '<div style="color:#64748b; font-style: italic;">Sem produtos detalhados</div>';
     }
 
-    // ✅ CORRIGIDO: Voltando a usar 'userRole' em vez do 'isAuthorized' que não existia.
     let btnSincronizarHtml = (userRole === 'ADMIN' || userRole === 'USUARIO') ? `<button onclick="event.stopPropagation(); window.sincronizarStatusModal('${a.ticket}', this, ${index})" style="background:var(--cobli-green); flex:1; padding:10px; color:white; border:none; border-radius:5px; cursor:pointer;">🔄 Atualizar Status</button>` : '';
     let btnExcluirHtml = (userRole === 'ADMIN') ? `<button onclick="window.excluirAgendamento(${a.id}, '${a.data}')" class="btn-cancelar" style="flex:1; padding:10px; color:white; border:none; border-radius:5px; cursor:pointer;">Excluir</button>` : '';
 
