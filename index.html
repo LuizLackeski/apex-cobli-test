@@ -36,7 +36,7 @@
         .auth-card p { color: #64748b; font-size: 0.85rem; margin-bottom: 25px; }
         .input-group { position: relative; width: 100%; margin-bottom: 15px; text-align: left; }
         .input-group label { display: block; font-size: 0.75rem; font-weight: bold; color: #64748b; margin-bottom: 5px; text-transform: uppercase; }
-        .input-group input { width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; box-sizing: border-box; font-size: 0.95rem; }
+        .input-group input { width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; box-sizing: border-box; font-size: 0.95rem; margin: 0; }
         .pass-toggle { position: absolute; right: 12px; top: 32px; cursor: pointer; font-size: 1.1rem; opacity: 0.6; }
         .auth-btn { width: 100%; background: var(--cobli-dark); color: white; padding: 14px; border: none; border-radius: 8px; font-weight: bold; font-size: 1rem; cursor: pointer; transition: 0.3s; margin-top: 10px; }
         .auth-btn:hover { filter: brightness(1.2); }
@@ -45,14 +45,6 @@
         .auth-links a span { color: var(--primary); font-weight: bold; }
         
         #app-content { display: none; padding: 20px; } 
-        
-        /* TABELA DE USUÁRIOS */
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        th { text-align: left; background: #f1f5f9; padding: 12px; font-size: 0.75rem; color: #64748b; text-transform: uppercase; border-radius: 6px 6px 0 0; }
-        td { padding: 12px; border-bottom: 1px solid #e2e8f0; font-size: 0.9rem; }
-        .badge-admin { background: #fee2e2; color: #ef4444; padding:4px; border-radius:4px; font-size:0.7rem; font-weight:bold;}
-        .badge-user { background: #e0e7ff; color: #4338ca; padding:4px; border-radius:4px; font-size:0.7rem; font-weight:bold;}
-        .badge-prest { background: #dcfce7; color: #15803d; padding:4px; border-radius:4px; font-size:0.7rem; font-weight:bold;}
 
         /* MENU TOPO NOME E BOTOES */
         .topo { background: var(--cobli-dark); color: white; padding: 15px 30px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center; margin: -20px -20px 0 -20px;}
@@ -124,9 +116,17 @@
         .campo-filtro label { font-size: 0.65rem; color: #64748b; font-weight: 700; text-transform: uppercase; margin: 0; }
         .campo-filtro input, .campo-filtro details { margin: 0 !important; height: 38px !important; box-sizing: border-box !important; }
         .grid-filtros .botoes-container { display: flex; gap: 8px; height: 38px; }
-
+        
         @keyframes girar { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         .icone-girando { display: inline-block; animation: girar 1s linear infinite; }
+        
+        /* TABELA DE USUÁRIOS */
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th { text-align: left; background: #f1f5f9; padding: 12px; font-size: 0.75rem; color: #64748b; text-transform: uppercase; border-radius: 6px 6px 0 0; }
+        td { padding: 12px; border-bottom: 1px solid #e2e8f0; font-size: 0.9rem; }
+        .badge-admin { background: #fee2e2; color: #ef4444; padding:4px; border-radius:4px; font-size:0.7rem; font-weight:bold;}
+        .badge-user { background: #e0e7ff; color: #4338ca; padding:4px; border-radius:4px; font-size:0.7rem; font-weight:bold;}
+        .badge-prest { background: #dcfce7; color: #15803d; padding:4px; border-radius:4px; font-size:0.7rem; font-weight:bold;}
     </style>
 </head>
 <body>
@@ -595,7 +595,8 @@ async function checkSession() {
 }
 
 async function definirPermissoes(email, uid) {
-    const { data, error } = await supabaseClient.from('perfis_usuarios').select('nivel').eq('id', uid).single();
+    // CORREÇÃO: Trocado .single() por .maybeSingle() para evitar erro 406
+    const { data, error } = await supabaseClient.from('perfis_usuarios').select('nivel').eq('id', uid).maybeSingle();
     
     if (data) {
         userRole = data.nivel;
@@ -1462,7 +1463,7 @@ window.abrirCadastro = function(index = -1){
             })).filter(b => {
                 let parts = b.data.split('/');
                 let dataB = new Date(parts[2], parts[1] - 1, parts[0]);
-                return dataB >= hoje;
+                return dataB >= hoje; // Só mantém as datas que ainda não passaram
             });
             window.renderizarDatasBloqueadas();
         } 
@@ -1686,6 +1687,9 @@ window.salvarPrestador = async function(btn) {
         btn.disabled = false; btn.innerText = originalText; 
     } 
 };
+
+window.excluirPrestador = async function(i) { window.showConfirm("Tem certeza que deseja excluir?", `fetch('${API_URL}/prestadores/${prestadores[i].id}', { method: 'DELETE', headers: getHeaders() }).then(async () => { await window.carregarDadosDoBanco(); window.showToast("Prestador excluído com sucesso!"); })`); };
+window.confirmarExclusaoAgendamento = async function(id) { await fetch(`${API_URL}/agendamentos/${id}`, { method: 'DELETE', headers: getHeaders() }); await window.carregarDadosDoBanco(); window.showToast("Agendamento excluído!"); window.fecharModal(); };
 
 // ==========================================
 // 8. PAINEL E DASHBOARD (ABAS 3 E 4)
