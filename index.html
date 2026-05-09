@@ -28,8 +28,9 @@
         }
 
         /* --- NOVAS TELAS DE AUTENTICAÇÃO PADRÃO COBLI --- */
-        #auth-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--primary); display: flex; align-items: center; justify-content: center; z-index: 50000; }
-        .auth-card { background: white; padding: 40px; border-radius: 16px; width: 360px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.3); }
+        /* ✅ PONTO 1: Fundo do login alterado para Azul Escuro */
+        #auth-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--cobli-dark); display: flex; align-items: center; justify-content: center; z-index: 50000; }
+        .auth-card { background: white; padding: 40px; border-radius: 16px; width: 360px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.5); }
         .auth-card .logo-circle { width: 50px; height: 50px; border: 4px solid var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; position: relative; }
         .auth-card .logo-circle::after { content: ''; width: 15px; height: 15px; background: var(--primary); border-radius: 50%; }
         .auth-card h2 { color: var(--cobli-dark); margin: 0 0 5px; font-size: 1.6rem; border:none; }
@@ -48,22 +49,28 @@
 
         /* MENU TOPO NOME E BOTOES */
         .topo { background: var(--cobli-dark); color: white; padding: 15px 30px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center; margin: -20px -20px 0 -20px;}
-        .menu { background: var(--primary); padding: 0 30px; display: flex; align-items: center; justify-content: space-between; min-height: 45px; margin: 0 -20px 20px -20px;}
-        .menu button { background: none; border: none; color: #cbd5e1; padding: 15px 20px; cursor: pointer; font-size: 0.9rem; transition: 0.3s; }
+        
+        /* ✅ PONTO 5: Estilo ajustado das abas (linha mais grossa e próxima) */
+        .menu { background: var(--primary); padding: 0 30px; display: flex; align-items: flex-end; justify-content: space-between; min-height: 45px; margin: 0 -20px 20px -20px;}
+        .menu button { background: none; border: none; color: #cbd5e1; padding: 12px 20px; cursor: pointer; font-size: 0.9rem; transition: 0.3s; position: relative; margin-bottom: 0;}
         .menu-left, .menu-right { display: flex; align-items: center; flex: 1; }
-        .menu-right { justify-content: flex-end; }
+        .menu-right { justify-content: flex-end; align-items: center; padding-bottom: 8px; }
 
-        .menu button.ativo { color: white; border-bottom: 3px solid #809cff; font-weight: bold; }
+        .menu button.ativo { color: white; font-weight: bold; }
+        .menu button.ativo::after { content: ''; position: absolute; bottom: 0; left: 10%; width: 80%; height: 4px; background: white; border-radius: 4px 4px 0 0; }
         .menu button:hover { color: white; }
         .menu .user-info { margin-left: auto; color: #ffffff; font-size: 0.8rem; margin-right: 15px; opacity: 0.8; font-weight: 600;}
         .menu .btn-sair { color: #ff9999; font-weight: bold; }
         
-        /* AJUSTE NO LAYOUT DAS INTEGRAÇÕES */
-        .slack-adm-panel { display: none; flex-direction: column; align-items: center; background: rgba(255, 255, 255, 0.1); padding: 2px 13px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.2); margin: 0px 0; min-width: fit-content;}
-        .slack-adm-panel .label-integracoes {font-size: 0.55rem; color: #ffffff; font-weight: 700; text-transform: uppercase; margin-bottom:2px; opacity: 0.7; }
-        .slack-adm-panel .switches-row { display: flex; gap: 10px; align-items: center; margin-top: 2px; }
-        .slack-adm-panel span { color: white; font-size: 0.6rem; font-weight: bold; }
-        .slack-adm-panel select { width: 60px; height: 19px; padding: 0; font-size: 0.6rem; margin: 0; border-radius: 4px; border: none; background: white; color: var(--primary); cursor: pointer; line-height: 1; }
+        /* ✅ PONTO 5: Switches modernos na barra escura superior */
+        .integracoes-topo { display: none; align-items: center; gap: 15px; background: rgba(255,255,255,0.1); padding: 5px 15px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.2); }
+        .integracoes-topo label { display: flex; align-items: center; gap: 5px; color: white; font-size: 0.65rem; font-weight: bold; cursor: pointer; margin:0;}
+        
+        /* CSS do Botão Switch Estilo iPhone */
+        .toggle-switch { position: relative; width: 34px; height: 18px; appearance: none; background: #64748b; border-radius: 20px; outline: none; cursor: pointer; transition: 0.3s; margin: 0 !important; padding: 0 !important;}
+        .toggle-switch::after { content: ''; position: absolute; top: 2px; left: 2px; width: 14px; height: 14px; background: white; border-radius: 50%; transition: 0.3s; }
+        .toggle-switch:checked { background: var(--cobli-green); }
+        .toggle-switch:checked::after { transform: translateX(16px); }
 
         button:hover { filter: brightness(1.1); transform: translateY(-1px); box-shadow: 0 2px 4px rgba(0,0,0,0.2); transition: 0.2s; }
         button:active { transform: translateY(0); filter: brightness(0.9); }
@@ -97,7 +104,8 @@
         .painel-item { background: white; margin-bottom: 8px; padding: 12px; border-radius: 8px; border: 1px solid #e5e7eb; border-left: 5px solid var(--primary); box-shadow: 0 1px 3px rgba(0,0,0,0.1); display: flex; align-items: center; justify-content: space-between; cursor: pointer; transition: all 0.2s ease;}
         .painel-item:hover { transform: translateY(-3px); box-shadow: 0 6px 15px rgba(0,0,0,0.1); background-color: #ebfcf9; border-left-color: var(--cobli-green); }
         
-        .modal-overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); justify-content:center; align-items:center; z-index:20001; }
+        /* ✅ PONTO 4: Z-INDEX AUMENTADO PARA O MODAL APARECER SOBRE A TELA DE LOGIN */
+        .modal-overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); justify-content:center; align-items:center; z-index: 60000; }
         .modal-card { background: #f0f0f0; color: #334155; padding: 25px; border-radius: 12px; width: 600px; max-width: 90%; max-height: 90vh; overflow-y: auto; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
         .modal-header { font-size: 1.2rem; font-weight: bold; color: var(--primary); margin-bottom: 15px; }
         .modal-footer { margin-top:20px; text-align: right; }
@@ -107,8 +115,6 @@
         .date-pills { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
         .pill { background: #e0e6ff; color: var(--primary); padding: 4px 10px; border-radius: 6px; font-size: 0.8rem; font-weight: 600; border: 1px solid #c2d1ff; }
         .bloco-servico { background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #cbd5e1; margin-bottom: 15px; }
-        .switch-on { background-color: var(--cobli-green) !important; color: white !important; } 
-        .switch-off { background-color: var(--cobli-red) !important; color: white !important; } 
 
         /* CSS GRID - BARRA DE FILTROS DO PAINEL */
         .grid-filtros { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 15px; background: white; padding: 12px 15px; border-radius: 8px; border: 1px solid #e5e7eb; margin-bottom: 10px; align-items: end; }
@@ -194,7 +200,15 @@
 
 <div id="app-content">
     <div class="topo">
-        <div><strong>APEX</strong> <span>Agenda Prestadores</span></div>
+        <div style="display:flex; align-items:center; gap: 20px;">
+            <div><strong>APEX</strong> <span>Agenda Prestadores</span></div>
+            <div id="integrations-control" class="integracoes-topo">
+                <span style="font-size:0.6rem; opacity:0.7; font-weight:bold;">INTEGRAÇÕES:</span>
+                <label title="Avisos no Slack">SLACK <input type="checkbox" id="slackSwitch" class="toggle-switch"></label>
+                <label title="Lançar OS no Field">FIELD <input type="checkbox" id="fieldSwitch" class="toggle-switch"></label>
+                <label title="Salvar no BD">BANCO <input type="checkbox" id="dbSwitch" class="toggle-switch" checked></label>
+            </div>
+        </div>
         <div id="user-role-display" style="font-size: 0.85rem; font-weight: 600; opacity: 0.9;"></div>
     </div>
 
@@ -205,24 +219,6 @@
             <button id="btn-painel" onclick="window.trocarAba('painel', this)">Painel</button>
             <button id="btn-dashboard" onclick="window.trocarAba('dashboard', this)">Dashboard</button>
             <button id="btn-usuarios" onclick="window.trocarAba('usuarios', this)">Usuários</button>
-            </div>
-
-        <div id="integrations-control" class="slack-adm-panel">
-            <div class="label-integracoes">Integrações</div>
-            <div class="switches-row">
-                <div style="display:flex; align-items:center; gap:5px;">
-                    <span>SLACK</span>
-                    <select id="slackSwitch" class="switch-off" onchange="window.updateSwitchColor(this)"><option value="ON">ON</option><option value="OFF" selected>OFF</option></select>
-                </div>
-                <div style="display:flex; align-items:center; gap:5px; border-left: 1px solid rgba(255,255,255,0.2); padding-left:10px;">
-                    <span>FIELD</span>
-                    <select id="fieldSwitch" class="switch-off" onchange="window.updateSwitchColor(this)"><option value="ON">ON</option><option value="OFF" selected>OFF</option></select>
-                </div>
-                <div style="display:flex; align-items:center; gap:5px; border-left: 1px solid rgba(255,255,255,0.2); padding-left:10px;">
-                    <span>BANCO</span>
-                    <select id="dbSwitch" class="switch-on" onchange="window.updateSwitchColor(this)"><option value="ON">ON</option><option value="OFF" selected>OFF</option></select>
-                </div>
-            </div>
         </div>
         <div class="menu-right">
             <button class="btn-sair" onclick="handleLogout()" style="color:var(--cobli-red); font-weight:bold; background:none; border:none; cursor:pointer;">Sair</button>
@@ -559,10 +555,10 @@ let isDraggingAgenda = false, dragActionAgenda = true;
 window.addEventListener('mouseup', () => { isDraggingAgenda = false; });
 let datasBloqueadasTemp = [], agendaDiasDisponiveis = [], agendaPaginaAtual = 0;
 
-// CONTROLE DE MÚLTIPLOS TÉCNICOS
+// CONTROLE DE MÚLTIPLOS TÉCNICOS E PRESTADOR LOGADO
 window.agendaCadastroObj = {};
 window.currentTech = 1;
-window.meuPrestadorLogado = null; // ✅ Referência rápida para o Prestador logado
+window.meuPrestadorLogado = null;
 
 const serviçosDisponíveis = {
     "Telemetria": [{desc:"Instalado veículos leves ou pesados", tempo:40, id_field: "b2098d2f-c060-445b-8e4b-bdcc5b6e613a"}, {desc:"Instalado motos ou maquinários", tempo:40, id_field: "fe2057ba-abd5-44b6-9686-2f50e7717f16"}, {desc:"Leves ou pesados + CAN", tempo:60, id_field: "b04b9472-5663-4d77-8dc9-a79b2f06aa28"}], 
@@ -579,7 +575,6 @@ function formatarTempo(minutos) { if (minutos === 0) return "0h"; let h = Math.f
 window.maskCPFCNPJ = function(i) { let v = i.value.replace(/\D/g, ""); if (v.length <= 11) { v = v.replace(/(\={3})(\d)/, "$1.$2"); v = v.replace(/(\d{3})(\d)/, "$1.$2"); v = v.replace(/(\d{3})(\d{1,2})$/, "$1-$2"); } else { v = v.replace(/^(\d{2})(\d)/, "$1.$2"); v = v.replace(/^(\d{2})\.(\d{3})(\d)/, "$1.$2.$3"); v = v.replace(/\.(\d{3})(\d)/, ".$1/$2"); v = v.replace(/(\d{4})(\d)/, "$1-$2"); } i.value = v.substring(0, 18); };
 window.maskPhone = function(campo) { let v = campo.value.replace(/\D/g, ""); if (v.length <= 10) v = v.replace(/^(\d{2})(\d{4})(\d{4}).*/, "($1) $2-$3"); else v = v.replace(/^(\d{2})(\d{5})(\d{4}).*/, "($1) $2-$3"); campo.value = v; };
 window.maskCEP = function(i) { let v = i.value.replace(/\D/g, ""); v = v.replace(/^(\d{5})(\d)/, "$1-$2"); i.value = v.substring(0, 9); };
-window.updateSwitchColor = function(el) { el.classList.remove(el.value === 'ON' ? 'switch-off' : 'switch-on'); el.classList.add(el.value === 'ON' ? 'switch-on' : 'switch-off'); };
 window.exibirModal = function(t, b) { document.getElementById('modalHeader').innerText = t; document.getElementById('modalBody').innerHTML = b; document.getElementById('modalFooter').innerHTML = ''; document.getElementById('modalAviso').style.display = 'flex'; };
 window.fecharModal = function() { document.getElementById('modalAviso').style.display = 'none'; };
 window.showMessage = function(msg) { window.exibirModal("Aviso", `<p>${msg}</p>`); document.getElementById('modalFooter').innerHTML = '<button onclick="window.fecharModal()" style="background:var(--primary)">OK</button>'; };
@@ -707,7 +702,6 @@ async function checkSession() {
     }
 }
 
-// ✅ CORRIGIDO O NOME DA FUNÇÃO
 async function definirPermissoes(email, uid) {
     const { data, error } = await supabaseClient.from('perfis_usuarios').select('nivel').eq('id', uid).maybeSingle();
     
@@ -730,11 +724,10 @@ async function definirPermissoes(email, uid) {
         document.getElementById('btn-usuarios').style.display = 'none';
     }
     
-    // ✅ NOVO: Exibe a aba de Disponibilidade para o Prestador
     if (userRole === 'PRESTADOR') {
         document.getElementById('btn-consulta').style.display = 'none';
         document.getElementById('btn-cadastro').style.display = 'none';
-        document.getElementById('btn-dashboard').style.display = 'none';
+        // Dashboard do prestador fica visível (filtrado), então não escondemos.
         
         let menuLeft = document.getElementById('main-menu');
         if(!document.getElementById('btn-disponibilidade')) {
@@ -789,15 +782,24 @@ window.mudarNivelUsuario = async function(id, nivel) {
     if(error) window.showMessage("Erro ao atualizar o nível."); else window.showToast("Nível atualizado com sucesso!");
 };
 
+// ✅ PONTO 4: Exclusão chama Edge Function e remove do Banco de Dados
 window.excluirUsuarioPerfil = function(id, email) {
-    window.showConfirm(`Tem certeza que deseja remover o perfil de <strong>${email}</strong>?<br><br><small>O usuário perderá o acesso configurado no sistema.</small>`, `
-        supabaseClient.from('perfis_usuarios').delete().eq('id', '${id}').then(res => {
-            if(res.error) {
-                window.showMessage("Erro ao excluir: " + res.error.message);
-            } else {
-                window.showToast("Usuário removido da base.");
-                window.carregarListaUsuarios();
-            }
+    window.showConfirm(`Tem certeza que deseja remover o perfil de <strong>${email}</strong> e revogar seu acesso?<br><br><small>O usuário perderá o acesso configurado no sistema.</small>`, `
+        fetch(EDGE_URL, {
+            method: 'POST',
+            headers: getHeaders(),
+            body: JSON.stringify({ acao: 'deletar_usuario', uid: '${id}' })
+        }).then(() => {
+            supabaseClient.from('perfis_usuarios').delete().eq('id', '${id}').then(res => {
+                if(res.error) {
+                    window.showMessage("Erro ao excluir: " + res.error.message);
+                } else {
+                    window.showToast("Usuário removido da base.");
+                    window.carregarListaUsuarios();
+                }
+            });
+        }).catch(err => {
+            window.showMessage("Erro de comunicação com o servidor.");
         });
     `);
 };
@@ -813,7 +815,6 @@ window.carregarDadosDoBanco = async function() {
         const resA = await fetch(`${DB_URL}/agendamentos?select=*&order=created_at.desc`, { method: 'GET', headers: getHeaders() }); 
         const dataAgend = await resA.json(); agendamentos = Array.isArray(dataAgend) ? dataAgend : [];
         
-        // ✅ NOVO: Identifica e armazena os dados do prestador logado
         if (userRole === 'PRESTADOR' && currentUser) {
             let emailLogado = currentUser.email.toLowerCase();
             window.meuPrestadorLogado = prestadores.find(p => p.usuario_apex && p.usuario_apex.toLowerCase() === emailLogado);
@@ -821,9 +822,8 @@ window.carregarDadosDoBanco = async function() {
         }
 
         window.renderPainel(); 
-        if (userRole !== 'PRESTADOR') window.renderDashboard(); 
+        window.renderDashboard(); 
         
-        setTimeout(() => { ['slackSwitch', 'fieldSwitch', 'dbSwitch'].forEach(id => { const el = document.getElementById(id); if(el) window.updateSwitchColor(el); }); }, 500);
     } catch(e) { console.error("Erro bd:", e); } 
 };
 
@@ -833,7 +833,7 @@ window.enviarNotificacaoSlack = async function(msg) {
 };
 
 // ==========================================
-// 5. MOTOR DE AGENDA, DISTÂNCIA E MULTI-TÉCNICO
+// 5. MOTOR DE AGENDA E DISTÂNCIA
 // ==========================================
 window.buscarEnderecoPorCep = async function() {
     const cep = document.getElementById('inputCep').value.replace(/\D/g, ''); 
@@ -883,7 +883,7 @@ window.getAusenciasDoDia = function(prestador, dStr) {
     return { total: false, horasBloqueadas: new Set() };
 };
 
-// ✅ CORRIGIDO: Motor Inteligente que avalia Férias, Folga de 1h, Agendamentos e Turnos por Técnico.
+// ✅ PONTO 3: Motor Inteligente consertado. Férias + Agendamentos + Folga de 1h antes/depois.
 window.podeAgendar = function(prestador, data, novosSlotsInt, dNome) {
     let maxT = parseInt(prestador.qtdtecnicos) || 1;
     
@@ -946,7 +946,6 @@ window.podeAgendar = function(prestador, data, novosSlotsInt, dNome) {
                 if (!techs[t].includes(h)) { worksAll = false; break; }
             }
             
-            // Folga de 1h antes e depois mantida intacta
             if (worksAll && techEnds[t] + 1 < job.start) {
                 techEnds[t] = job.end;
                 assigned = true;
@@ -1368,9 +1367,9 @@ window.concluirAgendamentoFinal = async function(btn) {
     const dataSelecionada = sel.length > 0 ? sel[0].dataset.date : null;
     const prestador = prestadores[prestadorSelecionadoIndex];
     
-    const dispararSlack = (userRole === 'ADMIN') ? (document.getElementById('slackSwitch').value === 'ON') : true;
-    const dispararField = (userRole === 'ADMIN') ? (document.getElementById('fieldSwitch').value === 'ON') : true;
-    const dispararBanco = (userRole === 'ADMIN') ? (document.getElementById('dbSwitch').value === 'ON') : true;
+    const dispararSlack = (userRole === 'ADMIN') ? (document.getElementById('slackSwitch').checked) : true;
+    const dispararField = (userRole === 'ADMIN') ? (document.getElementById('fieldSwitch').checked) : true;
+    const dispararBanco = (userRole === 'ADMIN') ? (document.getElementById('dbSwitch').checked) : true;
 
     if (!prestador || slotsSelecionados.length === 0) {
         window.showMessage("Erro: Selecione o prestador e o horário.");
@@ -1470,7 +1469,7 @@ window.cancelarAgendamento = function() { window.showConfirm("Deseja realmente c
 // 7. CADASTRO DE PRESTADOR E AUSÊNCIAS (ABA 2)
 // ==========================================
 window.renderizarListaPrestadores = function(){ 
-    document.getElementById("btn-novo-container").innerHTML = (userRole === 'ADMIN') ? `<button onclick="window.abrirCadastro()" style="margin-bottom: 20px;">+ Novo Prestador</button>` : '';
+    document.getElementById("btn-novo-container").innerHTML = (userRole === 'ADMIN') ? `<button onclick="window.abrirCadastro()" style="margin-bottom: 20px; background: var(--cobli-dark);">+ Novo Prestador</button>` : '';
     
     document.getElementById("lista-prestadores").innerHTML = prestadores.map((p, i) => {
         const acaoClique = (userRole === 'ADMIN') ? `window.abrirOpcoesPrestador(${i})` : `window.abrirDetalhesPrestador(${i})`;
@@ -1530,13 +1529,13 @@ window.abrirOpcoesPrestador = function(i) {
     window.exibirModal("Ações do Prestador", html);
 };
 
-// ✅ CORRIGIDO: Popup do prestador agora suporta ABAS de técnicos e BOTÃO atalho de bloqueio
 window.abrirDetalhesPrestador = function(index) { 
     let p = prestadores[index]; 
     let agendaHtml = '';  
     let qtd = parseInt(p.qtdtecnicos) || 1;
     let temTecnicos = p.agenda && p.agenda.some(a => a.tecnico);
 
+    // Abas no modal
     if (temTecnicos || qtd > 1) {
         agendaHtml += '<div style="display:flex; gap:5px; margin-bottom:15px; border-bottom:1px solid #cbd5e1; padding-bottom:10px; overflow-x:auto;">';
         for (let t = 1; t <= qtd; t++) {
@@ -1599,7 +1598,6 @@ window.abrirDetalhesPrestador = function(index) {
         </div>
     `;
     
-    // Botão de atalho para adicionar bloqueio rapidamente
     let htmlBotaoFechar = `
         <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 15px;">
             ${userRole === 'ADMIN' ? `<button onclick="window.fecharModal(); window.abrirCadastro(${index}); setTimeout(()=>window.mudarEtapa(1), 100);" style="background:var(--cobli-red); padding: 10px 20px;">➕ Adicionar Bloqueio</button>` : '<div></div>'}
@@ -1609,7 +1607,6 @@ window.abrirDetalhesPrestador = function(index) {
     window.exibirModal("Detalhes do Prestador", htmlHeader + agendaHtml + ausenciasHtml + htmlBotaoFechar); 
 };
 
-// Aba do Modal
 window.mudarAbaModalTecnico = function(tId, total) {
     for(let i=1; i<=total; i++) {
         let div = document.getElementById('mod-tec-'+i);
@@ -2400,7 +2397,6 @@ window.renderDashboard = function() {
     let totalServicosGeral = 0;
 
     agendamentos.forEach(a => {
-        // Se for USUÁRIO comum, filtra só o que ele mesmo pediu
         if (isUserDashboard) {
             let sol = String(a.solicitante || '').toLowerCase();
             if (!sol.includes(nomeLogado)) return; 
