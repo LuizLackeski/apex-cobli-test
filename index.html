@@ -43,14 +43,24 @@
         .auth-links { margin-top: 20px; font-size: 0.85rem; }
         .auth-links a { display: block; color: #64748b; text-decoration: none; cursor: pointer; margin-bottom: 8px; font-weight: 500; }
         .auth-links a span { color: var(--primary); font-weight: bold; }
+        
+        #app-content { display: none; padding: 20px; } 
+        
+        /* TABELA DE USUÁRIOS */
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th { text-align: left; background: #f1f5f9; padding: 12px; font-size: 0.75rem; color: #64748b; text-transform: uppercase; border-radius: 6px 6px 0 0; }
+        td { padding: 12px; border-bottom: 1px solid #e2e8f0; font-size: 0.9rem; }
+        .badge-admin { background: #fee2e2; color: #ef4444; padding:4px; border-radius:4px; font-size:0.7rem; font-weight:bold;}
+        .badge-user { background: #e0e7ff; color: #4338ca; padding:4px; border-radius:4px; font-size:0.7rem; font-weight:bold;}
+        .badge-prest { background: #dcfce7; color: #15803d; padding:4px; border-radius:4px; font-size:0.7rem; font-weight:bold;}
 
-        /* SISTEMA PRINCIPAL E MENU */
-        #app-content { display: none; padding: 20px; }
+        /* MENU TOPO NOME E BOTOES */
         .topo { background: var(--cobli-dark); color: white; padding: 15px 30px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center; margin: -20px -20px 0 -20px;}
         .menu { background: var(--primary); padding: 0 30px; display: flex; align-items: center; justify-content: space-between; min-height: 45px; margin: 0 -20px 20px -20px;}
         .menu button { background: none; border: none; color: #cbd5e1; padding: 15px 20px; cursor: pointer; font-size: 0.9rem; transition: 0.3s; }
         .menu-left, .menu-right { display: flex; align-items: center; flex: 1; }
         .menu-right { justify-content: flex-end; }
+
         .menu button.ativo { color: white; border-bottom: 3px solid #809cff; font-weight: bold; }
         .menu button:hover { color: white; }
         .menu .user-info { margin-left: auto; color: #ffffff; font-size: 0.8rem; margin-right: 15px; opacity: 0.8; font-weight: 600;}
@@ -115,14 +125,6 @@
         .campo-filtro input, .campo-filtro details { margin: 0 !important; height: 38px !important; box-sizing: border-box !important; }
         .grid-filtros .botoes-container { display: flex; gap: 8px; height: 38px; }
 
-        /* TABELA DE USUÁRIOS */
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        th { text-align: left; background: #f1f5f9; padding: 12px; font-size: 0.75rem; color: #64748b; text-transform: uppercase; border-radius: 6px 6px 0 0; }
-        td { padding: 12px; border-bottom: 1px solid #e2e8f0; font-size: 0.9rem; }
-        .badge-admin { background: #fee2e2; color: #ef4444; padding:4px; border-radius:4px; font-size:0.7rem; font-weight:bold;}
-        .badge-user { background: #e0e7ff; color: #4338ca; padding:4px; border-radius:4px; font-size:0.7rem; font-weight:bold;}
-        .badge-prest { background: #dcfce7; color: #15803d; padding:4px; border-radius:4px; font-size:0.7rem; font-weight:bold;}
-
         @keyframes girar { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         .icone-girando { display: inline-block; animation: girar 1s linear infinite; }
     </style>
@@ -137,22 +139,31 @@
         <h2>APEX Cobli</h2>
         <p>Gestão de Prestadores e Serviços</p>
         <div class="input-group"><label>E-mail</label><input type="email" id="login-email" placeholder="seu.nome@cobli.co"></div>
-        <div class="input-group"><label>Senha</label><input type="password" id="login-password" placeholder="••••••••"><span class="pass-toggle" onclick="togglePass('login-password')">👁️</span></div>
+        <div class="input-group">
+            <label>Senha</label><input type="password" id="login-password" placeholder="••••••••">
+            <span class="pass-toggle" onclick="togglePass('login-password')">👁️</span>
+        </div>
         <button class="auth-btn" id="btnLogin" onclick="authAction('login')">Entrar</button>
         <div id="login-error" style="color: var(--cobli-red); font-size: 0.8rem; margin-top: 10px; display: none; font-weight: bold;">Credenciais inválidas.</div>
-        <div class="auth-links"><a onclick="showAuthCard('card-forgot')">Esqueci minha senha</a><br><br>Não tem conta? <a onclick="showAuthCard('card-signup')">Cadastre-se</a></div>
+        <div class="auth-links">
+            <a onclick="showAuthCard('card-forgot')">Esqueci minha senha</a>
+            <a onclick="showAuthCard('card-signup')">Não tem conta? <span>Cadastre-se</span></a>
+        </div>
     </div>
-    
+
     <div class="auth-card" id="card-signup" style="display:none;">
         <div class="logo-circle"></div>
         <h2>Criar Conta</h2>
         <p>Use seu e-mail @cobli.co ou @apex.co</p>
         <div class="input-group"><label>E-mail</label><input type="email" id="signup-email" placeholder="nome@cobli.co"></div>
-        <div class="input-group"><label>Senha</label><input type="password" id="signup-password" placeholder="Mínimo de 6 caracteres"><span class="pass-toggle" onclick="togglePass('signup-password')">👁️</span></div>
+        <div class="input-group">
+            <label>Senha</label><input type="password" id="signup-password" placeholder="Mínimo de 6 caracteres">
+            <span class="pass-toggle" onclick="togglePass('signup-password')">👁️</span>
+        </div>
         <button class="auth-btn" id="btnSignup" onclick="authAction('signup')">Criar Acesso</button>
         <div class="auth-links"><a onclick="showAuthCard('card-login')">Já possui conta? <span>Faça login</span></a></div>
     </div>
-    
+
     <div class="auth-card" id="card-forgot" style="display:none;">
         <div class="logo-circle"></div>
         <h2>Recuperar Senha</h2>
@@ -166,7 +177,7 @@
 <div id="app-content">
     <div class="topo">
         <div><strong>APEX</strong> <span>Agenda Prestadores</span></div>
-        <div id="user-display" style="font-size: 0.85rem; font-weight: 600; opacity: 0.9;"></div>
+        <div id="user-role-display" style="font-size: 0.85rem; font-weight: 600; opacity: 0.9;"></div>
     </div>
 
     <div class="menu">
@@ -181,13 +192,22 @@
         <div id="integrations-control" class="slack-adm-panel">
             <div class="label-integracoes">Integrações</div>
             <div class="switches-row">
-                <div style="display:flex; align-items:center; gap:5px;"><span>SLACK</span><select id="slackSwitch" class="switch-off" onchange="window.updateSwitchColor(this)"><option value="ON">ON</option><option value="OFF" selected>OFF</option></select></div>
-                <div style="display:flex; align-items:center; gap:5px; border-left: 1px solid rgba(255,255,255,0.2); padding-left:10px;"><span>FIELD</span><select id="fieldSwitch" class="switch-off" onchange="window.updateSwitchColor(this)"><option value="ON">ON</option><option value="OFF" selected>OFF</option></select></div>
-                <div style="display:flex; align-items:center; gap:5px; border-left: 1px solid rgba(255,255,255,0.2); padding-left:10px;"><span>BANCO</span><select id="dbSwitch" class="switch-on" onchange="window.updateSwitchColor(this)"><option value="ON">ON</option><option value="OFF" selected>OFF</option></select></div>
+                <div style="display:flex; align-items:center; gap:5px;">
+                    <span>SLACK</span>
+                    <select id="slackSwitch" class="switch-off" onchange="window.updateSwitchColor(this)"><option value="ON">ON</option><option value="OFF" selected>OFF</option></select>
+                </div>
+                <div style="display:flex; align-items:center; gap:5px; border-left: 1px solid rgba(255,255,255,0.2); padding-left:10px;">
+                    <span>FIELD</span>
+                    <select id="fieldSwitch" class="switch-off" onchange="window.updateSwitchColor(this)"><option value="ON">ON</option><option value="OFF" selected>OFF</option></select>
+                </div>
+                <div style="display:flex; align-items:center; gap:5px; border-left: 1px solid rgba(255,255,255,0.2); padding-left:10px;">
+                    <span>BANCO</span>
+                    <select id="dbSwitch" class="switch-on" onchange="window.updateSwitchColor(this)"><option value="ON">ON</option><option value="OFF" selected>OFF</option></select>
+                </div>
             </div>
         </div>
         <div class="menu-right">
-            <button class="btn-sair" onclick="handleLogout()">Sair</button>
+            <button class="btn-sair" onclick="handleLogout()" style="color:var(--cobli-red); font-weight:bold; background:none; border:none; cursor:pointer;">Sair</button>
         </div>
     </div>
 
@@ -235,6 +255,7 @@
             <div id="step-3" class="card" style="display:none;">
                 <h2>Serviços e Agenda</h2>
                 <div id="header-prestador-info" style="font-size: 0.95rem; color: var(--primary); font-weight: 600; margin-bottom: 15px; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px;"></div>
+                
                 <div class="bloco-servico">
                     <div style="display: flex; gap: 10px;">
                         <div style="flex:1;">
@@ -255,8 +276,11 @@
                         <button onclick="window.adicionarProduto()" style="height: 42px; margin-bottom: 8px;">Adicionar</button>
                     </div>
                 </div>
-                <div id="lista-produtos"></div><p>Horas Necessárias: <strong><span id="horasNecessarias">0</span></strong></p>
+
+                <div id="lista-produtos"></div>
+                <p>Horas Necessárias: <strong><span id="horasNecessarias">0</span></strong></p>
                 <div id="agenda-agendamento"></div>
+                
                 <div style="margin-top:15px; border-top: 1px solid #e2e8f0; padding-top: 15px;">
                     <button onclick="window.proximoPasso(2)" style="background:gray;">Voltar</button>
                     <button onclick="window.validarEAvancar()" style="background:var(--cobli-green);">Próximo</button>
@@ -286,36 +310,49 @@
         </div>
 
         <div id="cadastro" class="aba">
-            <div id="lista-prestadores-view" class="card"><div id="btn-novo-container"></div><div id="lista-prestadores"></div></div>
+            <div id="lista-prestadores-view" class="card">
+                <div id="btn-novo-container"></div> 
+                <div id="lista-prestadores"></div>
+            </div>
             <div id="cadastro-flow" class="card" style="display:none;">
+                
                 <div id="etapa-1">
                     <h3 style="margin-bottom: 20px; color: var(--primary);">Dados do Prestador</h3>
                     <label class="req">Nome / Empresa</label><input id="nomeEmpresa" required style="margin-bottom: 12px;">
                     <label class="req">Endereço Completo</label><input id="endereco" required style="margin-bottom: 12px;">
+                    
                     <div style="display: flex; gap: 10px; margin-bottom: 12px;">
                         <div style="flex: 2;"><label class="req">Cidade</label><input id="cidade" required></div>
                         <div style="flex: 1;"><label class="req">UF</label><input id="uf" required maxlength="2" placeholder="SP"></div>
                         <div style="flex: 1.5;"><label class="req">CEP</label><input id="cep" required oninput="window.maskCEP(this)" placeholder="00000-000"></div>
                     </div>
+
                     <div style="display: flex; gap: 10px; margin-bottom: 12px;">
                         <div style="flex: 1;"><label class="req">Responsável</label><input id="responsavel" required></div>
                         <div style="flex: 1;"><label class="req">Telefone</label><input id="contatoResponsavel" required oninput="window.maskPhone(this)" placeholder="(00) 00000-0000"></div>
                     </div>
+
                     <div style="display: flex; gap: 10px; margin-bottom: 15px;">
                         <div style="flex: 1;"><label class="req">Qtd Técnicos</label><input id="qtdTecnicos" type="number" required></div>
                         <div style="flex: 1;"><label class="req">Raio de Atuação (Km)</label><input id="rangeAtendimento" type="number" required></div>
                         <div style="flex: 1.5;"><label>ID Field Control</label><input id="fieldIdField" placeholder="Opcional"></div>
                     </div>
                 </div>
+        
                 <div id="etapa-2" style="display:none;">
-                    <h3>Agenda Base</h3><div id="agenda-cadastro"></div>
+                    <h3>Agenda Base</h3>
+                    <div id="agenda-cadastro"></div>
+                    
                     <h3 style="margin-top: 30px; border-top: 1px solid #cbd5e1; padding-top: 20px; color: var(--cobli-red);">🛑 Ausências (Feriados / Férias / Imprevistos)</h3>
                     <div style="background: #fff5f5; border: 1px solid #fecaca; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
                         <div style="display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap;">
                             <div style="flex: 1; min-width: 120px;"><label style="color: var(--cobli-red);">Data Inicial</label><input type="date" id="dataBloqueio" style="border-color: #fca5a5; background: white;"></div>
                             <div style="flex: 1; min-width: 120px;"><label style="color: var(--cobli-red);">Data Final (Opcional)</label><input type="date" id="dataBloqueioFim" style="border-color: #fca5a5; background: white;"></div>
                             <div style="flex: 1; min-width: 120px;">
-                                <label style="color: var(--cobli-red);">Tipo</label><select id="tipoBloqueio" onchange="window.toggleTipoBloqueio()" style="border-color: #fca5a5; background: white;"><option value="total">Dia Inteiro</option><option value="parcial">Horário Específico</option></select>
+                                <label style="color: var(--cobli-red);">Tipo</label>
+                                <select id="tipoBloqueio" onchange="window.toggleTipoBloqueio()" style="border-color: #fca5a5; background: white;">
+                                    <option value="total">Dia Inteiro</option><option value="parcial">Horário Específico</option>
+                                </select>
                             </div>
                             <div style="flex: 0.5; min-width: 80px;"><label style="color: var(--cobli-red);">Qtd. Téc.</label><input type="number" id="qtdBloqueio" value="1" min="1" style="border-color: #fca5a5; background: white;"></div>
                             <div id="boxHoraBloqueio" style="display: none; gap: 10px; flex: 2; min-width: 200px;">
@@ -351,6 +388,7 @@
                 <div style="width: 1px; height: 35px; background: #e5e7eb; margin: 0 15px;"></div>
                 <button onclick="window.atualizarTodosStatus()" style="background:var(--cobli-green); height: 36px; padding: 0 15px; font-size: 0.85rem; border-radius: 6px; border: none; color: white; cursor: pointer; white-space: nowrap;">🔄 Update</button>
             </div>
+
             <div class="grid-filtros">
                 <div class="campo-filtro"><label>Início</label><input type="date" id="filtroDataInicio"></div>
                 <div class="campo-filtro"><label>Fim</label><input type="date" id="filtroDataFim"></div>
@@ -383,7 +421,8 @@
                     <button onclick="window.limparFiltros()" style="flex: 1; height: 100%; background: gray; padding:0;">Limpar</button>
                 </div>
             </div>
-            <div id="indicador-filtro" style="display: none; text-align: center; color: var(--cobli-red); font-size: 0.75rem; font-weight: 700; margin-top: -10px; margin-bottom: 15px; letter-spacing: 1px;">⚠️ DADOS FILTRADOS, LIMPE A SELEÇÃO</div>
+            
+           <div id="indicador-filtro" style="display: none; text-align: center; color: var(--cobli-red); font-size: 0.75rem; font-weight: 700; margin-top: -10px; margin-bottom: 15px; letter-spacing: 1px;">⚠️ DADOS FILTRADOS, LIMPE A SELEÇÃO</div>
             <div id="painel-conteudo" style="max-height: 500px; overflow-y: auto;"></div>
         </div>
 
@@ -432,22 +471,23 @@
 
     </div>
 </div>
-    
+
 <script>
 // ==========================================
 // 1. CONFIGURAÇÕES DO SUPABASE
 // ==========================================
-const SUPABASE_URL = 'https://fqaqlofndeihmhkopvan.supabaseClient.co'; 
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZxYXFsb2ZuZGVpaG1oa29wdmFuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcyMjU4ODIsImV4cCI6MjA5MjgwMTg4Mn0.nauPYoB9RDhLLueMEuop2H2FxdChjIxFkAmBcYbJLzc'; // COLOQUE A CHAVE DO SEU SUPABASE AQUI!
+const SUPABASE_URL = 'https://fqaqlofndeihmhkopvan.supabase.co'; 
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZxYXFsb2ZuZGVpaG1oa29wdmFuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcyMjU4ODIsImV4cCI6MjA5MjgwMTg4Mn0.nauPYoB9RDhLLueMEuop2H2FxdChjIxFkAmBcYbJLzc'; 
 
-const supabaseClient = window.supabaseClient.createClient(SUPABASE_URL, SUPABASE_KEY);
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const EDGE_URL = `${SUPABASE_URL}/functions/v1/integracao-v2-interna`;
 const API_URL = `${SUPABASE_URL}/functions/v1/smart-service`;
 const DB_URL = `${SUPABASE_URL}/rest/v1`;
 
 const ADMIN_EMAILS = ["luiz.lackeski@cobli.co", "fernando.souza@cobli.co", "anni.torrecilhas@cobli.co"];
-let currentUser = null, userRole = 'PRESTADOR';
+let currentUser = null;
+let userRole = 'PRESTADOR';
 
 // VARIÁVEIS GLOBAIS DA AGENDA
 let prestadores = [], itensSelecionados = [], agendamentos = [], etapa = 1, editingIndex = -1, prestadorSelecionadoIndex = null;
@@ -492,7 +532,7 @@ async function authAction(type) {
         if(!email || password.length < 6) return window.showMessage("E-mail e senha de 6 dígitos são obrigatórios.");
         
         btn.innerText = "Criando...";
-        const { error } = await supabaseClient.auth.signUp({ email, password });
+        const { error } = await supabase.auth.signUp({ email, password });
         btn.innerText = "Criar Acesso";
         
         if (error) return window.showMessage("Erro: " + error.message);
@@ -507,7 +547,7 @@ async function authAction(type) {
         btn.innerText = "Autenticando...";
         errDiv.style.display = 'none';
         
-        const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+        const { error } = await supabase.auth.signInWithPassword({ email, password });
         
         if (error) {
             btn.innerText = "Entrar";
@@ -522,7 +562,7 @@ async function authAction(type) {
         if(!email) return window.showMessage("Digite o e-mail cadastrado.");
         
         btn.innerText = "Enviando...";
-        const { error } = await supabaseClient.auth.resetPasswordForEmail(email);
+        const { error } = await supabase.auth.resetPasswordForEmail(email);
         btn.innerText = "Enviar Link";
         
         if (error) return window.showMessage("Erro: " + error.message);
@@ -532,7 +572,7 @@ async function authAction(type) {
 }
 
 async function checkSession() {
-    const { data: { session } } = await supabaseClient.auth.getSession();
+    const { data: { session } } = await supabase.auth.getSession();
     if (session) {
         currentUser = session.user;
         document.getElementById('auth-overlay').style.display = 'none';
@@ -555,7 +595,7 @@ async function checkSession() {
 }
 
 async function definirPermissoes(email, uid) {
-    const { data, error } = await supabaseClient.from('perfis_usuarios').select('nivel').eq('id', uid).single();
+    const { data, error } = await supabase.from('perfis_usuarios').select('nivel').eq('id', uid).single();
     
     if (data) {
         userRole = data.nivel;
@@ -585,7 +625,7 @@ async function definirPermissoes(email, uid) {
 }
 
 async function handleLogout() {
-    await supabaseClient.auth.signOut();
+    await supabase.auth.signOut();
     window.location.reload();
 }
 
@@ -593,7 +633,7 @@ async function carregarListaUsuarios() {
     const tbody = document.getElementById('tabela-usuarios-body');
     tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;">Carregando usuários...</td></tr>';
     
-    const { data, error } = await supabaseClient.from('perfis_usuarios').select('*').order('created_at', { ascending: false });
+    const { data, error } = await supabase.from('perfis_usuarios').select('*').order('created_at', { ascending: false });
     
     if (error) {
         tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; color:red;">Erro ao carregar (Verifique a tabela no Supabase)</td></tr>';
@@ -622,7 +662,7 @@ async function carregarListaUsuarios() {
 }
 
 window.mudarNivelUsuario = async function(id, nivel) {
-    const { error } = await supabaseClient.from('perfis_usuarios').update({ nivel: nivel }).eq('id', id);
+    const { error } = await supabase.from('perfis_usuarios').update({ nivel: nivel }).eq('id', id);
     if(error) window.showMessage("Erro ao atualizar o nível."); else window.showToast("Nível atualizado com sucesso!");
 };
 
@@ -645,7 +685,7 @@ async function carregarDadosDoBanco() {
 }
 
 window.enviarNotificacaoSlack = async function(msg) {
-    const URL = "https://fqaqlofndeihmhkopvan.supabaseClient.co/functions/v1/notificar-slack";
+    const URL = "https://fqaqlofndeihmhkopvan.supabase.co/functions/v1/notificar-slack";
     try { await fetch(URL, { method: 'POST', headers: getHeaders(), body: JSON.stringify({ text: msg }) }); } catch (e) { console.error("Erro Slack:", e); }
 };
 
@@ -1079,7 +1119,7 @@ window.renderizarAgendaPaginada = function() {
     btnProx.style.background = "var(--primary)";
     btnProx.style.padding = "8px 16px";
     btnProx.style.borderRadius = "6px";
-    btnProx.disabled = endIndex >= window.agendaDiasDisponiveis.length;
+    btnProx.disabled = endIndex >= window.agendaDiasDisponivelength;
     if(btnProx.disabled) btnProx.style.opacity = "0.5";
     btnProx.onclick = () => { window.agendaPaginaAtual++; window.renderizarAgendaPaginada(); };
 
