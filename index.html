@@ -501,34 +501,7 @@
 </div>
 
 <script>
-    async function checkUserLevel(user) {
-    // Busca na nossa tabela o nível dele
-    const { data, error } = await _supa
-        .from('perfis_usuarios')
-        .select('nivel')
-        .eq('id', user.id)
-        .single();
-
-    if (data) {
-        userRole = data.nivel; // ADMIN, USUARIO ou PRESTADOR
-        configurarInterfacePorNivel(userRole);
-    }
-}
-
-function configurarInterfacePorNivel(role) {
-    const isAdmin = role === 'ADMIN';
-    const isPrestador = role === 'PRESTADOR';
-
-    // 1. Esconde aba de Usuários se não for Admin
-    document.getElementById('menu-usuarios').style.display = isAdmin ? 'block' : 'none';
-
-    // 2. Se for Prestador, trava na aba Painel
-    if (isPrestador) {
-        document.getElementById('menu-agendamento').style.display = 'none';
-        document.getElementById('menu-prestadores').style.display = 'none';
-        trocarAba('painel');
-    }
-}
+  
     let filtradosPainel = []; 
     let myChart = null; 
     let chartLocais = null;
@@ -659,7 +632,34 @@ window.abrirOpcoesPrestador = function(i) {
     `;
     window.exibirModal("Ações do Prestador", html);
 };
-    
+      async function checkUserLevel(user) {
+    // Busca na nossa tabela o nível dele
+    const { data, error } = await _supa
+        .from('perfis_usuarios')
+        .select('nivel')
+        .eq('id', user.id)
+        .single();
+
+    if (data) {
+        userRole = data.nivel; // ADMIN, USUARIO ou PRESTADOR
+        configurarInterfacePorNivel(userRole);
+    }
+}
+
+function configurarInterfacePorNivel(role) {
+    const isAdmin = role === 'ADMIN';
+    const isPrestador = role === 'PRESTADOR';
+
+    // 1. Esconde aba de Usuários se não for Admin
+    document.getElementById('menu-usuarios').style.display = isAdmin ? 'block' : 'none';
+
+    // 2. Se for Prestador, trava na aba Painel
+    if (isPrestador) {
+        document.getElementById('menu-agendamento').style.display = 'none';
+        document.getElementById('menu-prestadores').style.display = 'none';
+        trocarAba('painel');
+    }
+}
     window.enviarNotificacaoSlack = async function(msg) {
         const SUPABASE_URL = "https://fqaqlofndeihmhkopvan.supabase.co/functions/v1/notificar-slack";
         try {
