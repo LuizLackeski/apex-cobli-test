@@ -327,25 +327,16 @@
                         <div style="flex: 1.5;"><label class="req">CEP</label><input id="cep" required oninput="window.maskCEP(this)" placeholder="00000-000"></div>
                     </div>
 
-            <div style="display: flex; gap: 10px; margin-bottom: 12px;">
-                    <div style="flex: 1;">
-                        <label class="req">Responsável</label>
-                        <input id="responsavel" required>
-                    </div>
-                    <div style="flex: 1;">
-                        <label class="req">Telefone</label>
-                        <input id="contatoResponsavel" required oninput="window.maskPhone(this)" placeholder="(00) 00000-0000">
-                    </div>
-                    <div style="flex: 1.5;">
-                        <label>Usuário no Sistema (@apex.co)</label>
-                        <input id="usuarioApex" placeholder="prestador@apex.co">
-                    </div>
-                </div>
+               <div style="display: flex; gap: 10px; margin-bottom: 12px;">
+                        <div style="flex: 1;"><label class="req">Responsável</label><input id="responsavel" required></div>
+                        <div style="flex: 1;"><label class="req">Telefone</label><input id="contatoResponsavel" required oninput="window.maskPhone(this)" placeholder="(00) 00000-0000"></div>
+                    </div>
 
                     <div style="display: flex; gap: 10px; margin-bottom: 15px;">
                         <div style="flex: 1;"><label class="req">Qtd Técnicos</label><input id="qtdTecnicos" type="number" required></div>
-                        <div style="flex: 1;"><label class="req">Raio de Atuação (Km)</label><input id="rangeAtendimento" type="number" required></div>
-                        <div style="flex: 1.5;"><label>ID Field Control</label><input id="fieldIdField" placeholder="Opcional"></div>
+                        <div style="flex: 1;"><label class="req">Raio (Km)</label><input id="rangeAtendimento" type="number" required></div>
+                        <div style="flex: 1;"><label>ID Field Control</label><input id="fieldIdField" placeholder="Opcional"></div>
+                        <div style="flex: 1.5;"><label>E-mail Acesso (@apex.co)</label><input id="usuarioApex" placeholder="prestador@apex.co"></div>
                     </div>
                 </div>
         
@@ -1402,7 +1393,7 @@ window.renderizarListaPrestadores = function(){
                  👤 <strong>Contato:</strong> ${p.responsavel || 'Não informado'} | 📞 <strong>Tel:</strong> ${p.contato || 'Não informado'}
             </div>
             
-            <div style="font-size: 0.7rem; color: #64748b; border-top: 1px dashed #e2e8f0; padding-top: 6px; margin-top: 6px; width: 100%;">
+              <div style="font-size: 0.7rem; color: #64748b; border-top: 1px dashed #e2e8f0; padding-top: 6px; margin-top: 6px; width: 100%;">
                  👥 <strong>Técnicos:</strong> ${p.qtdtecnicos} | 📏 <strong>Raio:</strong> ${p.range}km
             </div>
         </div>`; 
