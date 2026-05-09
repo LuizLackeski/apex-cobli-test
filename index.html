@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>APEX - Sistema Completo</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
     <style>
@@ -17,7 +18,7 @@
             --text: #334155; 
         }
         
-        body { font-family: 'Inter', -apple-system, sans-serif; background:var(--bg); color: var(--text); margin:0; padding:20px; }
+        body { font-family: 'Inter', -apple-system, sans-serif; background:var(--bg); color: var(--text); margin:0; padding:20px; display: none; }
         
         #toast {
             display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); 
@@ -25,10 +26,6 @@
             box-shadow: 0 10px 25px rgba(0,0,0,0.3); z-index: 10000; border: 2px solid var(--primary);
             font-weight: 700; text-align: center; font-size: 1.1rem; letter-spacing: 0.5px;
         }
-
-        #login-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--primary); display: none; align-items: center; justify-content: center; z-index: 20000; }
-        .login-card { background: white; padding: 40px; border-radius: 12px; width: 350px; text-align: center; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2); }
-        .login-card h2 { color: var(--primary); border-bottom: none; margin-bottom: 20px; }
 
         /* MENU TOPO NOME E BOTOES */
         .topo { background: var(--cobli-dark); color: white; padding: 15px 30px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
@@ -115,443 +112,607 @@
             to { transform: rotate(360deg); }
         }
         .icone-girando { display: inline-block; animation: girar 1s linear infinite; }
+
+        /* --- NOVAS TELAS DE AUTENTICAÇÃO PADRÃO COBLI --- */
+        #auth-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--primary); display: flex; align-items: center; justify-content: center; z-index: 50000; }
+        .auth-card { background: white; padding: 40px; border-radius: 16px; width: 360px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.3); }
+        .auth-card .logo-circle { width: 50px; height: 50px; border: 4px solid var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; position: relative; }
+        .auth-card .logo-circle::after { content: ''; width: 15px; height: 15px; background: var(--primary); border-radius: 50%; }
+        .auth-card h2 { color: var(--cobli-dark); margin: 0 0 5px; font-size: 1.6rem; border:none; }
+        .auth-card p { color: #64748b; font-size: 0.85rem; margin-bottom: 25px; }
+        .input-group { position: relative; width: 100%; margin-bottom: 15px; text-align: left; }
+        .input-group label { display: block; font-size: 0.75rem; font-weight: bold; color: #64748b; margin-bottom: 5px; text-transform: uppercase; }
+        .input-group input { width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; box-sizing: border-box; font-size: 0.95rem; }
+        .pass-toggle { position: absolute; right: 12px; top: 32px; cursor: pointer; font-size: 1.1rem; opacity: 0.6; }
+        .auth-btn { width: 100%; background: var(--cobli-dark); color: white; padding: 14px; border: none; border-radius: 8px; font-weight: bold; font-size: 1rem; cursor: pointer; transition: 0.3s; margin-top: 10px; }
+        .auth-btn:hover { filter: brightness(1.2); }
+        .auth-links { margin-top: 20px; font-size: 0.85rem; }
+        .auth-links a { display: block; color: #64748b; text-decoration: none; cursor: pointer; margin-bottom: 8px; font-weight: 500; }
+        .auth-links a span { color: var(--primary); font-weight: bold; }
+        #app-content { display: none; } /* Oculta o sistema principal */
+        
+        /* TABELA DE USUÁRIOS */
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th { text-align: left; background: #f1f5f9; padding: 12px; font-size: 0.75rem; color: #64748b; text-transform: uppercase; border-radius: 6px 6px 0 0; }
+        td { padding: 12px; border-bottom: 1px solid #e2e8f0; font-size: 0.9rem; }
+        .badge { padding: 4px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: bold; }
+        .badge-admin { background: #fee2e2; color: #ef4444; }
+        .badge-user { background: #e0e7ff; color: #4338ca; }
+        .badge-prest { background: #dcfce7; color: #15803d; }
     </style>
 </head>
 <body>
 
 <div id="toast"></div>
 
-<div id="login-overlay">
-    <div class="login-card">
-        <h2 style="border:none;">APEX Cobli</h2>
-        <input type="text" id="loginEmail" placeholder="Informe seu E-mail">
-        <button onclick="window.performLogin()" style="width:100%; background: var(--cobli-dark); padding: 12px; margin-top:10px;">Entrar</button>
+<!-- OVERLAY DE LOGIN -->
+<div id="auth-overlay">
+    <div class="auth-card" id="card-login">
+        <div class="logo-circle"></div>
+        <h2>APEX Cobli</h2>
+        <p>Gestão de Prestadores e Serviços</p>
+        <div class="input-group"><label>E-mail</label><input type="email" id="login-email" placeholder="seu.nome@cobli.co"></div>
+        <div class="input-group">
+            <label>Senha</label><input type="password" id="login-password" placeholder="••••••••">
+            <span class="pass-toggle" onclick="togglePass('login-password')">👁️</span>
+        </div>
+        <button class="auth-btn" id="btnLogin" onclick="authAction('login')">Entrar</button>
+        <div id="login-error" style="color: var(--cobli-red); font-size: 0.8rem; margin-top: 10px; display: none; font-weight: bold;">Credenciais inválidas.</div>
+        <div class="auth-links">
+            <a onclick="showAuthCard('card-forgot')">Esqueci minha senha</a>
+            <a onclick="showAuthCard('card-signup')">Não tem conta? <span>Cadastre-se</span></a>
+        </div>
+    </div>
+
+    <div class="auth-card" id="card-signup" style="display:none;">
+        <div class="logo-circle"></div>
+        <h2>Criar Conta</h2>
+        <p>Use seu e-mail @cobli.co ou @apex.co</p>
+        <div class="input-group"><label>E-mail</label><input type="email" id="signup-email" placeholder="nome@cobli.co"></div>
+        <div class="input-group">
+            <label>Senha</label><input type="password" id="signup-password" placeholder="Mínimo de 6 caracteres">
+            <span class="pass-toggle" onclick="togglePass('signup-password')">👁️</span>
+        </div>
+        <button class="auth-btn" id="btnSignup" onclick="authAction('signup')">Criar Acesso</button>
+        <div class="auth-links"><a onclick="showAuthCard('card-login')">Já possui conta? <span>Faça login</span></a></div>
+    </div>
+
+    <div class="auth-card" id="card-forgot" style="display:none;">
+        <div class="logo-circle"></div>
+        <h2>Recuperar Senha</h2>
+        <p>Enviaremos um link para o seu e-mail</p>
+        <div class="input-group"><label>E-mail Cadastrado</label><input type="email" id="reset-email" placeholder="seu@email.co"></div>
+        <button class="auth-btn" id="btnReset" onclick="authAction('reset')">Enviar Link</button>
+        <div class="auth-links"><a onclick="showAuthCard('card-login')">⬅ Voltar ao Login</a></div>
     </div>
 </div>
 
-<div class="topo"><strong>APEX</strong> <span>Agenda Prestadores</span></div>
-<div class="menu">
-    <div class="menu-left">
-        <button class="ativo" onclick="window.trocarAba('consulta', this)">Agendamento</button>
-        <button onclick="window.trocarAba('cadastro', this)">Prestadores</button>
-        <button onclick="window.trocarAba('painel', this)">Painel</button>
-        <button onclick="window.trocarAba('dashboard', this)">Dashboard</button>
-    </div>
+<div id="app-content">
+    <div class="topo"><strong>APEX</strong> <span>Agenda Prestadores</span></div>
+    <div class="menu">
+        <div class="menu-left">
+            <button class="ativo" onclick="window.trocarAba('consulta', this)">Agendamento</button>
+            <button onclick="window.trocarAba('cadastro', this)">Prestadores</button>
+            <button onclick="window.trocarAba('painel', this)">Painel</button>
+            <button onclick="window.trocarAba('dashboard', this)">Dashboard</button>
+            <button id="btn-usuarios" onclick="window.trocarAba('usuarios', this)">Usuários</button>
+        </div>
 
-    <div id="integrations-control" class="slack-adm-panel">
-        <div class="label-integracoes">Integrações</div>
-        <div class="switches-row">
-            <div style="display:flex; align-items:center; gap:5px;">
-                <span>SLACK</span>
-                <select id="slackSwitch" class="switch-off" onchange="window.updateSwitchColor(this)">
-                    <option value="ON">ON</option>
-                    <option value="OFF" selected>OFF</option>
-                </select>
-            </div>
-            <div style="display:flex; align-items:center; gap:5px; border-left: 1px solid rgba(255,255,255,0.2); padding-left:10px;">
-                <span>FIELD</span>
-                <select id="fieldSwitch" class="switch-off" onchange="window.updateSwitchColor(this)">
-                    <option value="ON">ON</option>
-                    <option value="OFF" selected>OFF</option>
-                </select>
-            </div>
-            <div style="display:flex; align-items:center; gap:5px; border-left: 1px solid rgba(255,255,255,0.2); padding-left:10px;">
-                <span>BANCO</span>
-                <select id="dbSwitch" class="switch-on" onchange="window.updateSwitchColor(this)">
-                    <option value="ON">ON</option>
-                    <option value="OFF" selected>OFF</option>
-                </select>
+        <div id="integrations-control" class="slack-adm-panel">
+            <div class="label-integracoes">Integrações</div>
+            <div class="switches-row">
+                <div style="display:flex; align-items:center; gap:5px;">
+                    <span>SLACK</span>
+                    <select id="slackSwitch" class="switch-off" onchange="window.updateSwitchColor(this)">
+                        <option value="ON">ON</option>
+                        <option value="OFF" selected>OFF</option>
+                    </select>
+                </div>
+                <div style="display:flex; align-items:center; gap:5px; border-left: 1px solid rgba(255,255,255,0.2); padding-left:10px;">
+                    <span>FIELD</span>
+                    <select id="fieldSwitch" class="switch-off" onchange="window.updateSwitchColor(this)">
+                        <option value="ON">ON</option>
+                        <option value="OFF" selected>OFF</option>
+                    </select>
+                </div>
+                <div style="display:flex; align-items:center; gap:5px; border-left: 1px solid rgba(255,255,255,0.2); padding-left:10px;">
+                    <span>BANCO</span>
+                    <select id="dbSwitch" class="switch-on" onchange="window.updateSwitchColor(this)">
+                        <option value="ON">ON</option>
+                        <option value="OFF" selected>OFF</option>
+                    </select>
+                </div>
             </div>
         </div>
-    </div>
-    <div class="menu-right">
-        <span id="user-display" class="user-info"></span>
-        <button class="btn-sair" style="color:var(--cobli-red); font-weight:bold;" onclick="window.logout()">Sair</button>
-    </div>
-</div>
-
-<div id="modalAviso" class="modal-overlay">
-    <div class="modal-card" onclick="event.stopPropagation()">
-        <div id="modalHeader" class="modal-header"></div>
-        <div id="modalBody" class="modal-body" style="margin-bottom: 15px;"></div>
-        <div id="modalFooter" class="modal-footer"></div>
-    </div>
-</div>
-
-<div class="conteudo">
-    
-    <div id="consulta" class="aba ativa">
-        <div id="step-1" class="card">
-            <h2>Localização do Atendimento</h2>
-            
-           <label class="req">CEP</label>
-                <div style="display: flex; gap: 10px;">
-                <input type="text" id="inputCep" placeholder="00000-000" oninput="window.maskCEP(this)" required>
-                <button onclick="window.buscarEnderecoPorCep()" id="btnValidarCep" style="background:var(--cobli-green); white-space:nowrap;">Validar CEP</button>
-            </div>
-
-            <div id="camposEndereco" style="display: none; margin-top: 15px; border-top: 1px solid #eee; padding-top: 15px;">
-                <div style="display: flex; gap: 10px;">
-                    <div style="flex: 3;">
-                        <label class="req">Endereço (Rua/Av)</label>
-                        <input type="text" id="inputRua" placeholder="Ex: Av. Paulista" required>
-                    </div>
-                    <div style="flex: 1;">
-                        <label class="req">Nº</label>
-                        <input type="text" id="inputNumero" placeholder="123" required>
-                    </div>
-                </div>
-
-                <div style="display: flex; gap: 10px;">
-                    <div style="flex: 2;">
-                        <label class="req">Bairro</label>
-                        <input type="text" id="inputBairro" placeholder="Ex: Centro" required>
-                    </div>
-                    <div style="flex: 2;">
-                        <label class="req">Cidade</label>
-                        <input type="text" id="inputCidade" placeholder="Ex: São Paulo" required>
-                    </div>
-                    <div style="flex: 1;">
-                        <label class="req">UF</label>
-                        <input type="text" id="inputUf" placeholder="SP" maxlength="2" required>
-                    </div>
-                </div>
-
-                <button onclick="window.proximoPasso(2)" id="btnBuscar" style="margin-top: 10px; width: 100%;">Buscar Prestadores</button>
-            </div>
+        <div class="menu-right">
+            <span id="user-display" class="user-info"></span>
+            <button class="btn-sair" style="color:var(--cobli-red); font-weight:bold;" onclick="handleLogout()">Sair</button>
         </div>
+    </div>
+
+    <div id="modalAviso" class="modal-overlay">
+        <div class="modal-card" onclick="event.stopPropagation()">
+            <div id="modalHeader" class="modal-header"></div>
+            <div id="modalBody" class="modal-body" style="margin-bottom: 15px;"></div>
+            <div id="modalFooter" class="modal-footer"></div>
+        </div>
+    </div>
+
+    <div class="conteudo">
         
-        <div id="step-2" class="card" style="display:none; padding-bottom: 30px;">
-            <h2>Selecione o Prestador</h2>
-            <div id="lista-prestadores-selecao" style="margin-bottom: 20px;"></div>
-            <div style="display: flex; gap: 10px;">
-                <button onclick="window.proximoPasso(1)" style="background:gray; flex:1;">⬅️ Voltar e Alterar CEP</button>
-                <button onclick="window.cancelarAgendamento()" class="btn-cancelar" style="flex:1;">❌ Cancelar Tudo</button>
-            </div>
-        </div>
-        
-        <div id="step-3" class="card" style="display:none;">
-            <h2>Serviços e Agenda</h2>
-            <div id="header-prestador-info" style="font-size: 0.95rem; color: var(--primary); font-weight: 600; margin-bottom: 15px; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px;"></div>
-            
-            <div class="bloco-servico">
-                <div style="display: flex; gap: 10px;">
-                    <div style="flex:1;">
-                        <label>Segmento / Manutenção</label>
-                        <select id="tipoManutencao">
-                            <option value="00fa3181-0ee1-4bc2-8e16-04fce22f87f7">Instalação</option>
-                            <option value="5664b3bb-f905-4da5-81c6-a7d46b6c0dd3">Desinstalação</option>
-                            <option value="06a7192d-590f-4dd1-9e40-9053a7524e6c">Troca</option>
-                            <option value="764b29fc-190c-4ca5-8e9d-2bde28996da4">Troca entre veículos</option>
-                            <option value="6244f058-dd7c-4123-b35d-4c6cb96d332e">Upgrade</option>
-                            <option value="0cabab12-25d2-4369-bc6e-fb1e0771db5f">Visita técnica</option>
-                        </select>
-                    </div>
-                    <div style="flex:1;">
-                        <label>Tipo de Serviço</label>
-                        <select id="produto"></select>
-                    </div>
-                </div>
-                <div style="display: flex; gap: 10px; align-items: flex-end; margin-top:10px;">
-                    <div style="flex:1;">
-                        <label>Quantidade</label>
-                        <input type="number" id="quantidade" value="1">
-                    </div>
-                    <button onclick="window.adicionarProduto()" style="height: 42px; margin-bottom: 8px;">Adicionar</button>
-                </div>
-            </div>
-
-            <div id="lista-produtos"></div>
-            <p>Horas Necessárias: <strong><span id="horasNecessarias">0</span></strong></p>
-            
-            <div id="agenda-agendamento"></div>
-            
-            <div style="margin-top:15px; border-top: 1px solid #e2e8f0; padding-top: 15px;">
-                <button onclick="window.proximoPasso(2)" style="background:gray;">Voltar</button>
-                <button onclick="window.validarEAvancar()" style="background:var(--cobli-green);">Próximo</button>
-                <button onclick="window.cancelarAgendamento()" class="btn-cancelar">Cancelar</button>
-            </div>
-        </div>
-        
-        <div id="step-4" class="card" style="display:none;">
-            <h2>Dados do Cliente</h2>
-            <label class="req">Nº do Ticket</label>
-            <div style="display: flex; gap: 8px; margin-bottom: 12px;">
-                <input id="ticket" placeholder="Ex: 123654789" required style="flex: 1;">
-                <button type="button" id="btnChecarSequencia" onclick="verificarSequenciaEFOP()" style="background:var(--cobli-dark); color:white; padding:0 15px; border-radius:6px; font-size:12px; cursor:pointer; border:none; height: 42px;">Checar Sequência</button>
-            </div>
-            <label class="req">Nome do Cliente</label><input id="clienteNome" required>
-            <label class="req">CNPJ / CPF</label><input id="clienteCnpj" placeholder="00.000.000/0000-00" oninput="window.maskCPFCNPJ(this)" required>
-            <label class="req">Responsável pela solicitação (APEX)</label><input id="solicitante" required>
-            <label class="req">Responsável pelo acompanhamento (Local)</label><input id="respAcompanhamento" required>
-            <label class="req">Telefone do responsável</label><input id="telResponsavel" placeholder="(00) 00000-0000" oninput="window.maskPhone(this)" maxlength="15" required>
-            
-            <div style="margin-top:15px;">
-                <button onclick="window.proximoPasso(3)" style="background:gray;">Voltar</button>
-                <button id="btnConfirmar" onclick="window.revisarAgendamento(this)" style="background:var(--cobli-green);">Confirmar</button>
-                <button onclick="window.cancelarAgendamento()" class="btn-cancelar">Cancelar</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="cadastro" class="aba">
-        <div id="lista-prestadores-view" class="card">
-            <div id="btn-novo-container"></div> 
-            <div id="lista-prestadores"></div>
-        </div>
-        <div id="cadastro-flow" class="card" style="display:none;">
-            
-            <div id="etapa-1">
-                <h3 style="margin-bottom: 20px; color: var(--primary);">Dados do Prestador</h3>
+        <div id="consulta" class="aba ativa">
+            <div id="step-1" class="card">
+                <h2>Localização do Atendimento</h2>
                 
-                <label class="req">Nome / Empresa</label>
-                <input id="nomeEmpresa" required style="margin-bottom: 12px;">
-                
-                <label class="req">Endereço Completo (Ex: R. Lourenço Marques, 297 - Vila Olímpia)</label>
-                <input id="endereco" required style="margin-bottom: 12px;">
-                
-                <div style="display: flex; gap: 10px; margin-bottom: 12px;">
-                    <div style="flex: 2;">
-                        <label class="req">Cidade</label>
-                        <input id="cidade" required>
-                    </div>
-                    <div style="flex: 1;">
-                        <label class="req">UF</label>
-                        <input id="uf" required maxlength="2" placeholder="SP">
-                    </div>
-                    <div style="flex: 1.5;">
-                        <label class="req">CEP</label>
-                        <input id="cep" required oninput="window.maskCEP(this)" placeholder="00000-000">
-                    </div>
+               <label class="req">CEP</label>
+                    <div style="display: flex; gap: 10px;">
+                    <input type="text" id="inputCep" placeholder="00000-000" oninput="window.maskCEP(this)" required>
+                    <button onclick="window.buscarEnderecoPorCep()" id="btnValidarCep" style="background:var(--cobli-green); white-space:nowrap;">Validar CEP</button>
                 </div>
 
-                <div style="display: flex; gap: 10px; margin-bottom: 12px;">
-                    <div style="flex: 1;">
-                        <label class="req">Responsável</label>
-                        <input id="responsavel" required>
-                    </div>
-                    <div style="flex: 1;">
-                        <label class="req">Telefone</label>
-                        <input id="contatoResponsavel" required oninput="window.maskPhone(this)" placeholder="(00) 00000-0000">
-                    </div>
-                </div>
-
-                <div style="display: flex; gap: 10px; margin-bottom: 15px;">
-                    <div style="flex: 1;">
-                        <label class="req">Qtd Técnicos</label>
-                        <input id="qtdTecnicos" type="number" required>
-                    </div>
-                    <div style="flex: 1;">
-                        <label class="req">Raio de Atuação (Km)</label>
-                        <input id="rangeAtendimento" type="number" required>
-                    </div>
-                    <div style="flex: 1.5;">
-                        <label>ID Field Control</label>
-                        <input id="fieldIdField" placeholder="Opcional">
-                    </div>
-                </div>
-            </div>
-    
-            <div id="etapa-2" style="display:none;">
-                <h3>Agenda Base</h3>
-                <div id="agenda-cadastro"></div>
-                
-                <h3 style="margin-top: 30px; border-top: 1px solid #cbd5e1; padding-top: 20px; color: var(--cobli-red);">🛑 Ausências (Feriados / Férias / Imprevistos)</h3>
-                <div style="background: #fff5f5; border: 1px solid #fecaca; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
-                    <div style="display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap;">
-                        <div style="flex: 1; min-width: 120px;">
-                            <label style="color: var(--cobli-red);">Data Inicial</label>
-                            <input type="date" id="dataBloqueio" style="border-color: #fca5a5; background: white;">
+                <div id="camposEndereco" style="display: none; margin-top: 15px; border-top: 1px solid #eee; padding-top: 15px;">
+                    <div style="display: flex; gap: 10px;">
+                        <div style="flex: 3;">
+                            <label class="req">Endereço (Rua/Av)</label>
+                            <input type="text" id="inputRua" placeholder="Ex: Av. Paulista" required>
                         </div>
-                        <div style="flex: 1; min-width: 120px;">
-                            <label style="color: var(--cobli-red);">Data Final (Opcional)</label>
-                            <input type="date" id="dataBloqueioFim" style="border-color: #fca5a5; background: white;">
+                        <div style="flex: 1;">
+                            <label class="req">Nº</label>
+                            <input type="text" id="inputNumero" placeholder="123" required>
                         </div>
-                        <div style="flex: 1; min-width: 120px;">
-                            <label style="color: var(--cobli-red);">Tipo</label>
-                            <select id="tipoBloqueio" onchange="window.toggleTipoBloqueio()" style="border-color: #fca5a5; background: white;">
-                                <option value="total">Dia Inteiro</option>
-                                <option value="parcial">Horário Específico</option>
+                    </div>
+
+                    <div style="display: flex; gap: 10px;">
+                        <div style="flex: 2;">
+                            <label class="req">Bairro</label>
+                            <input type="text" id="inputBairro" placeholder="Ex: Centro" required>
+                        </div>
+                        <div style="flex: 2;">
+                            <label class="req">Cidade</label>
+                            <input type="text" id="inputCidade" placeholder="Ex: São Paulo" required>
+                        </div>
+                        <div style="flex: 1;">
+                            <label class="req">UF</label>
+                            <input type="text" id="inputUf" placeholder="SP" maxlength="2" required>
+                        </div>
+                    </div>
+
+                    <button onclick="window.proximoPasso(2)" id="btnBuscar" style="margin-top: 10px; width: 100%;">Buscar Prestadores</button>
+                </div>
+            </div>
+            
+            <div id="step-2" class="card" style="display:none; padding-bottom: 30px;">
+                <h2>Selecione o Prestador</h2>
+                <div id="lista-prestadores-selecao" style="margin-bottom: 20px;"></div>
+                <div style="display: flex; gap: 10px;">
+                    <button onclick="window.proximoPasso(1)" style="background:gray; flex:1;">⬅️ Voltar e Alterar CEP</button>
+                    <button onclick="window.cancelarAgendamento()" class="btn-cancelar" style="flex:1;">❌ Cancelar Tudo</button>
+                </div>
+            </div>
+            
+            <div id="step-3" class="card" style="display:none;">
+                <h2>Serviços e Agenda</h2>
+                <div id="header-prestador-info" style="font-size: 0.95rem; color: var(--primary); font-weight: 600; margin-bottom: 15px; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px;"></div>
+                
+                <div class="bloco-servico">
+                    <div style="display: flex; gap: 10px;">
+                        <div style="flex:1;">
+                            <label>Segmento / Manutenção</label>
+                            <select id="tipoManutencao">
+                                <option value="00fa3181-0ee1-4bc2-8e16-04fce22f87f7">Instalação</option>
+                                <option value="5664b3bb-f905-4da5-81c6-a7d46b6c0dd3">Desinstalação</option>
+                                <option value="06a7192d-590f-4dd1-9e40-9053a7524e6c">Troca</option>
+                                <option value="764b29fc-190c-4ca5-8e9d-2bde28996da4">Troca entre veículos</option>
+                                <option value="6244f058-dd7c-4123-b35d-4c6cb96d332e">Upgrade</option>
+                                <option value="0cabab12-25d2-4369-bc6e-fb1e0771db5f">Visita técnica</option>
                             </select>
                         </div>
-                        <div style="flex: 0.5; min-width: 80px;">
-                            <label style="color: var(--cobli-red);">Qtd. Téc.</label>
-                            <input type="number" id="qtdBloqueio" value="1" min="1" style="border-color: #fca5a5; background: white;">
+                        <div style="flex:1;">
+                            <label>Tipo de Serviço</label>
+                            <select id="produto"></select>
                         </div>
-                        <div id="boxHoraBloqueio" style="display: none; gap: 10px; flex: 2; min-width: 200px;">
-                            <div style="flex: 1;">
-                                <label style="color: var(--cobli-red);">Início</label>
-                                <select id="horaInicioBloqueio" style="border-color: #fca5a5; background: white;">
-                                    <option value="">Sel...</option>
-                                    <option value="8">08:00</option>
-                                    <option value="9">09:00</option>
-                                    <option value="10">10:00</option>
-                                    <option value="11">11:00</option>
-                                    <option value="12">12:00</option>
-                                    <option value="13">13:00</option>
-                                    <option value="14">14:00</option>
-                                    <option value="15">15:00</option>
-                                    <option value="16">16:00</option>
-                                    <option value="17">17:00</option>
-                                    <option value="18">18:00</option>
-                                </select>
-                            </div>
-                            <div style="flex: 1;">
-                                <label style="color: var(--cobli-red);">Fim</label>
-                                <select id="horaFimBloqueio" style="border-color: #fca5a5; background: white;">
-                                    <option value="">Sel...</option>
-                                    <option value="9">09:00</option>
-                                    <option value="10">10:00</option>
-                                    <option value="11">11:00</option>
-                                    <option value="12">12:00</option>
-                                    <option value="13">13:00</option>
-                                    <option value="14">14:00</option>
-                                    <option value="15">15:00</option>
-                                    <option value="16">16:00</option>
-                                    <option value="17">17:00</option>
-                                    <option value="18">18:00</option>
-                                    <option value="19">19:00</option>
-                                </select>
-                            </div>
+                    </div>
+                    <div style="display: flex; gap: 10px; align-items: flex-end; margin-top:10px;">
+                        <div style="flex:1;">
+                            <label>Quantidade</label>
+                            <input type="number" id="quantidade" value="1">
                         </div>
-                        <button onclick="window.adicionarBloqueioData()" style="height: 42px; background: var(--cobli-red); min-width: 100px;">Adicionar</button>
+                        <button onclick="window.adicionarProduto()" style="height: 42px; margin-bottom: 8px;">Adicionar</button>
                     </div>
-                    <div id="lista-datas-bloqueadas" style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 15px;"></div>
                 </div>
-            </div>
-            <div style="margin-top:20px; display: flex; gap: 8px; flex-wrap: wrap;">
-                <button id="btn-voltar" onclick="window.mudarEtapa(-1)">Voltar</button>
-                <button id="btn-proximo" onclick="window.mudarEtapa(1)">Próximo</button>
-                <button id="btn-concluir" onclick="window.salvarPrestador(this)" style="background: var(--cobli-green);">Concluir</button>
-                <button id="btn-limpar-agenda" onclick="window.limparAgendaCadastro()" style="background: #f59e0b; color: white; border: none; display:none;">🧹 Limpar Agenda</button>
-                <button onclick="window.cancelarCadastro()" class="btn-cancelar">Cancelar</button>
-            </div>
-        </div>
-    </div>
 
-    <div id="painel" class="aba">
-        <div style="display: flex; align-items: center; background: white; padding: 12px; border-radius: 8px; border: 1px solid #e5e7eb; margin-bottom: 10px; overflow-x: auto;">
-            <div style="display: flex; flex: 1; justify-content: space-between; min-width: 650px;">
-                <div style="flex: 1; text-align: center; border-right: 1px solid #e5e7eb; padding: 0 10px;">
-                    <div style="font-size: 0.65rem; color: #64748b; font-weight: 700; text-transform: uppercase;">Solicitado</div>
-                    <div style="font-size: 1.2rem; font-weight: 800; color: var(--primary);" id="st-solicitado">0</div>
-                </div>
-                <div style="flex: 1; text-align: center; border-right: 1px solid #e5e7eb; padding: 0 10px;">
-                    <div style="font-size: 0.65rem; color: #64748b; font-weight: 700; text-transform: uppercase;">Em Negociação</div>
-                    <div style="font-size: 1.2rem; font-weight: 800; color: var(--primary);" id="st-negociacao">0</div>
-                </div>
-                <div style="flex: 1; text-align: center; border-right: 1px solid #e5e7eb; padding: 0 10px;">
-                    <div style="font-size: 0.65rem; color: #64748b; font-weight: 700; text-transform: uppercase;">Agendado</div>
-                    <div style="font-size: 1.2rem; font-weight: 800; color: var(--primary);" id="st-agendado">0</div>
-                </div>
-                <div style="flex: 1; text-align: center; border-right: 1px solid #e5e7eb; padding: 0 10px;">
-                    <div style="font-size: 0.65rem; color: #64748b; font-weight: 700; text-transform: uppercase;">Em Andamento</div>
-                    <div style="font-size: 1.2rem; font-weight: 800; color: var(--primary);" id="st-andamento">0</div>
-                </div>
-                <div style="flex: 1; text-align: center; border-right: 1px solid #e5e7eb; padding: 0 10px;">
-                    <div style="font-size: 0.65rem; color: #64748b; font-weight: 700; text-transform: uppercase;">Impedido</div>
-                    <div style="font-size: 1.2rem; font-weight: 800; color: var(--cobli-red);" id="st-impedido">0</div>
-                </div>
-                <div style="flex: 1; text-align: center; border-right: 1px solid #e5e7eb; padding: 0 10px;">
-                    <div style="font-size: 0.65rem; color: #64748b; font-weight: 700; text-transform: uppercase;">Concluído</div>
-                    <div style="font-size: 1.2rem; font-weight: 800; color: var(--cobli-green);" id="st-concluido">0</div>
-                </div>
-                <div style="flex: 1; text-align: center; padding: 0 10px;">
-                    <div style="font-size: 0.65rem; color: #64748b; font-weight: 700; text-transform: uppercase;">Cancelado</div>
-                    <div style="font-size: 1.2rem; font-weight: 800; color: #64748b;" id="st-cancelado">0</div>
-                </div>
-            </div>
-            <div style="width: 1px; height: 35px; background: #e5e7eb; margin: 0 15px;"></div>
-            <button onclick="window.atualizarTodosStatus()" style="background:var(--cobli-green); height: 36px; padding: 0 15px; font-size: 0.85rem; border-radius: 6px; border: none; color: white; cursor: pointer; white-space: nowrap;">
-                🔄 Update
-            </button>
-        </div>
-
-        <div class="grid-filtros">
-            <div class="campo-filtro">
-                <label>Início</label>
-                <input type="date" id="filtroDataInicio">
-            </div>
-            <div class="campo-filtro">
-                <label>Fim</label>
-                <input type="date" id="filtroDataFim">
-            </div>
-            <div class="campo-filtro">
-                <label>Ticket</label>
-                <input type="text" id="filtroTicket" placeholder="Nº OS">
-            </div>
-            <div class="campo-filtro">
-                <label>Prestador</label>
-                <details id="dropdown-prestador" onmouseleave="this.removeAttribute('open')" style="background: white; border: 1px solid #cbd5e1; border-radius: 6px; cursor: pointer; position: relative; width: 100%;">
-                    <summary style="padding: 8px; font-size: 0.8rem; list-style: none;">👷 Selecionar...</summary>
-                    <div id="container-prestadores" style="position: absolute; top: 100%; left: 0; background: white; border: 1px solid #cbd5e1; border-radius: 6px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); padding: 10px; z-index: 1000; display: flex; flex-direction: column; gap: 8px; min-width: 180px; max-height: 200px; overflow-y: auto;">
-                    </div>
-                </details>
-            </div>
-            <div class="campo-filtro">
-                <label>Status</label>
-                <details id="dropdown-status" onmouseleave="this.removeAttribute('open')" style="background: white; border: 1px solid #cbd5e1; border-radius: 6px; cursor: pointer; position: relative; width: 100%;">
-                    <summary style="padding: 8px; font-size: 0.8rem; list-style: none;">📑 Selecionar...</summary>
-                    <div style="position: absolute; top: 100%; left: 0; background: white; border: 1px solid #cbd5e1; border-radius: 6px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); padding: 10px; z-index: 1000; display: flex; flex-direction: column; gap: 8px; min-width: 160px;">
-                        <label style="display:flex; align-items:center; gap:8px; font-size: 0.7rem; font-weight: 600;"><input type="checkbox" value="solicitado" class="cb-status" style="width:auto; margin:0;"> SOLICITADO</label>
-                        <label style="display:flex; align-items:center; gap:8px; font-size: 0.7rem; font-weight: 600;"><input type="checkbox" value="negociacao" class="cb-status" style="width:auto; margin:0;"> NEGOCIAÇÃO</label>
-                        <label style="display:flex; align-items:center; gap:8px; font-size: 0.7rem; font-weight: 600;"><input type="checkbox" value="agendado" class="cb-status" style="width:auto; margin:0;"> AGENDADO</label>
-                        <label style="display:flex; align-items:center; gap:8px; font-size: 0.7rem; font-weight: 600;"><input type="checkbox" value="andamento" class="cb-status" style="width:auto; margin:0;"> ANDAMENTO</label>
-                        <label style="display:flex; align-items:center; gap:8px; font-size: 0.7rem; font-weight: 600;"><input type="checkbox" value="impedido" class="cb-status" style="width:auto; margin:0;"> IMPEDIDO</label>
-                        <label style="display:flex; align-items:center; gap:8px; font-size: 0.7rem; font-weight: 600;"><input type="checkbox" value="concluido" class="cb-status" style="width:auto; margin:0;"> CONCLUÍDO</label>
-                        <label style="display:flex; align-items:center; gap:8px; font-size: 0.7rem; font-weight: 600;"><input type="checkbox" value="cancelado" class="cb-status" style="width:auto; margin:0;"> CANCELADO</label>
-                    </div>
-                </details>
-            </div>
-            <div class="campo-filtro">
-                <label>Solicitante</label>
-                <input type="text" id="filtroSolicitante" placeholder="Nome...">
-            </div>
-            <div class="botoes-container">
-                <button onclick="window.renderPainel();" style="flex: 1; height: 100%; background: var(--primary); padding:0;">Filtrar</button>
-                <button onclick="window.limparFiltros()" style="flex: 1; height: 100%; background: gray; padding:0;">Limpar</button>
-            </div>
-        </div>
-        
-       <div id="indicador-filtro" style="display: none; text-align: center; color: var(--cobli-red); font-size: 0.75rem; font-weight: 700; margin-top: -10px; margin-bottom: 15px; letter-spacing: 1px;">
-            ⚠️ DADOS FILTRADOS, LIMPE A SELEÇÃO
-        </div>
-        
-        <div id="painel-conteudo" style="max-height: 500px; overflow-y: auto;"></div>
-    </div>
-
-    <div id="dashboard" class="aba">
-        <div class="flex-cards">
-            <div class="stats-card">Agendados<br><strong id="dash-agend" style="color: var(--primary);">0</strong></div>
-            <div class="stats-card">Concluídos <span style="font-size:0.6rem; color:#64748b; font-weight:normal;">(Inc. Impedidos)</span><br><strong id="dash-concluidos" style="color: var(--cobli-green);">0</strong></div>
-            <div class="stats-card">Programados <span style="font-size:0.6rem; color:#64748b; font-weight:normal;">(A acontecer)</span><br><strong id="dash-programados" style="color: #f59e0b;">0</strong></div>
-        </div>
-        
-        <div style="display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap;">
-            <div class="card" style="flex: 1; min-width: 300px; margin-bottom: 0;">
-                <h2 style="font-size: 1rem;">Distribuição por Prestador</h2>
-                <div style="position: relative; height: 280px; width: 100%;">
-                    <canvas id="chartPrestadores"></canvas>
+                <div id="lista-produtos"></div>
+                <p>Horas Necessárias: <strong><span id="horasNecessarias">0</span></strong></p>
+                
+                <div id="agenda-agendamento"></div>
+                
+                <div style="margin-top:15px; border-top: 1px solid #e2e8f0; padding-top: 15px;">
+                    <button onclick="window.proximoPasso(2)" style="background:gray;">Voltar</button>
+                    <button onclick="window.validarEAvancar()" style="background:var(--cobli-green);">Próximo</button>
+                    <button onclick="window.cancelarAgendamento()" class="btn-cancelar">Cancelar</button>
                 </div>
             </div>
             
-            <div class="card" style="flex: 1; min-width: 300px; margin-bottom: 0; max-height: 355px; display: flex; flex-direction: column;">
-                <h2 style="font-size: 1rem; flex-shrink: 0;">Tipos de Serviços/Manutenção</h2>
-                <div id="lista-dashboard-servicos" style="display: flex; flex-direction: column; gap: 8px; overflow-y: auto; padding-right: 5px; flex-grow: 1;">
-                    </div>
+            <div id="step-4" class="card" style="display:none;">
+                <h2>Dados do Cliente</h2>
+                <label class="req">Nº do Ticket</label>
+                <div style="display: flex; gap: 8px; margin-bottom: 12px;">
+                    <input id="ticket" placeholder="Ex: 123654789" required style="flex: 1;">
+                    <button type="button" id="btnChecarSequencia" onclick="window.verificarSequenciaEFOP()" style="background:var(--cobli-dark); color:white; padding:0 15px; border-radius:6px; font-size:12px; cursor:pointer; border:none; height: 42px;">Checar Sequência</button>
+                </div>
+                <label class="req">Nome do Cliente</label><input id="clienteNome" required>
+                <label class="req">CNPJ / CPF</label><input id="clienteCnpj" placeholder="00.000.000/0000-00" oninput="window.maskCPFCNPJ(this)" required>
+                <label class="req">Responsável pela solicitação (APEX)</label><input id="solicitante" required>
+                <label class="req">Responsável pelo acompanhamento (Local)</label><input id="respAcompanhamento" required>
+                <label class="req">Telefone do responsável</label><input id="telResponsavel" placeholder="(00) 00000-0000" oninput="window.maskPhone(this)" maxlength="15" required>
+                
+                <div style="margin-top:15px;">
+                    <button onclick="window.proximoPasso(3)" style="background:gray;">Voltar</button>
+                    <button id="btnConfirmar" onclick="window.revisarAgendamento()" style="background:var(--cobli-green);">Confirmar</button>
+                    <button onclick="window.cancelarAgendamento()" class="btn-cancelar">Cancelar</button>
+                </div>
             </div>
         </div>
+
+        <div id="cadastro" class="aba">
+            <div id="lista-prestadores-view" class="card">
+                <div id="btn-novo-container"></div> 
+                <div id="lista-prestadores"></div>
+            </div>
+            <div id="cadastro-flow" class="card" style="display:none;">
+                
+                <div id="etapa-1">
+                    <h3 style="margin-bottom: 20px; color: var(--primary);">Dados do Prestador</h3>
+                    
+                    <label class="req">Nome / Empresa</label>
+                    <input id="nomeEmpresa" required style="margin-bottom: 12px;">
+                    
+                    <label class="req">Endereço Completo (Ex: R. Lourenço Marques, 297 - Vila Olímpia)</label>
+                    <input id="endereco" required style="margin-bottom: 12px;">
+                    
+                    <div style="display: flex; gap: 10px; margin-bottom: 12px;">
+                        <div style="flex: 2;">
+                            <label class="req">Cidade</label>
+                            <input id="cidade" required>
+                        </div>
+                        <div style="flex: 1;">
+                            <label class="req">UF</label>
+                            <input id="uf" required maxlength="2" placeholder="SP">
+                        </div>
+                        <div style="flex: 1.5;">
+                            <label class="req">CEP</label>
+                            <input id="cep" required oninput="window.maskCEP(this)" placeholder="00000-000">
+                        </div>
+                    </div>
+
+                    <div style="display: flex; gap: 10px; margin-bottom: 12px;">
+                        <div style="flex: 1;">
+                            <label class="req">Responsável</label>
+                            <input id="responsavel" required>
+                        </div>
+                        <div style="flex: 1;">
+                            <label class="req">Telefone</label>
+                            <input id="contatoResponsavel" required oninput="window.maskPhone(this)" placeholder="(00) 00000-0000">
+                        </div>
+                    </div>
+
+                    <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                        <div style="flex: 1;">
+                            <label class="req">Qtd Técnicos</label>
+                            <input id="qtdTecnicos" type="number" required>
+                        </div>
+                        <div style="flex: 1;">
+                            <label class="req">Raio de Atuação (Km)</label>
+                            <input id="rangeAtendimento" type="number" required>
+                        </div>
+                        <div style="flex: 1.5;">
+                            <label>ID Field Control</label>
+                            <input id="fieldIdField" placeholder="Opcional">
+                        </div>
+                    </div>
+                </div>
         
-        <div class="card">
-            <h2 style="font-size: 1rem;">Volume por Localidade (Top 10)</h2>
-            <div style="position: relative; height: 250px; width: 100%;">
-                <canvas id="chartLocais"></canvas>
+                <div id="etapa-2" style="display:none;">
+                    <h3>Agenda Base</h3>
+                    <div id="agenda-cadastro"></div>
+                    
+                    <h3 style="margin-top: 30px; border-top: 1px solid #cbd5e1; padding-top: 20px; color: var(--cobli-red);">🛑 Ausências (Feriados / Férias / Imprevistos)</h3>
+                    <div style="background: #fff5f5; border: 1px solid #fecaca; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                        <div style="display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap;">
+                            <div style="flex: 1; min-width: 120px;">
+                                <label style="color: var(--cobli-red);">Data Inicial</label>
+                                <input type="date" id="dataBloqueio" style="border-color: #fca5a5; background: white;">
+                            </div>
+                            <div style="flex: 1; min-width: 120px;">
+                                <label style="color: var(--cobli-red);">Data Final (Opcional)</label>
+                                <input type="date" id="dataBloqueioFim" style="border-color: #fca5a5; background: white;">
+                            </div>
+                            <div style="flex: 1; min-width: 120px;">
+                                <label style="color: var(--cobli-red);">Tipo</label>
+                                <select id="tipoBloqueio" onchange="window.toggleTipoBloqueio()" style="border-color: #fca5a5; background: white;">
+                                    <option value="total">Dia Inteiro</option>
+                                    <option value="parcial">Horário Específico</option>
+                                </select>
+                            </div>
+                            <div style="flex: 0.5; min-width: 80px;">
+                                <label style="color: var(--cobli-red);">Qtd. Téc.</label>
+                                <input type="number" id="qtdBloqueio" value="1" min="1" style="border-color: #fca5a5; background: white;">
+                            </div>
+                            <div id="boxHoraBloqueio" style="display: none; gap: 10px; flex: 2; min-width: 200px;">
+                                <div style="flex: 1;">
+                                    <label style="color: var(--cobli-red);">Início</label>
+                                    <select id="horaInicioBloqueio" style="border-color: #fca5a5; background: white;">
+                                        <option value="">Sel...</option>
+                                        <option value="8">08:00</option><option value="9">09:00</option>
+                                        <option value="10">10:00</option><option value="11">11:00</option>
+                                        <option value="12">12:00</option><option value="13">13:00</option>
+                                        <option value="14">14:00</option><option value="15">15:00</option>
+                                        <option value="16">16:00</option><option value="17">17:00</option>
+                                        <option value="18">18:00</option>
+                                    </select>
+                                </div>
+                                <div style="flex: 1;">
+                                    <label style="color: var(--cobli-red);">Fim</label>
+                                    <select id="horaFimBloqueio" style="border-color: #fca5a5; background: white;">
+                                        <option value="">Sel...</option>
+                                        <option value="9">09:00</option><option value="10">10:00</option>
+                                        <option value="11">11:00</option><option value="12">12:00</option>
+                                        <option value="13">13:00</option><option value="14">14:00</option>
+                                        <option value="15">15:00</option><option value="16">16:00</option>
+                                        <option value="17">17:00</option><option value="18">18:00</option>
+                                        <option value="19">19:00</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <button onclick="window.adicionarBloqueioData()" style="height: 42px; background: var(--cobli-red); min-width: 100px;">Adicionar</button>
+                        </div>
+                        <div id="lista-datas-bloqueadas" style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 15px;"></div>
+                    </div>
+                </div>
+                <div style="margin-top:20px; display: flex; gap: 8px; flex-wrap: wrap;">
+                    <button id="btn-voltar" onclick="window.mudarEtapa(-1)">Voltar</button>
+                    <button id="btn-proximo" onclick="window.mudarEtapa(1)">Próximo</button>
+                    <button id="btn-concluir" onclick="window.salvarPrestador(this)" style="background: var(--cobli-green);">Concluir</button>
+                    <button id="btn-limpar-agenda" onclick="window.limparAgendaCadastro()" style="background: #f59e0b; color: white; border: none; display:none;">🧹 Limpar Agenda</button>
+                    <button onclick="window.cancelarCadastro()" class="btn-cancelar">Cancelar</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="painel" class="aba">
+            <div style="display: flex; align-items: center; background: white; padding: 12px; border-radius: 8px; border: 1px solid #e5e7eb; margin-bottom: 10px; overflow-x: auto;">
+                <div style="display: flex; flex: 1; justify-content: space-between; min-width: 650px;">
+                    <div style="flex: 1; text-align: center; border-right: 1px solid #e5e7eb; padding: 0 10px;">
+                        <div style="font-size: 0.65rem; color: #64748b; font-weight: 700; text-transform: uppercase;">Solicitado</div>
+                        <div style="font-size: 1.2rem; font-weight: 800; color: var(--primary);" id="st-solicitado">0</div>
+                    </div>
+                    <div style="flex: 1; text-align: center; border-right: 1px solid #e5e7eb; padding: 0 10px;">
+                        <div style="font-size: 0.65rem; color: #64748b; font-weight: 700; text-transform: uppercase;">Em Negociação</div>
+                        <div style="font-size: 1.2rem; font-weight: 800; color: var(--primary);" id="st-negociacao">0</div>
+                    </div>
+                    <div style="flex: 1; text-align: center; border-right: 1px solid #e5e7eb; padding: 0 10px;">
+                        <div style="font-size: 0.65rem; color: #64748b; font-weight: 700; text-transform: uppercase;">Agendado</div>
+                        <div style="font-size: 1.2rem; font-weight: 800; color: var(--primary);" id="st-agendado">0</div>
+                    </div>
+                    <div style="flex: 1; text-align: center; border-right: 1px solid #e5e7eb; padding: 0 10px;">
+                        <div style="font-size: 0.65rem; color: #64748b; font-weight: 700; text-transform: uppercase;">Em Andamento</div>
+                        <div style="font-size: 1.2rem; font-weight: 800; color: var(--primary);" id="st-andamento">0</div>
+                    </div>
+                    <div style="flex: 1; text-align: center; border-right: 1px solid #e5e7eb; padding: 0 10px;">
+                        <div style="font-size: 0.65rem; color: #64748b; font-weight: 700; text-transform: uppercase;">Impedido</div>
+                        <div style="font-size: 1.2rem; font-weight: 800; color: var(--cobli-red);" id="st-impedido">0</div>
+                    </div>
+                    <div style="flex: 1; text-align: center; border-right: 1px solid #e5e7eb; padding: 0 10px;">
+                        <div style="font-size: 0.65rem; color: #64748b; font-weight: 700; text-transform: uppercase;">Concluído</div>
+                        <div style="font-size: 1.2rem; font-weight: 800; color: var(--cobli-green);" id="st-concluido">0</div>
+                    </div>
+                    <div style="flex: 1; text-align: center; padding: 0 10px;">
+                        <div style="font-size: 0.65rem; color: #64748b; font-weight: 700; text-transform: uppercase;">Cancelado</div>
+                        <div style="font-size: 1.2rem; font-weight: 800; color: #64748b;" id="st-cancelado">0</div>
+                    </div>
+                </div>
+                <div style="width: 1px; height: 35px; background: #e5e7eb; margin: 0 15px;"></div>
+                <button onclick="window.atualizarTodosStatus()" style="background:var(--cobli-green); height: 36px; padding: 0 15px; font-size: 0.85rem; border-radius: 6px; border: none; color: white; cursor: pointer; white-space: nowrap;">
+                    🔄 Update
+                </button>
+            </div>
+
+            <div class="grid-filtros">
+                <div class="campo-filtro">
+                    <label>Início</label>
+                    <input type="date" id="filtroDataInicio">
+                </div>
+                <div class="campo-filtro">
+                    <label>Fim</label>
+                    <input type="date" id="filtroDataFim">
+                </div>
+                <div class="campo-filtro">
+                    <label>Ticket</label>
+                    <input type="text" id="filtroTicket" placeholder="Nº OS">
+                </div>
+                <div class="campo-filtro">
+                    <label>Prestador</label>
+                    <details id="dropdown-prestador" onmouseleave="this.removeAttribute('open')" style="background: white; border: 1px solid #cbd5e1; border-radius: 6px; cursor: pointer; position: relative; width: 100%;">
+                        <summary style="padding: 8px; font-size: 0.8rem; list-style: none;">👷 Selecionar...</summary>
+                        <div id="container-prestadores" style="position: absolute; top: 100%; left: 0; background: white; border: 1px solid #cbd5e1; border-radius: 6px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); padding: 10px; z-index: 1000; display: flex; flex-direction: column; gap: 8px; min-width: 180px; max-height: 200px; overflow-y: auto;">
+                        </div>
+                    </details>
+                </div>
+                <div class="campo-filtro">
+                    <label>Status</label>
+                    <details id="dropdown-status" onmouseleave="this.removeAttribute('open')" style="background: white; border: 1px solid #cbd5e1; border-radius: 6px; cursor: pointer; position: relative; width: 100%;">
+                        <summary style="padding: 8px; font-size: 0.8rem; list-style: none;">📑 Selecionar...</summary>
+                        <div style="position: absolute; top: 100%; left: 0; background: white; border: 1px solid #cbd5e1; border-radius: 6px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); padding: 10px; z-index: 1000; display: flex; flex-direction: column; gap: 8px; min-width: 160px;">
+                            <label style="display:flex; align-items:center; gap:8px; font-size: 0.7rem; font-weight: 600;"><input type="checkbox" value="solicitado" class="cb-status" style="width:auto; margin:0;"> SOLICITADO</label>
+                            <label style="display:flex; align-items:center; gap:8px; font-size: 0.7rem; font-weight: 600;"><input type="checkbox" value="negociacao" class="cb-status" style="width:auto; margin:0;"> NEGOCIAÇÃO</label>
+                            <label style="display:flex; align-items:center; gap:8px; font-size: 0.7rem; font-weight: 600;"><input type="checkbox" value="agendado" class="cb-status" style="width:auto; margin:0;"> AGENDADO</label>
+                            <label style="display:flex; align-items:center; gap:8px; font-size: 0.7rem; font-weight: 600;"><input type="checkbox" value="andamento" class="cb-status" style="width:auto; margin:0;"> ANDAMENTO</label>
+                            <label style="display:flex; align-items:center; gap:8px; font-size: 0.7rem; font-weight: 600;"><input type="checkbox" value="impedido" class="cb-status" style="width:auto; margin:0;"> IMPEDIDO</label>
+                            <label style="display:flex; align-items:center; gap:8px; font-size: 0.7rem; font-weight: 600;"><input type="checkbox" value="concluido" class="cb-status" style="width:auto; margin:0;"> CONCLUÍDO</label>
+                            <label style="display:flex; align-items:center; gap:8px; font-size: 0.7rem; font-weight: 600;"><input type="checkbox" value="cancelado" class="cb-status" style="width:auto; margin:0;"> CANCELADO</label>
+                        </div>
+                    </details>
+                </div>
+                <div class="campo-filtro">
+                    <label>Solicitante</label>
+                    <input type="text" id="filtroSolicitante" placeholder="Nome...">
+                </div>
+                <div class="botoes-container">
+                    <button onclick="window.renderPainel();" style="flex: 1; height: 100%; background: var(--primary); padding:0;">Filtrar</button>
+                    <button onclick="window.limparFiltros()" style="flex: 1; height: 100%; background: gray; padding:0;">Limpar</button>
+                </div>
+            </div>
+            
+           <div id="indicador-filtro" style="display: none; text-align: center; color: var(--cobli-red); font-size: 0.75rem; font-weight: 700; margin-top: -10px; margin-bottom: 15px; letter-spacing: 1px;">
+                ⚠️ DADOS FILTRADOS, LIMPE A SELEÇÃO
+            </div>
+            
+            <div id="painel-conteudo" style="max-height: 500px; overflow-y: auto;"></div>
+        </div>
+
+        <div id="dashboard" class="aba">
+            <div class="flex-cards">
+                <div class="stats-card">Agendados<br><strong id="dash-agend" style="color: var(--primary);">0</strong></div>
+                <div class="stats-card">Concluídos <span style="font-size:0.6rem; color:#64748b; font-weight:normal;">(Inc. Impedidos)</span><br><strong id="dash-concluidos" style="color: var(--cobli-green);">0</strong></div>
+                <div class="stats-card">Programados <span style="font-size:0.6rem; color:#64748b; font-weight:normal;">(A acontecer)</span><br><strong id="dash-programados" style="color: #f59e0b;">0</strong></div>
+            </div>
+            
+            <div style="display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap;">
+                <div class="card" style="flex: 1; min-width: 300px; margin-bottom: 0;">
+                    <h2 style="font-size: 1rem;">Distribuição por Prestador</h2>
+                    <div style="position: relative; height: 280px; width: 100%;">
+                        <canvas id="chartPrestadores"></canvas>
+                    </div>
+                </div>
+                
+                <div class="card" style="flex: 1; min-width: 300px; margin-bottom: 0; max-height: 355px; display: flex; flex-direction: column;">
+                    <h2 style="font-size: 1rem; flex-shrink: 0;">Tipos de Serviços/Manutenção</h2>
+                    <div id="lista-dashboard-servicos" style="display: flex; flex-direction: column; gap: 8px; overflow-y: auto; padding-right: 5px; flex-grow: 1;">
+                        </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <h2 style="font-size: 1rem;">Volume por Localidade (Top 10)</h2>
+                <div style="position: relative; height: 250px; width: 100%;">
+                    <canvas id="chartLocais"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div id="usuarios" class="aba">
+            <div class="card">
+                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; padding-bottom: 15px; margin-bottom: 15px;">
+                    <h2 style="border:none; margin:0;">Gestão de Acessos</h2>
+                    <button onclick="carregarListaUsuarios()" style="background: var(--cobli-green);">🔄 Atualizar Tabela</button>
+                </div>
+                <p style="font-size: 0.85rem; color: #64748b;">Apenas Administradores podem alterar permissões.</p>
+                <table style="width: 100%; border-collapse: collapse; margin-top: 15px;">
+                    <thead>
+                        <tr>
+                            <th>Usuário / E-mail</th>
+                            <th>Nível de Acesso</th>
+                            <th>Data de Criação</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabela-usuarios-body"></tbody>
+                </table>
             </div>
         </div>
     </div>
 </div>
 
 <script>
+// ==========================================
+// CONFIGURAÇÕES SUPABASE
+// ==========================================
+const SUPABASE_URL = 'https://fqaqlofndeihmhkopvan.supabase.co'; 
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZxYXFsb2ZuZGVpaG1oa29wdmFuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcyMjU4ODIsImV4cCI6MjA5MjgwMTg4Mn0.nauPYoB9RDhLLueMEuop2H2FxdChjIxFkAmBcYbJLzc'; 
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+const API_URL = 'https://fqaqlofndeihmhkopvan.supabase.co/functions/v1/smart-service'; 
+const DB_URL = 'https://fqaqlofndeihmhkopvan.supabase.co/rest/v1'; 
+const EDGE_URL = 'https://fqaqlofndeihmhkopvan.supabase.co/functions/v1/integracao-v2-interna';
+const ANON_KEY = SUPABASE_KEY;
+
+function getHeaders() { 
+    return { 
+        'Content-Type': 'application/json', 
+        'apikey': ANON_KEY, 
+        'Authorization': `Bearer ${ANON_KEY}` 
+    }; 
+} 
+
+const ADMIN_EMAILS = ["luiz.lackeski@cobli.co", "fernando.souza@cobli.co", "anni.torrecilhas@cobli.co"];
+let currentUser = null, userRole = 'PRESTADOR';
+
+// --- CONTROLE DE TELAS DE AUTH ---
+function showAuthCard(id) { document.querySelectorAll('.auth-card').forEach(c => c.style.display = 'none'); document.getElementById(id).style.display = 'block'; }
+function togglePass(id) { const el = document.getElementById(id); el.type = el.type === 'password' ? 'text' : 'password'; }
+
+async function authAction(type) {
+    if (type === 'signup') {
+        const em = document.getElementById('signup-email').value, pw = document.getElementById('signup-password').value, btn = document.getElementById('btnSignup');
+        if(!em || pw.length < 6) return window.showMessage("Preencha e-mail e senha de 6 dígitos.");
+        btn.innerText = "Criando..."; const { error } = await supabase.auth.signUp({ email: em, password: pw }); btn.innerText = "Criar Acesso";
+        if(error) return window.showMessage("Erro: " + error.message);
+        window.showToast("Sucesso! Faça o login."); document.getElementById('login-email').value = em; showAuthCard('card-login');
+    } else if (type === 'login') {
+        const em = document.getElementById('login-email').value, pw = document.getElementById('login-password').value, btn = document.getElementById('btnLogin'), err = document.getElementById('login-error');
+        btn.innerText = "Autenticando..."; err.style.display = 'none';
+        const { error } = await supabase.auth.signInWithPassword({ email: em, password: pw });
+        if(error) { btn.innerText = "Entrar"; err.style.display = 'block'; } else window.location.reload();
+    } else if (type === 'reset') {
+        const em = document.getElementById('reset-email').value, btn = document.getElementById('btnReset');
+        if(!em) return window.showMessage("Digite o e-mail.");
+        btn.innerText = "Enviando..."; const { error } = await supabase.auth.resetPasswordForEmail(em); btn.innerText = "Enviar Link";
+        if(error) return window.showMessage("Erro: " + error.message); window.showToast("Link enviado!"); showAuthCard('card-login');
+    }
+}
+
+async function checkSession() {
+    const { data: { session } } = await supabase.auth.getSession();
+    if(session) {
+        currentUser = session.user; document.getElementById('auth-overlay').style.display='none'; document.body.style.display='block';
+        await definirPermissoes(currentUser.email, currentUser.id);
+        if(userRole === 'ADMIN') { document.getElementById('integrations-control').style.display='flex'; carregarListaUsuarios(); }
+        if(window.carregarProdutos) window.carregarProdutos(); 
+        await carregarDadosDoBanco();
+    } else { document.getElementById('auth-overlay').style.display='flex'; document.body.style.display='block'; }
+}
+
+async function definirPermissoes(email, uid) {
+    const { data } = await supabase.from('perfis_usuarios').select('nivel').eq('id', uid).single();
+    userRole = data ? data.nivel : (ADMIN_EMAILS.includes(email.toLowerCase()) ? 'ADMIN' : (email.endsWith('@cobli.co') ? 'USUARIO' : 'PRESTADOR'));
+    document.getElementById('user-display').innerText = `${email} | ${userRole}`;
+    
+    let sol = document.getElementById('solicitante');
+    if(sol) sol.value = email.endsWith('@cobli.co') ? email.split('@')[0].replace('.',' ') : email;
+
+    if(userRole !== 'ADMIN') document.getElementById('btn-usuarios').style.display = 'none';
+    if(userRole === 'PRESTADOR') {
+        document.querySelector('.menu-left button[onclick*="consulta"]').style.display = 'none';
+        document.querySelector('.menu-left button[onclick*="cadastro"]').style.display = 'none';
+        document.querySelector('.menu-left button[onclick*="dashboard"]').style.display = 'none';
+        window.trocarAba('painel', document.querySelector('.menu-left button[onclick*="painel"]'));
+    }
+}
+
+async function handleLogout() { await supabase.auth.signOut(); window.location.reload(); }
+
+async function carregarListaUsuarios() {
+    const tb = document.getElementById('tabela-usuarios-body'); tb.innerHTML = '<tr><td colspan="3" align="center">Carregando...</td></tr>';
+    const { data, error } = await supabase.from('perfis_usuarios').select('*').order('created_at', { ascending: false });
+    if(error) return tb.innerHTML = '<tr><td colspan="3" align="center" style="color:red">Erro ao carregar do Supabase.</td></tr>';
+    tb.innerHTML = data.map(u => `<tr><td style="padding:12px; border-bottom:1px solid #e2e8f0; font-weight:bold;">${u.email}</td><td style="padding:12px; border-bottom:1px solid #e2e8f0;"><select onchange="window.mudarNivelUsuario('${u.id}', this.value)" style="padding:4px; font-weight:bold; border:none; background:${u.nivel==='ADMIN'?'#fee2e2':u.nivel==='USUARIO'?'#e0e7ff':'#dcfce7'}; color:${u.nivel==='ADMIN'?'#ef4444':u.nivel==='USUARIO'?'#4338ca':'#15803d'}"><option value="PRESTADOR" ${u.nivel==='PRESTADOR'?'selected':''}>PRESTADOR</option><option value="USUARIO" ${u.nivel==='USUARIO'?'selected':''}>USUARIO</option><option value="ADMIN" ${u.nivel==='ADMIN'?'selected':''}>ADMIN</option></select></td><td style="padding:12px; border-bottom:1px solid #e2e8f0;">${new Date(u.created_at).toLocaleDateString()}</td></tr>`).join('');
+}
+window.mudarNivelUsuario = async (id, nv) => { const { error } = await supabase.from('perfis_usuarios').update({ nivel: nv }).eq('id', id); error ? window.showMessage("Erro ao atualizar.") : window.showToast("Nível salvo!"); };
+
+
+// ==========================================
+// LÓGICA ORIGINAL DO SISTEMA (ABAIXO)
+// ==========================================
+
     let filtradosPainel = []; 
     let myChart = null; 
     let chartLocais = null;
@@ -563,6 +724,7 @@
     let datasBloqueadasTemp = [];
     window.agendaDiasDisponiveis = [];
     window.agendaPaginaAtual = 0;
+    let prestadores = [], itensSelecionados = [], agendamentos = [], etapa = 1, editingIndex = -1, prestadorSelecionadoIndex = null;
 
     function formatarTempo(minutos) {
         if (minutos === 0) return "0h";
@@ -703,10 +865,10 @@ window.abrirOpcoesPrestador = function(i) {
 };
     
     window.enviarNotificacaoSlack = async function(msg) {
-        const SUPABASE_URL = "https://fqaqlofndeihmhkopvan.supabase.co/functions/v1/notificar-slack";
+        const SUPABASE_SLACK_URL = "https://fqaqlofndeihmhkopvan.supabase.co/functions/v1/notificar-slack";
         try {
             console.log("🚀 Disparando para o Slack..."); 
-            const res = await fetch(SUPABASE_URL, {
+            const res = await fetch(SUPABASE_SLACK_URL, {
                 method: 'POST',
                 headers: getHeaders(), 
                 body: JSON.stringify({ text: msg })
@@ -755,61 +917,6 @@ window.buscarEnderecoPorCep = async function() {
     }
 };
 
-const ADMIN_EMAILS = ["luiz.lackeski@cobli.co", "fernando.souza@cobli.co", "anni.torrecilhas@cobli.co"];
-let isAuthorized = false;
-
-function checkAuth() {
-    const email = localStorage.getItem('userEmail');
-    const emailRegex = /^[a-z0-9_-]+\.[a-z0-9_-]+@cobli\.co$/i;
-
-    if (email && emailRegex.test(email)) {
-        document.getElementById('login-overlay').style.display = 'none';
-        isAuthorized = ADMIN_EMAILS.includes(email.toLowerCase());
-        document.getElementById('user-display').innerText = email;
-        
-        const panel = document.getElementById('integrations-control');
-        if(isAuthorized && panel) panel.style.display = 'flex';
-        
-        if(window.renderizarListaPrestadores) window.renderizarListaPrestadores();
-    } else {
-        localStorage.removeItem('userEmail');
-        document.getElementById('login-overlay').style.display = 'flex';
-    }
-}
-window.performLogin = function() {
-    const emailInput = document.getElementById('loginEmail');
-    const email = emailInput.value.trim().toLowerCase();
-    const emailRegex = /^[a-z0-9_-]+\.[a-z0-9_-]+@cobli\.co$/i;
-    if (!email) {
-        return window.showMessage("Por favor, digite seu e-mail.");
-    }
-    if (!emailRegex.test(email)) {
-        return window.showMessage("Acesso restrito. Use o padrão nome.sobrenome@cobli.co");
-    }
-    localStorage.setItem('userEmail', email);
-    window.location.reload(); 
-}
-window.logout = function() {
-    localStorage.removeItem('userEmail');
-    window.location.href = window.location.href; 
-}
-checkAuth();
-
-// --- CONFIGURAÇÃO DE URLs ---
-const API_URL = 'https://fqaqlofndeihmhkopvan.supabase.co/functions/v1/smart-service'; 
-const DB_URL = 'https://fqaqlofndeihmhkopvan.supabase.co/rest/v1'; 
-const EDGE_URL = 'https://fqaqlofndeihmhkopvan.supabase.co/functions/v1/integracao-v2-interna';
-
-const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZxYXFsb2ZuZGVpaG1oa29wdmFuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcyMjU4ODIsImV4cCI6MjA5MjgwMTg4Mn0.nauPYoB9RDhLLueMEuop2H2FxdChjIxFkAmBcYbJLzc';
-
-function getHeaders() { 
-    return { 
-        'Content-Type': 'application/json', 
-        'apikey': ANON_KEY, 
-        'Authorization': `Bearer ${ANON_KEY}` 
-    }; 
-} 
-    let prestadores = [], itensSelecionados = [], agendamentos = [], etapa = 1, editingIndex = -1, prestadorSelecionadoIndex = null;
  const serviçosDisponíveis = {
     "Telemetria": [
         {desc:"Instalado veículos leves ou pesados", tempo:40, id_field: "b2098d2f-c060-445b-8e4b-bdcc5b6e613a"},
@@ -835,13 +942,12 @@ function getHeaders() {
     ]
 };
     
-window.onload = async () => { carregarProdutos(); await carregarDadosDoBanco(); };
 
 async function carregarDadosDoBanco() { 
     try { 
         const resP = await fetch(`${API_URL}/prestadores`, { headers: getHeaders() }); 
         prestadores = await resP.json(); 
-        renderizarListaPrestadores(); 
+        if (userRole !== 'PRESTADOR') renderizarListaPrestadores(); 
 
         const resA = await fetch(`${DB_URL}/agendamentos?select=*&order=created_at.desc`, { 
             method: 'GET',
@@ -852,7 +958,7 @@ async function carregarDadosDoBanco() {
         agendamentos = Array.isArray(dataAgend) ? dataAgend : [];
         
         renderPainel(); 
-        renderDashboard(); 
+        if (userRole !== 'PRESTADOR') renderDashboard(); 
         setTimeout(() => {
             ['slackSwitch', 'fieldSwitch', 'dbSwitch'].forEach(id => {
                 const el = document.getElementById(id);
@@ -1005,10 +1111,10 @@ window.abrirDetalhesAgendamento = function(index) {
     let a = filtradosPainel[index];
     const enderecoCompleto = `${a.rua || ''}, ${a.numero || 'S/N'} - ${a.bairro || ''}, ${a.cidade || ''}/${a.uf || ''} - CEP: ${a.cep || ''}`;
     const contatoResponsavel = `${a.acompanhamento || 'Não informado'} | ${a.telefone_responsavel || 'Sem telefone'}`;
-    let prodHtml = a.produtos ? a.produtos.replace(/\n/g, '<br>') : 'Sem produtos detalhados';
+    let prodHtml = a.produtos_texto ? a.produtos_texto.replace(/\n/g, '<br>') : 'Sem produtos detalhados';
 
-    let btnSincronizarHtml = `<button onclick="event.stopPropagation(); window.sincronizarStatusModal('${a.ticket}', this, ${index})" style="background:var(--cobli-green); flex:1; padding:10px;">🔄 Atualizar Status</button>`;
-    let btnExcluirHtml = isAuthorized ? `<button onclick="window.excluirAgendamento(${a.id}, '${a.data}')" class="btn-cancelar" style="flex:1; padding:10px;">Excluir</button>` : '';
+    let btnSincronizarHtml = (userRole==='ADMIN' || userRole==='USUARIO') ? `<button onclick="event.stopPropagation(); window.sincronizarStatusModal('${a.ticket}', this, ${index})" style="background:var(--cobli-green); flex:1; padding:10px;">🔄 Atualizar Status</button>` : '';
+    let btnExcluirHtml = userRole==='ADMIN' ? `<button onclick="window.excluirAgendamento(${a.id}, '${a.data}')" class="btn-cancelar" style="flex:1; padding:10px;">Excluir</button>` : '';
 
     let html = `
         <div style="background: white; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 15px;">
@@ -1078,7 +1184,7 @@ window.excluirAgendamento = function(id, dataStr) {
         const dataAgendamento = new Date(y, m - 1, d);
         const hoje = new Date();
         hoje.setHours(0, 0, 0, 0); 
-        if (dataAgendamento < hoje && !isAuthorized) {
+        if (dataAgendamento < hoje && userRole!=='ADMIN') {
             return window.showMessage("❌ <strong>Ação Negada:</strong><br><br>Não é permitido excluir agendamentos com data retroativa para preservar o histórico da operação.");
         }
     }
@@ -1220,9 +1326,9 @@ window.concluirAgendamentoFinal = async function(btn) {
     const dataSelecionada = sel.length > 0 ? sel[0].dataset.date : null;
     const prestador = prestadores[prestadorSelecionadoIndex];
     
-    const dispararSlack = isAuthorized ? (document.getElementById('slackSwitch').value === 'ON') : true;
-    const dispararField = isAuthorized ? (document.getElementById('fieldSwitch').value === 'ON') : true;
-    const dispararBanco = isAuthorized ? (document.getElementById('dbSwitch').value === 'ON') : true;
+    const dispararSlack = userRole==='ADMIN' ? (document.getElementById('slackSwitch').value === 'ON') : true;
+    const dispararField = userRole==='ADMIN' ? (document.getElementById('fieldSwitch').value === 'ON') : true;
+    const dispararBanco = userRole==='ADMIN' ? (document.getElementById('dbSwitch').value === 'ON') : true;
 
     if (!prestador || slotsSelecionados.length === 0) {
         window.showMessage("Erro: Selecione o prestador e o horário.");
@@ -1323,6 +1429,7 @@ window.trocarAba = function(id, btn){
     if(btn) btn.classList.add('ativo'); 
     if(id === 'painel') window.atualizarFiltrosPrestador(); 
     if(id === 'dashboard') window.renderDashboard(); 
+    if(id === 'usuarios') carregarListaUsuarios();
 };
 
 // --- NOVO MOTOR MATEMÁTICO DE AGENDA ---
@@ -1506,10 +1613,6 @@ window.proximoPasso = async function(n) {
     } 
 };
 
-// --- VARIÁVEIS GLOBAIS DA PAGINAÇÃO ---
-window.agendaDiasDisponiveis = [];
-window.agendaPaginaAtual = 0;
-
 window.rdaAgendamento = function() { 
     let p = prestadores[prestadorSelecionadoIndex]; 
     let container = document.getElementById("agenda-agendamento"); 
@@ -1669,7 +1772,7 @@ window.validarEAvancar = function() {
     if (sel.length === 0) return window.showMessage("Selecione horário!"); 
     if (sel.length !== horas && horas > 0) return window.showMessage("Selecione exatamente " + horas + " hora(s)!"); 
     
-    const emailLogado = localStorage.getItem('userEmail');
+    const emailLogado = currentUser ? currentUser.email : null;
     const campoSolicitante = document.getElementById('solicitante');
         if (emailLogado && campoSolicitante) {
         campoSolicitante.value = extrairNomeDoEmail(emailLogado);
@@ -1772,14 +1875,12 @@ window.abrirCadastro = function(index = -1){
         document.getElementById("fieldIdField").value = p.field_id || ""; 
         
         if(p.agenda) { 
-            // 1. Carrega os horários normais na grade
             p.agenda.forEach(item => { 
-                if (item.isAbsence) return; // Pula as ausências para não pintar a grade
+                if (item.isAbsence) return; 
                 let cells = document.querySelectorAll("#agenda-cadastro .cell"); 
                 cells.forEach(c => { if(c.dataset.dia == item.dia && c.dataset.hora == item.hora) c.classList.add("selecionado"); }); 
             }); 
             
-            // 2. Extrai e limpa as ausências passadas automaticamente!
             let hoje = new Date();
             hoje.setHours(0,0,0,0);
             
@@ -1788,7 +1889,7 @@ window.abrirCadastro = function(index = -1){
             })).filter(b => {
                 let parts = b.data.split('/');
                 let dataB = new Date(parts[2], parts[1] - 1, parts[0]);
-                return dataB >= hoje; // Só mantém as datas que ainda não passaram
+                return dataB >= hoje;
             });
             window.renderizarDatasBloqueadas();
         } 
@@ -1802,7 +1903,6 @@ window.abrirCadastro = function(index = -1){
     document.getElementById('tipoBloqueio').value = 'total';
     document.getElementById('qtdBloqueio').value = '1';
     
-    // Limpa bordas vermelhas que possam ter ficado de outro cadastro
     document.querySelectorAll('#etapa-1 input').forEach(el => {
         el.style.borderColor = '#cbd5e1';
         el.style.backgroundColor = 'white';
@@ -1892,10 +1992,10 @@ window.mudarEtapa = function(dir) {
 };
 
 window.renderizarListaPrestadores = function(){ 
-    document.getElementById("btn-novo-container").innerHTML = isAuthorized ? `<button onclick="window.abrirCadastro()" style="margin-bottom: 20px;">+ Novo Prestador</button>` : '';
+    document.getElementById("btn-novo-container").innerHTML = (userRole === 'ADMIN') ? `<button onclick="window.abrirCadastro()" style="margin-bottom: 20px;">+ Novo Prestador</button>` : '';
     
     document.getElementById("lista-prestadores").innerHTML = prestadores.map((p, i) => {
-        const acaoClique = isAuthorized ? `window.abrirOpcoesPrestador(${i})` : `window.abrirDetalhesPrestador(${i})`;
+        const acaoClique = (userRole === 'ADMIN') ? `window.abrirOpcoesPrestador(${i})` : `window.abrirDetalhesPrestador(${i})`;
 
         return `
         <div class="painel-item" 
@@ -2007,6 +2107,12 @@ window.renderPainel = function(){
     if(indicador) indicador.style.display = temFiltroAtivo ? 'block' : 'none';
 
     filtradosPainel = agendamentos.filter(a => { 
+        if(userRole === 'PRESTADOR') {
+            let nPrest = currentUser.email.split('@')[0].toLowerCase().replace(/\s/g, '');
+            let nOS = (a.prestador || "").toLowerCase().replace(/\s/g, '');
+            if(!nOS.includes(nPrest) && !nPrest.includes(nOS)) return false;
+        }
+
         if(!a.data || !a.ticket) return false;
         let [d, m, y] = a.data.split('/'); 
         let dataAgendada = `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
@@ -2158,8 +2264,8 @@ window.renderDashboard = function() {
             distLocais[local] = (distLocais[local] || 0) + 1;
         }
 
-        if (typeof a.produtos === 'string' && a.produtos.includes('•')) {
-            let linhas = a.produtos.split('\n');
+        if (typeof a.produtos_texto === 'string' && a.produtos_texto.includes('•')) {
+            let linhas = a.produtos_texto.split('\n');
             linhas.forEach(linha => {
                 let match = linha.match(/• \[(.*?)\] (.*?) \(Qtd: (\d+)\)/);
                 if (match) {
@@ -2259,6 +2365,9 @@ window.renderDashboard = function() {
         });
     }
 };
+
+// 8. START SESSION
+checkSession();
 </script>
 </body>
 </html>
