@@ -2149,9 +2149,10 @@ window.renderDashboard = function() {
                 }, 
                 scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } 
             },
-            plugins: [ChartDataLabels]
+             plugins: [ChartDataLabels]
         });
     }
+};
 
     let servicosOrdenados = Object.entries(distServ).sort((a,b) => b[1] - a[1]);
     let listaHtml = servicosOrdenados.map(s => {
