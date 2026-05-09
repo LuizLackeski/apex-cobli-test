@@ -149,67 +149,7 @@
 <div id="toast"></div>
 
 <div id="auth-overlay">
-    <div class="auth-card" id="card-login">
-        <div class="logo-circle"></div>
-        <h2>APEX Cobli</h2>
-        <p>Gestão de Prestadores e Serviços</p>
-        <div class="input-group"><label>E-mail</label><input type="email" id="login-email" placeholder="seu.nome@cobli.co"></div>
-        <div class="input-group">
-            <label>Senha</label><input type="password" id="login-password" placeholder="••••••••">
-            <span class="pass-toggle" onclick="togglePass('login-password')">👁️</span>
-        </div>
-        <button class="auth-btn" id="btnLogin" onclick="authAction('login')">Entrar</button>
-        <div id="login-error" style="color: var(--cobli-red); font-size: 0.8rem; margin-top: 10px; display: none; font-weight: bold;">Credenciais inválidas.</div>
-        <div class="auth-links">
-            <a onclick="showAuthCard('card-forgot')">Esqueci minha senha</a>
-            <a onclick="showAuthCard('card-signup')">Não tem conta? <span>Cadastre-se</span></a>
-        </div>
-    </div>
-
-    <div class="auth-card" id="card-signup" style="display:none;">
-        <div class="logo-circle"></div>
-        <h2>Criar Conta</h2>
-        <p>Use seu e-mail @cobli.co ou @apex.co</p>
-        <div class="input-group"><label>E-mail</label><input type="email" id="signup-email" placeholder="nome@cobli.co"></div>
-        <div class="input-group">
-            <label>Senha</label><input type="password" id="signup-password" placeholder="Mínimo de 6 caracteres">
-            <span class="pass-toggle" onclick="togglePass('signup-password')">👁️</span>
-        </div>
-        <button class="auth-btn" id="btnSignup" onclick="authAction('signup')">Criar Acesso</button>
-        <div class="auth-links"><a onclick="showAuthCard('card-login')">Já possui conta? <span>Faça login</span></a></div>
-    </div>
-
-    <div class="auth-card" id="card-forgot" style="display:none;">
-        <div class="logo-circle"></div>
-        <h2>Recuperar Senha</h2>
-        <p>Enviaremos um link para o seu e-mail</p>
-        <div class="input-group"><label>E-mail Cadastrado</label><input type="email" id="reset-email" placeholder="seu@email.co"></div>
-        <button class="auth-btn" id="btnReset" onclick="authAction('reset')">Enviar Link</button>
-        <div class="auth-links"><a onclick="showAuthCard('card-login')">⬅ Voltar ao Login</a></div>
-    </div>
-</div>
-
-<div id="app-content"> ```
-
-*(Não esqueça de colocar um `</div>` na linha logo **antes** da tag `<script>` lá no final do seu arquivo, para fechar esse `app-content`)*.
-
----
-
-### Bloco 4: Atualizar Menu e Adicionar Aba Usuários
-Encontre a sua div `<div class="menu-left">` e adicione o botão `Usuários`. E na `menu-right`, atualize o `onclick` do botão Sair:
-
-**Como deve ficar:**
-```html
-    <div class="menu-left" id="main-menu">
-        <button class="ativo" onclick="window.trocarAba('consulta', this)">Agendamento</button>
-        <button onclick="window.trocarAba('cadastro', this)">Prestadores</button>
-        <button onclick="window.trocarAba('painel', this)">Painel</button>
-        <button onclick="window.trocarAba('dashboard', this)">Dashboard</button>
-        <button id="btn-usuarios" onclick="window.trocarAba('usuarios', this)">Usuários</button>
-    </div>
-
-<div class="topo"><strong>APEX</strong> <span>Agenda Prestadores</span></div>
-<div class="menu">
+   
     <div class="menu-left">
         <button class="ativo" onclick="window.trocarAba('consulta', this)">Agendamento</button>
         <button onclick="window.trocarAba('cadastro', this)">Prestadores</button>
@@ -2435,6 +2375,340 @@ window.renderDashboard = function() {
         });
     }
 };
+</div>
+</div>
+
+<script>
+
+    // ==========================================
+// 1. CONFIGURAÇÕES DO SUPABASE
+// ==========================================
+const SUPABASE_URL = 'https://fqaqlofndeihmhkopvan.supabase.co'; 
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZxYXFsb2ZuZGVpaG1oa29wdmFuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcyMjU4ODIsImV4cCI6MjA5MjgwMTg4Mn0.nauPYoB9RDhLLueMEuop2H2FxdChjIxFkAmBcYbJLzc'; 
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const EDGE_URL = `${SUPABASE_URL}/functions/v1/integracao-v2-interna`;
+const API_URL = `${SUPABASE_URL}/functions/v1/smart-service`;
+
+const ADMIN_EMAILS = ["luiz.lackeski@cobli.co", "fernando.souza@cobli.co", "anni.torrecilhas@cobli.co"];
+let currentUser = null, userRole = 'PRESTADOR';
+let prestadores = [], agendamentos = [], itensSelecionados = [], datasBloqueadasTemp = [];
+let etapa = 1, editingIndex = -1, prestadorSelecionadoIndex = null;
+let agendaDiasDisponiveis = [], agendaPaginaAtual = 0;
+let filtradosPainel = [], myChart = null, chartLocais = null;
+let isDraggingAgenda = false, dragActionAgenda = true; 
+window.addEventListener('mouseup', () => { isDraggingAgenda = false; });
+
+const servicos = {
+    "Telemetria": [{desc:"Instalado veículos leves ou pesados", tempo:40, id_field: "b2098d2f-c060-445b-8e4b-bdcc5b6e613a"}, {desc:"Instalado motos ou maquinários", tempo:40, id_field: "fe2057ba-abd5-44b6-9686-2f50e7717f16"}, {desc:"Leves ou pesados + CAN", tempo:60, id_field: "b04b9472-5663-4d77-8dc9-a79b2f06aa28"}], 
+    "Identificador": [{desc:"Instalado veículos leves e pesados", tempo:60, id_field: "a5aa5112-5b34-48fe-bf9b-1d655522db0b"}, {desc:"Leves ou pesados + CAN", tempo:90, id_field: "b04b9472-5663-4d77-8dc9-a79b2f06aa28"}], 
+    "Videotelemetria": [{desc:"Coblicam (1 câmera)", tempo:90, id_field: "3003972e-cd7a-46d8-9194-d611e54e4093"}, {desc:"Coblicam-Multi (4 câmeras)", tempo:240, id_field: "33eeb8a1-e867-469b-9701-bcfe695c74e5"}]
+};
+
+// ==========================================
+// 2. UTILITÁRIOS E UI
+// ==========================================
+function getHeaders() { return { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }; } 
+function formatarTempo(m) { if(m===0)return"0h"; let h=Math.floor(m/60), min=m%60; return h>0&&min>0?`${h}h ${min}m`:h>0?`${h}h`:`${min}m`; }
+window.maskCPFCNPJ = i => { let v=i.value.replace(/\D/g,""); if(v.length<=11){v=v.replace(/(\d{3})(\d)/,"$1.$2"); v=v.replace(/(\d{3})(\d{1,2})$/,"$1-$2");}else{v=v.replace(/^(\d{2})(\d)/,"$1.$2"); v=v.replace(/^(\d{2})\.(\d{3})(\d)/,"$1.$2.$3"); v=v.replace(/\.(\d{3})(\d)/,".$1/$2"); v=v.replace(/(\d{4})(\d)/,"$1-$2");} i.value=v.substring(0,18); };
+window.maskPhone = c => { let v=c.value.replace(/\D/g,""); c.value = v.length<=10 ? v.replace(/^(\d{2})(\d{4})(\d{4}).*/,"($1) $2-$3") : v.replace(/^(\d{2})(\d{5})(\d{4}).*/,"($1) $2-$3"); };
+window.maskCEP = i => { i.value = i.value.replace(/\D/g,"").replace(/^(\d{5})(\d)/,"$1-$2").substring(0,9); };
+window.exibirModal = (t,b) => { document.getElementById('modalHeader').innerText=t; document.getElementById('modalBody').innerHTML=b; document.getElementById('modalFooter').innerHTML=''; document.getElementById('modalAviso').style.display='flex'; };
+window.fecharModal = () => document.getElementById('modalAviso').style.display='none';
+window.showMessage = msg => { window.exibirModal("Aviso", `<p>${msg}</p>`); document.getElementById('modalFooter').innerHTML=`<button onclick="window.fecharModal()" style="background:var(--primary)">OK</button>`; };
+window.showConfirm = (msg, fn) => { window.exibirModal("Atenção", `<p>${msg}</p>`); document.getElementById('modalFooter').innerHTML=`<button onclick="window.fecharModal()" style="background:gray; margin-right:10px;">Não</button><button onclick="window.fecharModal(); ${fn}" style="background:var(--primary)">Sim</button>`; };
+window.showToast = msg => { let t=document.getElementById("toast"); t.innerText=msg; t.style.display="block"; setTimeout(()=>t.style.display="none",3000); };
+window.validarCampos = sel => { let v=true; document.querySelectorAll(`${sel} [required]`).forEach(e=>{ if(!e.value.trim()){e.style.borderColor='var(--cobli-red)'; e.style.backgroundColor='#fff5f5'; v=false;}else{e.style.borderColor='#cbd5e1'; e.style.backgroundColor='white';} }); return v; };
+
+// ==========================================
+// 3. MÓDULO DE AUTENTICAÇÃO & ACESSOS
+// ==========================================
+function showAuthCard(id) { document.querySelectorAll('.auth-card').forEach(c => c.style.display = 'none'); document.getElementById(id).style.display = 'block'; }
+function togglePass(id) { const el = document.getElementById(id); el.type = el.type === 'password' ? 'text' : 'password'; }
+
+async function authAction(type) {
+    if (type === 'signup') {
+        const em = document.getElementById('signup-email').value, pw = document.getElementById('signup-password').value, btn = document.getElementById('btnSignup');
+        if(!em || pw.length < 6) return window.showMessage("E-mail válido e senha de 6 dígitos são obrigatórios.");
+        btn.innerText = "Criando..."; const { error } = await supabase.auth.signUp({ email: em, password: pw }); btn.innerText = "Criar Acesso";
+        if(error) return window.showMessage("Erro: " + error.message);
+        window.showToast("Sucesso! Faça o login."); document.getElementById('login-email').value = em; showAuthCard('card-login');
+    } else if (type === 'login') {
+        const em = document.getElementById('login-email').value, pw = document.getElementById('login-password').value, btn = document.getElementById('btnLogin'), err = document.getElementById('login-error');
+        btn.innerText = "Autenticando..."; err.style.display = 'none';
+        const { error } = await supabase.auth.signInWithPassword({ email: em, password: pw });
+        if(error) { btn.innerText = "Entrar"; err.style.display = 'block'; } else window.location.reload();
+    } else if (type === 'reset') {
+        const em = document.getElementById('reset-email').value, btn = document.getElementById('btnReset');
+        if(!em) return window.showMessage("Digite o e-mail.");
+        btn.innerText = "Enviando..."; const { error } = await supabase.auth.resetPasswordForEmail(em); btn.innerText = "Enviar Link";
+        if(error) return window.showMessage(error.message); window.showToast("Link enviado!"); showAuthCard('card-login');
+    }
+}
+
+async function checkSession() {
+    const { data: { session } } = await supabase.auth.getSession();
+    if(session) {
+        currentUser = session.user; document.getElementById('auth-overlay').style.display='none'; document.getElementById('app-content').style.display='block'; document.body.style.display='block';
+        await definirPermissoes(currentUser.email, currentUser.id);
+        if(userRole === 'ADMIN') { document.getElementById('integrations-control').style.display='flex'; carregarListaUsuarios(); }
+        carregarProdutos(); await carregarDadosDoBanco();
+    } else { document.getElementById('auth-overlay').style.display='flex'; document.body.style.display='block'; }
+}
+
+async function definirPermissoes(email, uid) {
+    const { data } = await supabase.from('perfis_usuarios').select('nivel').eq('id', uid).single();
+    userRole = data ? data.nivel : (ADMIN_EMAILS.includes(email.toLowerCase()) ? 'ADMIN' : (email.endsWith('@cobli.co') ? 'USUARIO' : 'PRESTADOR'));
+    document.getElementById('user-role-display').innerText = `${email} | ${userRole}`;
+    
+    let sol = document.getElementById('solicitante');
+    if(sol) sol.value = email.endsWith('@cobli.co') ? email.split('@')[0].replace('.',' ') : email;
+
+    if(userRole !== 'ADMIN') document.getElementById('btn-usuarios').style.display = 'none';
+    if(userRole === 'PRESTADOR') {
+        ['btn-consulta','btn-cadastro','btn-dashboard'].forEach(id => document.getElementById(id).style.display='none');
+        window.trocarAba('painel', document.getElementById('btn-painel'));
+    }
+}
+
+async function handleLogout() { await supabase.auth.signOut(); window.location.reload(); }
+
+async function carregarListaUsuarios() {
+    const tb = document.getElementById('tabela-usuarios-body'); tb.innerHTML = '<tr><td colspan="3" align="center">Carregando...</td></tr>';
+    const { data, error } = await supabase.from('perfis_usuarios').select('*').order('created_at', { ascending: false });
+    if(error) return tb.innerHTML = '<tr><td colspan="3" align="center" style="color:red">Erro ao carregar usuários.</td></tr>';
+    tb.innerHTML = data.map(u => `<tr><td style="padding:12px; border-bottom:1px solid #e2e8f0; font-weight:bold;">${u.email}</td><td style="padding:12px; border-bottom:1px solid #e2e8f0;"><select onchange="window.mudarNivelUsuario('${u.id}', this.value)" style="padding:4px; font-weight:bold; border:none; background:${u.nivel==='ADMIN'?'#fee2e2':u.nivel==='USUARIO'?'#e0e7ff':'#dcfce7'}; color:${u.nivel==='ADMIN'?'#ef4444':u.nivel==='USUARIO'?'#4338ca':'#15803d'}"><option value="PRESTADOR" ${u.nivel==='PRESTADOR'?'selected':''}>PRESTADOR</option><option value="USUARIO" ${u.nivel==='USUARIO'?'selected':''}>USUARIO</option><option value="ADMIN" ${u.nivel==='ADMIN'?'selected':''}>ADMIN</option></select></td><td style="padding:12px; border-bottom:1px solid #e2e8f0;">${new Date(u.created_at).toLocaleDateString()}</td></tr>`).join('');
+}
+window.mudarNivelUsuario = async (id, nv) => { const { error } = await supabase.from('perfis_usuarios').update({ nivel: nv }).eq('id', id); error ? window.showMessage("Erro ao atualizar.") : window.showToast("Nível salvo!"); };
+
+// ==========================================
+// 4. BANCO DE DADOS & MOTOR DE AGENDA
+// ==========================================
+async function carregarDadosDoBanco() { 
+    try { 
+        const resP = await fetch(`${API_URL}/prestadores`, { headers: getHeaders() }); prestadores = await resP.json(); 
+        if (userRole !== 'PRESTADOR') renderizarListaPrestadores(); 
+        const resA = await fetch(`${SUPABASE_URL}/rest/v1/agendamentos?select=*&order=created_at.desc`, { headers: getHeaders() }); 
+        const dA = await resA.json(); agendamentos = Array.isArray(dA) ? dA : [];
+        renderPainel(); if (userRole !== 'PRESTADOR') renderDashboard(); 
+    } catch(e) {} 
+}
+
+window.getAusenciasDoDia = (p, dStr) => {
+    if(!p.agenda) return { total: false, horasBloqueadas: new Set() };
+    let aus = p.agenda.filter(a => a.isAbsence && a.data === dStr), hrs = new Set(), tot = false, cap = parseInt(p.qtdtecnicos)||1;
+    aus.forEach(a => { let q=parseInt(a.qtd)||1; if(a.tipo==='total'&&q>=cap) tot=true; else if(a.tipo==='parcial'&&q>=cap) for(let h=parseInt(a.inicio); h<parseInt(a.fim); h++) hrs.add(h); });
+    return { total: tot, horasBloqueadas: hrs };
+};
+
+window.podeAgendar = (p, data, nSlots) => {
+    let cap = parseInt(p.qtdtecnicos)||1, ints = [];
+    agendamentos.filter(a => a.prestador === p.nome && (a.data === data || a.rawdate === data)).forEach(a => {
+        let sArr = Array.isArray(a.slots) ? a.slots : String(a.slots).split(', ');
+        if(sArr.length>0){ let hs = sArr.map(s=>parseInt(s)).sort((x,y)=>x-y); ints.push({ start: hs[0], end: hs[hs.length-1], type: 'job' }); }
+    });
+    if(nSlots) ints.push({ start: nSlots[0], end: nSlots[nSlots.length-1], type: 'job' });
+    if(p.agenda) p.agenda.filter(a => a.isAbsence && a.data === data).forEach(a => { let s=a.tipo==='total'?0:parseInt(a.inicio), e=a.tipo==='total'?24:parseInt(a.fim)-1; for(let i=0;i<(parseInt(a.qtd)||1);i++) ints.push({start:s, end:e, type:'absence'}); });
+    ints.sort((a,b)=>a.start-b.start);
+    let tech = Array(cap).fill().map(()=>({end:-999, type:'none'}));
+    for(let j of ints){ let asg=false; for(let t=0; t<cap; t++){ if(tech[t].end + ((tech[t].type==='job'&&j.type==='job')?1:0) < j.start){ tech[t]={end:j.end, type:j.type}; asg=true; break; } } if(!asg) return false; }
+    return true; 
+};
+
+window.getNextDates = p => { 
+    let dates=[], td=new Date(), dm={"Dom":0,"Seg":1,"Ter":2,"Qua":3,"Qui":4,"Sex":5,"Sab":6}, agN=p.agenda?p.agenda.filter(a=>!a.isAbsence):[], agD=[...new Set(agN.map(a=>a.dia))].map(d=>dm[d]); 
+    for(let i=2; i<60; i++){ 
+        if(dates.length>=10) break;
+        let d=new Date(); d.setDate(td.getDate()+i); let ds=d.toLocaleDateString(), dn=["Dom","Seg","Ter","Qua","Qui","Sex","Sab"][d.getDay()]; 
+        if(!agD.includes(d.getDay())) continue;
+        let { total, horasBloqueadas } = window.getAusenciasDoDia(p, ds); if(total) continue;
+        if(agN.filter(a=>a.dia==dn).some(s=>{ let h=parseInt(s.hora); return !horasBloqueadas.has(h) && window.podeAgendar(p, ds, [h]); })) dates.push(ds.slice(0,5)); 
+    } return dates; 
+};
+
+// ==========================================
+// 5. FLUXO DE AGENDAMENTO (ABA 1)
+// ==========================================
+window.buscarEnderecoPorCep = async () => {
+    let cep = document.getElementById('inputCep').value.replace(/\D/g, ''); if(cep.length!==8) return window.showMessage("CEP inválido.");
+    let btn = document.getElementById('btnValidarCep'), orig = btn.innerText; btn.innerText="Buscando..."; btn.disabled=true;
+    try { const res = await fetch(`https://viacep.com.br/ws/${cep}/json/`); const dat = await res.json(); if(dat.erro){ window.showMessage("CEP não encontrado."); document.getElementById('camposEndereco').style.display='block'; } else { document.getElementById('inputRua').value=dat.logradouro||""; document.getElementById('inputBairro').value=dat.bairro||""; document.getElementById('inputCidade').value=dat.localidade||""; document.getElementById('inputUf').value=dat.uf||""; document.getElementById('camposEndereco').style.display='block'; } } catch(e){ document.getElementById('camposEndereco').style.display='block'; } finally { btn.innerText=orig; btn.disabled=false; }
+};
+
+window.proximoPasso = async n => { 
+    if(n===2) { 
+        if(!window.validarCampos('#step-1')) return window.showMessage("Preencha obrigatórios vermelhos!");
+        let btn = document.getElementById('btnBuscar'); btn.disabled=true; btn.innerText="Calculando..."; 
+        let end = `${document.getElementById('inputRua').value}, ${document.getElementById('inputNumero').value} - ${document.getElementById('inputCidade').value}`; 
+        let filtrados = []; 
+        for(let p of prestadores) { if(!p.endereco) continue; let dist = await (await fetch(`${API_URL}/distancia`,{method:'POST',headers:getHeaders(),body:JSON.stringify({origin:end,destination:p.endereco})})).json(); if(dist.status==='OK' && (dist.rows[0].elements[0].distance.value/1000) <= parseFloat(p.range)){ let av = window.getNextDates(p); if(av.length>0){ p.distanciaFinal=(dist.rows[0].elements[0].distance.value/1000).toFixed(1); p.nextDates=av.join(', '); filtrados.push(p); } } } 
+        btn.disabled=false; btn.innerText="Buscar Prestadores"; 
+        if(filtrados.length===0) return window.showMessage("Nenhum prestador encontrado."); 
+        filtrados.sort((a,b)=>parseFloat(a.distanciaFinal)-parseFloat(b.distanciaFinal)); 
+        document.getElementById('lista-prestadores-selecao').innerHTML = filtrados.map(p=>`<div class="painel-item" onclick="prestadorSelecionadoIndex=prestadores.findIndex(x=>x.nome==='${p.nome}'); window.proximoPasso(3)"><div style="width:100%; display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;"><div style="font-weight:bold; color:var(--primary);">👷 ${p.nome}</div><div style="font-size:0.75rem; background:#f1f5f9; padding:4px 8px; border-radius:4px;">📍 ${p.cidade}/${p.uf}</div></div><div style="font-size:0.85rem; margin-bottom:10px;">📏 Distância: ${p.distanciaFinal} km</div><div class="date-pills">${p.nextDates.split(', ').map(d=>`<span class="pill">${d}</span>`).join('')}</div></div>`).join('');
+    } 
+    if(n===3 && prestadorSelecionadoIndex===null) return window.showMessage("Selecione um prestador."); 
+    document.querySelectorAll('#consulta > div').forEach(d=>d.style.display='none'); document.getElementById('step-'+n).style.display='block'; 
+    if(n===3) { document.getElementById("header-prestador-info").innerText = `${prestadores[prestadorSelecionadoIndex].nome} | ${prestadores[prestadorSelecionadoIndex].distanciaFinal} km`; window.rdaAgendamento(); } 
+};
+
+window.carregarProdutos = () => { let s=document.getElementById("produto"); if(!s)return; s.innerHTML=""; for(let t in servicos){ let g=document.createElement("optgroup"); g.label=t; servicos[t].forEach(p=>{ let o=document.createElement("option"); o.value=p.tempo; o.text=p.desc; o.dataset.idField=p.id_field; g.appendChild(o); }); s.appendChild(g); } };
+window.adicionarProduto = () => { let sel=document.getElementById("produto"), opt=sel.options[sel.selectedIndex], sm=document.getElementById('tipoManutencao'); let ex = itensSelecionados.find(i=>i.desc===opt.text && i.nomeManutencao===sm.options[sm.selectedIndex].text); if(ex) ex.qtd+=parseInt(document.getElementById("quantidade").value)||1; else itensSelecionados.push({desc:opt.text, nomeManutencao:sm.options[sm.selectedIndex].text, maintenance_id:sm.value, tempo:parseInt(sel.value), qtd:parseInt(document.getElementById("quantidade").value)||1, segment_id:opt.dataset.idField}); window.renderizarProdutos(); if(prestadorSelecionadoIndex!==null) window.rdaAgendamento(); };
+window.renderizarProdutos = () => { document.getElementById("horasNecessarias").innerText=Math.ceil(itensSelecionados.reduce((a,b)=>a+(b.tempo*b.qtd),0)/60); document.getElementById("lista-produtos").innerHTML=itensSelecionados.map((i,idx)=>`<div class="item-lista"><span>[${i.nomeManutencao}] ${i.desc} (Qtd:${i.qtd})</span> <button onclick="itensSelecionados.splice(${idx},1); window.renderizarProdutos(); window.rdaAgendamento();" style="background:var(--cobli-red); color:white; border:none; border-radius:4px; cursor:pointer;">X</button></div>`).join(''); };
+
+window.rdaAgendamento = () => { 
+    let p=prestadores[prestadorSelecionadoIndex], cont=document.getElementById("agenda-agendamento"); cont.innerHTML=`<div style="text-align:center; padding:20px; font-weight:bold; color:var(--primary);">Calculando horários...</div>`; 
+    let hN=Math.ceil(itensSelecionados.reduce((a,b)=>a+(b.tempo*b.qtd),0)/60); if(itensSelecionados.length===0) return cont.innerHTML="Inclua o serviço.";
+    agendaDiasDisponiveis=[]; let hj=new Date();
+    for(let i=2; i<60; i++){ 
+        let d=new Date(); d.setDate(hj.getDate()+i); let ds=d.toLocaleDateString(), dn=["Dom","Seg","Ter","Qua","Qui","Sex","Sab"][d.getDay()]; 
+        let { total, horasBloqueadas } = window.getAusenciasDoDia(p, ds); if(total) continue;
+        let aS=(p.agenda||[]).filter(a=>!a.isAbsence && a.dia===dn); if(aS.length===0) continue;
+        let hA=aS.map(it=>parseInt(it.hora)).filter(h=>!horasBloqueadas.has(h)), vS=[]; 
+        for(let h of hA){ let ok=true, ts=[]; for(let k=0; k<hN; k++){ if(!hA.includes(h+k)){ok=false; break;} ts.push(h+k); } if(ok && window.podeAgendar(p, ds, ts)) vS.push(h); }
+        let eC=new Set(); vS.forEach(s=>{ for(let k=0; k<hN; k++) eC.add(s+k); });
+        if(vS.length>0) agendaDiasDisponiveis.push({ dStr:ds, dNome:dn, allSlots:aS, validStarts:vS, enabledCells:eC, horasNecessarias:hN });
+    } agendaPaginaAtual=0; window.renderizarAgendaPaginada();
+};
+
+window.renderizarAgendaPaginada = () => {
+    let cont=document.getElementById("agenda-agendamento"); cont.innerHTML=""; if(agendaDiasDisponiveis.length===0) return cont.innerHTML="⚠️ Não há horários seguidos.";
+    agendaDiasDisponiveis.slice(agendaPaginaAtual*5, (agendaPaginaAtual*5)+5).forEach(inf => {
+        let card=document.createElement("div"); card.className="agenda-day-card"; card.innerHTML=`<div class="agenda-day-title">${inf.dStr} (${inf.dNome})</div>`; 
+        let wr=document.createElement("div"); wr.className="slots-wrapper"; 
+        inf.allSlots.forEach(it => { 
+            let hi=parseInt(it.hora), div=document.createElement("div"); div.className="cell"; div.innerText=it.hora; div.dataset.hora=it.hora; div.dataset.date=inf.dStr; 
+            if(!inf.enabledCells.has(hi)){ div.style.opacity="0.3"; div.style.cursor="not-allowed"; div.onclick=()=>window.showToast("Indisponível"); } 
+            else { div.onclick=() => { let r=hi; if(!inf.validStarts.includes(hi)){ for(let b=1;b<inf.horasNecessarias;b++){ if(inf.validStarts.includes(hi-b)){r=hi-b; break;} } } document.querySelectorAll("#agenda-agendamento .cell").forEach(c=>c.classList.remove('selecionado')); for(let m=0;m<inf.horasNecessarias;m++){ let t=Array.from(wr.children).find(c=>c.dataset.hora===`${r+m}:00`); if(t) t.classList.add("selecionado"); } }; }
+            wr.appendChild(div); 
+        }); card.appendChild(wr); cont.appendChild(card); 
+    });
+    let pag=document.createElement("div"); pag.style.display="flex"; pag.style.justifyContent="space-between"; pag.style.marginTop="15px";
+    pag.innerHTML=`<button style="background:#64748b; padding:8px 16px; border-radius:6px; color:white; border:none;" ${agendaPaginaAtual===0?'disabled style="opacity:0.5"':''} onclick="agendaPaginaAtual--; window.renderizarAgendaPaginada();">⬅️ Anteriores</button> <button style="background:var(--primary); padding:8px 16px; border-radius:6px; color:white; border:none;" ${((agendaPaginaAtual*5)+5)>=agendaDiasDisponiveis.length?'disabled style="opacity:0.5"':''} onclick="agendaPaginaAtual++; window.renderizarAgendaPaginada();">Próximos ➡️</button>`;
+    cont.appendChild(pag);
+};
+
+window.validarEAvancar = () => { if(itensSelecionados.length===0) return window.showMessage("Adicione serviços."); let hr=Math.ceil(itensSelecionados.reduce((a,b)=>a+(b.tempo*b.qtd),0)/60), sel=document.querySelectorAll("#agenda-agendamento .cell.selecionado"); if(sel.length===0||sel.length!==hr) return window.showMessage(`Selecione ${hr} hora(s)!`); document.querySelectorAll('#consulta > div').forEach(d=>d.style.display='none'); document.getElementById('step-4').style.display='block'; };
+
+window.verificarSequenciaEFOP = async () => {
+    let base = document.getElementById('ticket').value.trim(), btn = document.getElementById('btnChecarSequencia');
+    if(!base) return window.showMessage("Digite o ticket base."); btn.innerText="🔍..."; btn.disabled=true;
+    try { const r = await fetch(EDGE_URL, {method:'POST', headers:getHeaders(), body:JSON.stringify({acao:'checar_sequencia', ticket_base:base})}); const res = await r.json(); if(res.warning) window.showMessage(res.warning); if(res.sugerido) { document.getElementById('ticket').value = res.sugerido; document.getElementById('ticket').style.border = res.sugerido!==base ? "2px solid #f59e0b" : "2px solid var(--cobli-green)"; } } catch(e){} finally { btn.innerText="Checar"; btn.disabled=false; setTimeout(()=>document.getElementById('ticket').style.border="",3000); }
+};
+
+window.revisarAgendamento = () => {
+    if(!window.validarCampos('#step-4')) return window.showMessage("Preencha obrigatórios vermelhos!");
+    let sel=document.querySelectorAll("#agenda-agendamento .cell.selecionado"), dt=sel.length>0?sel[0].dataset.date:'N/A', hrs=Array.from(sel).map(c=>c.dataset.hora).join(', ');
+    window.showConfirm(`Confirmar OS ${document.getElementById('ticket').value} para ${document.getElementById('clienteNome').value} no dia ${dt} às ${hrs}?`, "window.concluirAgendamentoFinal()");
+};
+
+window.concluirAgendamentoFinal = async () => {
+    let btn=document.getElementById('btnConfirmar'), sel=document.querySelectorAll("#agenda-agendamento .cell.selecionado");
+    let obj = { prestador: prestadores[prestadorSelecionadoIndex].nome, qtdtecnicos: prestadores[prestadorSelecionadoIndex].qtdtecnicos, ticket: document.getElementById('ticket').value, cliente: document.getElementById('clienteNome').value, cnpj: document.getElementById('clienteCnpj').value, solicitante: document.getElementById('solicitante').value, data: sel[0].dataset.date, rawdate: sel[0].dataset.date, slots: Array.from(sel).map(c=>c.dataset.hora.substring(0,5)), rua: document.getElementById('inputRua').value, numero: document.getElementById('inputNumero').value, bairro: document.getElementById('inputBairro').value, cidade: document.getElementById('inputCidade').value, uf: document.getElementById('inputUf').value, cep: document.getElementById('inputCep').value, acompanhamento: document.getElementById('respAcompanhamento').value, telefone_responsavel: document.getElementById('telResponsavel').value, produtos_texto: itensSelecionados.map(i=>`[${i.nomeManutencao}] ${i.desc} (Qtd: ${i.qtd})`).join('\n'), executar_field: userRole==='ADMIN'?document.getElementById('fieldSwitch').value==='ON':true, executar_banco: userRole==='ADMIN'?document.getElementById('dbSwitch').value==='ON':true, segment: itensSelecionados[0]?.nomeManutencao||"", tipo_servico: itensSelecionados[0]?.desc||"", field_id: prestadores[prestadorSelecionadoIndex].field_id, segment_id_field: itensSelecionados[0]?.segment_id||"", maintenance_id_field: itensSelecionados[0]?.maintenance_id||"" };
+    btn.innerText="Salvando..."; btn.disabled=true;
+    try { const res = await fetch(EDGE_URL, {method:'POST', headers:getHeaders(), body:JSON.stringify(obj)}); const dat = await res.json(); if(res.ok){ window.showMessage(`🚀 OS ${dat.ticket} gerada! Status: ${dat.status}`); setTimeout(()=>window.location.reload(), 2000); } else window.showMessage("Erro: "+dat.error); } catch(e){} finally{ btn.innerText="Confirmar"; btn.disabled=false; }
+};
+window.cancelarAgendamento = () => { window.showConfirm("Cancelar criação?", "window.location.reload()"); };
+
+// ==========================================
+// 6. CADASTRO DE PRESTADOR (ABA 2)
+// ==========================================
+window.renderizarListaPrestadores = () => {
+    document.getElementById("btn-novo-container").innerHTML = userRole==='ADMIN' ? `<button onclick="window.abrirCadastro()" style="margin-bottom: 20px;">+ Novo Prestador</button>` : '';
+    document.getElementById("lista-prestadores").innerHTML = prestadores.map((p,i) => `<div class="painel-item" onclick="${userRole==='ADMIN'?`window.abrirOpcoesPrestador(${i})`:`window.abrirDetalhesPrestador(${i})`}"><div style="flex:1;"><strong>👷 ${p.nome}</strong> | 📍 ${p.cidade}/${p.uf}</div><div style="font-size:0.8rem; color:#64748b;">👥 ${p.qtdtecnicos} Técnicos | 📏 Raio: ${p.range}km</div></div>`).join('');
+};
+
+window.abrirOpcoesPrestador = i => { window.exibirModal("Ações", `<div style="display:flex; flex-direction:column; gap:10px;"><button onclick="window.fecharModal(); window.abrirDetalhesPrestador(${i})" style="background:var(--cobli-green); padding:12px; border-radius:8px;">👁️ Ver Agenda</button><button onclick="window.fecharModal(); window.abrirCadastro(${i})" style="background:var(--primary); padding:12px; border-radius:8px;">📝 Editar</button><button onclick="window.fecharModal(); window.excluirPrestador(${i})" style="background:var(--cobli-red); padding:12px; border-radius:8px;">🗑️ Excluir</button></div>`); };
+window.excluirPrestador = i => window.showConfirm("Excluir prestador?", `fetch('${API_URL}/prestadores/${prestadores[i].id}', {method:'DELETE', headers:getHeaders()}).then(()=>window.location.reload())`);
+
+window.abrirCadastro = idx => {
+    editingIndex=idx; document.getElementById("lista-prestadores-view").style.display="none"; document.getElementById("cadastro-flow").style.display="block"; etapa=1; window.mudarEtapa(0);
+    let g=document.getElementById("agenda-cadastro"); g.innerHTML=""; ["Seg","Ter","Qua","Qui","Sex","Sab"].forEach(d => { let rw=document.createElement("div"); rw.className="agenda-day-card"; rw.innerHTML=`<div class="agenda-day-title">${d}</div>`; let wr=document.createElement("div"); wr.className="slots-wrapper"; for(let h=8;h<=18;h++){ let c=document.createElement("div"); c.className="cell"; c.innerText=h+":00"; c.dataset.dia=d; c.dataset.hora=h+":00"; c.onmousedown=(e)=>{e.preventDefault();isDraggingAgenda=true;dragActionAgenda=!c.classList.contains("selecionado");c.classList.toggle("selecionado",dragActionAgenda);}; c.onmouseenter=()=>{if(isDraggingAgenda)c.classList.toggle("selecionado",dragActionAgenda);}; wr.appendChild(c); } rw.appendChild(wr); g.appendChild(rw); });
+    
+    if(idx !== -1) {
+        let p=prestadores[idx]; ['nomeEmpresa','endereco','cidade','uf','cep','responsavel','contatoResponsavel','qtdTecnicos','rangeAtendimento','fieldIdField'].forEach(k => document.getElementById(k).value = p[k.replace('nomeEmpresa','nome').replace('contatoResponsavel','contato').replace('qtdTecnicos','qtdtecnicos').replace('rangeAtendimento','range').replace('fieldIdField','field_id')] || "");
+        if(p.agenda) {
+            p.agenda.forEach(a => { if(!a.isAbsence) document.querySelectorAll(".cell").forEach(c => { if(c.dataset.dia===a.dia && c.dataset.hora===a.hora) c.classList.add("selecionado"); }); });
+            let hj=new Date(); hj.setHours(0,0,0,0); datasBloqueadasTemp = p.agenda.filter(a=>a.isAbsence).filter(b=>{let p=b.data.split('/'); return new Date(p[2],p[1]-1,p[0])>=hj;}); window.renderAusencias();
+        }
+    } else { document.querySelectorAll('#etapa-1 input').forEach(i=>i.value=""); datasBloqueadasTemp=[]; window.renderAusencias(); }
+};
+
+window.mudarEtapa = dir => { if(dir>0 && etapa===1 && !window.validarCampos('#etapa-1')) return window.showMessage("Preencha obrigatórios vermelhos!"); document.getElementById("etapa-"+etapa).style.display="none"; etapa+=dir; if(etapa<1)etapa=1; if(etapa>2)etapa=2; document.getElementById("etapa-"+etapa).style.display="block"; document.getElementById('btn-voltar').style.display=etapa===1?'none':'inline-block'; document.getElementById('btn-proximo').style.display=etapa===1?'inline-block':'none'; document.getElementById('btn-concluir').style.display=etapa===2?'inline-block':'none'; };
+window.cancelarCadastro = () => { document.getElementById("cadastro-flow").style.display="none"; document.getElementById("lista-prestadores-view").style.display="block"; };
+
+window.toggleTipoBloqueio = () => { document.getElementById('boxHoraBloqueio').style.display = document.getElementById('tipoBloqueio').value==='parcial'?'flex':'none'; };
+window.adicionarBloqueioData = () => {
+    let di=document.getElementById('dataBloqueio').value, df=document.getElementById('dataBloqueioFim').value, tp=document.getElementById('tipoBloqueio').value, q=parseInt(document.getElementById('qtdBloqueio').value)||1;
+    if(!di) return window.showMessage("Data inicial!"); let cur=new Date(di+'T00:00:00'), end=df?new Date(df+'T00:00:00'):new Date(cur);
+    while(cur<=end){ let dt=`${String(cur.getDate()).padStart(2,'0')}/${String(cur.getMonth()+1).padStart(2,'0')}/${cur.getFullYear()}`, obj={isAbsence:true, data:dt, tipo:tp, qtd:q}; if(tp==='parcial'){ obj.inicio=document.getElementById('horaInicioBloqueio').value; obj.fim=document.getElementById('horaFimBloqueio').value; } datasBloqueadasTemp.push(obj); cur.setDate(cur.getDate()+1); } window.renderAusencias();
+};
+window.renderAusencias = () => { document.getElementById('lista-datas-bloqueadas').innerHTML=datasBloqueadasTemp.map((b,i)=>`<span class="pill" style="background:var(--cobli-red); color:white; border:none;">${b.tipo==='total'?`${b.data} (Dia Todo)`:`${b.data} (${b.inicio}h-${b.fim}h)`} | ${b.qtd}T <span style="cursor:pointer; margin-left:5px;" onclick="datasBloqueadasTemp.splice(${i},1); window.renderAusencias()">X</span></span>`).join(''); };
+
+window.salvarPrestador = async btn => {
+    btn.disabled=true; btn.innerText="Salvando...";
+    let ag = [...document.querySelectorAll('#agenda-cadastro .cell.selecionado')].map(c=>({dia:c.dataset.dia, hora:c.dataset.hora})).concat(datasBloqueadasTemp);
+    let p = { nome: document.getElementById("nomeEmpresa").value, endereco: document.getElementById("endereco").value, cidade: document.getElementById("cidade").value, uf: document.getElementById("uf").value, cep: document.getElementById("cep").value, responsavel: document.getElementById("responsavel").value, contato: document.getElementById("contatoResponsavel").value, qtdtecnicos: parseInt(document.getElementById("qtdTecnicos").value), range: document.getElementById("rangeAtendimento").value, field_id: document.getElementById("fieldIdField").value, agenda: ag };
+    let u = editingIndex!==-1 ? `${API_URL}/prestadores/${prestadores[editingIndex].id}` : `${API_URL}/prestadores`;
+    await fetch(u, {method:editingIndex!==-1?'PUT':'POST', headers:getHeaders(), body:JSON.stringify(p)}); window.location.reload();
+};
+
+window.abrirDetalhesPrestador = i => {
+    let p=prestadores[i], ht="", ausHtml="";
+    ["Seg","Ter","Qua","Qui","Sex","Sab"].forEach(d => { let sl=p.agenda.filter(a=>a.dia===d&&!a.isAbsence).map(a=>`<div class="cell" style="width:38px; padding:2px;">${a.hora}</div>`).join(''); if(sl) ht+=`<div class="agenda-day-card"><strong>${d}</strong><div class="slots-wrapper">${sl}</div></div>`; });
+    let hj=new Date(); hj.setHours(0,0,0,0); let aus=p.agenda?p.agenda.filter(a=>a.isAbsence && new Date(a.data.split('/')[2],a.data.split('/')[1]-1,a.data.split('/')[0])>=hj):[];
+    if(aus.length>0) ausHtml = `<div style="margin-top:15px; border-top:1px solid #ccc; padding-top:10px;"><strong style="color:red">🛑 Ausências</strong><div style="display:flex; gap:5px; flex-wrap:wrap; margin-top:5px;">` + aus.map(b=>`<span class="pill" style="background:#fee2e2; color:red; border:1px solid red; font-size:0.7rem;">${b.tipo==='total'?`${b.data} (Dia Todo)`:`${b.data} (${b.inicio}h-${b.fim}h)`} | ${b.qtd}T</span>`).join('') + `</div></div>`;
+    window.exibirModal(`Detalhes: ${p.nome}`, `<div style="font-size:0.85rem; margin-bottom:10px;">👤 ${p.responsavel} | 📞 ${p.contato} | 📍 Raio: ${p.range}km</div>` + ht + ausHtml + `<div style="text-align:right; margin-top:15px;"><button onclick="window.fecharModal()" style="background:var(--primary)">Fechar</button></div>`);
+};
+
+// ==========================================
+// 7. PAINEL E DASHBOARD (ABAS 3 e 4)
+// ==========================================
+window.trocarAba = (id, btn) => { document.querySelectorAll('.aba').forEach(a=>a.classList.remove('ativa')); document.getElementById(id).classList.add('ativa'); document.querySelectorAll('.menu button').forEach(b=>b.classList.remove('ativo')); if(btn) btn.classList.add('ativo'); if(id==='painel') window.renderPainel(); if(id==='dashboard') window.renderDashboard(); if(id==='usuarios') carregarListaUsuarios(); };
+
+window.renderPainel = () => {
+    let st=[], cnt={}; ['solicitado','negociacao','agendado','andamento','impedido','concluido','cancelado'].forEach(k=>cnt[k]=0);
+    document.querySelectorAll('.cb-status:checked').forEach(c=>st.push(c.value));
+    
+    filtradosPainel = agendamentos.filter(a => {
+        if(!a.data) return false;
+        if(userRole === 'PRESTADOR') { let np=currentUser.email.split('@')[0].toLowerCase().replace(/\s/g,''), na=(a.prestador||"").toLowerCase().replace(/\s/g,''); if(!na.includes(np) && !np.includes(na)) return false; }
+        
+        let tMap = 'solicitado', so=String(a.status).toLowerCase();
+        if(so.includes('negocia')) tMap='negociacao'; else if(so.includes('agendad')) tMap='agendado'; else if(so.includes('andament')) tMap='andamento'; else if(so.includes('impedido')) tMap='impedido'; else if(so.includes('conclu')) tMap='concluido'; else if(so.includes('cancel')) tMap='cancelado';
+        
+        cnt[tMap]++;
+        if(st.length>0 && !st.includes(tMap)) return false;
+        return true;
+    });
+
+    ['solicitado','negociacao','agendado','andamento','impedido','concluido','cancelado'].forEach(k => document.getElementById('st-'+k).innerText = cnt[k]);
+    document.getElementById("painel-conteudo").innerHTML = filtradosPainel.map((a, i) => `<div class="painel-item" onclick="window.abrirDetalhesAgendamento(${i})"><div style="flex:1"><strong>🎟️ #${a.ticket}</strong> | Status: <strong style="color:var(--primary)">${a.status||'SOLICITADO'}</strong><div style="font-size:0.85rem; color:#64748b; margin-top:5px;">📅 ${a.data} às ${Array.isArray(a.slots)?a.slots[0]:String(a.slots).split(',')[0]} | 🛠️ ${a.prestador}</div></div></div>`).join('');
+};
+
+window.abrirDetalhesAgendamento = i => {
+    let a=filtradosPainel[i];
+    let btnSync = (userRole==='ADMIN'||userRole==='USUARIO') ? `<button onclick="event.stopPropagation(); fetch(EDGE_URL,{method:'POST',headers:getHeaders(),body:JSON.stringify({acao:'sincronizar_status',ticket:'${a.ticket}'})}).then(()=>window.location.reload())" style="background:var(--cobli-green); flex:1;">🔄 Sync Status</button>` : '';
+    let btnDel = userRole==='ADMIN' ? `<button onclick="window.excluirAgendamento(${a.id})" style="background:var(--cobli-red); flex:1;">Excluir OS</button>` : '';
+    window.exibirModal(`Detalhes OS #${a.ticket}`, `<div style="font-size:0.9rem; line-height:1.6;">👤 ${a.cliente}<br>📍 ${a.rua}, ${a.numero} - ${a.cidade}/${a.uf}<br>📞 ${a.acompanhamento} | ${a.telefone_responsavel}<br>📦 ${a.produtos_texto?.replace(/\n/g,'<br>')}</div><div style="display:flex; gap:10px; margin-top:15px;"><button onclick="window.fecharModal()" style="background:gray; flex:1;">Fechar</button>${btnSync}${btnDel}</div>`);
+};
+
+window.excluirAgendamento = id => window.showConfirm("Excluir Agendamento?", `fetch('${API_URL}/agendamentos/${id}', {method:'DELETE', headers:getHeaders()}).then(()=>window.location.reload())`);
+window.atualizarTodosStatus = () => window.showConfirm("Atualizar tudo?", `filtradosPainel.forEach(a=>fetch(EDGE_URL,{method:'POST',headers:getHeaders(),body:JSON.stringify({acao:'sincronizar_status',ticket:a.ticket})})); setTimeout(()=>window.location.reload(), 3000)`);
+window.limparFiltros = () => { document.querySelectorAll('.cb-status').forEach(c=>c.checked=false); window.renderPainel(); };
+
+window.renderDashboard = () => {
+    let dPrest={}; agendamentos.forEach(a=>{ if(a.prestador) dPrest[a.prestador]=(dPrest[a.prestador]||0)+1; });
+    document.getElementById("dash-agend").innerText = agendamentos.length;
+    if(myChart) myChart.destroy();
+    if(document.getElementById('chartPrestadores')) myChart = new Chart(document.getElementById('chartPrestadores').getContext('2d'), { type:'bar', data:{ labels:Object.keys(dPrest), datasets:[{ data:Object.values(dPrest), backgroundColor:'#001BB8' }] }, options:{plugins:{legend:{display:false}}} });
+};
+
+// 8. START
+checkSession();
+</script>
+</body>
+</html>
+    
 </script>
 </body>
 </html>
