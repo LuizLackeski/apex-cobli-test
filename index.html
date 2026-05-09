@@ -2146,25 +2146,26 @@ window.renderDashboard = function() {
             distLocais[local] = (distLocais[local] || 0) + 1;
         }
 
-        if (typeof a.produtos === 'string' && a.produtos.includes('•')) {
-            let linhas = a.produtos.split('\n');
+        let txt = a.produtos_texto || a.produtos || '';
+        if (String(txt).trim().length > 0) {
+            let linhas = String(txt).split('\n');
             linhas.forEach(linha => {
-                let match = linha.match(/• \[(.*?)\] (.*?) \(Qtd: (\d+)\)/);
-                if (match) {
-                    let nomeServ = `[${match[1]}] ${match[2]}`.trim();
-                    let qtd = parseInt(match[3]) || 1;
-                    distServ[nomeServ] = (distServ[nomeServ] || 0) + qtd;
-                    totalServicosGeral += qtd;
-                } else {
-                    let limpo = linha.replace('•', '').trim();
-                    if (limpo) {
-                        distServ[limpo] = (distServ[limpo] || 0) + 1;
-                        totalServicosGeral += 1;
-                    }
+                let limpo = linha.replace('•', '').trim();
+                if (!limpo) return;
+                
+                let nomeServico = limpo.replace(/\s*\(Qtd:.*?\)/i, '').trim();
+                
+                let qtd = 1;
+                let matchQtd = limpo.match(/\(Qtd:\s*(\d+)/i);
+                if (matchQtd) {
+                    qtd = parseInt(matchQtd[1]) || 1;
                 }
+                
+                distServ[nomeServico] = (distServ[nomeServico] || 0) + qtd;
+                totalServicosGeral += qtd;
             });
         } else if (a.segment && a.tipo_servico) {
-            let nomeServ = `[${a.segment.toUpperCase()}] ${a.tipo_servico}`;
+            let nomeServ = `[${String(a.segment).toUpperCase()}] ${a.tipo_servico}`;
             distServ[nomeServ] = (distServ[nomeServ] || 0) + 1;
             totalServicosGeral += 1;
         } else {
@@ -2247,7 +2248,7 @@ window.renderDashboard = function() {
         });
     }
 };
-    
+
 // ==========================================
 // 10. INICIALIZA O SISTEMA
 // ==========================================
