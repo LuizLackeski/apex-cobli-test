@@ -362,7 +362,6 @@
                     <h3>Agenda Base</h3>
                     
                     <div id="tabs-tecnicos" style="margin-bottom: 15px; display:flex; gap:5px; overflow-x:auto;"></div>
-                    
                     <div id="agenda-cadastro"></div>
                     
                     <h3 style="margin-top: 30px; border-top: 1px solid #cbd5e1; padding-top: 20px; color: var(--cobli-red);">🛑 Ausências (Feriados / Férias / Imprevistos)</h3>
@@ -525,7 +524,7 @@ let isDraggingAgenda = false, dragActionAgenda = true;
 window.addEventListener('mouseup', () => { isDraggingAgenda = false; });
 let datasBloqueadasTemp = [], agendaDiasDisponiveis = [], agendaPaginaAtual = 0;
 
-// ✅ NOVO: Controle de Múltiplos Técnicos
+// CONTROLE DE MÚLTIPLOS TÉCNICOS
 window.agendaCadastroObj = {};
 window.currentTech = 1;
 
@@ -672,6 +671,7 @@ async function checkSession() {
     }
 }
 
+// CORRIGIDO: Nome da função de definirPermissoes
 async function definirPermissoes(email, uid) {
     const { data, error } = await supabaseClient.from('perfis_usuarios').select('nivel').eq('id', uid).maybeSingle();
     
@@ -824,62 +824,84 @@ window.getOcupacaoSlot = function(prestador, data, hora) {
     }).length; 
 };
 
-window.getAusenciasDoDia = function(prestador, dStr) {
-    if (!prestador.agenda || !Array.isArray(prestador.agenda)) return { total: false, horasBloqueadas: new Set() };
-    let ausencias = prestador.agenda.filter(a => a.isAbsence && a.data === dStr);
-    
-    // Se "Todos" tem bloqueio total, o dia inteiro está perdido
-    let bloqueioTotalEmpresa = ausencias.some(a => a.tipo === 'total' && (a.tecnico === 'Todos' || !a.tecnico));
-    if (bloqueioTotalEmpresa) return { total: true, horasBloqueadas: new Set() };
-    
-    // O bloqueio fino hora a hora será feito no motor de agendamento (podeAgendar)
-    return { total: false, horasBloqueadas: new Set() };
-};
-
-// ✅ NOVO MOTOR DE AGENDA: Avalia capacidade exata HORA POR HORA e por TÉCNICO
+// NOVO: Motor Inteligente de Agendamento (Cruza técnicos, vagas, faltas e trava de 1h antes/depois)
 window.podeAgendar = function(prestador, data, novosSlotsInt, dNome) {
     let maxT = parseInt(prestador.qtdtecnicos) || 1;
     
-    for (let hInt of novosSlotsInt) {
-        let hStr = hInt + ':00';
-        
-        let cap_base = 0;
-        if (prestador.agenda && prestador.agenda.some(a => a.tecnico)) {
-            cap_base = prestador.agenda.filter(a => a.dia === dNome && a.hora === hStr && !a.isAbsence).length;
-        } else {
-            let hasSlot = prestador.agenda && prestador.agenda.some(a => a.dia === dNome && a.hora === hStr && !a.isAbsence);
-            cap_base = hasSlot ? maxT : 0;
+    // Captura os agendamentos já marcados para o dia (ordenando pelo início)
+    let jobs = [];
+    agendamentos.filter(a => a.prestador === prestador.nome && (a.data === data || a.rawdate === data)).forEach(a => {
+        let slotsArr = Array.isArray(a.slots) ? a.slots : (typeof a.slots === 'string' ? a.slots.split(', ') : []);
+        if (slotsArr.length > 0) {
+            let ints = slotsArr.map(s => parseInt(s.split(':')[0])).sort((x,y) => x-y);
+            jobs.push({ start: ints[0], end: ints[ints.length - 1] });
         }
-        
-        if (cap_base === 0) return false; 
-        
-        let techsAusentes = new Set();
-        let ausenciasGlobais = 0; 
-        
-        if (prestador.agenda) {
-            prestador.agenda.filter(a => a.isAbsence && a.data === data).forEach(a => {
-                let matchesTime = false;
-                if (a.tipo === 'total') matchesTime = true;
-                else if (a.tipo === 'parcial' && hInt >= parseInt(a.inicio) && hInt < parseInt(a.fim)) matchesTime = true;
+    });
+    
+    // Adiciona o novo agendamento que estamos tentando marcar
+    if (novosSlotsInt && novosSlotsInt.length > 0) {
+        let ints = [...novosSlotsInt].sort((x,y) => x-y);
+        jobs.push({ start: ints[0], end: ints[ints.length - 1] });
+    }
 
-                if (matchesTime) {
-                    if (a.tecnico === 'Todos' || (!a.tecnico && !a.qtd)) {
-                        ausenciasGlobais = maxT; // Bloqueia todos
-                    } else if (a.tecnico) {
-                        techsAusentes.add(a.tecnico); // Bloqueia técnico específico
-                    } else if (a.qtd) {
-                        ausenciasGlobais += parseInt(a.qtd); // Legado
-                    }
+    // Cria a Matriz de Ausências bloqueando hora a hora o que foi colocado de Férias/Feriado
+    let absenceMatrix = Array.from({length: maxT + 1}, () => new Set());
+    if (prestador.agenda) {
+        prestador.agenda.filter(a => a.isAbsence && a.data === data).forEach(a => {
+            let start = a.tipo === 'total' ? 0 : parseInt(a.inicio);
+            let end = a.tipo === 'total' ? 24 : parseInt(a.fim);
+            
+            if (a.tecnico && a.tecnico !== 'Todos') {
+                for(let i=start; i<end; i++) absenceMatrix[parseInt(a.tecnico)].add(i);
+            } else if (a.tecnico === 'Todos' || !a.qtd) {
+                for(let t=1; t<=maxT; t++) {
+                    for(let i=start; i<end; i++) absenceMatrix[t].add(i);
                 }
-            });
+            } else if (a.qtd) { // Legado
+                for(let t=1; t<=Math.min(maxT, parseInt(a.qtd)); t++) {
+                    for(let i=start; i<end; i++) absenceMatrix[t].add(i);
+                }
+            }
+        });
+    }
+    
+    // Cria a agenda disponível para o dia cruzando Matriz de Escala x Ausências
+    let techs = [];
+    let tem_tecnico_especifico = prestador.agenda && prestador.agenda.some(a => a.tecnico);
+    
+    for (let t = 1; t <= maxT; t++) {
+        let worksHours = [];
+        if (tem_tecnico_especifico) {
+            worksHours = prestador.agenda.filter(a => a.dia === dNome && a.tecnico == t && !a.isAbsence).map(a => parseInt(a.hora));
+        } else {
+            worksHours = prestador.agenda ? prestador.agenda.filter(a => a.dia === dNome && !a.isAbsence).map(a => parseInt(a.hora)) : [];
         }
-        
-        let ausenciasTotaisNestaHora = Math.min(maxT, ausenciasGlobais + techsAusentes.size);
-        let ocupacao = window.getOcupacaoSlot(prestador, data, hStr);
-        
-        if (ocupacao + 1 > (cap_base - ausenciasTotaisNestaHora)) {
-            return false; // Estourou a capacidade de técnicos disponíveis nesta hora
+        // Remove as horas que o técnico está ausente
+        let availableHours = worksHours.filter(h => !absenceMatrix[t].has(h));
+        techs.push(availableHours);
+    }
+
+    // Tenta distribuir os Jobs nos Técnicos disponíveis (incluindo a Trava de Segurança de 1h)
+    jobs.sort((a, b) => a.start - b.start);
+    let techEnds = Array(maxT).fill(-999);
+    
+    for (let job of jobs) {
+        let assigned = false;
+        for (let t = 0; t < maxT; t++) {
+            // Checa se o técnico trabalha em todas as horas que o serviço precisa
+            let worksAll = true;
+            for(let h = job.start; h <= job.end; h++) {
+                if (!techs[t].includes(h)) { worksAll = false; break; }
+            }
+            
+            // TRAVA DE SEGURANÇA: Se o horário do último serviço finalizado + 1h for MENOR que o começo deste serviço, pode assumir
+            if (worksAll && techEnds[t] + 1 < job.start) {
+                techEnds[t] = job.end;
+                assigned = true;
+                break;
+            }
         }
+        if (!assigned) return false;
     }
     return true; 
 };
@@ -893,15 +915,13 @@ window.getNextDates = function(prestador) {
         if(dates.length >= 10) break;
         let d = new Date(); d.setDate(today.getDate() + i); let dStr = d.toLocaleDateString(); let dNome = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sab"][d.getDay()]; 
         if (!agendaDays.includes(d.getDay())) continue;
-        let { total: diaBloqueado, horasBloqueadas } = window.getAusenciasDoDia(prestador, dStr);
-        if (diaBloqueado) continue;
-
+        
         let slotsDoDia = agendaNormal.filter(a => a.dia == dNome); 
         let uniqueHoras = [...new Set(slotsDoDia.map(s => parseInt(s.hora.split(':')[0])))];
         
         let temLivre = false;
         for(let hInt of uniqueHoras) {
-            if (horasBloqueadas.has(hInt)) continue;
+            // Delega a avaliação fina de técnico por técnico para o PodeAgendar
             if (window.podeAgendar(prestador, dStr, [hInt], dNome)) {
                 temLivre = true; break;
             }
@@ -1081,15 +1101,12 @@ window.rdaAgendamento = function() {
         data.setDate(hoje.getDate() + i); 
         let dStr = data.toLocaleDateString(); 
         let dNome = diasSemana[data.getDay()]; 
-        
-        let { total: diaBloqueado, horasBloqueadas } = window.getAusenciasDoDia(p, dStr);
-        if (diaBloqueado) continue;
 
         let allSlotsRaw = (p.agenda && Array.isArray(p.agenda)) ? p.agenda.filter(a => !a.isAbsence && a.dia == dNome) : []; 
         if (allSlotsRaw.length === 0) continue;
 
         let horasAgendaSet = new Set(allSlotsRaw.map(item => parseInt(item.hora.split(':')[0])));
-        let horasAgenda = Array.from(horasAgendaSet).filter(h => !horasBloqueadas.has(h)).sort((a,b)=>a-b);
+        let horasAgenda = Array.from(horasAgendaSet).sort((a,b)=>a-b);
         let validStarts = []; 
         
         for (let h of horasAgenda) {
@@ -1526,7 +1543,6 @@ window.abrirDetalhesPrestador = function(index) {
     window.exibirModal("Detalhes do Prestador", htmlHeader + agendaHtml + ausenciasHtml + htmlBotaoFechar); 
 };
 
-// ✅ NOVO: Renderiza as Abas dos Técnicos E Atualiza o Select de Bloqueio
 window.renderTechTabs = function(qtd) {
     let container = document.getElementById("tabs-tecnicos");
     container.innerHTML = "";
@@ -2153,7 +2169,10 @@ window.atualizarFiltrosPrestador = function(){
 };
 
 window.renderDashboard = function() {
-    let totalAgend = agendamentos.length;
+    let isUserDashboard = (userRole === 'USUARIO');
+    let nomeLogado = currentUser ? extrairNomeDoEmail(currentUser.email).toLowerCase() : '';
+
+    let totalAgend = 0;
     let concluidosCount = 0;
     let programadosCount = 0;
     
@@ -2163,6 +2182,14 @@ window.renderDashboard = function() {
     let totalServicosGeral = 0;
 
     agendamentos.forEach(a => {
+        // ✅ CORRIGIDO: Se for USUARIO comum, filtra só o que ele pediu
+        if (isUserDashboard) {
+            let sol = String(a.solicitante || '').toLowerCase();
+            if (!sol.includes(nomeLogado)) return; 
+        }
+
+        totalAgend++;
+
         let status = a.status ? String(a.status).toLowerCase() : '';
         if (status.includes('conclu') || status.includes('completed') || status.includes('finalizado') || status.includes('impedido') || status.includes('reportado') || status.includes('falha')) {
             concluidosCount++;
