@@ -473,6 +473,7 @@
 </div>
 
 <script>
+
 // ==========================================
 // 1. CONFIGURAÇÕES DO SUPABASE
 // ==========================================
@@ -484,6 +485,10 @@ const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 const EDGE_URL = `${SUPABASE_URL}/functions/v1/integracao-v2-interna`;
 const API_URL = `${SUPABASE_URL}/functions/v1/smart-service`;
 const DB_URL = `${SUPABASE_URL}/rest/v1`;
+
+const ADMIN_EMAILS = ["luiz.lackeski@cobli.co", "fernando.souza@cobli.co", "anni.torrecilhas@cobli.co"];
+let currentUser = null;
+let userRole = 'PRESTADOR';
 
 // VARIÁVEIS GLOBAIS DA AGENDA
 let prestadores = [], itensSelecionados = [], agendamentos = [], etapa = 1, editingIndex = -1, prestadorSelecionadoIndex = null;
@@ -522,7 +527,7 @@ window.validarCampos = function(selector) { let container = document.querySelect
 function showAuthCard(id) { document.querySelectorAll('.auth-card').forEach(c => c.style.display = 'none'); document.getElementById(id).style.display = 'block'; }
 function togglePass(id) { const el = document.getElementById(id); el.type = el.type === 'password' ? 'text' : 'password'; }
 
-async function authAction(type) {
+window.authAction = async function(type) {
     if (type === 'signup') {
         const email = document.getElementById('signup-email').value, password = document.getElementById('signup-password').value, btn = document.getElementById('btnSignup');
         if(!email || password.length < 6) return window.showMessage("E-mail e senha de 6 dígitos são obrigatórios.");
@@ -557,6 +562,11 @@ async function authAction(type) {
         const email = document.getElementById('reset-email').value, btn = document.getElementById('btnReset');
         if(!email) return window.showMessage("Digite o e-mail cadastrado.");
         
+        // PONTO 4: TRAVA PARA E-MAIL FAKE DO PRESTADOR
+        if(email.endsWith('@apex.co')) {
+            return window.showMessage("⚠️ E-mail de prestador identificado.<br><br>Sua conta de prestador não recebe e-mails externos. Entre em contato com a equipe da Cobli (APEX) para redefinir sua senha.");
+        }
+
         btn.innerText = "Enviando...";
         const { error } = await supabaseClient.auth.resetPasswordForEmail(email);
         btn.innerText = "Enviar Link";
@@ -591,7 +601,6 @@ async function checkSession() {
 }
 
 async function definirPermissoes(email, uid) {
-    // CORREÇÃO: Trocado .single() por .maybeSingle() para evitar erro 406
     const { data, error } = await supabaseClient.from('perfis_usuarios').select('nivel').eq('id', uid).maybeSingle();
     
     if (data) {
@@ -621,22 +630,23 @@ async function definirPermissoes(email, uid) {
     }
 }
 
-async function handleLogout() {
+window.handleLogout = async function() {
     await supabaseClient.auth.signOut();
     window.location.reload();
 }
 
 window.carregarListaUsuarios = async function() {
     const tbody = document.getElementById('tabela-usuarios-body');
-    tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;">Carregando usuários...</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Carregando usuários...</td></tr>';
     
     const { data, error } = await supabaseClient.from('perfis_usuarios').select('*').order('created_at', { ascending: false });
     
     if (error) {
-        tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; color:red;">Erro ao carregar (Verifique a tabela no Supabase)</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:red;">Erro ao carregar (Verifique a tabela no Supabase)</td></tr>';
         return;
     }
     
+    // PONTO 3: ADICIONANDO COLUNA DE AÇÕES COM BOTÃO DE EXCLUIR E-MAIL
     tbody.innerHTML = data.map(u => {
         let badgeClass = 'badge-prest';
         if(u.nivel === 'ADMIN') badgeClass = 'badge-admin';
@@ -654,6 +664,9 @@ window.carregarListaUsuarios = async function() {
                 </select>
             </td>
             <td style="padding: 12px; border-bottom: 1px solid #e2e8f0; font-size: 0.85rem; color:#64748b;">${d}</td>
+            <td style="padding: 12px; border-bottom: 1px solid #e2e8f0; text-align: center;">
+                <button onclick="window.excluirUsuarioPerfil('${u.id}', '${u.email}')" style="background: var(--cobli-red); padding: 4px 8px; border-radius: 4px;" title="Remover Perfil">🗑️</button>
+            </td>
         </tr>`;
     }).join('');
 };
@@ -661,6 +674,20 @@ window.carregarListaUsuarios = async function() {
 window.mudarNivelUsuario = async function(id, nivel) {
     const { error } = await supabaseClient.from('perfis_usuarios').update({ nivel: nivel }).eq('id', id);
     if(error) window.showMessage("Erro ao atualizar o nível."); else window.showToast("Nível atualizado com sucesso!");
+};
+
+// PONTO 3: FUNÇÃO PARA EXCLUIR PERFIL DA TABELA
+window.excluirUsuarioPerfil = function(id, email) {
+    window.showConfirm(`Tem certeza que deseja remover o perfil de <strong>${email}</strong>?<br><br><small>O usuário perderá o acesso configurado no sistema.</small>`, `
+        supabaseClient.from('perfis_usuarios').delete().eq('id', '${id}').then(res => {
+            if(res.error) {
+                window.showMessage("Erro ao excluir: " + res.error.message);
+            } else {
+                window.showToast("Usuário removido da base.");
+                window.carregarListaUsuarios();
+            }
+        });
+    `);
 };
 
 // ==========================================
@@ -1459,7 +1486,7 @@ window.abrirCadastro = function(index = -1){
             })).filter(b => {
                 let parts = b.data.split('/');
                 let dataB = new Date(parts[2], parts[1] - 1, parts[0]);
-                return dataB >= hoje; // Só mantém as datas que ainda não passaram
+                return dataB >= hoje;
             });
             window.renderizarDatasBloqueadas();
         } 
@@ -1685,7 +1712,235 @@ window.salvarPrestador = async function(btn) {
 };
 
 window.excluirPrestador = async function(i) { window.showConfirm("Tem certeza que deseja excluir?", `fetch('${API_URL}/prestadores/${prestadores[i].id}', { method: 'DELETE', headers: getHeaders() }).then(async () => { await window.carregarDadosDoBanco(); window.showToast("Prestador excluído com sucesso!"); })`); };
-window.confirmarExclusaoAgendamento = async function(id) { await fetch(`${API_URL}/agendamentos/${id}`, { method: 'DELETE', headers: getHeaders() }); await window.carregarDadosDoBanco(); window.showToast("Agendamento excluído!"); window.fecharModal(); };
+
+// PONTO 1: FUNÇÃO ABRIR DETALHES DE AGENDAMENTO (GLOBAL)
+window.abrirDetalhesAgendamento = function(index) {
+    let a = filtradosPainel[index];
+    if(!a) return;
+    
+    const enderecoCompleto = `${a.rua || ''}, ${a.numero || 'S/N'} - ${a.bairro || ''}, ${a.cidade || ''}/${a.uf || ''} - CEP: ${a.cep || ''}`;
+    const contatoResponsavel = `${a.acompanhamento || 'Não informado'} | ${a.telefone_responsavel || 'Sem telefone'}`;
+    let prodHtml = a.produtos_texto ? a.produtos_texto.replace(/\n/g, '<br>') : 'Sem produtos detalhados';
+
+    let btnSincronizarHtml = (userRole === 'ADMIN' || userRole === 'USUARIO') ? `<button onclick="event.stopPropagation(); window.sincronizarStatusModal('${a.ticket}', this, ${index})" style="background:var(--cobli-green); flex:1; padding:10px;">🔄 Atualizar Status</button>` : '';
+    let btnExcluirHtml = (userRole === 'ADMIN') ? `<button onclick="window.excluirAgendamento(${a.id}, '${a.data}')" class="btn-cancelar" style="flex:1; padding:10px;">Excluir</button>` : '';
+
+    let html = `
+        <div style="background: white; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 15px;">
+            <div style="display:flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px; margin-bottom: 8px;">
+                <div style="font-weight:bold; font-size:1.1rem; color:var(--primary);">
+                    🎟️ Ticket: ${a.ticket}
+                </div>
+                <div id="modal-status-badge" style="font-size: 0.75rem; color: white; font-weight: 700; background: var(--primary); padding: 4px 10px; border-radius: 6px;">
+                    ${a.status || 'SOLICITADO'}
+                </div>
+            </div>
+            <div style="font-size:0.9rem; line-height:1.6;">
+                👤 <strong>Cliente:</strong> ${a.cliente}<br>
+                👔 <strong>Solicitante:</strong> ${a.solicitante}<br>
+                🛠️ <strong>Prestador:</strong> ${a.prestador}<br>
+                📅 <strong>Data do Atendimento:</strong> ${a.data}<br>
+                ⏰ <strong>Horários:</strong> ${Array.isArray(a.slots) ? a.slots.join(', ') : (a.slots || 'N/A')}<br>
+                <hr style="border:0; border-top:1px solid #f1f5f9; margin:8px 0;">
+                📍 <strong>Endereço:</strong> ${enderecoCompleto}<br>
+                📞 <strong>Responsável:</strong> ${contatoResponsavel}
+            </div>
+        </div>
+        <div style="font-weight:600; margin-bottom:5px; color:#334155;">📦 Serviços/Produtos Solicitados:</div>
+        <div style="background: #f8fafc; padding: 12px; border-radius: 6px; border: 1px solid #cbd5e1; margin-bottom: 15px; font-size: 0.9rem; line-height: 1.5; color:#475569;">
+            ${prodHtml}
+        </div>
+        <div style="display:flex; gap:10px; flex-wrap: wrap;">
+            <button onclick="window.fecharModal()" style="background:gray; flex:1; padding:10px;">Fechar</button>
+            ${btnSincronizarHtml}
+            ${btnExcluirHtml}
+        </div>
+    `;
+    window.exibirModal("Detalhes do Agendamento", html);
+};
+
+window.confirmarExclusaoAgendamento = async function(id) { 
+    await fetch(`${API_URL}/agendamentos/${id}`, { method: 'DELETE', headers: getHeaders() }); 
+    await window.carregarDadosDoBanco(); 
+    window.showToast("Agendamento excluído!"); 
+    window.fecharModal(); 
+};
+    
+window.revisarAgendamento = function() {
+    if(!window.validarCampos('#step-4')) {
+        return window.showMessage("Preencha todos os campos obrigatórios marcados em vermelho!");
+    }
+
+    const sel = document.querySelectorAll("#agenda-agendamento .cell.selecionado");
+    const dataSelecionada = sel.length > 0 ? sel[0].dataset.date : 'N/A';
+    const slotsSelecionados = Array.from(sel).map(c => c.dataset.hora).join(', ');
+    const prestador = prestadores[prestadorSelecionadoIndex]?.nome || 'Não selecionado';
+    
+    const ticket = document.getElementById('ticket').value;
+    const cliente = document.getElementById('clienteNome').value;
+    const solicitante = document.getElementById('solicitante').value;
+    const responsavel = document.getElementById('respAcompanhamento').value;
+    const telefone = document.getElementById('telResponsavel').value;
+    
+    const rua = document.getElementById('inputRua').value;
+    const numero = document.getElementById('inputNumero').value;
+    const bairro = document.getElementById('inputBairro').value;
+    const cidade = document.getElementById('inputCidade').value;
+    const uf = document.getElementById('inputUf').value;
+    const cep = document.getElementById('inputCep').value;
+    const endereco = `${rua}, ${numero} - ${bairro}, ${cidade}/${uf} - CEP: ${cep}`;
+
+    let prodHtml = itensSelecionados.map(i => {
+        let tempoTotalFormatado = formatarTempo(i.tempo * i.qtd);
+        return `<div style="margin-bottom:5px;">• [${i.nomeManutencao.toUpperCase()}] ${i.desc} <strong>(Qtd: ${i.qtd} | ${tempoTotalFormatado})</strong></div>`;
+    }).join('');
+    
+    let html = `
+        <div style="background: white; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 15px; text-align: left;">
+            <div style="font-weight:bold; font-size:1.1rem; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px; margin-bottom: 8px; color:var(--primary);">
+                📝 Revisão do Agendamento
+            </div>
+            <div style="font-size:0.9rem; line-height:1.6;">
+                <strong>🎟️ Ticket:</strong> ${ticket}<br>
+                <strong>👤 Cliente:</strong> ${cliente}<br>
+                <strong>🛠️ Prestador:</strong> ${prestador}<br>
+                <strong>📅 Data:</strong> ${dataSelecionada}<br>
+                <strong>⏰ Horários:</strong> ${slotsSelecionados}<br>
+                <hr style="border:0; border-top:1px solid #f1f5f9; margin:8px 0;">
+                <strong>📍 Local:</strong> ${endereco}<br>
+                <strong>📞 Contato:</strong> ${responsavel} | ${telefone}
+            </div>
+        </div>
+        <div style="font-weight:600; margin-bottom:5px; text-align: left;">📦 Serviços:</div>
+        <div style="background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #cbd5e1; margin-bottom: 20px; font-size: 0.85rem; text-align: left;">
+            ${prodHtml}
+        </div>
+        <div style="display: flex; gap: 10px;">
+            <button onclick="window.fecharModal()" style="background:gray; flex:1;">⬅️ Editar Dados</button>
+            <button onclick="window.confirmarEnvioReal()" style="background:var(--cobli-green); flex:1;">✅ Confirmar e Salvar</button>
+        </div>
+    `;
+    window.exibirModal("Confirme os Dados", html);
+};
+    
+window.confirmarEnvioReal = function() {
+    window.fecharModal();
+    const btn = document.getElementById('btnConfirmar');
+    window.concluirAgendamentoFinal(btn);
+};
+
+window.concluirAgendamentoFinal = async function(btn) {
+    const elCnpj = document.getElementById('clienteCnpj');   
+    if (elCnpj) {
+        const documentoNumeros = elCnpj.value.replace(/\D/g, '');        
+        if (documentoNumeros.length > 0 && documentoNumeros.length !== 14) {
+            window.showMessage("❌ O CNPJ está incompleto! Digite todos os 14 números.");
+            return; 
+        }
+    }
+    
+    const sel = document.querySelectorAll("#agenda-agendamento .cell.selecionado");
+    const slotsSelecionados = Array.from(sel).map(c => c.dataset.hora.substring(0, 5));
+    const dataSelecionada = sel.length > 0 ? sel[0].dataset.date : null;
+    const prestador = prestadores[prestadorSelecionadoIndex];
+    
+    const dispararSlack = (userRole === 'ADMIN') ? (document.getElementById('slackSwitch').value === 'ON') : true;
+    const dispararField = (userRole === 'ADMIN') ? (document.getElementById('fieldSwitch').value === 'ON') : true;
+    const dispararBanco = (userRole === 'ADMIN') ? (document.getElementById('dbSwitch').value === 'ON') : true;
+
+    if (!prestador || slotsSelecionados.length === 0) {
+        window.showMessage("Erro: Selecione o prestador e o horário.");
+        return;
+    }
+
+    let itensOrdenados = [...itensSelecionados].sort((a, b) => b.tempo - a.tempo);
+
+    const agendamento = {
+        prestador: prestador.nome,
+        qtdtecnicos: prestador.qtdtecnicos,
+        ticket: document.getElementById('ticket').value,
+        cliente: document.getElementById('clienteNome').value,
+        cnpj: document.getElementById('clienteCnpj').value,
+        solicitante: document.getElementById('solicitante').value,
+        data: dataSelecionada, 
+        rawdate: dataSelecionada,
+        slots: slotsSelecionados,
+        rua: document.getElementById('inputRua').value,
+        numero: document.getElementById('inputNumero').value,
+        bairro: document.getElementById('inputBairro').value,
+        cidade: document.getElementById('inputCidade').value,
+        uf: document.getElementById('inputUf').value,
+        cep: document.getElementById('inputCep').value,
+        acompanhamento: document.getElementById('respAcompanhamento').value,
+        telefone_responsavel: document.getElementById('telResponsavel').value,
+        segment: itensOrdenados[0]?.nomeManutencao || "", 
+        tipo_servico: itensOrdenados[0]?.desc || "Manutenção",
+        field_id: prestador.field_id,
+        produtos_texto: itensOrdenados.map(i => `• [${i.nomeManutencao.toUpperCase()}] ${i.desc} (Qtd: ${i.qtd})`).join('\n'),
+        segment_id_field: itensOrdenados[0]?.segment_id || "",
+        maintenance_id_field: itensOrdenados[0]?.maintenance_id || document.getElementById('tipoManutencao').value,
+        executar_field: dispararField,
+        executar_banco: dispararBanco
+    };
+    
+    const originalText = btn.innerText;
+    btn.innerText = "Processando..."; btn.disabled = true;
+    try {
+        const response = await fetch(EDGE_URL, {
+            method: 'POST',
+            headers: getHeaders(),
+            body: JSON.stringify(agendamento)
+        });
+        const result = await response.json(); 
+        if (response.ok) {
+            if (dispararSlack) {
+                let produtosFormatados = itensOrdenados.map(i => `[${i.nomeManutencao.toUpperCase()}] ${i.desc} (${i.qtd}x)`).join(', ');
+                const msgSlack = `✅ *Novo Agendamento - Ticket: ${result.ticket}*\n` +
+                                 `*Cliente:* ${agendamento.cliente}\n` +
+                                 `*Prestador:* ${agendamento.prestador}\n` +
+                                 `*Data:* ${agendamento.data} | ${agendamento.slots[0]}\n` +
+                                 `*Produtos:* ${produtosFormatados}\n` +
+                                 `*Solicitante:* ${agendamento.solicitante}`;
+                                 
+                await window.enviarNotificacaoSlack(msgSlack);
+            }
+            let statusMsg = `🚀 **Sucesso!**\n\n`;
+            statusMsg += `🎫 **Ticket:** ${result.ticket}\n`;
+            statusMsg += `📊 **Status EFOP:** ${result.status}\n`;
+            statusMsg += `📍 **Origem:** ${result.origin}\n`;
+            statusMsg += `\nSincronização: ` + 
+                         (dispararBanco ? "Banco [OK] " : "") + 
+                         (dispararField ? "Field [OK]" : "");
+            window.showMessage(statusMsg, "success");
+            await window.carregarDadosDoBanco();
+            
+            setTimeout(() => window.location.reload(), 2000); 
+        } else {
+            window.showMessage("❌ Erro: " + (result.error || "Erro na integração"), "error");
+        }
+    } catch (error) {
+        console.error("Erro na chamada:", error);
+        window.showMessage("Erro de conexão com a Edge Function.");
+    } finally {
+        btn.innerText = originalText; btn.disabled = false;
+    }
+};
+
+window.limparFormulario = function() { 
+    itensSelecionados = []; 
+    prestadorSelecionadoIndex = null; 
+    document.getElementById("lista-produtos").innerHTML = ""; 
+    document.getElementById("horasNecessarias").innerText = "0"; 
+    document.getElementById("agenda-agendamento").innerHTML = ""; 
+    document.getElementById("inputCep").value = ""; 
+    document.getElementById("ticket").value = ""; 
+    document.getElementById("clienteNome").value = ""; 
+    document.getElementById("solicitante").value = currentUser ? extrairNomeDoEmail(currentUser.email) : ""; 
+    document.getElementById("respAcompanhamento").value = ""; 
+    document.getElementById("telResponsavel").value = ""; 
+};
+
+window.cancelarAgendamento = function() { window.showConfirm("Deseja realmente cancelar este agendamento?", "window.limparFormulario(); window.proximoPasso(1);"); };
 
 // ==========================================
 // 8. PAINEL E DASHBOARD (ABAS 3 E 4)
@@ -1796,6 +2051,34 @@ window.renderPainel = function(){
             </div>
         </div>`;
     }).join(''); 
+};
+
+window.sincronizarStatusModal = async function(ticket, btn, index) {
+    const originalText = btn.innerHTML;
+    btn.innerHTML = `<span class="icone-girando">🔄</span> Atualizando...`;
+    btn.disabled = true;
+    
+    try {
+        const response = await fetch(EDGE_URL, {
+            method: 'POST',
+            headers: getHeaders(),
+            body: JSON.stringify({ acao: 'sincronizar_status', ticket: ticket })
+        });
+        const result = await response.json();
+        if (response.ok) {
+            window.showToast(`✅ Ticket ${ticket} atualizado para: ${result.status}`);
+            const badge = document.getElementById('modal-status-badge');
+            if(badge) badge.innerText = result.status;
+            await window.carregarDadosDoBanco(); 
+        } else {
+            window.showMessage("❌ Erro ao sincronizar: " + result.error);
+        }
+    } catch (err) {
+        window.showMessage("❌ Erro de conexão.");
+    } finally {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+    }
 };
 
 window.atualizarTodosStatus = async function() {
@@ -1987,4 +2270,7 @@ window.renderDashboard = function() {
 checkSession();
 </script>
 </body>
-</html>
+</html>"""
+
+with open("apex_sistema_prioridades_resolvidas.txt", "w", encoding="utf-8") as f:
+    f.write(full_code)}
