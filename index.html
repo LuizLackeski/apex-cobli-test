@@ -559,32 +559,25 @@ window.authAction = async function(type) {
             window.location.reload();
         }
     }
-// ... dentro de window.authAction ...
 else if (type === 'reset') {
-    const email = document.getElementById('reset-email').value.toLowerCase(), btn = document.getElementById('btnReset');
+    const email = document.getElementById('reset-email').value.toLowerCase().trim(), btn = document.getElementById('btnReset');
     if(!email) return window.showMessage("Digite o e-mail cadastrado.");
     
-    // Bloqueio para e-mails fictícios @apex.co
     if(email.endsWith('@apex.co')) {
-        window.showMessage(`
-            <div style="text-align:left;">
-                <p><strong>Atenção:</strong> Contas @apex.co não possuem caixa de e-mail real.</p>
-                <p>Para alterar a senha deste prestador, o administrador deve realizar a alteração manualmente no painel.</p>
-            </div>
-        `);
+        window.fecharModal(); // Fecha modais abertos se houver
+        setTimeout(() => {
+            window.showMessage("🛑 <b>Acesso Restrito</b><br><br>E-mails @apex.co são gerados pelo sistema. Para alterar sua senha, entre em contato com o suporte Cobli.");
+        }, 200);
         return;
     }
 
     btn.innerText = "Enviando...";
-    const siteUrl = window.location.href.split('#')[0].split('?')[0]; 
+    const siteUrl = window.location.origin + window.location.pathname; 
     
-    const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
-        redirectTo: siteUrl
-    });
-    
+    const { error } = await supabaseClient.auth.resetPasswordForEmail(email, { redirectTo: siteUrl });
     btn.innerText = "Enviar Link";
     if (error) return window.showMessage("Erro: " + error.message);
-    window.showToast("Link enviado! Verifique sua caixa de entrada.");
+    window.showToast("Link enviado! Verifique seu e-mail.");
     showAuthCard('card-login');
 }
     else if (type === 'update_pass_apex') {
@@ -1750,28 +1743,24 @@ window.abrirDetalhesAgendamento = function(index) {
     
     const enderecoCompleto = `${a.rua || ''}, ${a.numero || 'S/N'} - ${a.bairro || ''}, ${a.cidade || ''}/${a.uf || ''} - CEP: ${a.cep || ''}`;
     const contatoResponsavel = `${a.acompanhamento || 'Não informado'} | ${a.telefone_responsavel || 'Sem telefone'}`;
+    
     let prodHtml = '';
-if (a.produtos_texto && a.produtos_texto.trim()) {
-    prodHtml = a.produtos_texto
-        .split('\n')
-        .filter(l => l.trim())
-        .map(l => `<div style="margin-bottom:4px;">${l.trim()}</div>`)
-        .join('');
-} else if (a.segment && a.tipo_servico) {
-    prodHtml = `<div>• [${(a.segment || '').toUpperCase()}] ${a.tipo_servico}</div>`;
-} else {
-    prodHtml = '<div style="color:#64748b;">Sem produtos detalhados</div>';
-}
+    if (a.produtos_texto && a.produtos_texto.trim()) {
+        prodHtml = a.produtos_texto.split('\n').filter(l => l.trim()).map(l => `<div style="margin-bottom:4px;">${l.trim()}</div>`).join('');
+    } else if (a.segment && a.tipo_servico) {
+        prodHtml = `<div>• [${(a.segment || '').toUpperCase()}] ${a.tipo_servico}</div>`;
+    } else {
+        prodHtml = '<div style="color:#64748b;">Sem produtos detalhados</div>';
+    }
 
-    let btnSincronizarHtml = (userRole === 'ADMIN' || userRole === 'USUARIO') ? `<button onclick="event.stopPropagation(); window.sincronizarStatusModal('${a.ticket}', this, ${index})" style="background:var(--cobli-green); flex:1; padding:10px;">🔄 Atualizar Status</button>` : '';
+    // Corrigido: Botões agora chamam as funções globais corretamente
+    let btnSincronizarHtml = (userRole === 'ADMIN' || userRole === 'USUARIO') ? `<button onclick="window.sincronizarStatusModal('${a.ticket}', this, ${index})" style="background:var(--cobli-green); flex:1; padding:10px;">🔄 Atualizar Status</button>` : '';
     let btnExcluirHtml = (userRole === 'ADMIN') ? `<button onclick="window.excluirAgendamento(${a.id}, '${a.data}')" class="btn-cancelar" style="flex:1; padding:10px;">Excluir</button>` : '';
 
     let html = `
         <div style="background: white; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 15px;">
             <div style="display:flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px; margin-bottom: 8px;">
-                <div style="font-weight:bold; font-size:1.1rem; color:var(--primary);">
-                    🎟️ Ticket: ${a.ticket}
-                </div>
+                <div style="font-weight:bold; font-size:1.1rem; color:var(--primary);">🎟️ Ticket: ${a.ticket}</div>
                 <div id="modal-status-badge" style="font-size: 0.75rem; color: white; font-weight: 700; background: var(--primary); padding: 4px 10px; border-radius: 6px;">
                     ${a.status || 'SOLICITADO'}
                 </div>
@@ -1780,15 +1769,14 @@ if (a.produtos_texto && a.produtos_texto.trim()) {
                 👤 <strong>Cliente:</strong> ${a.cliente}<br>
                 👔 <strong>Solicitante:</strong> ${a.solicitante}<br>
                 🛠️ <strong>Prestador:</strong> ${a.prestador}<br>
-                📅 <strong>Data do Atendimento:</strong> ${a.data}<br>
-                ⏰ <strong>Horários:</strong> ${Array.isArray(a.slots) ? a.slots.join(', ') : (a.slots || 'N/A')}<br>
+                📅 <strong>Data:</strong> ${a.data}<br>
+                ⏰ <strong>Horários:</strong> ${Array.isArray(a.slots) ? a.slots.join(', ') : (a.slots || 'N/A')}
                 <hr style="border:0; border-top:1px solid #f1f5f9; margin:8px 0;">
-                📍 <strong>Endereço:</strong> ${enderecoCompleto}<br>
-                📞 <strong>Responsável:</strong> ${contatoResponsavel}
+                📍 <strong>Endereço:</strong> ${enderecoCompleto}
             </div>
         </div>
-        <div style="font-weight:600; margin-bottom:5px; color:#334155;">📦 Serviços/Produtos Solicitados:</div>
-        <div style="background: #f8fafc; padding: 12px; border-radius: 6px; border: 1px solid #cbd5e1; margin-bottom: 15px; font-size: 0.9rem; line-height: 1.5; color:#475569;">
+        <div style="font-weight:600; margin-bottom:5px; color:#334155;">📦 Serviços Solicitados:</div>
+        <div style="background: #f8fafc; padding: 12px; border-radius: 6px; border: 1px solid #cbd5e1; margin-bottom: 15px; font-size: 0.9rem;">
             ${prodHtml}
         </div>
         <div style="display:flex; gap:10px; flex-wrap: wrap;">
@@ -1811,81 +1799,8 @@ window.confirmarExclusaoAgendamento = async function(id) {
     await window.carregarDadosDoBanco(); 
     window.showToast("Agendamento excluído!"); 
     window.fecharModal(); 
-};
-    
-window.revisarAgendamento = function() {
-    if(!window.validarCampos('#step-4')) {
-        return window.showMessage("Preencha todos os campos obrigatórios marcados em vermelho!");
-    }
-
-    const sel = document.querySelectorAll("#agenda-agendamento .cell.selecionado");
-    const dataSelecionada = sel.length > 0 ? sel[0].dataset.date : 'N/A';
-    const slotsSelecionados = Array.from(sel).map(c => c.dataset.hora).join(', ');
-    const prestador = prestadores[prestadorSelecionadoIndex]?.nome || 'Não selecionado';
-    
-    const ticket = document.getElementById('ticket').value;
-    const cliente = document.getElementById('clienteNome').value;
-    const solicitante = document.getElementById('solicitante').value;
-    const responsavel = document.getElementById('respAcompanhamento').value;
-    const telefone = document.getElementById('telResponsavel').value;
-    
-    const rua = document.getElementById('inputRua').value;
-    const numero = document.getElementById('inputNumero').value;
-    const bairro = document.getElementById('inputBairro').value;
-    const cidade = document.getElementById('inputCidade').value;
-    const uf = document.getElementById('inputUf').value;
-    const cep = document.getElementById('inputCep').value;
-    const endereco = `${rua}, ${numero} - ${bairro}, ${cidade}/${uf} - CEP: ${cep}`;
-
-    let prodHtml = itensSelecionados.map(i => {
-        let tempoTotalFormatado = formatarTempo(i.tempo * i.qtd);
-        return `<div style="margin-bottom:5px;">• [${i.nomeManutencao.toUpperCase()}] ${i.desc} <strong>(Qtd: ${i.qtd} | ${tempoTotalFormatado})</strong></div>`;
-    }).join('');
-    
-    let html = `
-        <div style="background: white; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 15px; text-align: left;">
-            <div style="font-weight:bold; font-size:1.1rem; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px; margin-bottom: 8px; color:var(--primary);">
-                📝 Revisão do Agendamento
-            </div>
-            <div style="font-size:0.9rem; line-height:1.6;">
-                <strong>🎟️ Ticket:</strong> ${ticket}<br>
-                <strong>👤 Cliente:</strong> ${cliente}<br>
-                <strong>🛠️ Prestador:</strong> ${prestador}<br>
-                <strong>📅 Data:</strong> ${dataSelecionada}<br>
-                <strong>⏰ Horários:</strong> ${slotsSelecionados}<br>
-                <hr style="border:0; border-top:1px solid #f1f5f9; margin:8px 0;">
-                <strong>📍 Local:</strong> ${endereco}<br>
-                <strong>📞 Contato:</strong> ${responsavel} | ${telefone}
-            </div>
-        </div>
-        <div style="font-weight:600; margin-bottom:5px; text-align: left;">📦 Serviços:</div>
-        <div style="background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #cbd5e1; margin-bottom: 20px; font-size: 0.85rem; text-align: left;">
-            ${prodHtml}
-        </div>
-        <div style="display: flex; gap: 10px;">
-            <button onclick="window.fecharModal()" style="background:gray; flex:1;">⬅️ Editar Dados</button>
-            <button onclick="window.confirmarEnvioReal()" style="background:var(--cobli-green); flex:1;">✅ Confirmar e Salvar</button>
-        </div>
-    `;
-    window.exibirModal("Confirme os Dados", html);
-};
-    
-window.confirmarEnvioReal = function() {
-    window.fecharModal();
-    const btn = document.getElementById('btnConfirmar');
-    window.concluirAgendamentoFinal(btn);
-};
-
-window.concluirAgendamentoFinal = async function(btn) {
-    const elCnpj = document.getElementById('clienteCnpj');   
-    if (elCnpj) {
-        const documentoNumeros = elCnpj.value.replace(/\D/g, '');        
-        if (documentoNumeros.length > 0 && documentoNumeros.length !== 14) {
-            window.showMessage("❌ O CNPJ está incompleto! Digite todos os 14 números.");
-            return; 
-        }
-    }
-    
+};  
+  
     const sel = document.querySelectorAll("#agenda-agendamento .cell.selecionado");
     const slotsSelecionados = Array.from(sel).map(c => c.dataset.hora.substring(0, 5));
     const dataSelecionada = sel.length > 0 ? sel[0].dataset.date : null;
@@ -1972,22 +1887,6 @@ window.concluirAgendamentoFinal = async function(btn) {
         btn.innerText = originalText; btn.disabled = false;
     }
 };
-
-window.limparFormulario = function() { 
-    itensSelecionados = []; 
-    prestadorSelecionadoIndex = null; 
-    document.getElementById("lista-produtos").innerHTML = ""; 
-    document.getElementById("horasNecessarias").innerText = "0"; 
-    document.getElementById("agenda-agendamento").innerHTML = ""; 
-    document.getElementById("inputCep").value = ""; 
-    document.getElementById("ticket").value = ""; 
-    document.getElementById("clienteNome").value = ""; 
-    document.getElementById("solicitante").value = currentUser ? extrairNomeDoEmail(currentUser.email) : ""; 
-    document.getElementById("respAcompanhamento").value = ""; 
-    document.getElementById("telResponsavel").value = ""; 
-};
-
-window.cancelarAgendamento = function() { window.showConfirm("Deseja realmente cancelar este agendamento?", "window.limparFormulario(); window.proximoPasso(1);"); };
 
 // ==========================================
 // 8. PAINEL E DASHBOARD (ABAS 3 E 4)
@@ -2314,35 +2213,34 @@ window.renderDashboard = function() {
 // ==========================================
 // INICIALIZA O SISTEMA
 // ==========================================
-checkSession();
-    // DETECTOR DE LINK DE RECUPERAÇÃO
-supabaseClient.auth.onAuthStateChange(async (event, session) => {
-    if (event == "PASSWORD_RECOVERY") {
-        document.getElementById('auth-overlay').style.display = 'flex';
-        showAuthCard('card-signup'); 
-        
-        const tit = document.querySelector('#card-signup h2');
-        const sub = document.querySelector('#card-signup p');
-        const btn = document.getElementById('btnSignup');
-        const campoEmail = document.getElementById('signup-email').parentElement;
-
-        if(tit) tit.innerText = "Nova Senha";
-        if(sub) sub.innerText = "Defina sua nova senha de acesso abaixo.";
-        if(campoEmail) campoEmail.style.display = 'none'; 
-        if(btn) {
+// Substitua o bloco final por este:
+checkSession().then(() => {
+    // Escuta se o usuário clicou no link de recuperação
+    supabaseClient.auth.onAuthStateChange(async (event, session) => {
+        if (event == "PASSWORD_RECOVERY") {
+            // Força a exibição da tela de nova senha antes de qualquer outra aba
+            document.getElementById('app-content').style.display = 'none';
+            document.getElementById('auth-overlay').style.display = 'flex';
+            showAuthCard('card-signup'); 
+            
+            document.querySelector('#card-signup h2').innerText = "Redefinir Senha";
+            document.querySelector('#card-signup p').innerText = "Crie uma nova senha segura abaixo.";
+            document.getElementById('signup-email').parentElement.style.display = 'none'; 
+            
+            const btn = document.getElementById('btnSignup');
             btn.innerText = "Salvar Nova Senha";
             btn.onclick = async function() {
                 const newPassword = document.getElementById('signup-password').value;
-                if(newPassword.length < 6) return window.showMessage("A senha deve ter no mínimo 6 caracteres.");
+                if(newPassword.length < 6) return window.showMessage("Mínimo de 6 caracteres.");
                 
                 const { error } = await supabaseClient.auth.updateUser({ password: newPassword });
                 if (error) return window.showMessage("Erro: " + error.message);
                 
-                window.showMessage("Senha atualizada! Use sua nova senha para logar.");
-                window.location.href = window.location.pathname; // Limpa os tokens da URL e recarrega
+                window.showMessage("Senha atualizada! Faça login com a nova senha.");
+                window.location.href = window.location.origin + window.location.pathname;
             };
         }
-    }
+    });
 });
 </script>
 </body>
