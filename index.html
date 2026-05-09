@@ -293,7 +293,7 @@
                 <label class="req">Nº do Ticket</label>
                 <div style="display: flex; gap: 8px; margin-bottom: 12px;">
                     <input id="ticket" placeholder="Ex: 123654789" required style="flex: 1;">
-                    <button type="button" id="btnChecarSequencia" onclick="verificarSequenciaEFOP()" style="background:var(--cobli-dark); color:white; padding:0 15px; border-radius:6px; font-size:12px; cursor:pointer; border:none; height: 42px;">Checar Sequência</button>
+                    <button type="button" id="btnChecarSequencia" onclick="window.verificarSequenciaEFOP()" style="background:var(--cobli-dark); color:white; padding:0 15px; border-radius:6px; font-size:12px; cursor:pointer; border:none; height: 42px;">Checar Sequência</button>
                 </div>
                 <label class="req">Nome do Cliente</label><input id="clienteNome" required>
                 <label class="req">CNPJ / CPF</label><input id="clienteCnpj" placeholder="00.000.000/0000-00" oninput="window.maskCPFCNPJ(this)" required>
@@ -447,12 +447,12 @@
                 <div style="position: relative; height: 250px; width: 100%;"><canvas id="chartLocais"></canvas></div>
             </div>
         </div>
-
+        
         <div id="usuarios" class="aba">
             <div class="card">
                 <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; padding-bottom: 15px; margin-bottom: 15px;">
                     <h2 style="border:none; margin:0;">Gestão de Acessos</h2>
-                    <button onclick="carregarListaUsuarios()" style="background: var(--cobli-green);">🔄 Atualizar Tabela</button>
+                    <button onclick="window.carregarListaUsuarios()" style="background: var(--cobli-green);">🔄 Atualizar Tabela</button>
                 </div>
                 <p style="font-size: 0.85rem; color: #64748b;">Apenas Administradores podem visualizar e alterar as permissões de acesso do sistema.</p>
                 
@@ -468,7 +468,7 @@
                 </table>
             </div>
         </div>
-
+        
     </div>
 </div>
 
@@ -583,11 +583,11 @@ async function checkSession() {
         
         if (userRole === 'ADMIN') {
             document.getElementById('integrations-control').style.display = 'flex';
-            carregarListaUsuarios();
+            window.carregarListaUsuarios();
         }
         
-        carregarProdutos();
-        carregarDadosDoBanco();
+        window.carregarProdutos();
+        window.carregarDadosDoBanco();
     } else {
         document.getElementById('auth-overlay').style.display = 'flex';
         document.body.style.display = 'block'; 
@@ -629,7 +629,7 @@ async function handleLogout() {
     window.location.reload();
 }
 
-async function carregarListaUsuarios() {
+window.carregarListaUsuarios = async function() {
     const tbody = document.getElementById('tabela-usuarios-body');
     tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;">Carregando usuários...</td></tr>';
     
@@ -659,7 +659,7 @@ async function carregarListaUsuarios() {
             <td style="padding: 12px; border-bottom: 1px solid #e2e8f0; font-size: 0.85rem; color:#64748b;">${d}</td>
         </tr>`;
     }).join('');
-}
+};
 
 window.mudarNivelUsuario = async function(id, nivel) {
     const { error } = await supabase.from('perfis_usuarios').update({ nivel: nivel }).eq('id', id);
@@ -669,20 +669,20 @@ window.mudarNivelUsuario = async function(id, nivel) {
 // ==========================================
 // 4. BANCO DE DADOS E EVENTOS
 // ==========================================
-async function carregarDadosDoBanco() { 
+window.carregarDadosDoBanco = async function() { 
     try { 
         const resP = await fetch(`${API_URL}/prestadores`, { headers: getHeaders() }); prestadores = await resP.json(); 
-        if (userRole !== 'PRESTADOR') renderizarListaPrestadores(); 
+        if (userRole !== 'PRESTADOR') window.renderizarListaPrestadores(); 
 
         const resA = await fetch(`${DB_URL}/agendamentos?select=*&order=created_at.desc`, { method: 'GET', headers: getHeaders() }); 
         const dataAgend = await resA.json(); agendamentos = Array.isArray(dataAgend) ? dataAgend : [];
         
-        renderPainel(); 
-        if (userRole !== 'PRESTADOR') renderDashboard(); 
+        window.renderPainel(); 
+        if (userRole !== 'PRESTADOR') window.renderDashboard(); 
         
         setTimeout(() => { ['slackSwitch', 'fieldSwitch', 'dbSwitch'].forEach(id => { const el = document.getElementById(id); if(el) window.updateSwitchColor(el); }); }, 500);
     } catch(e) { console.error("Erro bd:", e); } 
-}
+};
 
 window.enviarNotificacaoSlack = async function(msg) {
     const URL = "https://fqaqlofndeihmhkopvan.supabase.co/functions/v1/notificar-slack";
@@ -1119,7 +1119,7 @@ window.renderizarAgendaPaginada = function() {
     btnProx.style.background = "var(--primary)";
     btnProx.style.padding = "8px 16px";
     btnProx.style.borderRadius = "6px";
-    btnProx.disabled = endIndex >= window.agendaDiasDisponivelength;
+    btnProx.disabled = endIndex >= window.agendaDiasDisponiveis.length;
     if(btnProx.disabled) btnProx.style.opacity = "0.5";
     btnProx.onclick = () => { window.agendaPaginaAtual++; window.renderizarAgendaPaginada(); };
 
@@ -1152,6 +1152,7 @@ window.revisarAgendamento = function() {
     
     const ticket = document.getElementById('ticket').value;
     const cliente = document.getElementById('clienteNome').value;
+    const solicitante = document.getElementById('solicitante').value;
     const responsavel = document.getElementById('respAcompanhamento').value;
     const telefone = document.getElementById('telResponsavel').value;
     
@@ -1195,7 +1196,7 @@ window.revisarAgendamento = function() {
     `;
     window.exibirModal("Confirme os Dados", html);
 };
-
+    
 window.confirmarEnvioReal = function() {
     window.fecharModal();
     const btn = document.getElementById('btnConfirmar');
@@ -1285,7 +1286,7 @@ window.concluirAgendamentoFinal = async function(btn) {
                          (dispararBanco ? "Banco [OK] " : "") + 
                          (dispararField ? "Field [OK]" : "");
             window.showMessage(statusMsg, "success");
-            await carregarDadosDoBanco();
+            await window.carregarDadosDoBanco();
             
             setTimeout(() => window.location.reload(), 2000); 
         } else {
@@ -1308,7 +1309,7 @@ window.limparFormulario = function() {
     document.getElementById("inputCep").value = ""; 
     document.getElementById("ticket").value = ""; 
     document.getElementById("clienteNome").value = ""; 
-    document.getElementById("solicitante").value = currentUser ? currentUser.email : ""; 
+    document.getElementById("solicitante").value = currentUser ? extrairNomeDoEmail(currentUser.email) : ""; 
     document.getElementById("respAcompanhamento").value = ""; 
     document.getElementById("telResponsavel").value = ""; 
 };
@@ -1447,14 +1448,12 @@ window.abrirCadastro = function(index = -1){
         document.getElementById("fieldIdField").value = p.field_id || ""; 
         
         if(p.agenda) { 
-            // 1. Carrega os horários normais na grade
             p.agenda.forEach(item => { 
-                if (item.isAbsence) return; // Pula as ausências para não pintar a grade
+                if (item.isAbsence) return; 
                 let cells = document.querySelectorAll("#agenda-cadastro .cell"); 
                 cells.forEach(c => { if(c.dataset.dia == item.dia && c.dataset.hora == item.hora) c.classList.add("selecionado"); }); 
             }); 
             
-            // 2. Extrai e limpa as ausências passadas automaticamente
             let hoje = new Date();
             hoje.setHours(0,0,0,0);
             
@@ -1463,7 +1462,7 @@ window.abrirCadastro = function(index = -1){
             })).filter(b => {
                 let parts = b.data.split('/');
                 let dataB = new Date(parts[2], parts[1] - 1, parts[0]);
-                return dataB >= hoje; // Só mantém as datas que ainda não passaram
+                return dataB >= hoje;
             });
             window.renderizarDatasBloqueadas();
         } 
@@ -1679,7 +1678,7 @@ window.salvarPrestador = async function(btn) {
         await fetch(url, { method: (editingIndex !== -1) ? 'PUT' : 'POST', headers: getHeaders(), body: JSON.stringify(p) }); 
         
         editingIndex = -1; 
-        await carregarDadosDoBanco(); 
+        await window.carregarDadosDoBanco(); 
         document.getElementById("cadastro-flow").style.display="none"; 
         document.getElementById("lista-prestadores-view").style.display="block"; 
         window.showToast("Prestador salvo com sucesso!"); 
@@ -1687,9 +1686,6 @@ window.salvarPrestador = async function(btn) {
         btn.disabled = false; btn.innerText = originalText; 
     } 
 };
-
-window.excluirPrestador = async function(i) { window.showConfirm("Tem certeza que deseja excluir?", `fetch('${API_URL}/prestadores/${prestadores[i].id}', { method: 'DELETE', headers: getHeaders() }).then(async () => { await carregarDadosDoBanco(); window.showToast("Prestador excluído com sucesso!"); })`); };
-window.confirmarExclusaoAgendamento = async function(id) { await fetch(`${API_URL}/agendamentos/${id}`, { method: 'DELETE', headers: getHeaders() }); await carregarDadosDoBanco(); window.showToast("Agendamento excluído!"); window.fecharModal(); };
 
 // ==========================================
 // 8. PAINEL E DASHBOARD (ABAS 3 E 4)
@@ -1701,7 +1697,7 @@ window.trocarAba = function(id, btn){
     if(btn) btn.classList.add('ativo'); 
     if(id === 'painel') window.atualizarFiltrosPrestador(); 
     if(id === 'dashboard') window.renderDashboard(); 
-    if(id === 'usuarios') carregarListaUsuarios();
+    if(id === 'usuarios') window.carregarListaUsuarios();
 };
 
 window.renderPainel = function(){ 
@@ -1826,7 +1822,7 @@ window.processarAtualizarTodosStatus = async function() {
     }
         
     window.showToast("✅ Varredura completa!");
-    await carregarDadosDoBanco(); 
+    await window.carregarDadosDoBanco(); 
 };
 
 window.limparFiltros = function(){ 
@@ -1883,8 +1879,8 @@ window.renderDashboard = function() {
             distLocais[local] = (distLocais[local] || 0) + 1;
         }
 
-        if (typeof a.produtos === 'string' && a.produtos.includes('•')) {
-            let linhas = a.produtos.split('\n');
+        if (typeof a.produtos_texto === 'string' && a.produtos_texto.includes('•')) {
+            let linhas = a.produtos_texto.split('\n');
             linhas.forEach(linha => {
                 let match = linha.match(/• \[(.*?)\] (.*?) \(Qtd: (\d+)\)/);
                 if (match) {
