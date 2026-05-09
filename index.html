@@ -1796,31 +1796,12 @@ window.confirmarExclusaoAgendamento = async function(id) {
 
 window.abrirDetalhesAgendamento = function(index) {
     let a = filtradosPainel[index];
-    if(!a) return;
-    
     const enderecoCompleto = `${a.rua || ''}, ${a.numero || 'S/N'} - ${a.bairro || ''}, ${a.cidade || ''}/${a.uf || ''} - CEP: ${a.cep || ''}`;
     const contatoResponsavel = `${a.acompanhamento || 'Não informado'} | ${a.telefone_responsavel || 'Sem telefone'}`;
-    
-    let txt = a.produtos_texto ? String(a.produtos_texto) : '';
-    let prodHtml = '';
-    
-    if (txt.trim().length > 0) {
-        prodHtml = txt.split('\n')
-            .filter(l => l.trim())
-            .map(l => {
-                let limpo = l.replace('•', '').trim();
-                limpo = limpo.replace(/(\(Qtd:.*?\))/ig, '<strong>$1</strong>');
-                return `<div style="margin-bottom:6px; font-size: 0.95rem;">• ${limpo}</div>`;
-            })
-            .join('');
-    } else if (a.segment && a.tipo_servico) {
-        prodHtml = `<div style="margin-bottom:6px; font-size: 0.95rem;">• [${String(a.segment).toUpperCase()}] ${a.tipo_servico}</div>`;
-    } else {
-        prodHtml = '<div style="color:#64748b; font-style: italic;">Sem produtos detalhados</div>';
-    }
+    let prodHtml = a.produtos ? a.produtos.replace(/\n/g, '<br>') : 'Sem produtos detalhados';
 
-    let btnSincronizarHtml = (userRole === 'ADMIN' || userRole === 'USUARIO') ? `<button onclick="window.sincronizarStatusModal('${a.ticket}', this, ${index})" style="background:var(--cobli-green); flex:1; padding:10px; color:white; border:none; border-radius:5px; cursor:pointer;">🔄 Atualizar Status</button>` : '';
-    let btnExcluirHtml = (userRole === 'ADMIN') ? `<button onclick="window.excluirAgendamento(${a.id}, '${a.data}')" class="btn-cancelar" style="flex:1; padding:10px; color:white; border:none; border-radius:5px; cursor:pointer;">Excluir</button>` : '';
+    let btnSincronizarHtml = `<button onclick="event.stopPropagation(); window.sincronizarStatusModal('${a.ticket}', this, ${index})" style="background:var(--cobli-green); flex:1; padding:10px;">🔄 Atualizar Status</button>`;
+    let btnExcluirHtml = isAuthorized ? `<button onclick="window.excluirAgendamento(${a.id}, '${a.data}')" class="btn-cancelar" style="flex:1; padding:10px;">Excluir</button>` : '';
 
     let html = `
         <div style="background: white; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 15px;">
@@ -1848,7 +1829,7 @@ window.abrirDetalhesAgendamento = function(index) {
             ${prodHtml}
         </div>
         <div style="display:flex; gap:10px; flex-wrap: wrap;">
-            <button onclick="window.fecharModal()" style="background:gray; flex:1; padding:10px; color:white; border:none; border-radius:5px; cursor:pointer;">Fechar</button>
+            <button onclick="window.fecharModal()" style="background:gray; flex:1; padding:10px;">Fechar</button>
             ${btnSincronizarHtml}
             ${btnExcluirHtml}
         </div>
@@ -2082,26 +2063,25 @@ window.renderDashboard = function() {
             distLocais[local] = (distLocais[local] || 0) + 1;
         }
 
-        let txt = a.produtos_texto ? String(a.produtos_texto) : '';
-        if (txt.trim().length > 0) {
-            let linhas = txt.split('\n');
+        if (typeof a.produtos === 'string' && a.produtos.includes('•')) {
+            let linhas = a.produtos.split('\n');
             linhas.forEach(linha => {
-                let limpo = linha.replace('•', '').trim();
-                if (!limpo) return;
-                
-                let nomeServico = limpo.replace(/\s*\(Qtd:.*?\)/i, '').trim();
-                
-                let qtd = 1;
-                let matchQtd = limpo.match(/\(Qtd:\s*(\d+)/i);
-                if (matchQtd) {
-                    qtd = parseInt(matchQtd[1]) || 1;
+                let match = linha.match(/• \[(.*?)\] (.*?) \(Qtd: (\d+)\)/);
+                if (match) {
+                    let nomeServ = `[${match[1]}] ${match[2]}`.trim();
+                    let qtd = parseInt(match[3]) || 1;
+                    distServ[nomeServ] = (distServ[nomeServ] || 0) + qtd;
+                    totalServicosGeral += qtd;
+                } else {
+                    let limpo = linha.replace('•', '').trim();
+                    if (limpo) {
+                        distServ[limpo] = (distServ[limpo] || 0) + 1;
+                        totalServicosGeral += 1;
+                    }
                 }
-                
-                distServ[nomeServico] = (distServ[nomeServico] || 0) + qtd;
-                totalServicosGeral += qtd;
             });
         } else if (a.segment && a.tipo_servico) {
-            let nomeServ = `[${String(a.segment).toUpperCase()}] ${a.tipo_servico}`;
+            let nomeServ = `[${a.segment.toUpperCase()}] ${a.tipo_servico}`;
             distServ[nomeServ] = (distServ[nomeServ] || 0) + 1;
             totalServicosGeral += 1;
         } else {
