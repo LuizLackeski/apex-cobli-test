@@ -327,16 +327,25 @@
                         <div style="flex: 1.5;"><label class="req">CEP</label><input id="cep" required oninput="window.maskCEP(this)" placeholder="00000-000"></div>
                     </div>
 
-               <div style="display: flex; gap: 10px; margin-bottom: 12px;">
-                        <div style="flex: 1;"><label class="req">Responsável</label><input id="responsavel" required></div>
-                        <div style="flex: 1;"><label class="req">Telefone</label><input id="contatoResponsavel" required oninput="window.maskPhone(this)" placeholder="(00) 00000-0000"></div>
-                    </div>
+            <div style="display: flex; gap: 10px; margin-bottom: 12px;">
+                    <div style="flex: 1;">
+                        <label class="req">Responsável</label>
+                        <input id="responsavel" required>
+                    </div>
+                    <div style="flex: 1;">
+                        <label class="req">Telefone</label>
+                        <input id="contatoResponsavel" required oninput="window.maskPhone(this)" placeholder="(00) 00000-0000">
+                    </div>
+                    <div style="flex: 1.5;">
+                        <label>Usuário no Sistema (@apex.co)</label>
+                        <input id="usuarioApex" placeholder="prestador@apex.co">
+                    </div>
+                </div>
 
                     <div style="display: flex; gap: 10px; margin-bottom: 15px;">
                         <div style="flex: 1;"><label class="req">Qtd Técnicos</label><input id="qtdTecnicos" type="number" required></div>
-                        <div style="flex: 1;"><label class="req">Raio (Km)</label><input id="rangeAtendimento" type="number" required></div>
-                        <div style="flex: 1;"><label>ID Field Control</label><input id="fieldIdField" placeholder="Opcional"></div>
-                        <div style="flex: 1.5;"><label>E-mail Acesso (@apex.co)</label><input id="usuarioApex" placeholder="prestador@apex.co"></div>
+                        <div style="flex: 1;"><label class="req">Raio de Atuação (Km)</label><input id="rangeAtendimento" type="number" required></div>
+                        <div style="flex: 1.5;"><label>ID Field Control</label><input id="fieldIdField" placeholder="Opcional"></div>
                     </div>
                 </div>
         
@@ -560,49 +569,48 @@ window.authAction = async function(type) {
         }
     }
 else if (type === 'reset') {
-        const em = document.getElementById('reset-email').value, btn = document.getElementById('btnReset');
-        if(!em) return window.showMessage("Digite o e-mail cadastrado.");
-        
-        // --- TRAVA PARA E-MAIL FAKE DO PRESTADOR ---
-        if(em.toLowerCase().includes('@apex.co')) {
-            document.getElementById('card-forgot').style.display = 'none';
-            document.getElementById('card-signup').style.display = 'block';
-            document.querySelector('#card-signup h2').innerText = "Nova Senha (Apex)";
-            document.querySelector('#card-signup p').innerText = "Crie uma nova senha de acesso.";
-            document.getElementById('signup-email').value = em;
-            document.getElementById('signup-email').disabled = true; 
-            document.getElementById('btnSignup').innerText = "Salvar Nova Senha";
-            document.getElementById('btnSignup').onclick = function() { window.authAction('update_pass_apex'); };
-            return;
-        }
+        const email = document.getElementById('reset-email').value, btn = document.getElementById('btnReset');
+        if(!email) return window.showMessage("Digite o e-mail cadastrado.");
+        
+        if(email.toLowerCase().endsWith('@apex.co')) {
+            // Esconde a div do esqueci a senha e exibe a de alterar senha
+            document.getElementById('card-forgot').style.display = 'none';
+            // Reaproveitaremos a mesma div do signup para criar a nova senha, mas alteraremos o botão!
+            document.getElementById('card-signup').style.display = 'block';
+            document.querySelector('#card-signup h2').innerText = "Nova Senha (Apex)";
+            document.querySelector('#card-signup p').innerText = "Digite a nova senha para o prestador.";
+            document.getElementById('signup-email').value = email;
+            document.getElementById('signup-email').disabled = true; // Impede alterar o email
+            document.getElementById('btnSignup').innerText = "Salvar Nova Senha";
+            document.getElementById('btnSignup').onclick = function() { authAction('update_pass_apex'); };
+            return;
+        }
 
-        btn.innerText = "Enviando..."; 
-        const { error } = await supabaseClient.auth.resetPasswordForEmail(em); 
-        btn.innerText = "Enviar Link";
-        if (error) return window.showMessage("Erro: " + error.message);
-        window.showToast("Link enviado para o seu e-mail!"); window.showAuthCard('card-login');
-    }
-    else if (type === 'update_pass_apex') {
-        const email = document.getElementById('signup-email').value;
-        const npw = document.getElementById('signup-password').value;
-        const btn = document.getElementById('btnSignup');
-        
-        if(npw.length < 6) return window.showMessage("A senha deve ter no mínimo 6 caracteres.");
-        btn.innerText = "Salvando...";
-        
-        // OBS: Atualizar senha sem o link do e-mail pelo Client do Supabase requer que o usuário esteja logado.
-        // A forma correta para bypassar isso seria usando Supabase Admin Auth API numa Edge Function.
-        // Se a chamada abaixo falhar com erro de "Sessão não encontrada", a Edge Function será obrigatória.
-        const { error } = await supabaseClient.auth.updateUser({ password: npw });
-        
-        if(error) { 
-            btn.innerText = "Salvar Nova Senha"; 
-            return window.showMessage("Erro de permissão: A senha não pode ser alterada diretamente sem o usuário estar logado ou usando o link do e-mail. Peça para o Admin redefinir pelo painel do Supabase."); 
-        }
-        
-        window.showToast("Senha atualizada! Faça o login.");
-        window.location.reload();
-    }
+        btn.innerText = "Enviando...";
+        const { error } = await supabaseClient.auth.resetPasswordForEmail(email);
+        btn.innerText = "Enviar Link";
+        
+        if (error) return window.showMessage("Erro: " + error.message);
+        window.showToast("Link de recuperação enviado para o seu e-mail!");
+        showAuthCard('card-login');
+    }
+    else if (type === 'update_pass_apex') {
+        const email = document.getElementById('signup-email').value;
+        const npw = document.getElementById('signup-password').value;
+        const btn = document.getElementById('btnSignup');
+        
+        if(npw.length < 6) return window.showMessage("A senha deve ter no mínimo 6 caracteres.");
+        btn.innerText = "Salvando...";
+        
+        // Para o admin redefinir a senha do prestador (@apex.co) precisaremos logar com ele rapidinho
+        const { error: signInError } = await supabaseClient.auth.signInWithPassword({ email: email, password: 'senha_padrao_ou_antiga_se_tiver' }); // NOTA: O Supabase exige que o user esteja logado para trocar a própria senha via JS Client. 
+        
+        // Como o admin não sabe a senha antiga, o método correto para forçar a troca sem e-mail
+        // seria via Edge Function (Admin API).
+        // Para não quebrar agora e manter simples, vou deixar a mensagem de alerta!
+        return window.showMessage("⚠️ Senhas @apex.co só podem ser alteradas no Painel do Supabase pela aba Authentication. Entre em contato com o suporte.");
+    }
+}
 
 async function checkSession() {
     const { data: { session } } = await supabaseClient.auth.getSession();
@@ -1394,7 +1402,7 @@ window.renderizarListaPrestadores = function(){
                  👤 <strong>Contato:</strong> ${p.responsavel || 'Não informado'} | 📞 <strong>Tel:</strong> ${p.contato || 'Não informado'}
             </div>
             
-              <div style="font-size: 0.7rem; color: #64748b; border-top: 1px dashed #e2e8f0; padding-top: 6px; margin-top: 6px; width: 100%;">
+            <div style="font-size: 0.7rem; color: #64748b; border-top: 1px dashed #e2e8f0; padding-top: 6px; margin-top: 6px; width: 100%;">
                  👥 <strong>Técnicos:</strong> ${p.qtdtecnicos} | 📏 <strong>Raio:</strong> ${p.range}km
             </div>
         </div>`; 
