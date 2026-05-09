@@ -1748,7 +1748,18 @@ window.abrirDetalhesAgendamento = function(index) {
     
     const enderecoCompleto = `${a.rua || ''}, ${a.numero || 'S/N'} - ${a.bairro || ''}, ${a.cidade || ''}/${a.uf || ''} - CEP: ${a.cep || ''}`;
     const contatoResponsavel = `${a.acompanhamento || 'Não informado'} | ${a.telefone_responsavel || 'Sem telefone'}`;
-    let prodHtml = a.produtos_texto ? a.produtos_texto.replace(/\n/g, '<br>') : 'Sem produtos detalhados';
+    let prodHtml = '';
+if (a.produtos_texto && a.produtos_texto.trim()) {
+    prodHtml = a.produtos_texto
+        .split('\n')
+        .filter(l => l.trim())
+        .map(l => `<div style="margin-bottom:4px;">${l.trim()}</div>`)
+        .join('');
+} else if (a.segment && a.tipo_servico) {
+    prodHtml = `<div>• [${(a.segment || '').toUpperCase()}] ${a.tipo_servico}</div>`;
+} else {
+    prodHtml = '<div style="color:#64748b;">Sem produtos detalhados</div>';
+}
 
     let btnSincronizarHtml = (userRole === 'ADMIN' || userRole === 'USUARIO') ? `<button onclick="event.stopPropagation(); window.sincronizarStatusModal('${a.ticket}', this, ${index})" style="background:var(--cobli-green); flex:1; padding:10px;">🔄 Atualizar Status</button>` : '';
     let btnExcluirHtml = (userRole === 'ADMIN') ? `<button onclick="window.excluirAgendamento(${a.id}, '${a.data}')" class="btn-cancelar" style="flex:1; padding:10px;">Excluir</button>` : '';
@@ -1786,7 +1797,13 @@ window.abrirDetalhesAgendamento = function(index) {
     `;
     window.exibirModal("Detalhes do Agendamento", html);
 };
-
+    
+window.excluirAgendamento = function(id, data) {
+    window.showConfirm(
+        `Tem certeza que deseja excluir o agendamento da data <strong>${data}</strong>?<br><br><small>Esta ação não pode ser desfeita.</small>`,
+        `window.confirmarExclusaoAgendamento(${id})`
+    );
+};
 window.confirmarExclusaoAgendamento = async function(id) { 
     await fetch(`${API_URL}/agendamentos/${id}`, { method: 'DELETE', headers: getHeaders() }); 
     await window.carregarDadosDoBanco(); 
