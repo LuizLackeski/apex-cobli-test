@@ -559,32 +559,34 @@ window.authAction = async function(type) {
             window.location.reload();
         }
     }
+// ... dentro de window.authAction ...
 else if (type === 'reset') {
-        const email = document.getElementById('reset-email').value, btn = document.getElementById('btnReset');
-        if(!email) return window.showMessage("Digite o e-mail cadastrado.");
-        
-        if(email.toLowerCase().endsWith('@apex.co')) {
-            // Esconde a div do esqueci a senha e exibe a de alterar senha
-            document.getElementById('card-forgot').style.display = 'none';
-            // Reaproveitaremos a mesma div do signup para criar a nova senha, mas alteraremos o botão!
-            document.getElementById('card-signup').style.display = 'block';
-            document.querySelector('#card-signup h2').innerText = "Nova Senha (Apex)";
-            document.querySelector('#card-signup p').innerText = "Digite a nova senha para o prestador.";
-            document.getElementById('signup-email').value = email;
-            document.getElementById('signup-email').disabled = true; // Impede alterar o email
-            document.getElementById('btnSignup').innerText = "Salvar Nova Senha";
-            document.getElementById('btnSignup').onclick = function() { authAction('update_pass_apex'); };
-            return;
-        }
+    const email = document.getElementById('reset-email').value.toLowerCase(), btn = document.getElementById('btnReset');
+    if(!email) return window.showMessage("Digite o e-mail cadastrado.");
+    
+    // Bloqueio para e-mails fictícios @apex.co
+    if(email.endsWith('@apex.co')) {
+        window.showMessage(`
+            <div style="text-align:left;">
+                <p><strong>Atenção:</strong> Contas @apex.co não possuem caixa de e-mail real.</p>
+                <p>Para alterar a senha deste prestador, o administrador deve realizar a alteração manualmente no painel.</p>
+            </div>
+        `);
+        return;
+    }
 
-        btn.innerText = "Enviando...";
-        const { error } = await supabaseClient.auth.resetPasswordForEmail(email);
-        btn.innerText = "Enviar Link";
-        
-        if (error) return window.showMessage("Erro: " + error.message);
-        window.showToast("Link de recuperação enviado para o seu e-mail!");
-        showAuthCard('card-login');
-    }
+    btn.innerText = "Enviando...";
+    const siteUrl = window.location.href.split('#')[0].split('?')[0]; 
+    
+    const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
+        redirectTo: siteUrl
+    });
+    
+    btn.innerText = "Enviar Link";
+    if (error) return window.showMessage("Erro: " + error.message);
+    window.showToast("Link enviado! Verifique sua caixa de entrada.");
+    showAuthCard('card-login');
+}
     else if (type === 'update_pass_apex') {
         const email = document.getElementById('signup-email').value;
         const npw = document.getElementById('signup-password').value;
@@ -2313,6 +2315,35 @@ window.renderDashboard = function() {
 // INICIALIZA O SISTEMA
 // ==========================================
 checkSession();
+    // DETECTOR DE LINK DE RECUPERAÇÃO
+supabaseClient.auth.onAuthStateChange(async (event, session) => {
+    if (event == "PASSWORD_RECOVERY") {
+        document.getElementById('auth-overlay').style.display = 'flex';
+        showAuthCard('card-signup'); 
+        
+        const tit = document.querySelector('#card-signup h2');
+        const sub = document.querySelector('#card-signup p');
+        const btn = document.getElementById('btnSignup');
+        const campoEmail = document.getElementById('signup-email').parentElement;
+
+        if(tit) tit.innerText = "Nova Senha";
+        if(sub) sub.innerText = "Defina sua nova senha de acesso abaixo.";
+        if(campoEmail) campoEmail.style.display = 'none'; 
+        if(btn) {
+            btn.innerText = "Salvar Nova Senha";
+            btn.onclick = async function() {
+                const newPassword = document.getElementById('signup-password').value;
+                if(newPassword.length < 6) return window.showMessage("A senha deve ter no mínimo 6 caracteres.");
+                
+                const { error } = await supabaseClient.auth.updateUser({ password: newPassword });
+                if (error) return window.showMessage("Erro: " + error.message);
+                
+                window.showMessage("Senha atualizada! Use sua nova senha para logar.");
+                window.location.href = window.location.pathname; // Limpa os tokens da URL e recarrega
+            };
+        }
+    }
+});
 </script>
 </body>
 </html>    
