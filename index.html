@@ -42,14 +42,18 @@
         .auth-links { margin-top: 20px; font-size: 0.85rem; }
         .auth-links a { display: block; color: #64748b; text-decoration: none; cursor: pointer; margin-bottom: 8px; font-weight: 500; }
         .auth-links a span { color: var(--primary); font-weight: bold; }
-        #app-content { display: none; } /* Oculta o sistema principal */
+        
+        #app-content { display: none; } /* Oculta o sistema principal até validar login */
         
         /* TABELA DE USUÁRIOS */
         table { width: 100%; border-collapse: collapse; margin-top: 15px; }
         th { text-align: left; background: #f1f5f9; padding: 12px; font-size: 0.75rem; color: #64748b; text-transform: uppercase; border-radius: 6px 6px 0 0; }
         td { padding: 12px; border-bottom: 1px solid #e2e8f0; font-size: 0.9rem; }
+        .badge-admin { background: #fee2e2; color: #ef4444; padding:4px; border-radius:4px; font-size:0.7rem; font-weight:bold;}
+        .badge-user { background: #e0e7ff; color: #4338ca; padding:4px; border-radius:4px; font-size:0.7rem; font-weight:bold;}
+        .badge-prest { background: #dcfce7; color: #15803d; padding:4px; border-radius:4px; font-size:0.7rem; font-weight:bold;}
 
-        /* MENU TOPO NOME E BOTOES */
+             /* MENU TOPO NOME E BOTOES */
         .topo { background: var(--cobli-dark); color: white; padding: 15px 30px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
         .menu { background: var(--primary); padding: 0 30px; display: flex; align-items: center; justify-content: space-between; min-height: 45px; }
         .menu button { background: none; border: none; color: #cbd5e1; padding: 15px 20px; cursor: pointer; font-size: 0.9rem; transition: 0.3s; }
@@ -79,7 +83,11 @@
         .card-actions { display: flex; gap: 8px; flex-wrap: wrap; }
         
         h2 { font-size: 1.1rem; margin-top: 0; color: #1e293b; border-bottom: 1px solid #f1f5f9; padding-bottom: 10px; }
-        input, select { width: 100%; padding: 10px; margin: 8px 0; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; }
+        
+        /* ASTERISCO DE CAMPO OBRIGATÓRIO */
+        label.req::after { content: " *"; color: var(--cobli-red); font-weight: bold; }
+        
+        input, select { width: 100%; padding: 10px; margin: 8px 0; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; transition: 0.3s; }
         label { font-size: 0.75rem; color: #64748b; font-weight: 600; text-transform: uppercase; margin-bottom: 2px; }
         button { cursor: pointer; padding: 8px 16px; background: var(--primary); color: white; border: none; border-radius: 5px; font-weight: 500; }
         .btn-cancelar { background: var(--cobli-red) !important; }
@@ -125,7 +133,6 @@
         .campo-filtro input, .campo-filtro details { margin: 0 !important; height: 38px !important; box-sizing: border-box !important; }
         .grid-filtros .botoes-container { display: flex; gap: 8px; height: 38px; }
         
-        /* ANIMAÇÃO DE GIRO PARA O BOTÃO REFRESH */
         @keyframes girar {
             from { transform: rotate(0deg); }
             to { transform: rotate(360deg); }
@@ -136,7 +143,6 @@
 <body>
 
 <div id="toast"></div>
-
 <div id="auth-overlay">
     <div class="auth-card" id="card-login">
         <div class="logo-circle"></div>
@@ -180,12 +186,16 @@
 
 <div id="app-content"> ```
 
+*(Não esqueça: você vai precisar fechar essa tag `<div id="app-content">` que abrimos agora. Ela deve ser fechada lá no final do arquivo, logo ANTES da tag `<script>`.)*
+
 ---
 
-### BLOCO 3: HTML (Aba de Usuários, Menu e Fechamento)
-**🔍 PROCURE PELA DIV DO MENU-LEFT:**
-```html
-<div class="menu-left">
+### BLOCO 3: Adicionando o botão da Aba Usuários no Menu
+
+<div class="topo"><strong>APEX</strong> <span>Agenda Prestadores</span></div>
+
+<div class="menu">
+    <div class="menu-left" id="main-menu">
         <button class="ativo" onclick="window.trocarAba('consulta', this)">Agendamento</button>
         <button onclick="window.trocarAba('cadastro', this)">Prestadores</button>
         <button onclick="window.trocarAba('painel', this)">Painel</button>
@@ -219,9 +229,9 @@
             </div>
         </div>
     </div>
-<div class="menu-right">
+    <div class="menu-right">
         <span id="user-display" class="user-info"></span>
-        <button class="btn-sair" style="color:var(--cobli-red); font-weight:bold;" onclick="handleLogout()">Sair</button>
+        <button class="btn-sair" style="color:var(--cobli-red); font-weight:bold;" onclick="window.logout()">Sair</button>
     </div>
 </div>
 
@@ -239,36 +249,36 @@
         <div id="step-1" class="card">
             <h2>Localização do Atendimento</h2>
             
-           <label>CEP</label>
+           <label class="req">CEP</label>
                 <div style="display: flex; gap: 10px;">
-                <input type="text" id="inputCep" placeholder="00000-000" oninput="window.maskCEP(this)">
+                <input type="text" id="inputCep" placeholder="00000-000" oninput="window.maskCEP(this)" required>
                 <button onclick="window.buscarEnderecoPorCep()" id="btnValidarCep" style="background:var(--cobli-green); white-space:nowrap;">Validar CEP</button>
             </div>
 
             <div id="camposEndereco" style="display: none; margin-top: 15px; border-top: 1px solid #eee; padding-top: 15px;">
                 <div style="display: flex; gap: 10px;">
                     <div style="flex: 3;">
-                        <label>Endereço (Rua/Av)</label>
-                        <input type="text" id="inputRua" placeholder="Ex: Av. Paulista">
+                        <label class="req">Endereço (Rua/Av)</label>
+                        <input type="text" id="inputRua" placeholder="Ex: Av. Paulista" required>
                     </div>
                     <div style="flex: 1;">
-                        <label>Nº</label>
-                        <input type="text" id="inputNumero" placeholder="123">
+                        <label class="req">Nº</label>
+                        <input type="text" id="inputNumero" placeholder="123" required>
                     </div>
                 </div>
 
                 <div style="display: flex; gap: 10px;">
                     <div style="flex: 2;">
-                        <label>Bairro</label>
-                        <input type="text" id="inputBairro" placeholder="Ex: Centro">
+                        <label class="req">Bairro</label>
+                        <input type="text" id="inputBairro" placeholder="Ex: Centro" required>
                     </div>
                     <div style="flex: 2;">
-                        <label>Cidade</label>
-                        <input type="text" id="inputCidade" placeholder="Ex: São Paulo">
+                        <label class="req">Cidade</label>
+                        <input type="text" id="inputCidade" placeholder="Ex: São Paulo" required>
                     </div>
                     <div style="flex: 1;">
-                        <label>UF</label>
-                        <input type="text" id="inputUf" placeholder="SP" maxlength="2">
+                        <label class="req">UF</label>
+                        <input type="text" id="inputUf" placeholder="SP" maxlength="2" required>
                     </div>
                 </div>
 
@@ -318,8 +328,10 @@
 
             <div id="lista-produtos"></div>
             <p>Horas Necessárias: <strong><span id="horasNecessarias">0</span></strong></p>
+            
             <div id="agenda-agendamento"></div>
-            <div style="margin-top:10px;">
+            
+            <div style="margin-top:15px; border-top: 1px solid #e2e8f0; padding-top: 15px;">
                 <button onclick="window.proximoPasso(2)" style="background:gray;">Voltar</button>
                 <button onclick="window.validarEAvancar()" style="background:var(--cobli-green);">Próximo</button>
                 <button onclick="window.cancelarAgendamento()" class="btn-cancelar">Cancelar</button>
@@ -328,16 +340,22 @@
         
         <div id="step-4" class="card" style="display:none;">
             <h2>Dados do Cliente</h2>
-            <label>Nº do Ticket</label><div style="display: flex; gap: 8px; margin-bottom: 12px;"><input id="ticket" placeholder="Ex: 123654789" required style="flex: 1;"><button type="button" id="btnChecarSequencia" onclick="verificarSequenciaEFOP()" 
-                style="background:var(--cobli-dark); color:white; padding:0 15px; border-radius:6px; font-size:12px; cursor:pointer; border:none; height: 42px;">Checar Sequência</button></div>
-            <label>Nome do Cliente</label><input id="clienteNome" required>
-            <label>CNPJ / CPF</label><input id="clienteCnpj" placeholder="00.000.000/0000-00" oninput="window.maskCPFCNPJ(this)" required>
-            <label>Responsável pela solicitação (APEX)</label><input id="solicitante" required>
-            <label>Responsável pelo acompanhamento (Local)</label><input id="respAcompanhamento" required>
-            <label>Telefone do responsável</label><input id="telResponsavel" placeholder="(00) 00000-0000" oninput="window.maskPhone(this)" maxlength="15" required>
-            <button onclick="window.proximoPasso(3)" style="background:gray;">Voltar</button>
-            <button id="btnConfirmar" onclick="window.revisarAgendamento(this)" style="background:var(--cobli-green);">Confirmar</button>
-            <button onclick="window.cancelarAgendamento()" class="btn-cancelar">Cancelar</button>
+            <label class="req">Nº do Ticket</label>
+            <div style="display: flex; gap: 8px; margin-bottom: 12px;">
+                <input id="ticket" placeholder="Ex: 123654789" required style="flex: 1;">
+                <button type="button" id="btnChecarSequencia" onclick="verificarSequenciaEFOP()" style="background:var(--cobli-dark); color:white; padding:0 15px; border-radius:6px; font-size:12px; cursor:pointer; border:none; height: 42px;">Checar Sequência</button>
+            </div>
+            <label class="req">Nome do Cliente</label><input id="clienteNome" required>
+            <label class="req">CNPJ / CPF</label><input id="clienteCnpj" placeholder="00.000.000/0000-00" oninput="window.maskCPFCNPJ(this)" required>
+            <label class="req">Responsável pela solicitação (APEX)</label><input id="solicitante" required>
+            <label class="req">Responsável pelo acompanhamento (Local)</label><input id="respAcompanhamento" required>
+            <label class="req">Telefone do responsável</label><input id="telResponsavel" placeholder="(00) 00000-0000" oninput="window.maskPhone(this)" maxlength="15" required>
+            
+            <div style="margin-top:15px;">
+                <button onclick="window.proximoPasso(3)" style="background:gray;">Voltar</button>
+                <button id="btnConfirmar" onclick="window.revisarAgendamento(this)" style="background:var(--cobli-green);">Confirmar</button>
+                <button onclick="window.cancelarAgendamento()" class="btn-cancelar">Cancelar</button>
+            </div>
         </div>
     </div>
 
@@ -351,70 +369,132 @@
             <div id="etapa-1">
                 <h3 style="margin-bottom: 20px; color: var(--primary);">Dados do Prestador</h3>
                 
-                <label>Nome / Empresa</label>
+                <label class="req">Nome / Empresa</label>
                 <input id="nomeEmpresa" required style="margin-bottom: 12px;">
                 
-                <label>Endereço Completo (Ex: R. Lourenço Marques, 297 - Vila Olímpia)</label>
+                <label class="req">Endereço Completo (Ex: R. Lourenço Marques, 297 - Vila Olímpia)</label>
                 <input id="endereco" required style="margin-bottom: 12px;">
                 
                 <div style="display: flex; gap: 10px; margin-bottom: 12px;">
                     <div style="flex: 2;">
-                        <label>Cidade</label>
+                        <label class="req">Cidade</label>
                         <input id="cidade" required>
                     </div>
                     <div style="flex: 1;">
-                        <label>UF</label>
+                        <label class="req">UF</label>
                         <input id="uf" required maxlength="2" placeholder="SP">
                     </div>
                     <div style="flex: 1.5;">
-                        <label>CEP</label>
+                        <label class="req">CEP</label>
                         <input id="cep" required oninput="window.maskCEP(this)" placeholder="00000-000">
                     </div>
                 </div>
 
                 <div style="display: flex; gap: 10px; margin-bottom: 12px;">
                     <div style="flex: 1;">
-                        <label>Responsável</label>
+                        <label class="req">Responsável</label>
                         <input id="responsavel" required>
                     </div>
                     <div style="flex: 1;">
-                        <label>Telefone</label>
+                        <label class="req">Telefone</label>
                         <input id="contatoResponsavel" required oninput="window.maskPhone(this)" placeholder="(00) 00000-0000">
                     </div>
                 </div>
 
                 <div style="display: flex; gap: 10px; margin-bottom: 15px;">
                     <div style="flex: 1;">
-                        <label>Qtd Técnicos</label>
+                        <label class="req">Qtd Técnicos</label>
                         <input id="qtdTecnicos" type="number" required>
                     </div>
                     <div style="flex: 1;">
-                        <label>Raio de Atuação (Km)</label>
+                        <label class="req">Raio de Atuação (Km)</label>
                         <input id="rangeAtendimento" type="number" required>
                     </div>
                     <div style="flex: 1.5;">
                         <label>ID Field Control</label>
-                        <input id="fieldIdField" placeholder="Informe o ID da Field">
+                        <input id="fieldIdField" placeholder="Opcional">
                     </div>
                 </div>
             </div>
     
             <div id="etapa-2" style="display:none;">
-                <h3>Agenda</h3>
+                <h3>Agenda Base</h3>
                 <div id="agenda-cadastro"></div>
+                
+                <h3 style="margin-top: 30px; border-top: 1px solid #cbd5e1; padding-top: 20px; color: var(--cobli-red);">🛑 Ausências (Feriados / Férias / Imprevistos)</h3>
+                <div style="background: #fff5f5; border: 1px solid #fecaca; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                    <div style="display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap;">
+                        <div style="flex: 1; min-width: 120px;">
+                            <label style="color: var(--cobli-red);">Data Inicial</label>
+                            <input type="date" id="dataBloqueio" style="border-color: #fca5a5; background: white;">
+                        </div>
+                        <div style="flex: 1; min-width: 120px;">
+                            <label style="color: var(--cobli-red);">Data Final (Opcional)</label>
+                            <input type="date" id="dataBloqueioFim" style="border-color: #fca5a5; background: white;">
+                        </div>
+                        <div style="flex: 1; min-width: 120px;">
+                            <label style="color: var(--cobli-red);">Tipo</label>
+                            <select id="tipoBloqueio" onchange="window.toggleTipoBloqueio()" style="border-color: #fca5a5; background: white;">
+                                <option value="total">Dia Inteiro</option>
+                                <option value="parcial">Horário Específico</option>
+                            </select>
+                        </div>
+                        <div style="flex: 0.5; min-width: 80px;">
+                            <label style="color: var(--cobli-red);">Qtd. Téc.</label>
+                            <input type="number" id="qtdBloqueio" value="1" min="1" style="border-color: #fca5a5; background: white;">
+                        </div>
+                        <div id="boxHoraBloqueio" style="display: none; gap: 10px; flex: 2; min-width: 200px;">
+                            <div style="flex: 1;">
+                                <label style="color: var(--cobli-red);">Início</label>
+                                <select id="horaInicioBloqueio" style="border-color: #fca5a5; background: white;">
+                                    <option value="">Sel...</option>
+                                    <option value="8">08:00</option>
+                                    <option value="9">09:00</option>
+                                    <option value="10">10:00</option>
+                                    <option value="11">11:00</option>
+                                    <option value="12">12:00</option>
+                                    <option value="13">13:00</option>
+                                    <option value="14">14:00</option>
+                                    <option value="15">15:00</option>
+                                    <option value="16">16:00</option>
+                                    <option value="17">17:00</option>
+                                    <option value="18">18:00</option>
+                                </select>
+                            </div>
+                            <div style="flex: 1;">
+                                <label style="color: var(--cobli-red);">Fim</label>
+                                <select id="horaFimBloqueio" style="border-color: #fca5a5; background: white;">
+                                    <option value="">Sel...</option>
+                                    <option value="9">09:00</option>
+                                    <option value="10">10:00</option>
+                                    <option value="11">11:00</option>
+                                    <option value="12">12:00</option>
+                                    <option value="13">13:00</option>
+                                    <option value="14">14:00</option>
+                                    <option value="15">15:00</option>
+                                    <option value="16">16:00</option>
+                                    <option value="17">17:00</option>
+                                    <option value="18">18:00</option>
+                                    <option value="19">19:00</option>
+                                </select>
+                            </div>
+                        </div>
+                        <button onclick="window.adicionarBloqueioData()" style="height: 42px; background: var(--cobli-red); min-width: 100px;">Adicionar</button>
+                    </div>
+                    <div id="lista-datas-bloqueadas" style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 15px;"></div>
+                </div>
             </div>
             <div style="margin-top:20px; display: flex; gap: 8px; flex-wrap: wrap;">
                 <button id="btn-voltar" onclick="window.mudarEtapa(-1)">Voltar</button>
                 <button id="btn-proximo" onclick="window.mudarEtapa(1)">Próximo</button>
                 <button id="btn-concluir" onclick="window.salvarPrestador(this)" style="background: var(--cobli-green);">Concluir</button>
-                <button onclick="window.limparAgendaCadastro()" style="background: #f59e0b; color: white; border: none;">🧹 Limpar Agenda</button>
+                <button id="btn-limpar-agenda" onclick="window.limparAgendaCadastro()" style="background: #f59e0b; color: white; border: none; display:none;">🧹 Limpar Agenda</button>
                 <button onclick="window.cancelarCadastro()" class="btn-cancelar">Cancelar</button>
             </div>
         </div>
     </div>
 
     <div id="painel" class="aba">
-        
         <div style="display: flex; align-items: center; background: white; padding: 12px; border-radius: 8px; border: 1px solid #e5e7eb; margin-bottom: 10px; overflow-x: auto;">
             <div style="display: flex; flex: 1; justify-content: space-between; min-width: 650px;">
                 <div style="flex: 1; text-align: center; border-right: 1px solid #e5e7eb; padding: 0 10px;">
@@ -535,33 +615,51 @@
         </div>
     </div>
 </div>
-<div id="usuarios" class="aba">
-            <div class="card">
-                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; padding-bottom: 15px; margin-bottom: 15px;">
-                    <h2 style="border:none; margin:0;">Gestão de Acessos</h2>
-                    <button onclick="carregarListaUsuarios()" style="background: var(--cobli-green);">🔄 Atualizar Tabela</button>
-                </div>
-                <p style="font-size: 0.85rem; color: #64748b;">Apenas Administradores podem alterar permissões.</p>
-                <table style="width: 100%; border-collapse: collapse; margin-top: 15px;">
-                    <thead><tr><th>Usuário / E-mail</th><th>Nível de Acesso</th><th>Data de Criação</th></tr></thead>
-                    <tbody id="tabela-usuarios-body"></tbody>
-                </table>
+<div class="card">
+            <h2 style="font-size: 1rem;">Volume por Localidade (Top 10)</h2>
+            <div style="position: relative; height: 250px; width: 100%;">
+                <canvas id="chartLocais"></canvas>
             </div>
         </div>
+    </div>
 
-    </div> </div> ```
+    <div id="usuarios" class="aba">
+        <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; padding-bottom: 15px; margin-bottom: 15px;">
+                <h2 style="border:none; margin:0;">Gestão de Acessos</h2>
+                <button onclick="carregarListaUsuarios()" style="background: var(--cobli-green);">🔄 Atualizar Tabela</button>
+            </div>
+            <p style="font-size: 0.85rem; color: #64748b;">Apenas Administradores podem visualizar e alterar as permissões de acesso do sistema.</p>
+            
+            <table style="width: 100%; border-collapse: collapse; margin-top: 15px;">
+                <thead>
+                    <tr>
+                        <th style="text-align: left; background: #f1f5f9; padding: 12px; font-size: 0.75rem; color: #64748b; text-transform: uppercase; border-radius: 6px 0 0 0;">Usuário / E-mail</th>
+                        <th style="text-align: left; background: #f1f5f9; padding: 12px; font-size: 0.75rem; color: #64748b; text-transform: uppercase;">Nível de Acesso</th>
+                        <th style="text-align: left; background: #f1f5f9; padding: 12px; font-size: 0.75rem; color: #64748b; text-transform: uppercase; border-radius: 0 6px 0 0;">Data de Criação</th>
+                    </tr>
+                </thead>
+                <tbody id="tabela-usuarios-body"></tbody>
+            </table>
+        </div>
+    </div>
+    </div>
+
+</div> </div> <script>
+
 <script>
-  
     let filtradosPainel = []; 
     let myChart = null; 
     let chartLocais = null;
 
-    // --- NOVA VARIÁVEL GLOBAL PARA O ARRASTE DOS HORÁRIOS ---
     let isDraggingAgenda = false;
     let dragActionAgenda = true; 
     window.addEventListener('mouseup', () => { isDraggingAgenda = false; });
 
-    // --- NOVA FUNÇÃO DE FORMATAR TEMPO ---
+    let datasBloqueadasTemp = [];
+    window.agendaDiasDisponiveis = [];
+    window.agendaPaginaAtual = 0;
+
     function formatarTempo(minutos) {
         if (minutos === 0) return "0h";
         let h = Math.floor(minutos / 60);
@@ -573,11 +671,11 @@
 
 window.maskCPFCNPJ = function(i) {
     let v = i.value.replace(/\D/g, "");
-    if (v.length <= 11) { // CPF
+    if (v.length <= 11) {
         v = v.replace(/(\={3})(\d)/, "$1.$2");
         v = v.replace(/(\d{3})(\d)/, "$1.$2");
         v = v.replace(/(\d{3})(\d{1,2})$/, "$1-$2");
-    } else { // CNPJ
+    } else {
         v = v.replace(/^(\d{2})(\d)/, "$1.$2");
         v = v.replace(/^(\d{2})\.(\d{3})(\d)/, "$1.$2.$3");
         v = v.replace(/\.(\d{3})(\d)/, ".$1/$2");
@@ -644,6 +742,23 @@ window.updateSwitchColor = function(el) {
         t.style.display = "block"; 
         setTimeout(() => { t.style.display = "none"; }, 3000); 
     };
+
+    window.validarCampos = function(selector) {
+        let container = document.querySelector(selector);
+        let reqs = container.querySelectorAll('[required]');
+        let isValid = true;
+        reqs.forEach(el => {
+            if (!el.value.trim()) {
+                el.style.borderColor = 'var(--cobli-red)';
+                el.style.backgroundColor = '#fff5f5';
+                isValid = false;
+            } else {
+                el.style.borderColor = '#cbd5e1';
+                el.style.backgroundColor = 'white';
+            }
+        });
+        return isValid;
+    };
     
     function extrairNomeDoEmail(email) {
         if (!email) return "";
@@ -682,34 +797,7 @@ window.abrirOpcoesPrestador = function(i) {
     `;
     window.exibirModal("Ações do Prestador", html);
 };
-      async function checkUserLevel(user) {
-    // Busca na nossa tabela o nível dele
-    const { data, error } = await _supa
-        .from('perfis_usuarios')
-        .select('nivel')
-        .eq('id', user.id)
-        .single();
-
-    if (data) {
-        userRole = data.nivel; // ADMIN, USUARIO ou PRESTADOR
-        configurarInterfacePorNivel(userRole);
-    }
-}
-
-function configurarInterfacePorNivel(role) {
-    const isAdmin = role === 'ADMIN';
-    const isPrestador = role === 'PRESTADOR';
-
-    // 1. Esconde aba de Usuários se não for Admin
-    document.getElementById('menu-usuarios').style.display = isAdmin ? 'block' : 'none';
-
-    // 2. Se for Prestador, trava na aba Painel
-    if (isPrestador) {
-        document.getElementById('menu-agendamento').style.display = 'none';
-        document.getElementById('menu-prestadores').style.display = 'none';
-        trocarAba('painel');
-    }
-}
+    
     window.enviarNotificacaoSlack = async function(msg) {
         const SUPABASE_URL = "https://fqaqlofndeihmhkopvan.supabase.co/functions/v1/notificar-slack";
         try {
@@ -719,13 +807,6 @@ function configurarInterfacePorNivel(role) {
                 headers: getHeaders(), 
                 body: JSON.stringify({ text: msg })
             });
-            
-            if (!res.ok) {
-                const erroSupabase = await res.text();
-                console.error("❌ A Edge Function do Slack recusou:", erroSupabase);
-            } else {
-                console.log("✅ Slack enviado com sucesso para a Edge!");
-            }
         } catch (e) { 
             console.error("❌ Erro de conexão ao tentar o Slack:", e); 
         }
@@ -762,7 +843,6 @@ window.buscarEnderecoPorCep = async function() {
             window.showToast("Endereço localizado!");
         }
     } catch (error) {
-        console.error("Erro ao buscar CEP:", error);
         window.showMessage("Erro ao consultar o CEP. Tente preencher manualmente.");
         document.getElementById('camposEndereco').style.display = 'block';
     } finally {
@@ -771,20 +851,86 @@ window.buscarEnderecoPorCep = async function() {
     }
 };
 
-const ADMIN_EMAILS = ["luiz.lackeski@cobli.co", "fernando.souza@cobli.co", "anni.torrecilhas@cobli.co"];
-let currentUser = null;
-let userRole = 'PRESTADOR';
+// ==========================================
+// 1. CONFIGURAÇÕES DO SUPABASE (COLOQUE AS CHAVES AQUI)
+// ==========================================
+const SUPABASE_URL = 'https://fqaqlofndeihmhkopvan.supabase.co/rest/v1';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZxYXFsb2ZuZGVpaG1oa29wdmFuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcyMjU4ODIsImV4cCI6MjA5MjgwMTg4Mn0.nauPYoB9RDhLLueMEuop2H2FxdChjIxFkAmBcYbJLzc'; 
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+const EDGE_URL = `${SUPABASE_URL}/functions/v1/integracao-v2-interna`;
+const API_URL = `${SUPABASE_URL}/functions/v1/smart-service`;
+
+const ADMIN_EMAILS = ["luiz.lackeski@cobli.co", "fernando.souza@cobli.co", "anni.torrecilhas@cobli.co"];
+let currentUser = null, userRole = 'PRESTADOR';
+
+// --- CONTROLE DE TELAS DE AUTH ---
 function showAuthCard(id) { document.querySelectorAll('.auth-card').forEach(c => c.style.display = 'none'); document.getElementById(id).style.display = 'block'; }
 function togglePass(id) { const el = document.getElementById(id); el.type = el.type === 'password' ? 'text' : 'password'; }
 
 async function authAction(type) {
     if (type === 'signup') {
-        const em = document
+        const em = document.getElementById('signup-email').value, pw = document.getElementById('signup-password').value, btn = document.getElementById('btnSignup');
+        if(!em || pw.length < 6) return window.showMessage("Preencha e-mail e senha de 6 dígitos.");
+        btn.innerText = "Criando..."; const { error } = await supabase.auth.signUp({ email: em, password: pw }); btn.innerText = "Criar Acesso";
+        if(error) return window.showMessage("Erro: " + error.message);
+        window.showToast("Sucesso! Faça o login."); document.getElementById('login-email').value = em; showAuthCard('card-login');
+    } else if (type === 'login') {
+        const em = document.getElementById('login-email').value, pw = document.getElementById('login-password').value, btn = document.getElementById('btnLogin'), err = document.getElementById('login-error');
+        btn.innerText = "Autenticando..."; err.style.display = 'none';
+        const { error } = await supabase.auth.signInWithPassword({ email: em, password: pw });
+        if(error) { btn.innerText = "Entrar"; err.style.display = 'block'; } else window.location.reload();
+    } else if (type === 'reset') {
+        const em = document.getElementById('reset-email').value, btn = document.getElementById('btnReset');
+        if(!em) return window.showMessage("Digite o e-mail.");
+        btn.innerText = "Enviando..."; const { error } = await supabase.auth.resetPasswordForEmail(em); btn.innerText = "Enviar Link";
+        if(error) return window.showMessage("Erro: " + error.message); window.showToast("Link enviado!"); showAuthCard('card-login');
+    }
+}
+
+async function checkSession() {
+    const { data: { session } } = await supabase.auth.getSession();
+    if(session) {
+        currentUser = session.user; document.getElementById('auth-overlay').style.display='none'; document.getElementById('app-content').style.display='block'; document.body.style.display='block';
+        await definirPermissoes(currentUser.email, currentUser.id);
+        if(userRole === 'ADMIN') { document.getElementById('integrations-control').style.display='flex'; carregarListaUsuarios(); }
+        carregarProdutos(); await carregarDadosDoBanco();
+    } else { document.getElementById('auth-overlay').style.display='flex'; document.body.style.display='block'; }
+}
+
+async function definirPermissoes(email, uid) {
+    const { data } = await supabase.from('perfis_usuarios').select('nivel').eq('id', uid).single();
+    userRole = data ? data.nivel : (ADMIN_EMAILS.includes(email.toLowerCase()) ? 'ADMIN' : (email.endsWith('@cobli.co') ? 'USUARIO' : 'PRESTADOR'));
+    document.getElementById('user-display').innerText = `${email} | ${userRole}`;
+    
+    let sol = document.getElementById('solicitante');
+    if(sol) sol.value = email.endsWith('@cobli.co') ? email.split('@')[0].replace('.',' ') : email;
+
+    if(userRole !== 'ADMIN') document.getElementById('btn-usuarios').style.display = 'none';
+    if(userRole === 'PRESTADOR') {
+        document.querySelector('.menu-left button[onclick*="consulta"]').style.display = 'none';
+        document.querySelector('.menu-left button[onclick*="cadastro"]').style.display = 'none';
+        document.querySelector('.menu-left button[onclick*="dashboard"]').style.display = 'none';
+        window.trocarAba('painel', document.querySelector('.menu-left button[onclick*="painel"]'));
+    }
+}
+
+async function handleLogout() { await supabase.auth.signOut(); window.location.reload(); }
+
+async function carregarListaUsuarios() {
+    const tb = document.getElementById('tabela-usuarios-body'); tb.innerHTML = '<tr><td colspan="3" align="center">Carregando...</td></tr>';
+    const { data, error } = await supabase.from('perfis_usuarios').select('*').order('created_at', { ascending: false });
+    if(error) return tb.innerHTML = '<tr><td colspan="3" align="center" style="color:red">Erro ao carregar do Supabase.</td></tr>';
+    tb.innerHTML = data.map(u => `<tr><td style="padding:12px; border-bottom:1px solid #e2e8f0; font-weight:bold;">${u.email}</td><td style="padding:12px; border-bottom:1px solid #e2e8f0;"><select onchange="window.mudarNivelUsuario('${u.id}', this.value)" style="padding:4px; font-weight:bold; border:none; background:${u.nivel==='ADMIN'?'#fee2e2':u.nivel==='USUARIO'?'#e0e7ff':'#dcfce7'}; color:${u.nivel==='ADMIN'?'#ef4444':u.nivel==='USUARIO'?'#4338ca':'#15803d'}"><option value="PRESTADOR" ${u.nivel==='PRESTADOR'?'selected':''}>PRESTADOR</option><option value="USUARIO" ${u.nivel==='USUARIO'?'selected':''}>USUARIO</option><option value="ADMIN" ${u.nivel==='ADMIN'?'selected':''}>ADMIN</option></select></td><td style="padding:12px; border-bottom:1px solid #e2e8f0;">${new Date(u.created_at).toLocaleDateString()}</td></tr>`).join('');
+}
+window.mudarNivelUsuario = async (id, nv) => { const { error } = await supabase.from('perfis_usuarios').update({ nivel: nv }).eq('id', id); error ? window.showMessage("Erro ao atualizar.") : window.showToast("Nível salvo!"); };
+
+// INICIALIZA O SISTEMA
+checkSession();
+
+// (O restante do seu código, com variáveis de agendamento etc., fica intacto aqui pra baixo!)
 
 // --- CONFIGURAÇÃO DE URLs ---
-const API_URL = 'https://fqaqlofndeihmhkopvan.supabase.co/functions/v1/smart-service'; 
-const DB_URL = 'https://fqaqlofndeihmhkopvan.supabase.co/rest/v1'; 
 const EDGE_URL = 'https://fqaqlofndeihmhkopvan.supabase.co/functions/v1/integracao-v2-interna';
 
 const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZxYXFsb2ZuZGVpaG1oa29wdmFuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcyMjU4ODIsImV4cCI6MjA5MjgwMTg4Mn0.nauPYoB9RDhLLueMEuop2H2FxdChjIxFkAmBcYbJLzc';
@@ -867,34 +1013,24 @@ async function verificarSequenciaEFOP() {
         const response = await fetch(EDGE_URL, {
             method: 'POST',
             headers: getHeaders(), 
-            body: JSON.stringify({ 
-                acao: 'checar_sequencia', 
-                ticket_base: baseOriginal 
-            })
+            body: JSON.stringify({ acao: 'checar_sequencia', ticket_base: baseOriginal })
         });
         
         const result = await response.json();
         
-        if (result.warning) {
-            window.showMessage(result.warning);
-        }
+        if (result.warning) window.showMessage(result.warning);
 
         if (result.sugerido) {
             if (result.sugerido !== baseOriginal) {
                 input.value = result.sugerido;
                 input.style.border = "2px solid #f59e0b";
-                if (!result.warning) {
-                    window.showMessage(`🔄 <strong>Sequência encontrada!</strong><br><br>O próximo número sugerido é: <strong>${result.sugerido}</strong>`);
-                }
+                if (!result.warning) window.showMessage(`🔄 <strong>Sequência encontrada!</strong><br><br>O próximo número sugerido é: <strong>${result.sugerido}</strong>`);
             } else {
                 input.style.border = "2px solid var(--cobli-green)";
-                if (!result.warning) {
-                    window.showMessage("✅ <strong>Tudo certo!</strong><br><br>Esse número está totalmente disponível para uso.");
-                }
+                if (!result.warning) window.showMessage("✅ <strong>Tudo certo!</strong><br><br>Esse número está totalmente disponível para uso.");
             }
         }
     } catch (err) {
-        console.error(err);
         window.showMessage("❌ Erro de conexão ao tentar verificar a sequência.");
     } finally {
         btn.innerText = "Checar Sequência";
@@ -910,11 +1046,8 @@ window.getOcupacaoSlot = function(prestador, data, hora) {
         const mesmoPrestador = (a.prestador === prestador.nome);
         const mesmaData = (a.data === data || a.rawdate === data);
         let contemHora = false;
-        if (Array.isArray(a.slots)) {
-            contemHora = a.slots.includes(hora);
-        } else if (typeof a.slots === 'string') {
-            contemHora = a.slots.split(', ').includes(hora);
-        }
+        if (Array.isArray(a.slots)) contemHora = a.slots.includes(hora);
+        else if (typeof a.slots === 'string') contemHora = a.slots.split(', ').includes(hora);
         return mesmoPrestador && mesmaData && contemHora;
     }).length; 
 };
@@ -927,24 +1060,68 @@ window.getBlockedHours = function(prestador, data) {
         slotsArray.forEach(s => {
             if (window.getOcupacaoSlot(prestador, data, s) >= cap) {
                 let h = parseInt(s.split(':')[0]);
-                blocked.add(h);     
-                blocked.add(h - 1); 
-                blocked.add(h + 1); 
+                blocked.add(h); blocked.add(h - 1); blocked.add(h + 1); 
             }
         });
     });
     return blocked;
 };
 
+window.getAusenciasDoDia = function(prestador, dStr) {
+    if (!prestador.agenda || !Array.isArray(prestador.agenda)) return { total: false, horasBloqueadas: new Set() };
+    
+    let ausencias = prestador.agenda.filter(a => a.isAbsence && a.data === dStr);
+    let total = false;
+    let horasBloqueadas = new Set();
+    let cap = parseInt(prestador.qtdtecnicos) || 1;
+
+    ausencias.forEach(a => {
+        let q = parseInt(a.qtd) || 1;
+        if (a.tipo === 'total' && q >= cap) {
+            total = true; 
+        } else if (a.tipo === 'parcial' && q >= cap) {
+            for (let h = parseInt(a.inicio); h < parseInt(a.fim); h++) {
+                horasBloqueadas.add(h);
+            }
+        }
+    });
+    
+    return { total, horasBloqueadas };
+};
+
 window.abrirDetalhesPrestador = function(index) { 
     let p = prestadores[index]; 
     let agendaHtml = '';  
     ["Seg", "Ter", "Qua", "Qui", "Sex", "Sab"].forEach(d => { 
-        let slots = p.agenda.filter(a => a.dia === d).map(a => `<div class="cell" style="width: 38px; height: 20px; font-size: 0.7rem; padding: 2px;">${a.hora}</div>`).join('');     
+        let slots = p.agenda.filter(a => a.dia === d && !a.isAbsence).map(a => `<div class="cell" style="width: 38px; height: 20px; font-size: 0.7rem; padding: 2px;">${a.hora}</div>`).join('');     
         if(slots) { 
             agendaHtml += `<div class="agenda-day-card" style="margin-bottom:10px; padding: 8px;"><div class="agenda-day-title" style="margin-bottom: 4px;">${d}</div><div class="slots-wrapper" style="gap: 3px;">${slots}</div></div>`; 
         } 
     });   
+    
+    let ausenciasHtml = '';
+    if (p.agenda) {
+        let hoje = new Date();
+        hoje.setHours(0,0,0,0);
+        let ausencias = p.agenda.filter(a => a.isAbsence).filter(b => {
+            let parts = b.data.split('/');
+            let dataB = new Date(parts[2], parts[1] - 1, parts[0]);
+            return dataB >= hoje; 
+        });
+
+        if (ausencias.length > 0) {
+            ausenciasHtml = `<div style="margin-top: 15px; border-top: 1px solid #cbd5e1; padding-top: 10px;">
+                <div style="font-weight:bold; font-size:0.9rem; color:var(--cobli-red); margin-bottom: 8px;">🛑 Ausências Programadas</div>
+                <div style="display: flex; flex-wrap: wrap; gap: 6px;">`;
+            ausenciasHtml += ausencias.map(b => {
+                let texto = b.tipo === 'total' ? `${b.data} (Dia Inteiro)` : `${b.data} (${b.inicio}h às ${b.fim}h)`;
+                texto += ` | ${b.qtd} Téc.`;
+                return `<span class="pill" style="background: #fee2e2; color: var(--cobli-red); border: 1px solid #fca5a5; font-size: 0.7rem;">${texto}</span>`;
+            }).join('');
+            ausenciasHtml += `</div></div>`;
+        }
+    }
+
     let htmlHeader = `
         <div style="margin-bottom:15px; border-bottom: 1px solid #cbd5e1; padding-bottom: 10px;">
             <div style="font-weight:bold; font-size:1.1rem; color:var(--primary); margin-bottom: 4px;">${p.nome}</div>
@@ -954,7 +1131,7 @@ window.abrirDetalhesPrestador = function(index) {
         </div>
     `;
     let htmlBotaoFechar = `<div style="text-align: right; margin-top: 15px;"><button onclick="window.fecharModal()" style="background:var(--primary); padding: 10px 20px;">Fechar</button></div>`;
-    window.exibirModal("Detalhes do Prestador", htmlHeader + agendaHtml + htmlBotaoFechar); 
+    window.exibirModal("Detalhes do Prestador", htmlHeader + agendaHtml + ausenciasHtml + htmlBotaoFechar); 
 };
     
 window.abrirDetalhesAgendamento = function(index) {
@@ -1044,12 +1221,65 @@ window.excluirAgendamento = function(id, dataStr) {
 window.cancelarAgendamento = function() { window.showConfirm("Deseja realmente cancelar este agendamento?", window.realizarCancelamento); };
 window.realizarCancelamento = function() { window.limparFormulario(); window.proximoPasso(1); };
 async function consultarDistancia(cepOrigem, enderecoPrestador) { try { const response = await fetch(`${API_URL}/distancia`, { method: 'POST', headers: getHeaders(), body: JSON.stringify({ origin: cepOrigem, destination: enderecoPrestador }) }); const data = await response.json(); return (data.status === 'OK') ? parseFloat(data.rows[0].elements[0].distance.value) / 1000 : null; } catch (e) { return null; } }
-window.salvarPrestador = async function(btn) { const originalText = btn.innerText; btn.innerText = "Salvando..."; btn.disabled = true; try { const inputs = document.querySelectorAll('#etapa-1 input'); for(let i of inputs) if(!i.value.trim()) { window.showMessage("Preencha todos os campos!"); return; } let agenda = [...document.querySelectorAll('#agenda-cadastro .cell.selecionado')].map(c => ({ dia: c.dataset.dia, hora: c.dataset.hora })); let p = { nome: document.getElementById("nomeEmpresa").value, endereco: document.getElementById("endereco").value, cidade: document.getElementById("cidade").value, uf: document.getElementById("uf").value, cep: document.getElementById("cep").value, responsavel: document.getElementById("responsavel").value, contato: document.getElementById("contatoResponsavel").value, qtdtecnicos: parseInt(document.getElementById("qtdTecnicos").value), range: document.getElementById("rangeAtendimento").value, field_id: document.getElementById("fieldIdField").value, agenda: agenda }; const url = (editingIndex !== -1) ? `${API_URL}/prestadores/${prestadores[editingIndex].id}` : `${API_URL}/prestadores`; await fetch(url, { method: (editingIndex !== -1) ? 'PUT' : 'POST', headers: getHeaders(), body: JSON.stringify(p) }); editingIndex = -1; await carregarDadosDoBanco(); document.getElementById("cadastro-flow").style.display="none"; document.getElementById("lista-prestadores-view").style.display="block"; window.showToast("Prestador salvo com sucesso!"); } finally { btn.disabled = false; btn.innerText = originalText; } };
+
+window.salvarPrestador = async function(btn) { 
+    const originalText = btn.innerText; 
+    btn.innerText = "Salvando..."; 
+    btn.disabled = true; 
+    try { 
+        if(!window.validarCampos('#etapa-1')) {
+            return window.showMessage("Preencha todos os campos obrigatórios marcados em vermelho!");
+        }
+        
+        let agenda = [...document.querySelectorAll('#agenda-cadastro .cell.selecionado')].map(c => ({ dia: c.dataset.dia, hora: c.dataset.hora })); 
+        
+        datasBloqueadasTemp.forEach(b => {
+            agenda.push({
+                isAbsence: true,
+                data: b.data,
+                tipo: b.tipo,
+                inicio: b.inicio,
+                fim: b.fim,
+                qtd: b.qtd
+            });
+        });
+
+        let p = { 
+            nome: document.getElementById("nomeEmpresa").value, 
+            endereco: document.getElementById("endereco").value, 
+            cidade: document.getElementById("cidade").value, 
+            uf: document.getElementById("uf").value, 
+            cep: document.getElementById("cep").value, 
+            responsavel: document.getElementById("responsavel").value, 
+            contato: document.getElementById("contatoResponsavel").value, 
+            qtdtecnicos: parseInt(document.getElementById("qtdTecnicos").value), 
+            range: document.getElementById("rangeAtendimento").value, 
+            field_id: document.getElementById("fieldIdField").value, 
+            agenda: agenda 
+        }; 
+        
+        const url = (editingIndex !== -1) ? `${API_URL}/prestadores/${prestadores[editingIndex].id}` : `${API_URL}/prestadores`; 
+        await fetch(url, { method: (editingIndex !== -1) ? 'PUT' : 'POST', headers: getHeaders(), body: JSON.stringify(p) }); 
+        
+        editingIndex = -1; 
+        await carregarDadosDoBanco(); 
+        document.getElementById("cadastro-flow").style.display="none"; 
+        document.getElementById("lista-prestadores-view").style.display="block"; 
+        window.showToast("Prestador salvo com sucesso!"); 
+    } finally { 
+        btn.disabled = false; btn.innerText = originalText; 
+    } 
+};
+
 window.excluirPrestador = async function(i) { window.showConfirm("Tem certeza que deseja excluir?", () => window.confirmarExclusaoPrestador(i)); };
 window.confirmarExclusaoPrestador = async function(i) { await fetch(`${API_URL}/prestadores/${prestadores[i].id}`, { method: 'DELETE', headers: getHeaders() }); await carregarDadosDoBanco(); window.showToast("Prestador excluído com sucesso!"); };
 window.confirmarExclusaoAgendamento = async function(id) { await fetch(`${API_URL}/agendamentos/${id}`, { method: 'DELETE', headers: getHeaders() }); await carregarDadosDoBanco(); window.showToast("Agendamento excluído!"); window.fecharModal(); };
     
 window.revisarAgendamento = function() {
+    if(!window.validarCampos('#step-4')) {
+        return window.showMessage("Preencha todos os campos obrigatórios marcados em vermelho!");
+    }
+
     const sel = document.querySelectorAll("#agenda-agendamento .cell.selecionado");
     const dataSelecionada = sel.length > 0 ? sel[0].dataset.date : 'N/A';
     const slotsSelecionados = Array.from(sel).map(c => c.dataset.hora).join(', ');
@@ -1205,7 +1435,19 @@ window.concluirAgendamentoFinal = async function(btn) {
     }
 };
 
-window.limparFormulario = function() { itensSelecionados = []; prestadorSelecionadoIndex = null; document.getElementById("lista-produtos").innerHTML = ""; document.getElementById("horasNecessarias").innerText = "0"; document.getElementById("agenda-agendamento").innerHTML = ""; document.getElementById("inputCep").value = ""; document.getElementById("ticket").value = ""; document.getElementById("clienteNome").value = ""; document.getElementById("solicitante").value = ""; document.getElementById("respAcompanhamento").value = ""; document.getElementById("telResponsavel").value = ""; };
+window.limparFormulario = function() { 
+    itensSelecionados = []; 
+    prestadorSelecionadoIndex = null; 
+    document.getElementById("lista-produtos").innerHTML = ""; 
+    document.getElementById("horasNecessarias").innerText = "0"; 
+    document.getElementById("agenda-agendamento").innerHTML = ""; 
+    document.getElementById("inputCep").value = ""; 
+    document.getElementById("ticket").value = ""; 
+    document.getElementById("clienteNome").value = ""; 
+    document.getElementById("solicitante").value = ""; 
+    document.getElementById("respAcompanhamento").value = ""; 
+    document.getElementById("telResponsavel").value = ""; 
+};
 
 window.trocarAba = function(id, btn){ 
     document.querySelectorAll('.aba').forEach(a => a.classList.remove('ativa')); 
@@ -1219,31 +1461,48 @@ window.trocarAba = function(id, btn){
 // --- NOVO MOTOR MATEMÁTICO DE AGENDA ---
 window.podeAgendar = function(prestador, data, novosSlotsInt) {
     let cap = parseInt(prestador.qtdtecnicos) || 1;
-    let agendamentosDoDia = agendamentos.filter(a => a.prestador === prestador.nome && (a.data === data || a.rawdate === data));
-
     let intervalos = [];
+
+    let agendamentosDoDia = agendamentos.filter(a => a.prestador === prestador.nome && (a.data === data || a.rawdate === data));
     agendamentosDoDia.forEach(a => {
         let slotsArray = Array.isArray(a.slots) ? a.slots : (typeof a.slots === 'string' ? a.slots.split(', ') : []);
         if (slotsArray.length > 0) {
             let ints = slotsArray.map(s => parseInt(s.split(':')[0])).sort((x,y) => x-y);
-            intervalos.push({ start: ints[0], end: ints[ints.length - 1] });
+            intervalos.push({ start: ints[0], end: ints[ints.length - 1], type: 'job' });
         }
     });
 
     if (novosSlotsInt && novosSlotsInt.length > 0) {
         let ints = [...novosSlotsInt].sort((x,y) => x-y);
-        intervalos.push({ start: ints[0], end: ints[ints.length - 1] });
+        intervalos.push({ start: ints[0], end: ints[ints.length - 1], type: 'job' });
+    }
+
+    if (prestador.agenda) {
+        let ausenciasDia = prestador.agenda.filter(a => a.isAbsence && a.data === data);
+        ausenciasDia.forEach(a => {
+            let q = parseInt(a.qtd) || 1;
+            let start = a.tipo === 'total' ? 0 : parseInt(a.inicio);
+            let end = a.tipo === 'total' ? 24 : parseInt(a.fim) - 1; 
+            for(let i=0; i<q; i++) {
+                intervalos.push({ start: start, end: end, type: 'absence' });
+            }
+        });
     }
 
     intervalos.sort((a, b) => a.start - b.start);
 
-    let techEnds = Array(cap).fill(-999);
+    let techEnds = Array(cap).fill().map(() => ({ end: -999, type: 'none' }));
+    
     for (let i = 0; i < intervalos.length; i++) {
         let job = intervalos[i];
         let assigned = false;
         for (let t = 0; t < cap; t++) {
-            if (techEnds[t] + 1 < job.start) {
-                techEnds[t] = job.end;
+            let tech = techEnds[t];
+            let gap = (tech.type === 'job' && job.type === 'job') ? 1 : 0;
+            
+            if (tech.end + gap < job.start) {
+                tech.end = job.end;
+                tech.type = job.type;
                 assigned = true;
                 break;
             }
@@ -1255,14 +1514,26 @@ window.podeAgendar = function(prestador, data, novosSlotsInt) {
 
 window.getNextDates = function(prestador) { 
     let dates = []; let today = new Date(); const daysMap = {"Dom":0, "Seg":1, "Ter":2, "Qua":3, "Qui":4, "Sex":5, "Sab":6}; 
-    let agendaDays = (prestador.agenda && Array.isArray(prestador.agenda)) ? [...new Set(prestador.agenda.map(a => a.dia))].map(d => daysMap[d]) : []; 
-    for (let i = 2; i < 16; i++) { 
+    
+    let agendaNormal = (prestador.agenda && Array.isArray(prestador.agenda)) ? prestador.agenda.filter(a => !a.isAbsence) : [];
+    let agendaDays = [...new Set(agendaNormal.map(a => a.dia))].map(d => daysMap[d]); 
+    
+    // Busca até 60 dias para frente, mas PARA quando achar as primeiras 10 opções válidas!
+    for (let i = 2; i < 60; i++) { 
+        if(dates.length >= 10) break;
+        
         let d = new Date(); d.setDate(today.getDate() + i); let dStr = d.toLocaleDateString(); let dNome = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sab"][d.getDay()]; 
         if (!agendaDays.includes(d.getDay())) continue;
-        let slotsDoDia = (prestador.agenda && Array.isArray(prestador.agenda)) ? prestador.agenda.filter(a => a.dia == dNome) : []; 
+        
+        let { total: diaBloqueado, horasBloqueadas } = window.getAusenciasDoDia(prestador, dStr);
+        if (diaBloqueado) continue;
+
+        let slotsDoDia = agendaNormal.filter(a => a.dia == dNome); 
         let temLivre = false;
         for(let s of slotsDoDia) {
             let hInt = parseInt(s.hora.split(':')[0]);
+            if (horasBloqueadas.has(hInt)) continue;
+
             if (window.podeAgendar(prestador, dStr, [hInt])) {
                 temLivre = true; break;
             }
@@ -1272,157 +1543,16 @@ window.getNextDates = function(prestador) {
     return dates; 
 };
 
-window.proximoPasso = async function(n) { 
-    if(n === 2) { 
-        if(prestadores.length === 0) return window.showMessage("Cadastre um prestador!"); 
-        const rua = document.getElementById('inputRua').value; const num = document.getElementById('inputNumero').value; const cidade = document.getElementById('inputCidade').value; 
-        if(!rua || !num || !cidade) return window.showMessage("Preencha o endereço completo!"); 
-        
-        const btn = document.getElementById('btnBuscar'); btn.disabled = true; btn.innerText = "Calculando..."; 
-        const enderecoBusca = `${rua}, ${num} - ${cidade} - ${document.getElementById('inputCep').value}`; 
-        let prestadoresFiltrados = []; 
-        for(let p of prestadores) { 
-            if (!p.endereco) continue; 
-            const dist = await consultarDistancia(enderecoBusca, p.endereco); let available = window.getNextDates(p); 
-            if(dist !== null && dist <= parseFloat(p.range) && available.length > 0) { 
-                p.distanciaFinal = dist.toFixed(1); p.nextDates = available.join(', '); prestadoresFiltrados.push(p); 
-            } 
-        } 
-        btn.disabled = false; btn.innerText = "Buscar Prestadores"; 
-        if(prestadoresFiltrados.length === 0) { window.showMessage("Nenhum prestador encontrado no raio de atendimento."); return; } 
-        
-        prestadoresFiltrados.sort((a, b) => parseFloat(a.distanciaFinal) - parseFloat(b.distanciaFinal));
-        window.renderizarListaPrestadoresSelecao(prestadoresFiltrados); 
-    } 
-    if(n === 3 && prestadorSelecionadoIndex === null) return window.showMessage("Selecione um prestador!"); document.querySelectorAll('#consulta > div').forEach(div => div.style.display = 'none'); document.getElementById('step-' + n).style.display = 'block'; 
-    if (n === 3) { let p = prestadores[prestadorSelecionadoIndex]; document.getElementById("header-prestador-info").innerText = `Prestador: ${p.nome} | Distância: ${p.distanciaFinal} km`; window.rdaAgendamento(); } 
-};
-
-window.rdaAgendamento = function() { 
-    let p = prestadores[prestadorSelecionadoIndex]; 
-    let container = document.getElementById("agenda-agendamento"); 
-    container.innerHTML = ""; 
-    let hoje = new Date(); 
-    const diasSemana = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sab"]; 
-    
-    let totalMinutos = itensSelecionados.reduce((a, b) => a + (b.tempo * b.qtd), 0);
-    let horasNecessarias = Math.ceil(totalMinutos / 60);
-    if (itensSelecionados.length === 0) {
-        container.innerHTML = `<div style="font-weight:600; color:var(--primary);">Inclua o serviço para verificar a agenda.</div>`;
-        return;
-    }
-    
-    let diasEncontrados = 0;
-    
-    for(let i=2; i<16; i++){ 
-        let data = new Date(); 
-        data.setDate(hoje.getDate() + i); 
-        let dStr = data.toLocaleDateString(); 
-        let dNome = diasSemana[data.getDay()]; 
-        
-        let allSlots = (p.agenda && Array.isArray(p.agenda)) ? p.agenda.filter(a => a.dia == dNome) : []; 
-        if (allSlots.length === 0) continue;
-
-        let horasAgenda = allSlots.map(item => parseInt(item.hora.split(':')[0]));
-        let validStarts = []; 
-        
-        for (let h of horasAgenda) {
-            let seqOk = true;
-            let testSlots = [];
-            for (let k = 0; k < horasNecessarias; k++) {
-                if (!horasAgenda.includes(h + k)) { seqOk = false; break; }
-                testSlots.push(h + k);
-            }
-            if (seqOk) {
-                if (window.podeAgendar(p, dStr, testSlots)) {
-                    validStarts.push(h);
-                }
-            }
-        }
-
-        let enabledCells = new Set();
-        validStarts.forEach(start => {
-            for (let k = 0; k < horasNecessarias; k++) {
-                enabledCells.add(start + k);
-            }
-        });
-
-        if(validStarts.length > 0){ 
-            diasEncontrados++;
-            let card = document.createElement("div"); 
-            card.className = "agenda-day-card"; 
-            card.innerHTML = `<div class="agenda-day-title">${dStr} (${dNome})</div>`; 
-            let wrapper = document.createElement("div"); 
-            wrapper.className = "slots-wrapper"; 
-            
-            allSlots.forEach(item => { 
-                let hInt = parseInt(item.hora.split(':')[0]);
-                let div = document.createElement("div"); 
-                div.className = "cell"; 
-                div.innerText = item.hora; 
-                div.dataset.hora = item.hora; 
-                div.dataset.date = dStr; 
-                
-                if (!enabledCells.has(hInt)) {
-                    div.style.opacity = "0.3";
-                    div.style.cursor = "not-allowed";
-                    div.onclick = () => window.showToast(`Horário indisponível para ${horasNecessarias}h seguidas ou excedeu a capacidade.`);
-                } else {
-                    div.onclick = function() { 
-                        let horaInicioReal = hInt;
-                        if (!validStarts.includes(hInt)) {
-                            for (let b = 1; b < horasNecessarias; b++) {
-                                let testStart = hInt - b;
-                                if (validStarts.includes(testStart)) {
-                                    horaInicioReal = testStart;
-                                    break;
-                                }
-                            }
-                        }
-                        
-                        document.querySelectorAll("#agenda-agendamento .cell").forEach(c => c.classList.remove('selecionado'));
-                        for(let m=0; m < horasNecessarias; m++) {
-                            let targetH = `${horaInicioReal + m}:00`;
-                            let targetCell = Array.from(wrapper.children).find(c => c.dataset.hora === targetH);
-                            if(targetCell) targetCell.classList.add("selecionado");
-                        }
-                    }; 
-                }
-                wrapper.appendChild(div); 
-            }); 
-            card.appendChild(wrapper); 
-            container.appendChild(card); 
-        } 
-    } 
-    if (diasEncontrados === 0) {
-        container.innerHTML = `<div style="color:var(--cobli-red); font-size:0.85rem; font-weight:bold;">⚠️ Não há horários disponíveis com ${horasNecessarias}h seguidas para este prestador.</div>`;
-    }
-};
-
-window.validarEAvancar = function() { 
-    if (itensSelecionados.length === 0) return window.showMessage("Adicione pelo menos um serviço!"); 
-    let totalMinutos = itensSelecionados.reduce((a, b) => a + (b.tempo * b.qtd), 0); 
-    let horas = Math.ceil(totalMinutos / 60); 
-    let sel = document.querySelectorAll("#agenda-agendamento .cell.selecionado"); 
-    if (sel.length === 0) return window.showMessage("Selecione horário!"); 
-    if (sel.length !== horas && horas > 0) return window.showMessage("Selecione exatamente " + horas + " hora(s)!"); 
-    
-    const emailLogado = localStorage.getItem('userEmail');
-    const campoSolicitante = document.getElementById('solicitante');
-        if (emailLogado && campoSolicitante) {
-        campoSolicitante.value = extrairNomeDoEmail(emailLogado);
-        campoSolicitante.readOnly = true; 
-        campoSolicitante.style.background = "#f1f5f9"; 
-        campoSolicitante.style.cursor = "not-allowed";
-    }
-    
-    document.querySelectorAll('#consulta > div').forEach(div => div.style.display = 'none'); 
-    document.getElementById('step-4').style.display = 'block'; 
+window.updateButtons = function() { 
+    document.getElementById('btn-voltar').style.display = (etapa === 1) ? 'none' : 'inline-block'; 
+    document.getElementById('btn-proximo').style.display = (etapa === 1) ? 'inline-block' : 'none'; 
+    document.getElementById('btn-concluir').style.display = (etapa === 2) ? 'inline-block' : 'none'; 
+    document.getElementById('btn-limpar-agenda').style.display = (etapa === 2) ? 'inline-block' : 'none'; 
 };
 
 window.renderizarListaPrestadoresSelecao = function(lista) { 
     document.getElementById('lista-prestadores-selecao').innerHTML = lista.map(p => { 
-        const datesArr = p.nextDates.split(', '); 
+        const datesArr = p.nextDates.split(', ').filter(Boolean); 
         const pills = datesArr.map(d => `<span class="pill">${d}</span>`).join(''); 
         
         return `
@@ -1448,20 +1578,383 @@ window.renderizarListaPrestadoresSelecao = function(lista) {
         </div>`; 
     }).join(''); 
 };
-window.selecionarPrestadorPorObjeto = function(nome) { prestadorSelecionadoIndex = prestadores.findIndex(p => p.nome === nome); window.proximoPasso(3); };
-window.updateButtons = function() { document.getElementById('btn-voltar').style.display = (etapa === 1) ? 'none' : 'inline-block'; document.getElementById('btn-proximo').style.display = (etapa === 1) ? 'inline-block' : 'none'; document.getElementById('btn-concluir').style.display = (etapa === 2) ? 'inline-block' : 'none'; };
+
+window.selecionarPrestadorPorObjeto = function(nome) { 
+    prestadorSelecionadoIndex = prestadores.findIndex(p => p.nome === nome); 
+    window.proximoPasso(3); 
+};
+
+window.proximoPasso = async function(n) { 
+    if(n === 2) { 
+        if(!window.validarCampos('#step-1') || !document.getElementById('inputCep').value.trim()) {
+            document.getElementById('inputCep').style.borderColor = !document.getElementById('inputCep').value.trim() ? 'var(--cobli-red)' : '#cbd5e1';
+            return window.showMessage("Preencha todos os campos obrigatórios em vermelho para buscar os prestadores!");
+        }
+
+        if(prestadores.length === 0) return window.showMessage("Cadastre um prestador!"); 
+        const rua = document.getElementById('inputRua').value; 
+        const num = document.getElementById('inputNumero').value; 
+        const cidade = document.getElementById('inputCidade').value; 
+        
+        const btn = document.getElementById('btnBuscar'); 
+        btn.disabled = true; 
+        btn.innerText = "Calculando..."; 
+        const enderecoBusca = `${rua}, ${num} - ${cidade} - ${document.getElementById('inputCep').value}`; 
+        
+        let prestadoresFiltrados = []; 
+        for(let p of prestadores) { 
+            if (!p.endereco) continue; 
+            const dist = await consultarDistancia(enderecoBusca, p.endereco); 
+            let available = window.getNextDates(p); 
+            if(dist !== null && dist <= parseFloat(p.range) && available.length > 0) { 
+                p.distanciaFinal = dist.toFixed(1); 
+                p.nextDates = available.join(', '); 
+                prestadoresFiltrados.push(p); 
+            } 
+        } 
+        
+        btn.disabled = false; 
+        btn.innerText = "Buscar Prestadores"; 
+        
+        if(prestadoresFiltrados.length === 0) { 
+            window.showMessage("Nenhum prestador encontrado no raio de atendimento."); 
+            return; 
+        } 
+        
+        prestadoresFiltrados.sort((a, b) => parseFloat(a.distanciaFinal) - parseFloat(b.distanciaFinal));
+        window.renderizarListaPrestadoresSelecao(prestadoresFiltrados); 
+    } 
+    
+    if(n === 3 && prestadorSelecionadoIndex === null) {
+        return window.showMessage("Selecione um prestador!"); 
+    }
+    
+    document.querySelectorAll('#consulta > div').forEach(div => div.style.display = 'none'); 
+    document.getElementById('step-' + n).style.display = 'block'; 
+    
+    if (n === 3) { 
+        let p = prestadores[prestadorSelecionadoIndex]; 
+        document.getElementById("header-prestador-info").innerText = `Prestador: ${p.nome} | Distância: ${p.distanciaFinal} km`; 
+        window.rdaAgendamento(); 
+    } 
+};
+
+// --- VARIÁVEIS GLOBAIS DA PAGINAÇÃO ---
+window.agendaDiasDisponiveis = [];
+window.agendaPaginaAtual = 0;
+
+window.rdaAgendamento = function() { 
+    let p = prestadores[prestadorSelecionadoIndex]; 
+    let container = document.getElementById("agenda-agendamento"); 
+    container.innerHTML = `<div style="text-align:center; padding:20px; font-weight:bold; color:var(--primary);">Calculando horários na nuvem...</div>`; 
+    
+    let hoje = new Date(); 
+    const diasSemana = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sab"]; 
+    
+    let totalMinutos = itensSelecionados.reduce((a, b) => a + (b.tempo * b.qtd), 0);
+    let horasNecessarias = Math.ceil(totalMinutos / 60);
+    if (itensSelecionados.length === 0) {
+        container.innerHTML = `<div style="font-weight:600; color:var(--primary);">Inclua o serviço para verificar a agenda.</div>`;
+        return;
+    }
+    
+    window.agendaDiasDisponiveis = [];
+    
+    // Busca até 60 dias pra frente no banco de dados para formar a paginação completa
+    for(let i=2; i<60; i++){ 
+        let data = new Date(); 
+        data.setDate(hoje.getDate() + i); 
+        let dStr = data.toLocaleDateString(); 
+        let dNome = diasSemana[data.getDay()]; 
+        
+        let { total: diaBloqueado, horasBloqueadas } = window.getAusenciasDoDia(p, dStr);
+        if (diaBloqueado) continue;
+
+        let allSlots = (p.agenda && Array.isArray(p.agenda)) ? p.agenda.filter(a => !a.isAbsence && a.dia == dNome) : []; 
+        if (allSlots.length === 0) continue;
+
+        let horasAgenda = allSlots.map(item => parseInt(item.hora.split(':')[0])).filter(h => !horasBloqueadas.has(h));
+        let validStarts = []; 
+        
+        for (let h of horasAgenda) {
+            let seqOk = true;
+            let testSlots = [];
+            for (let k = 0; k < horasNecessarias; k++) {
+                if (!horasAgenda.includes(h + k)) { seqOk = false; break; }
+                testSlots.push(h + k);
+            }
+            if (seqOk) {
+                if (window.podeAgendar(p, dStr, testSlots)) {
+                    validStarts.push(h);
+                }
+            }
+        }
+
+        let enabledCells = new Set();
+        validStarts.forEach(start => {
+            for (let k = 0; k < horasNecessarias; k++) {
+                enabledCells.add(start + k);
+            }
+        });
+
+        if(validStarts.length > 0){ 
+            window.agendaDiasDisponiveis.push({ dStr, dNome, allSlots, validStarts, enabledCells, horasNecessarias });
+        } 
+    } 
+
+    window.agendaPaginaAtual = 0;
+    window.renderizarAgendaPaginada();
+};
+
+window.renderizarAgendaPaginada = function() {
+    let container = document.getElementById("agenda-agendamento");
+    container.innerHTML = "";
+    
+    if (window.agendaDiasDisponiveis.length === 0) {
+        container.innerHTML = `<div style="color:var(--cobli-red); font-size:0.85rem; font-weight:bold;">⚠️ Não há horários disponíveis com as horas necessárias seguidas.</div>`;
+        return;
+    }
+
+    let startIndex = window.agendaPaginaAtual * 5;
+    let endIndex = startIndex + 5;
+    let diasPagina = window.agendaDiasDisponiveis.slice(startIndex, endIndex);
+
+    diasPagina.forEach(diaInfo => {
+        let card = document.createElement("div"); 
+        card.className = "agenda-day-card"; 
+        card.innerHTML = `<div class="agenda-day-title">${diaInfo.dStr} (${diaInfo.dNome})</div>`; 
+        let wrapper = document.createElement("div"); 
+        wrapper.className = "slots-wrapper"; 
+        
+        diaInfo.allSlots.forEach(item => { 
+            let hInt = parseInt(item.hora.split(':')[0]);
+            let div = document.createElement("div"); 
+            div.className = "cell"; 
+            div.innerText = item.hora; 
+            div.dataset.hora = item.hora; 
+            div.dataset.date = diaInfo.dStr; 
+            
+            if (!diaInfo.enabledCells.has(hInt)) {
+                div.style.opacity = "0.3";
+                div.style.cursor = "not-allowed";
+                div.onclick = () => window.showToast(`Horário indisponível para ${diaInfo.horasNecessarias}h seguidas ou excedeu a capacidade.`);
+            } else {
+                div.onclick = function() { 
+                    let horaInicioReal = hInt;
+                    if (!diaInfo.validStarts.includes(hInt)) {
+                        for (let b = 1; b < diaInfo.horasNecessarias; b++) {
+                            let testStart = hInt - b;
+                            if (diaInfo.validStarts.includes(testStart)) {
+                                horaInicioReal = testStart;
+                                break;
+                            }
+                        }
+                    }
+                    
+                    document.querySelectorAll("#agenda-agendamento .cell").forEach(c => c.classList.remove('selecionado'));
+                    for(let m=0; m < diaInfo.horasNecessarias; m++) {
+                        let targetH = `${horaInicioReal + m}:00`;
+                        let targetCell = Array.from(wrapper.children).find(c => c.dataset.hora === targetH);
+                        if(targetCell) targetCell.classList.add("selecionado");
+                    }
+                }; 
+            }
+            wrapper.appendChild(div); 
+        }); 
+        card.appendChild(wrapper); 
+        container.appendChild(card); 
+    });
+
+    // CONTROLES DE PAGINAÇÃO CHIQÚERRIMOS
+    let paginacaoHtml = document.createElement("div");
+    paginacaoHtml.style.display = "flex";
+    paginacaoHtml.style.justifyContent = "space-between";
+    paginacaoHtml.style.marginTop = "15px";
+    
+    let btnAnt = document.createElement("button");
+    btnAnt.innerText = "⬅️ Anteriores";
+    btnAnt.style.background = "#64748b";
+    btnAnt.style.padding = "8px 16px";
+    btnAnt.style.borderRadius = "6px";
+    btnAnt.disabled = window.agendaPaginaAtual === 0;
+    if(btnAnt.disabled) btnAnt.style.opacity = "0.5";
+    btnAnt.onclick = () => { window.agendaPaginaAtual--; window.renderizarAgendaPaginada(); };
+
+    let btnProx = document.createElement("button");
+    btnProx.innerText = "Próximos ➡️";
+    btnProx.style.background = "var(--primary)";
+    btnProx.style.padding = "8px 16px";
+    btnProx.style.borderRadius = "6px";
+    btnProx.disabled = endIndex >= window.agendaDiasDisponiveis.length;
+    if(btnProx.disabled) btnProx.style.opacity = "0.5";
+    btnProx.onclick = () => { window.agendaPaginaAtual++; window.renderizarAgendaPaginada(); };
+
+    paginacaoHtml.appendChild(btnAnt);
+    paginacaoHtml.appendChild(btnProx);
+    container.appendChild(paginacaoHtml);
+};
+
+window.validarEAvancar = function() { 
+    if (itensSelecionados.length === 0) return window.showMessage("Adicione pelo menos um serviço!"); 
+    let totalMinutos = itensSelecionados.reduce((a, b) => a + (b.tempo * b.qtd), 0); 
+    let horas = Math.ceil(totalMinutos / 60); 
+    let sel = document.querySelectorAll("#agenda-agendamento .cell.selecionado"); 
+    if (sel.length === 0) return window.showMessage("Selecione horário!"); 
+    if (sel.length !== horas && horas > 0) return window.showMessage("Selecione exatamente " + horas + " hora(s)!"); 
+    
+    const emailLogado = localStorage.getItem('userEmail');
+    const campoSolicitante = document.getElementById('solicitante');
+        if (emailLogado && campoSolicitante) {
+        campoSolicitante.value = extrairNomeDoEmail(emailLogado);
+        campoSolicitante.readOnly = true; 
+        campoSolicitante.style.background = "#f1f5f9"; 
+        campoSolicitante.style.cursor = "not-allowed";
+    }
+    
+    document.querySelectorAll('#consulta > div').forEach(div => div.style.display = 'none'); 
+    document.getElementById('step-4').style.display = 'block'; 
+};
 
 window.limparAgendaCadastro = function() {
     document.querySelectorAll('#agenda-cadastro .cell.selecionado').forEach(c => c.classList.remove('selecionado'));
 };
 
-window.abrirCadastro = function(index = -1){ editingIndex = index; document.getElementById("lista-prestadores-view").style.display="none"; document.getElementById("cadastro-flow").style.display="block"; etapa = 1; document.getElementById("etapa-1").style.display="block"; document.getElementById("etapa-2").style.display="none"; window.criarGridCadastro("agenda-cadastro"); if(index !== -1){ let p = prestadores[index]; document.getElementById("nomeEmpresa").value = p.nome; document.getElementById("endereco").value = p.endereco; document.getElementById("cidade").value = p.cidade; document.getElementById("uf").value = p.uf; document.getElementById("cep").value = p.cep; document.getElementById("responsavel").value = p.responsavel; document.getElementById("contatoResponsavel").value = p.contato; document.getElementById("qtdTecnicos").value = p.qtdtecnicos; document.getElementById("rangeAtendimento").value = p.range; document.getElementById("fieldIdField").value = p.field_id || ""; if(p.agenda) { p.agenda.forEach(item => { let cells = document.querySelectorAll("#agenda-cadastro .cell"); cells.forEach(c => { if(c.dataset.dia == item.dia && c.dataset.hora == item.hora) c.classList.add("selecionado"); }); }); } } else { document.querySelectorAll('input').forEach(i => i.value = ""); } window.updateButtons(); };
-window.cancelarCadastro = function() { document.getElementById("cadastro-flow").style.display="none"; document.getElementById("lista-prestadores-view").style.display="block"; editingIndex = -1; };
+window.toggleTipoBloqueio = function() {
+    let tipo = document.getElementById('tipoBloqueio').value;
+    document.getElementById('boxHoraBloqueio').style.display = tipo === 'parcial' ? 'flex' : 'none';
+};
+
+window.adicionarBloqueioData = function() {
+    let inputData = document.getElementById('dataBloqueio').value;
+    let inputDataFim = document.getElementById('dataBloqueioFim').value;
+    let tipo = document.getElementById('tipoBloqueio').value;
+    let qtd = parseInt(document.getElementById('qtdBloqueio').value) || 1;
+
+    if (!inputData) return window.showMessage("Selecione a data inicial no calendário!");
+
+    let dataInicio = new Date(inputData + 'T00:00:00');
+    let dataFim = inputDataFim ? new Date(inputDataFim + 'T00:00:00') : new Date(dataInicio);
+
+    if (dataFim < dataInicio) return window.showMessage("A data final não pode ser menor que a inicial!");
+
+    let dataAtual = new Date(dataInicio);
+    while (dataAtual <= dataFim) {
+        let d = String(dataAtual.getDate()).padStart(2, '0');
+        let m = String(dataAtual.getMonth() + 1).padStart(2, '0');
+        let y = dataAtual.getFullYear();
+        let dataFormatada = `${d}/${m}/${y}`;
+
+        let objBloqueio = { data: dataFormatada, tipo: tipo, qtd: qtd };
+
+        if (tipo === 'parcial') {
+            let hInicio = parseInt(document.getElementById('horaInicioBloqueio').value);
+            let hFim = parseInt(document.getElementById('horaFimBloqueio').value);
+            if (isNaN(hInicio) || isNaN(hFim) || hInicio >= hFim) {
+                return window.showMessage("Selecione um intervalo de horas válido! (Início deve ser menor que o Fim)");
+            }
+            objBloqueio.inicio = hInicio;
+            objBloqueio.fim = hFim;
+        }
+
+        let existe = datasBloqueadasTemp.find(b => b.data === objBloqueio.data && b.tipo === objBloqueio.tipo && b.inicio === objBloqueio.inicio && b.fim === objBloqueio.fim);
+        if(!existe) datasBloqueadasTemp.push(objBloqueio);
+
+        dataAtual.setDate(dataAtual.getDate() + 1);
+    }
+
+    window.renderizarDatasBloqueadas();
+    document.getElementById('dataBloqueio').value = '';
+    document.getElementById('dataBloqueioFim').value = '';
+};
+
+window.removerBloqueioData = function(index) {
+    datasBloqueadasTemp.splice(index, 1);
+    window.renderizarDatasBloqueadas();
+};
+
+window.renderizarDatasBloqueadas = function() {
+    document.getElementById('lista-datas-bloqueadas').innerHTML = datasBloqueadasTemp.map((b, i) => {
+        let texto = b.tipo === 'total' ? `${b.data} (Dia Inteiro)` : `${b.data} (${b.inicio}h às ${b.fim}h)`;
+        texto += ` | ${b.qtd} Téc.`;
+        return `<span class="pill" style="background: var(--cobli-red); color: white; border: none; display: flex; align-items: center; gap: 6px;">
+            ${texto} <span style="cursor:pointer; font-weight:bold; padding-left: 4px; border-left: 1px solid rgba(255,255,255,0.4);" onclick="window.removerBloqueioData(${i})">X</span>
+        </span>`;
+    }).join('');
+};
+
+window.abrirCadastro = function(index = -1){ 
+    editingIndex = index; 
+    document.getElementById("lista-prestadores-view").style.display="none"; 
+    document.getElementById("cadastro-flow").style.display="block"; 
+    etapa = 1; 
+    document.getElementById("etapa-1").style.display="block"; 
+    document.getElementById("etapa-2").style.display="none"; 
+    window.criarGridCadastro("agenda-cadastro"); 
+    
+    if(index !== -1){ 
+        let p = prestadores[index]; 
+        document.getElementById("nomeEmpresa").value = p.nome; 
+        document.getElementById("endereco").value = p.endereco; 
+        document.getElementById("cidade").value = p.cidade; 
+        document.getElementById("uf").value = p.uf; 
+        document.getElementById("cep").value = p.cep; 
+        document.getElementById("responsavel").value = p.responsavel; 
+        document.getElementById("contatoResponsavel").value = p.contato; 
+        document.getElementById("qtdTecnicos").value = p.qtdtecnicos; 
+        document.getElementById("rangeAtendimento").value = p.range; 
+        document.getElementById("fieldIdField").value = p.field_id || ""; 
+        
+        if(p.agenda) { 
+            // 1. Carrega os horários normais na grade
+            p.agenda.forEach(item => { 
+                if (item.isAbsence) return; // Pula as ausências para não pintar a grade
+                let cells = document.querySelectorAll("#agenda-cadastro .cell"); 
+                cells.forEach(c => { if(c.dataset.dia == item.dia && c.dataset.hora == item.hora) c.classList.add("selecionado"); }); 
+            }); 
+            
+            // 2. Extrai e limpa as ausências passadas automaticamente!
+            let hoje = new Date();
+            hoje.setHours(0,0,0,0);
+            
+            datasBloqueadasTemp = p.agenda.filter(a => a.isAbsence).map(a => ({
+                data: a.data, tipo: a.tipo, inicio: a.inicio, fim: a.fim, qtd: a.qtd
+            })).filter(b => {
+                let parts = b.data.split('/');
+                let dataB = new Date(parts[2], parts[1] - 1, parts[0]);
+                return dataB >= hoje; // Só mantém as datas que ainda não passaram
+            });
+            window.renderizarDatasBloqueadas();
+        } 
+    } else { 
+        document.querySelectorAll('input').forEach(i => i.value = ""); 
+        datasBloqueadasTemp = [];
+        window.renderizarDatasBloqueadas();
+    } 
+    document.getElementById('dataBloqueio').value = '';
+    document.getElementById('dataBloqueioFim').value = '';
+    document.getElementById('tipoBloqueio').value = 'total';
+    document.getElementById('qtdBloqueio').value = '1';
+    
+    // Limpa bordas vermelhas que possam ter ficado de outro cadastro
+    document.querySelectorAll('#etapa-1 input').forEach(el => {
+        el.style.borderColor = '#cbd5e1';
+        el.style.backgroundColor = 'white';
+    });
+
+    window.toggleTipoBloqueio();
+    window.updateButtons(); 
+};
+
+window.cancelarCadastro = function() { 
+    document.getElementById("cadastro-flow").style.display="none"; 
+    document.getElementById("lista-prestadores-view").style.display="block"; 
+    editingIndex = -1; 
+};
 
 window.criarGridCadastro = function(id){ 
     let grid = document.getElementById(id); 
     grid.innerHTML = ""; 
-    grid.style.userSelect = "none"; // Evita selecionar o texto ao arrastar
+    grid.style.userSelect = "none"; 
     
     ["Seg","Ter","Qua","Qui","Sex","Sab"].forEach(d=>{ 
         let card = document.createElement("div"); 
@@ -1485,7 +1978,6 @@ window.criarGridCadastro = function(id){
             cell.dataset.hora = `${h}:00`; 
             cell.innerText = `${h}:00`; 
             
-            // LÓGICA DE ARRASTAR (DRAG)
             cell.onmousedown = (e) => {
                 e.preventDefault();
                 isDraggingAgenda = true;
@@ -1518,7 +2010,19 @@ window.criarGridCadastro = function(id){
     }); 
 };
 
-window.mudarEtapa = function(dir){ if (dir > 0 && etapa === 1) { const inputs = document.querySelectorAll("#etapa-1 input"); for(let i of inputs) if(!i.value.trim()) return window.showMessage("Preencha todos os campos!"); } document.getElementById("etapa-"+etapa).style.display="none"; etapa += dir; if(etapa < 1) etapa = 1; if(etapa > 2) etapa = 2; document.getElementById("etapa-"+etapa).style.display="block"; window.updateButtons(); };
+window.mudarEtapa = function(dir) { 
+    if (dir > 0 && etapa === 1) { 
+        if(!window.validarCampos('#etapa-1')) {
+            return window.showMessage("Preencha todos os campos obrigatórios marcados em vermelho!");
+        }
+    } 
+    document.getElementById("etapa-"+etapa).style.display="none"; 
+    etapa += dir; 
+    if(etapa < 1) etapa = 1; 
+    if(etapa > 2) etapa = 2; 
+    document.getElementById("etapa-"+etapa).style.display="block"; 
+    window.updateButtons(); 
+};
 
 window.renderizarListaPrestadores = function(){ 
     document.getElementById("btn-novo-container").innerHTML = isAuthorized ? `<button onclick="window.abrirCadastro()" style="margin-bottom: 20px;">+ Novo Prestador</button>` : '';
@@ -1535,7 +2039,7 @@ window.renderizarListaPrestadores = function(){
             
             <div style="width: 100%; display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
                 <div style="font-weight: bold; color: var(--primary); font-size: 1.05rem;">👷 ${p.nome}</div>
-                <div style="font-size: 0.7rem; color: #64748b; font-weight: 700; background: #f1f5f9; padding: 2px 8px; border-radius: 4px; border: 1px solid #e2e8f0;">
+                <div style="font-size: 0.7rem; color: #64748b; font-weight: 700; background: #f1f5f9; padding: 4px 8px; border-radius: 4px; border: 1px solid #e2e8f0;">
                     📍 ${p.cidade}/${p.uf}
                 </div>
             </div>
