@@ -1687,6 +1687,9 @@ window.salvarPrestador = async function(btn) {
     } 
 };
 
+window.excluirPrestador = async function(i) { window.showConfirm("Tem certeza que deseja excluir?", `fetch('${API_URL}/prestadores/${prestadores[i].id}', { method: 'DELETE', headers: getHeaders() }).then(async () => { await window.carregarDadosDoBanco(); window.showToast("Prestador excluído com sucesso!"); })`); };
+window.confirmarExclusaoAgendamento = async function(id) { await fetch(`${API_URL}/agendamentos/${id}`, { method: 'DELETE', headers: getHeaders() }); await window.carregarDadosDoBanco(); window.showToast("Agendamento excluído!"); window.fecharModal(); };
+
 // ==========================================
 // 8. PAINEL E DASHBOARD (ABAS 3 E 4)
 // ==========================================
