@@ -2282,11 +2282,12 @@ window.renderDashboard = function() {
         });
     }
 };
-    
+
 // ==========================================
 // 10. INICIALIZA O SISTEMA
 // ==========================================
 
+// ✅ CORRIGIDO: Detecta se o usuário chegou via link de redefinição de senha
 const hashParams = new URLSearchParams(window.location.hash.replace('#', '?'));
 const accessToken = hashParams.get('access_token');
 const tokenType = hashParams.get('type');
