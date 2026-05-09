@@ -165,12 +165,25 @@ este logou, ver erro de usuário
         <div class="auth-links"><a onclick="showAuthCard('card-login')">Já possui conta? <span>Faça login</span></a></div>
     </div>
 
-    <div class="auth-card" id="card-forgot" style="display:none;">
+<div class="auth-card" id="card-forgot" style="display:none;">
         <div class="logo-circle"></div>
         <h2>Recuperar Senha</h2>
         <p>Enviaremos um link para o seu e-mail</p>
         <div class="input-group"><label>E-mail Cadastrado</label><input type="email" id="reset-email" placeholder="seu@email.co"></div>
         <button class="auth-btn" id="btnReset" onclick="authAction('reset')">Enviar Link</button>
+        <div class="auth-links"><a onclick="showAuthCard('card-login')">⬅ Voltar ao Login</a></div>
+    </div>
+
+    <div class="auth-card" id="card-update-password" style="display:none;">
+        <div class="logo-circle"></div>
+        <h2>Criar Nova Senha</h2>
+        <p>Digite sua nova senha de acesso.</p>
+        <div class="input-group">
+            <label>Nova Senha</label>
+            <input type="password" id="new-password" placeholder="Mínimo de 6 caracteres">
+            <span class="pass-toggle" onclick="togglePass('new-password')">👁️</span>
+        </div>
+        <button class="auth-btn" id="btnUpdatePass" onclick="authAction('update_pass')">Salvar Nova Senha</button>
         <div class="auth-links"><a onclick="showAuthCard('card-login')">⬅ Voltar ao Login</a></div>
     </div>
 </div>
@@ -331,6 +344,7 @@ este logou, ver erro de usuário
                     <div style="display: flex; gap: 10px; margin-bottom: 12px;">
                         <div style="flex: 1;"><label class="req">Responsável</label><input id="responsavel" required></div>
                         <div style="flex: 1;"><label class="req">Telefone</label><input id="contatoResponsavel" required oninput="window.maskPhone(this)" placeholder="(00) 00000-0000"></div>
+                        <div style="flex: 1.5;"><label>Usuário no Sistema (@apex.co)</label><input id="usuarioApex" placeholder="prestador@apex.co"></div>
                     </div>
 
                     <div style="display: flex; gap: 10px; margin-bottom: 15px;">
@@ -559,14 +573,39 @@ window.authAction = async function(type) {
             window.location.reload();
         }
     }
-    else if (type === 'reset') {
-        const email = document.getElementById('reset-email').value, btn = document.getElementById('btnReset');
-        if(!email) return window.showMessage("Digite o e-mail cadastrado.");
+} else if (type === 'reset') {
+        const em = document.getElementById('reset-email').value, btn = document.getElementById('btnReset');
+        if(!em) return window.showMessage("Digite o e-mail.");
         
-        // PONTO 4: TRAVA PARA E-MAIL FAKE DO PRESTADOR
-        if(email.endsWith('@apex.co')) {
-            return window.showMessage("⚠️ E-mail de prestador identificado.<br><br>Sua conta de prestador não recebe e-mails externos. Entre em contato com a equipe da Cobli (APEX) para redefinir sua senha.");
+        // PONTO 2: TRAVA PARA E-MAIL DO PRESTADOR FAKE (@apex.co)
+        if(em.toLowerCase().includes('@apex.co')) {
+            return window.showMessage("⚠️ E-mail de prestador identificado.<br><br>Entre em contato com a equipe da Cobli para redefinir sua senha internamente.");
         }
+
+        btn.innerText = "Enviando..."; const { error } = await supabaseClient.auth.resetPasswordForEmail(em); btn.innerText = "Enviar Link";
+        if(error) return window.showMessage("Erro: " + error.message); window.showToast("Link enviado!"); showAuthCard('card-login');
+    } else if (type === 'update_pass') {
+        const npw = document.getElementById('new-password').value, btn = document.getElementById('btnUpdatePass');
+        if(npw.length < 6) return window.showMessage("A senha deve ter no mínimo 6 caracteres.");
+        btn.innerText = "Salvando...";
+        const { error } = await supabaseClient.auth.updateUser({ password: npw });
+        if(error) {
+            btn.innerText = "Salvar Nova Senha";
+            return window.showMessage("Erro ao salvar: " + error.message);
+        }
+        window.showToast("Senha atualizada! Faça o login.");
+        showAuthCard('card-login');
+    }
+}
+
+// INCEPTADOR DE ROTA DE RECUPERAÇÃO DE SENHA DO SUPABASE
+supabaseClient.auth.onAuthStateChange((event, session) => {
+    if (event === 'PASSWORD_RECOVERY') {
+        document.getElementById('auth-overlay').style.display = 'flex';
+        document.getElementById('app-content').style.display = 'none';
+        showAuthCard('card-update-password');
+    }
+});
 
         btn.innerText = "Enviando...";
         const { error } = await supabaseClient.auth.resetPasswordForEmail(email);
@@ -1468,6 +1507,7 @@ window.abrirCadastro = function(index = -1){
         document.getElementById("cep").value = p.cep; 
         document.getElementById("responsavel").value = p.responsavel; 
         document.getElementById("contatoResponsavel").value = p.contato; 
+        document.getElementById("usuarioApex").value = p.usuario_apex || "";
         document.getElementById("qtdTecnicos").value = p.qtdtecnicos; 
         document.getElementById("rangeAtendimento").value = p.range; 
         document.getElementById("fieldIdField").value = p.field_id || ""; 
@@ -1693,6 +1733,7 @@ window.salvarPrestador = async function(btn) {
             cep: document.getElementById("cep").value, 
             responsavel: document.getElementById("responsavel").value, 
             contato: document.getElementById("contatoResponsavel").value, 
+            usuario_apex: document.getElementById("usuarioApex").value.toLowerCase().trim(),
             qtdtecnicos: parseInt(document.getElementById("qtdTecnicos").value), 
             range: document.getElementById("rangeAtendimento").value, 
             field_id: document.getElementById("fieldIdField").value, 
@@ -1974,13 +2015,14 @@ window.renderPainel = function(){
     let indicador = document.getElementById('indicador-filtro');
     if(indicador) indicador.style.display = temFiltroAtivo ? 'block' : 'none';
 
-    filtradosPainel = agendamentos.filter(a => { 
+filtradosPainel = agendamentos.filter(a => { 
         if(!a.data || !a.ticket) return false;
         
         if(userRole === 'PRESTADOR') {
-            let nPrest = currentUser.email.split('@')[0].toLowerCase().replace(/\s/g, '');
-            let nOS = (a.prestador || "").toLowerCase().replace(/\s/g, '');
-            if(!nOS.includes(nPrest) && !nPrest.includes(nOS)) return false;
+            // Acha qual prestador tem o e-mail logado agora no campo "usuario_apex"
+            let prestadorLogado = prestadores.find(p => p.usuario_apex === currentUser.email);
+            if (!prestadorLogado) return false; // Se ele não tem vínculo, não vê nada
+            if (a.prestador !== prestadorLogado.nome) return false; // Só vê a OS se o nome bater
         }
 
         let [d, m, y] = a.data.split('/'); 
@@ -2033,12 +2075,8 @@ window.renderPainel = function(){
         let primeiroSlot = Array.isArray(a.slots) ? a.slots[0] : (String(a.slots).split(',')[0] || 'N/A');
         let dataRegistro = a.created_at ? new Date(a.created_at).toLocaleString('pt-BR') : 'N/A';
 
-        return `<div class="painel-item" data-ticket="${a.ticket}" 
-             onclick="window.abrirDetalhesAgendamento(${i})" 
-             style="cursor: pointer; transition: all 0.2s ease; margin-bottom: 8px; border-left: 5px solid var(--primary); background-color: white;" 
-             onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 6px 15px rgba(0,0,0,0.1)'; this.style.backgroundColor='#ebfcf9'; this.style.borderLeftColor='var(--cobli-green)';" 
-             onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 1px 3px rgba(0,0,0,0.1)'; this.style.backgroundColor='white'; this.style.borderLeftColor='var(--primary)';">
-            
+return `
+        <div class="painel-item" style="margin-bottom: 8px; border-left: 5px solid var(--primary); background-color: white;">
             <div style="flex-grow: 1; font-size: 0.95rem;">
                 <strong>🎟️ #${a.ticket}</strong> | 🏷️ Status: <span style="color: var(--primary); font-weight: bold;">${a.status || 'SOLICITADO'}</span> | 👤 Cliente: <strong>${a.cliente || 'Não informado'}</strong>
                 
@@ -2050,10 +2088,13 @@ window.renderPainel = function(){
                      Registrado em: ${dataRegistro} (via APEX) | 🙋‍♂️ Solicitado por: ${a.solicitante}
                 </div>
             </div>
+            <div style="padding-left: 15px;">
+                <button onclick="window.abrirDetalhesAgendamento(${i})" style="background: var(--cobli-dark); padding: 8px 12px; font-size: 0.8rem; border-radius: 6px;">👁️ Ver OS</button>
+            </div>
         </div>`;
     }).join(''); 
 };
-
+    
 window.sincronizarStatusModal = async function(ticket, btn, index) {
     const originalText = btn.innerHTML;
     btn.innerHTML = `<span class="icone-girando">🔄</span> Atualizando...`;
