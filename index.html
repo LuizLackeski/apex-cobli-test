@@ -2150,7 +2150,7 @@ window.renderDashboard = function() {
             },
             plugins: [ChartDataLabels]
         });
-    }
+    };
 
     let servicosOrdenados = Object.entries(distServ).sort((a,b) => b[1] - a[1]);
     let listaHtml = servicosOrdenados.map(s => {
