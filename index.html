@@ -173,7 +173,6 @@
         <div class="auth-links"><a onclick="showAuthCard('card-login')">⬅ Voltar ao Login</a></div>
     </div>
 
-    <!-- ✅ NOVO CARD: TELA DE REDEFINIÇÃO DE SENHA (via link do e-mail) -->
     <div class="auth-card" id="card-reset-password" style="display:none;">
         <div class="logo-circle"></div>
         <h2>Nova Senha</h2>
@@ -611,13 +610,11 @@ window.authAction = async function(type) {
             window.location.reload();
         }
     }
-    // ✅ CORRIGIDO: Fluxo de reset separado por domínio
     else if (type === 'reset') {
         const email = document.getElementById('reset-email').value;
         const btn = document.getElementById('btnReset');
         if (!email) return window.showMessage("Digite o e-mail cadastrado.");
 
-        // @apex.co — não envia e-mail, orienta contato com a Cobli
         if (email.toLowerCase().endsWith('@apex.co')) {
             showAuthCard('card-login');
             window.showMessage(
@@ -627,7 +624,6 @@ window.authAction = async function(type) {
             return;
         }
 
-        // @cobli.co — envia link com redirect correto
         btn.innerText = "Enviando...";
         btn.disabled = true;
         const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
@@ -1253,7 +1249,7 @@ window.revisarAgendamento = function() {
 
     let prodHtml = itensSelecionados.map(i => {
         let tempoTotalFormatado = formatarTempo(i.tempo * i.qtd);
-        return `<div style="margin-bottom:5px;">• [${i.nomeManutencao.toUpperCase()}] ${i.desc} <strong>(Qtd: ${i.qtd} | ${tempoTotalFormatado})</strong></div>`;
+        return `<div style="margin-bottom:5px;">• [${i.nomeManutencao.toUpperCase()}] ${i.desc} <strong>(Qtd: ${i.qtd} | Tempo: ${tempoTotalFormatado})</strong></div>`;
     }).join('');
     
     let html = `
@@ -1338,7 +1334,6 @@ window.concluirAgendamentoFinal = async function(btn) {
         tipo_servico: itensOrdenados[0]?.desc || "Manutenção",
         field_id: prestador.field_id,
         
-        // ✅ CORRIGIDO: Salvando exatamente no formato solicitado com o Tempo
         produtos_texto: itensOrdenados.map(i => `• [${i.nomeManutencao.toUpperCase()}] ${i.desc} (Qtd: ${i.qtd} | Tempo: ${formatarTempo(i.tempo * i.qtd)})`).join('\n'),
         
         segment_id_field: itensOrdenados[0]?.segment_id || "",
@@ -1478,7 +1473,7 @@ window.abrirDetalhesPrestador = function(index) {
         if(slots) { 
             agendaHtml += `<div class="agenda-day-card" style="margin-bottom:10px; padding: 8px;"><div class="agenda-day-title" style="margin-bottom: 4px;">${d}</div><div class="slots-wrapper" style="gap: 3px;">${slots}</div></div>`; 
         } 
-    });   
+    });    
     
     let ausenciasHtml = '';
     if (p.agenda) {
@@ -1784,8 +1779,6 @@ window.excluirPrestador = async function(i) { window.showConfirm("Tem certeza qu
 // ==========================================
 // 8. PAINEL - DETALHES E EXCLUSÃO DE AGENDAMENTO
 // ==========================================
-
-// ✅ CORRIGIDO: Função que faltava para acionar a confirmação de exclusão
 window.excluirAgendamento = function(id, data) {
     window.fecharModal();
     window.showConfirm(
@@ -1801,8 +1794,6 @@ window.confirmarExclusaoAgendamento = async function(id) {
     window.fecharModal(); 
 };
 
-// ✅ CORRIGIDO: Exibição dos produtos no modal de detalhes
-// PONTO 1: FUNÇÃO ABRIR DETALHES DE AGENDAMENTO
 window.abrirDetalhesAgendamento = function(index) {
     let a = filtradosPainel[index];
     if(!a) return;
@@ -1813,13 +1804,12 @@ window.abrirDetalhesAgendamento = function(index) {
     let txt = a.produtos_texto ? String(a.produtos_texto) : '';
     let prodHtml = '';
     
-    // ✅ CORRIGIDO: Lida com textos antigos (sem '•') e novos, aplicando o negrito corretamente
     if (txt.trim().length > 0) {
         prodHtml = txt.split('\n')
             .filter(l => l.trim())
             .map(l => {
-                let limpo = l.replace('•', '').trim(); // Remove a bolinha se existir para padronizar
-                limpo = limpo.replace(/(\(Qtd:.*?\))/g, '<strong>$1</strong>'); // Negrito na Qtd/Tempo
+                let limpo = l.replace('•', '').trim();
+                limpo = limpo.replace(/(\(Qtd:.*?\))/ig, '<strong>$1</strong>');
                 return `<div style="margin-bottom:6px; font-size: 0.95rem;">• ${limpo}</div>`;
             })
             .join('');
@@ -1897,7 +1887,6 @@ window.renderPainel = function(){
     let indicador = document.getElementById('indicador-filtro');
     if(indicador) indicador.style.display = temFiltroAtivo ? 'block' : 'none';
 
-    // ✅ CORRIGIDO: Lógica de vínculo do Prestador via e-mail (usuario_apex)
     let prestadorVinculado = null;
     if(userRole === 'PRESTADOR' && currentUser) {
         let emailLogado = currentUser.email.toLowerCase();
@@ -1908,7 +1897,6 @@ window.renderPainel = function(){
         if(!a.data || !a.ticket) return false;
         
         if(userRole === 'PRESTADOR') {
-            // Se o usuário logado for prestador, ele só vê os tickets do prestador que tem o e-mail dele cadastrado
             if (!prestadorVinculado || a.prestador !== prestadorVinculado.nome) {
                 return false; 
             }
@@ -2094,7 +2082,6 @@ window.renderDashboard = function() {
             distLocais[local] = (distLocais[local] || 0) + 1;
         }
 
-        // ✅ CORRIGIDO: Lê os serviços independente de ter bolinha e calcula as proporções corretamente
         let txt = a.produtos_texto ? String(a.produtos_texto) : '';
         if (txt.trim().length > 0) {
             let linhas = txt.split('\n');
@@ -2102,13 +2089,15 @@ window.renderDashboard = function() {
                 let limpo = linha.replace('•', '').trim();
                 if (!limpo) return;
                 
+                let nomeServico = limpo.replace(/\s*\(Qtd:.*?\)/i, '').trim();
+                
                 let qtd = 1;
                 let matchQtd = limpo.match(/\(Qtd:\s*(\d+)/i);
                 if (matchQtd) {
                     qtd = parseInt(matchQtd[1]) || 1;
                 }
                 
-                distServ[limpo] = (distServ[limpo] || 0) + qtd;
+                distServ[nomeServico] = (distServ[nomeServico] || 0) + qtd;
                 totalServicosGeral += qtd;
             });
         } else if (a.segment && a.tipo_servico) {
@@ -2149,10 +2138,9 @@ window.renderDashboard = function() {
                 }, 
                 scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } 
             },
-             plugins: [ChartDataLabels]
+            plugins: [ChartDataLabels]
         });
     }
-};
 
     let servicosOrdenados = Object.entries(distServ).sort((a,b) => b[1] - a[1]);
     let listaHtml = servicosOrdenados.map(s => {
@@ -2196,98 +2184,11 @@ window.renderDashboard = function() {
         });
     }
 };
-
-    let servicosOrdenados = Object.entries(distServ).sort((a,b) => b[1] - a[1]);
-    let listaHtml = servicosOrdenados.map(s => {
-        let qtd = s[1];
-        let percent = totalServicosGeral > 0 ? Math.round((qtd / totalServicosGeral) * 100) : 0;
-        
-        return `
-        <div style="display: flex; justify-content: space-between; align-items: center; background: #f8fafc; padding: 12px; border-radius: 6px; border: 1px solid #e2e8f0; margin-bottom: 8px;">
-            <div style="font-size: 0.8rem; font-weight: 600; color: var(--cobli-dark); flex: 1; padding-right: 10px; line-height: 1.4;">${s[0]}</div>
-            <div style="font-size: 0.95rem; font-weight: bold; color: var(--primary); background: #e0e6ff; padding: 6px 12px; border-radius: 6px; border: 1px solid #c2d1ff; white-space: nowrap;">
-                ${qtd} <span style="color: #64748b; font-weight: 600; font-size: 0.75rem; margin-left: 4px;">(${percent}%)</span>
-            </div>
-        </div>`;
-    }).join('');
     
-    if (!listaHtml) listaHtml = `<div style="font-size:0.85rem; color:#64748b; padding: 10px;">Nenhum serviço computado ainda.</div>`;
-    const listaServicosElement = document.getElementById('lista-dashboard-servicos');
-    if (listaServicosElement) listaServicosElement.innerHTML = listaHtml;
-
-    let locaisOrdenados = Object.entries(distLocais).sort((a,b) => b[1] - a[1]).slice(0, 10); 
-    
-    if(chartLocais) chartLocais.destroy();
-    const ctxLocais = document.getElementById('chartLocais');
-    if (ctxLocais) {
-        chartLocais = new Chart(ctxLocais.getContext('2d'), {
-            type: 'bar',
-            data: { 
-                labels: locaisOrdenados.map(l => l[0]), 
-                datasets: [{ label: 'Atendimentos', data: locaisOrdenados.map(l => l[1]), backgroundColor: '#00AE97', borderRadius: 4 }] 
-            },
-            options: { 
-                responsive: true, 
-                maintainAspectRatio: false, 
-                plugins: { 
-                    legend: { display: false }, 
-                    datalabels: { color: 'white', font: {weight: 'bold', size: 12} } 
-                }, 
-                scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } 
-            },
-            plugins: [ChartDataLabels]
-        });
-    }
-};
-
-    let servicosOrdenados = Object.entries(distServ).sort((a,b) => b[1] - a[1]);
-    let listaHtml = servicosOrdenados.map(s => {
-        let qtd = s[1];
-        let percent = totalServicosGeral > 0 ? Math.round((qtd / totalServicosGeral) * 100) : 0;
-        
-        return `
-        <div style="display: flex; justify-content: space-between; align-items: center; background: #f8fafc; padding: 12px; border-radius: 6px; border: 1px solid #e2e8f0; margin-bottom: 8px;">
-            <div style="font-size: 0.8rem; font-weight: 600; color: var(--cobli-dark); flex: 1; padding-right: 10px; line-height: 1.4;">${s[0]}</div>
-            <div style="font-size: 0.95rem; font-weight: bold; color: var(--primary); background: #e0e6ff; padding: 6px 12px; border-radius: 6px; border: 1px solid #c2d1ff; white-space: nowrap;">
-                ${qtd} <span style="color: #64748b; font-weight: 600; font-size: 0.75rem; margin-left: 4px;">(${percent}%)</span>
-            </div>
-        </div>`;
-    }).join('');
-    
-    if (!listaHtml) listaHtml = `<div style="font-size:0.85rem; color:#64748b; padding: 10px;">Nenhum serviço computado ainda.</div>`;
-    const listaServicosElement = document.getElementById('lista-dashboard-servicos');
-    if (listaServicosElement) listaServicosElement.innerHTML = listaHtml;
-
-    let locaisOrdenados = Object.entries(distLocais).sort((a,b) => b[1] - a[1]).slice(0, 10); 
-    
-    if(chartLocais) chartLocais.destroy();
-    const ctxLocais = document.getElementById('chartLocais');
-    if (ctxLocais) {
-        chartLocais = new Chart(ctxLocais.getContext('2d'), {
-            type: 'bar',
-            data: { 
-                labels: locaisOrdenados.map(l => l[0]), 
-                datasets: [{ label: 'Atendimentos', data: locaisOrdenados.map(l => l[1]), backgroundColor: '#00AE97', borderRadius: 4 }] 
-            },
-            options: { 
-                responsive: true, 
-                maintainAspectRatio: false, 
-                plugins: { 
-                    legend: { display: false }, 
-                    datalabels: { color: 'white', font: {weight: 'bold', size: 12} } 
-                }, 
-                scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } 
-            },
-            plugins: [ChartDataLabels]
-        });
-    }
-};
-
 // ==========================================
 // 10. INICIALIZA O SISTEMA
 // ==========================================
 
-// ✅ CORRIGIDO: Detecta se o usuário chegou via link de redefinição de senha
 const hashParams = new URLSearchParams(window.location.hash.replace('#', '?'));
 const accessToken = hashParams.get('access_token');
 const tokenType = hashParams.get('type');
