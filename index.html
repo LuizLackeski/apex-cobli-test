@@ -479,7 +479,7 @@
 const SUPABASE_URL = 'https://fqaqlofndeihmhkopvan.supabase.co'; 
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZxYXFsb2ZuZGVpaG1oa29wdmFuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcyMjU4ODIsImV4cCI6MjA5MjgwMTg4Mn0.nauPYoB9RDhLLueMEuop2H2FxdChjIxFkAmBcYbJLzc'; 
 
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const EDGE_URL = `${SUPABASE_URL}/functions/v1/integracao-v2-interna`;
 const API_URL = `${SUPABASE_URL}/functions/v1/smart-service`;
@@ -532,7 +532,7 @@ async function authAction(type) {
         if(!email || password.length < 6) return window.showMessage("E-mail e senha de 6 dígitos são obrigatórios.");
         
         btn.innerText = "Criando...";
-        const { error } = await supabase.auth.signUp({ email, password });
+        const { error } = await supabaseClient.auth.signUp({ email, password });
         btn.innerText = "Criar Acesso";
         
         if (error) return window.showMessage("Erro: " + error.message);
@@ -547,7 +547,7 @@ async function authAction(type) {
         btn.innerText = "Autenticando...";
         errDiv.style.display = 'none';
         
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
         
         if (error) {
             btn.innerText = "Entrar";
@@ -562,7 +562,7 @@ async function authAction(type) {
         if(!email) return window.showMessage("Digite o e-mail cadastrado.");
         
         btn.innerText = "Enviando...";
-        const { error } = await supabase.auth.resetPasswordForEmail(email);
+        const { error } = await supabaseClient.auth.resetPasswordForEmail(email);
         btn.innerText = "Enviar Link";
         
         if (error) return window.showMessage("Erro: " + error.message);
@@ -572,7 +572,7 @@ async function authAction(type) {
 }
 
 async function checkSession() {
-    const { data: { session } } = await supabase.auth.getSession();
+    const { data: { session } } = await supabaseClient.auth.getSession();
     if (session) {
         currentUser = session.user;
         document.getElementById('auth-overlay').style.display = 'none';
@@ -595,7 +595,7 @@ async function checkSession() {
 }
 
 async function definirPermissoes(email, uid) {
-    const { data, error } = await supabase.from('perfis_usuarios').select('nivel').eq('id', uid).single();
+    const { data, error } = await supabaseClient.from('perfis_usuarios').select('nivel').eq('id', uid).single();
     
     if (data) {
         userRole = data.nivel;
@@ -625,7 +625,7 @@ async function definirPermissoes(email, uid) {
 }
 
 async function handleLogout() {
-    await supabase.auth.signOut();
+    await supabaseClient.auth.signOut();
     window.location.reload();
 }
 
@@ -633,7 +633,7 @@ window.carregarListaUsuarios = async function() {
     const tbody = document.getElementById('tabela-usuarios-body');
     tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;">Carregando usuários...</td></tr>';
     
-    const { data, error } = await supabase.from('perfis_usuarios').select('*').order('created_at', { ascending: false });
+    const { data, error } = await supabaseClient.from('perfis_usuarios').select('*').order('created_at', { ascending: false });
     
     if (error) {
         tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; color:red;">Erro ao carregar (Verifique a tabela no Supabase)</td></tr>';
@@ -662,7 +662,7 @@ window.carregarListaUsuarios = async function() {
 };
 
 window.mudarNivelUsuario = async function(id, nivel) {
-    const { error } = await supabase.from('perfis_usuarios').update({ nivel: nivel }).eq('id', id);
+    const { error } = await supabaseClient.from('perfis_usuarios').update({ nivel: nivel }).eq('id', id);
     if(error) window.showMessage("Erro ao atualizar o nível."); else window.showToast("Nível atualizado com sucesso!");
 };
 
