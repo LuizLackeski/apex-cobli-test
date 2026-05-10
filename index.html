@@ -1079,19 +1079,19 @@ window.carregarDadosDoBanco = async function() {
     } catch(e) { console.error("Erro bd:", e); } 
 };
 
-// NOTIFICAÇÃO SLACK PERSONALIZADA
+// NOTIFICAÇÃO SLACK (Voltando para o formato TEXT seguro)
 window.enviarNotificacaoSlack = async function(msg) {
     const URL = "https://fqaqlofndeihmhkopvan.supabase.co/functions/v1/notificar-slack";
-    
-    // Formato de "Attachment" do Slack cria a barra colorida lateral
-    const payload = {
-        attachments: [
-            {
-                color: "#00AE97", // A cor da barra (Verde Cobli)
-                text: msg
-            }
-        ]
-    };
+    try { 
+        await fetch(URL, { 
+            method: 'POST', 
+            headers: getHeaders(), 
+            body: JSON.stringify({ text: msg }) // Voltamos para o formato 'text' que seu servidor aceita!
+        }); 
+    } catch (e) { 
+        console.error("Erro Slack:", e); 
+    }
+};
 
     try { 
         await fetch(URL, { 
@@ -1691,7 +1691,12 @@ window.concluirAgendamentoFinal = async function(btn) {
         tipo_servico: itensOrdenados[0]?.desc || "Manutenção",
         field_id: prestador.field_id,
         produtos_texto: itensOrdenados.map(i => `• [${i.nomeManutencao.toUpperCase()}] ${i.desc} (Placa: ${i.placa} | Qtd: ${i.qtd} | Tempo: ${formatarTempo(i.tempo * i.qtd)})`).join('\n') + textoObservacao,
+        
+        // Enviando as placas nos 3 formatos para garantir que o seu Supabase pegue!
         placa_veiculo: placasConcatenadas, 
+        placa: placasConcatenadas,
+        placas: placasConcatenadas,
+        
         segment_id_field: itensOrdenados[0]?.segment_id || "",
         maintenance_id_field: itensOrdenados[0]?.maintenance_id || document.getElementById('tipoManutencao').value,
         executar_field: dispararField,
@@ -1710,7 +1715,10 @@ window.concluirAgendamentoFinal = async function(btn) {
         if (response.ok) {
             if (dispararSlack) {
                 let produtosFormatados = itensOrdenados.map(i => `[${i.nomeManutencao.toUpperCase()}] ${i.desc} (Placa: ${i.placa} | ${i.qtd}x)`).join(', ');
-                const msgSlack = `✅ *Novo Agendamento - Ticket: ${result.ticket}*\n*Cliente:* ${agendamento.cliente}\n*Prestador:* ${agendamento.prestador}\n*Data:* ${agendamento.data} | ${agendamento.slots[0]}\n*Produtos:* ${produtosFormatados}\n*Solicitante:* ${agendamento.solicitante}`;
+                
+                // Usando o '>' no começo de cada linha para gerar a barra de citação no Slack
+                const msgSlack = `> ✅ *Novo Agendamento - Ticket: ${result.ticket}*\n> *Cliente:* ${agendamento.cliente}\n> *Prestador:* ${agendamento.prestador}\n> *Data:* ${agendamento.data} | ${agendamento.slots[0]}\n> *Produtos:* ${produtosFormatados}\n> *Solicitante:* ${agendamento.solicitante}`;
+                
                 await window.enviarNotificacaoSlack(msgSlack);
             }
             let statusMsg = `<div style="text-align:center; font-size:1.1rem; color:var(--cobli-green); margin-bottom: 15px;">✅ <strong>AGENDAMENTO CONFIRMADO COM SUCESSO!</strong></div>`;
