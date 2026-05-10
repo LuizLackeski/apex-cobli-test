@@ -1,0 +1,16 @@
+{
+  "name": "APEX Agenda Prestadores",
+  "short_name": "APEX",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#07074E",
+  "theme_color": "#001BB8",
+  "icons": [
+    {
+      "src": "https://fqaqlofndeihmhkopvan.supabase.co/storage/v1/object/public/icones/logo-apex.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
