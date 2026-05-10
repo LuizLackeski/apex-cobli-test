@@ -1599,9 +1599,16 @@ window.concluirAgendamentoFinal = async function(btn) {
             window.showMessage(statusMsg, "success");
             await window.carregarDadosDoBanco();
             setTimeout(() => window.location.reload(), 3000); 
-        } else {
+     } else {
             window.showMessage("❌ Erro: " + (result.error || "Erro na integração"), "error");
         }
+    } catch(e) {
+        window.showMessage("❌ Erro ao processar: " + e.message);
+    } finally {
+        btn.innerText = originalText;
+        btn.disabled = false;
+    }
+};  // fecha concluirAgendamentoFinal
 
 window.limparFormulario = function() { 
     itensSelecionados = []; 
