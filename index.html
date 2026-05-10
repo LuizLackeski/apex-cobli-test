@@ -28,13 +28,12 @@
         }
 
         /* --- NOVAS TELAS DE AUTENTICAÇÃO PADRÃO COBLI --- */
-        /* ✅ PONTO 1: Fundo do login alterado para Azul Escuro */
         #auth-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--cobli-dark); display: flex; align-items: center; justify-content: center; z-index: 50000; }
         .auth-card { background: white; padding: 40px; border-radius: 16px; width: 360px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.5); }
         .auth-card .logo-circle { width: 50px; height: 50px; border: 4px solid var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; position: relative; }
         .auth-card .logo-circle::after { content: ''; width: 15px; height: 15px; background: var(--primary); border-radius: 50%; }
         .auth-card h2 { color: var(--cobli-dark); margin: 0 0 5px; font-size: 1.6rem; border:none; }
-        .auth-card p { color: #64748b; font-size: 0.85rem; margin-bottom: 25px; }
+        .auth-card p { color: #64748b; font-size: 0.85rem; margin-bottom: 25px; line-height: 1.4; }
         .input-group { position: relative; width: 100%; margin-bottom: 15px; text-align: left; }
         .input-group label { display: block; font-size: 0.75rem; font-weight: bold; color: #64748b; margin-bottom: 5px; text-transform: uppercase; }
         .input-group input { width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; box-sizing: border-box; font-size: 0.95rem; margin: 0; }
@@ -50,23 +49,27 @@
         /* MENU TOPO NOME E BOTOES */
         .topo { background: var(--cobli-dark); color: white; padding: 15px 30px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center; margin: -20px -20px 0 -20px;}
         
-        /* ✅ PONTO 5: Estilo ajustado das abas (linha mais grossa e próxima) */
         .menu { background: var(--primary); padding: 0 30px; display: flex; align-items: flex-end; justify-content: space-between; min-height: 45px; margin: 0 -20px 20px -20px;}
-        .menu button { background: none; border: none; color: #cbd5e1; padding: 12px 20px; cursor: pointer; font-size: 0.9rem; transition: 0.3s; position: relative; margin-bottom: 0;}
+        .menu button { background: none; border: none; color: rgba(255,255,255,0.7); padding: 12px 20px; cursor: pointer; font-size: 0.9rem; transition: 0.3s; margin-bottom: 0; position: relative;}
         .menu-left, .menu-right { display: flex; align-items: center; flex: 1; }
         .menu-right { justify-content: flex-end; align-items: center; padding-bottom: 8px; }
 
-        .menu button.ativo { color: white; font-weight: bold; }
-        .menu button.ativo::after { content: ''; position: absolute; bottom: 0; left: 10%; width: 80%; height: 4px; background: var(--cobli-green); border-radius: 4px 4px 0 0; }
+        /* Estilo em "C" do botão ativo */
+        .menu button.ativo { 
+            color: white; 
+            font-weight: bold; 
+            background: rgba(0, 27, 184, 0.5); /* Leve realce */
+            border-bottom: 4px solid var(--cobli-green);
+            border-left: 4px solid var(--cobli-green);
+            border-bottom-left-radius: 8px;
+        }
         .menu button:hover { color: white; }
         .menu .user-info { margin-left: auto; color: #ffffff; font-size: 0.8rem; margin-right: 15px; opacity: 0.8; font-weight: 600;}
-        .menu .btn-sair { color: #ff9999; font-weight: bold; }
+        .menu .btn-sair { color: #ff9999 !important; font-weight: bold; }
         
-        /* ✅ PONTO 5: Switches modernos na barra escura superior */
         .integracoes-topo { display: none; align-items: center; gap: 15px; background: rgba(255,255,255,0.1); padding: 5px 15px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.2); }
         .integracoes-topo label { display: flex; align-items: center; gap: 5px; color: white; font-size: 0.65rem; font-weight: bold; cursor: pointer; margin:0;}
         
-        /* CSS do Botão Switch Estilo iPhone */
         .toggle-switch { position: relative; width: 34px; height: 18px; appearance: none; background: #64748b; border-radius: 20px; outline: none; cursor: pointer; transition: 0.3s; margin: 0 !important; padding: 0 !important;}
         .toggle-switch::after { content: ''; position: absolute; top: 2px; left: 2px; width: 14px; height: 14px; background: white; border-radius: 50%; transition: 0.3s; }
         .toggle-switch:checked { background: var(--cobli-green); }
@@ -79,16 +82,14 @@
         
         .card { background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; border: 1px solid #e5e7eb; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); display: flex; flex-direction: column; justify-content: space-between; }
         .card:hover { border-color: var(--primary); }
-        .card-info { margin-bottom: 15px; }
-        .card-actions { display: flex; gap: 8px; flex-wrap: wrap; }
         
         h2 { font-size: 1.1rem; margin-top: 0; color: #1e293b; border-bottom: 1px solid #f1f5f9; padding-bottom: 10px; }
         
-        /* ASTERISCO DE CAMPO OBRIGATÓRIO */
         label.req::after { content: " *"; color: var(--cobli-red); font-weight: bold; }
         
-        input, select { width: 100%; padding: 10px; margin: 8px 0; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; transition: 0.3s; }
-        label { font-size: 0.75rem; color: #64748b; font-weight: 600; text-transform: uppercase; margin-bottom: 2px; }
+        input, select, textarea { width: 100%; padding: 10px; margin: 8px 0; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; transition: 0.3s; font-family: inherit;}
+        textarea { resize: vertical; }
+        label { font-size: 0.75rem; color: #64748b; font-weight: 600; text-transform: uppercase; margin-bottom: 2px; display: block;}
         button { cursor: pointer; padding: 8px 16px; background: var(--primary); color: white; border: none; border-radius: 5px; font-weight: 500; }
         .btn-cancelar { background: var(--cobli-red) !important; }
         
@@ -104,19 +105,15 @@
         .painel-item { background: white; margin-bottom: 8px; padding: 12px; border-radius: 8px; border: 1px solid #e5e7eb; border-left: 5px solid var(--primary); box-shadow: 0 1px 3px rgba(0,0,0,0.1); display: flex; align-items: center; justify-content: space-between; cursor: pointer; transition: all 0.2s ease;}
         .painel-item:hover { transform: translateY(-3px); box-shadow: 0 6px 15px rgba(0,0,0,0.1); background-color: #ebfcf9; border-left-color: var(--cobli-green); }
         
-        /* ✅ PONTO 4: Z-INDEX AUMENTADO PARA O MODAL APARECER SOBRE A TELA DE LOGIN */
         .modal-overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); justify-content:center; align-items:center; z-index: 60000; }
         .modal-card { background: #f0f0f0; color: #334155; padding: 25px; border-radius: 12px; width: 600px; max-width: 90%; max-height: 90vh; overflow-y: auto; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
         .modal-header { font-size: 1.2rem; font-weight: bold; color: var(--primary); margin-bottom: 15px; }
         .modal-footer { margin-top:20px; text-align: right; }
 
-        .card-selecao { background: white; padding: 15px; border-radius: 8px; margin-bottom: 10px; border: 1px solid #e5e7eb; cursor: pointer; transition: all 0.2s ease; border-left: 5px solid var(--primary); }
-        .card-selecao:hover { transform: translateY(-3px); box-shadow: 0 6px 15px rgba(0,0,0,0.1); border-color: var(--primary); }
         .date-pills { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
         .pill { background: #e0e6ff; color: var(--primary); padding: 4px 10px; border-radius: 6px; font-size: 0.8rem; font-weight: 600; border: 1px solid #c2d1ff; }
         .bloco-servico { background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #cbd5e1; margin-bottom: 15px; }
 
-        /* CSS GRID - BARRA DE FILTROS DO PAINEL */
         .grid-filtros { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 15px; background: white; padding: 12px 15px; border-radius: 8px; border: 1px solid #e5e7eb; margin-bottom: 10px; align-items: end; }
         .campo-filtro { display: flex; flex-direction: column; gap: 5px; }
         .campo-filtro label { font-size: 0.65rem; color: #64748b; font-weight: 700; text-transform: uppercase; margin: 0; }
@@ -126,16 +123,41 @@
         @keyframes girar { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         .icone-girando { display: inline-block; animation: girar 1s linear infinite; }
         
-        /* TABELA DE USUÁRIOS */
         table { width: 100%; border-collapse: collapse; margin-top: 15px; }
         th { text-align: left; background: #f1f5f9; padding: 12px; font-size: 0.75rem; color: #64748b; text-transform: uppercase; border-radius: 6px 6px 0 0; }
         td { padding: 12px; border-bottom: 1px solid #e2e8f0; font-size: 0.9rem; }
-        .badge-admin { background: #fee2e2; color: #ef4444; padding:4px; border-radius:4px; font-size:0.7rem; font-weight:bold;}
-        .badge-user { background: #e0e7ff; color: #4338ca; padding:4px; border-radius:4px; font-size:0.7rem; font-weight:bold;}
+        
+        /* Badges de Roles */
+        .badge-gestor { background: #fee2e2; color: #ef4444; padding:4px; border-radius:4px; font-size:0.7rem; font-weight:bold;}
+        .badge-admin { background: #fef08a; color: #b45309; padding:4px; border-radius:4px; font-size:0.7rem; font-weight:bold;}
+        .badge-smart { background: #e0e7ff; color: #4338ca; padding:4px; border-radius:4px; font-size:0.7rem; font-weight:bold;}
         .badge-prest { background: #dcfce7; color: #15803d; padding:4px; border-radius:4px; font-size:0.7rem; font-weight:bold;}
+
+        /* TIMELINE DO AGENDAMENTO */
+        .timeline-container { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; position: relative; padding: 0 20px;}
+        .timeline-container::before { content: ''; position: absolute; top: 15px; left: 40px; right: 40px; height: 3px; background: #e2e8f0; z-index: 1; }
+        .timeline-step { position: relative; z-index: 2; display: flex; flex-direction: column; align-items: center; gap: 8px; width: 100px; }
+        .step-circle { width: 32px; height: 32px; border-radius: 50%; background: white; border: 3px solid #cbd5e1; display: flex; align-items: center; justify-content: center; font-weight: bold; color: #64748b; font-size: 0.9rem; transition: 0.3s; }
+        .step-label { font-size: 0.75rem; font-weight: 700; color: #64748b; text-align: center; text-transform: uppercase; transition: 0.3s;}
+        
+        /* Estados da Timeline */
+        .timeline-step.active .step-circle { border-color: var(--primary); color: var(--primary); box-shadow: 0 0 0 4px rgba(0, 27, 184, 0.1); }
+        .timeline-step.active .step-label { color: var(--primary); }
+        
+        .timeline-step.completed .step-circle { background: var(--cobli-green); border-color: var(--cobli-green); color: white; }
+        .timeline-step.completed .step-label { color: var(--cobli-green); }
+
     </style>
 </head>
 <body>
+
+<div id="modalAviso" class="modal-overlay" onclick="window.fecharModal()">
+    <div class="modal-card" onclick="event.stopPropagation()">
+        <div id="modalHeader" class="modal-header"></div>
+        <div id="modalBody" class="modal-body" style="margin-bottom: 15px;"></div>
+        <div id="modalFooter" class="modal-footer"></div>
+    </div>
+</div>
 
 <div id="toast"></div>
 
@@ -143,8 +165,8 @@
     <div class="auth-card" id="card-login">
         <div class="logo-circle"></div>
         <h2>APEX Cobli</h2>
-        <p>Gestão de Prestadores e Serviços</p>
-        <div class="input-group"><label>E-mail</label><input type="email" id="login-email" placeholder="seu.nome@cobli.co"></div>
+        <p>Gestão de Prestadores e Serviços<br><small style="color:var(--primary); font-weight:bold;">Acesso exclusivo @cobli.co e @apex.co</small></p>
+        <div class="input-group"><label>E-mail</label><input type="email" id="login-email" placeholder="seu.nome@cobli.co" onblur="this.value = this.value.toLowerCase().trim()"></div>
         <div class="input-group">
             <label>Senha</label><input type="password" id="login-password" placeholder="••••••••">
             <span class="pass-toggle" onclick="togglePass('login-password')">👁️</span>
@@ -160,8 +182,8 @@
     <div class="auth-card" id="card-signup" style="display:none;">
         <div class="logo-circle"></div>
         <h2>Criar Conta</h2>
-        <p>Use seu e-mail @cobli.co ou @apex.co</p>
-        <div class="input-group"><label>E-mail</label><input type="email" id="signup-email" placeholder="nome@cobli.co"></div>
+        <p>Crie seu acesso com um domínio válido.<br><small>(Obrigatório validar via link no e-mail)</small></p>
+        <div class="input-group"><label>E-mail (@cobli.co ou @apex.co)</label><input type="email" id="signup-email" placeholder="nome@cobli.co" onblur="this.value = this.value.toLowerCase().trim()"></div>
         <div class="input-group">
             <label>Senha</label><input type="password" id="signup-password" placeholder="Mínimo de 6 caracteres">
             <span class="pass-toggle" onclick="togglePass('signup-password')">👁️</span>
@@ -173,7 +195,7 @@
     <div class="auth-card" id="card-forgot" style="display:none;">
         <div class="logo-circle"></div>
         <h2>Recuperar Senha</h2>
-        <p>Enviaremos um link para o seu e-mail</p>
+        <p>Enviaremos um link para o seu e-mail.<br><small>Atenção: E-mails @apex.co devem solicitar ao suporte.</small></p>
         <div class="input-group"><label>E-mail Cadastrado</label><input type="email" id="reset-email" placeholder="seu@email.co"></div>
         <button class="auth-btn" id="btnReset" onclick="authAction('reset')">Enviar Link</button>
         <div class="auth-links"><a onclick="showAuthCard('card-login')">⬅ Voltar ao Login</a></div>
@@ -201,15 +223,18 @@
 <div id="app-content">
     <div class="topo">
         <div style="display:flex; align-items:center; gap: 20px;">
-            <div><strong>APEX</strong> <span>Agenda Prestadores</span></div>
+            <div><strong style="font-size: 1.2rem;">APEX</strong> <span style="font-size: 0.9rem; opacity: 0.8;">Agenda Prestadores</span></div>
+        </div>
+        
+        <div style="display:flex; align-items:center; gap: 20px;">
             <div id="integrations-control" class="integracoes-topo">
                 <span style="font-size:0.6rem; opacity:0.7; font-weight:bold;">INTEGRAÇÕES:</span>
                 <label title="Avisos no Slack">SLACK <input type="checkbox" id="slackSwitch" class="toggle-switch"></label>
                 <label title="Lançar OS no Field">FIELD <input type="checkbox" id="fieldSwitch" class="toggle-switch"></label>
                 <label title="Salvar no BD">BANCO <input type="checkbox" id="dbSwitch" class="toggle-switch" checked></label>
             </div>
+            <div id="user-role-display" style="font-size: 0.85rem; font-weight: 600; opacity: 0.9; text-align: right;"></div>
         </div>
-        <div id="user-role-display" style="font-size: 0.85rem; font-weight: 600; opacity: 0.9;"></div>
     </div>
 
     <div class="menu">
@@ -221,21 +246,28 @@
             <button id="btn-usuarios" onclick="window.trocarAba('usuarios', this)">Usuários</button>
         </div>
         <div class="menu-right">
-            <button class="btn-sair" onclick="handleLogout()" style="color:var(--cobli-red); font-weight:bold; background:none; border:none; cursor:pointer;">Sair</button>
-        </div>
-    </div>
-
-    <div id="modalAviso" class="modal-overlay" onclick="window.fecharModal()">
-        <div class="modal-card" onclick="event.stopPropagation()">
-            <div id="modalHeader" class="modal-header"></div>
-            <div id="modalBody" class="modal-body" style="margin-bottom: 15px;"></div>
-            <div id="modalFooter" class="modal-footer"></div>
+            <button class="btn-sair" onclick="handleLogout()" style="background:none; border:none; cursor:pointer;">Sair</button>
         </div>
     </div>
 
     <div class="conteudo">
         
         <div id="consulta" class="aba ativa">
+            <div class="timeline-container" id="timeline-agendamento">
+                <div class="timeline-step active" id="ts-1">
+                    <div class="step-circle">1</div>
+                    <div class="step-label">Endereço</div>
+                </div>
+                <div class="timeline-step" id="ts-2">
+                    <div class="step-circle">2</div>
+                    <div class="step-label">Serviços</div>
+                </div>
+                <div class="timeline-step" id="ts-3">
+                    <div class="step-circle">3</div>
+                    <div class="step-label">Confirmação</div>
+                </div>
+            </div>
+
             <div id="step-1" class="card">
                 <h2>Localização do Atendimento</h2>
                 <label class="req">CEP</label>
@@ -245,15 +277,19 @@
                 </div>
                 <div id="camposEndereco" style="display: none; margin-top: 15px; border-top: 1px solid #eee; padding-top: 15px;">
                     <div style="display: flex; gap: 10px;">
-                        <div style="flex: 3;"><label class="req">Endereço (Rua/Av)</label><input type="text" id="inputRua" placeholder="Ex: Av. Paulista" required></div>
+                        <div style="flex: 3;"><label class="req">Endereço (Rua/Av)</label><input type="text" id="inputRua" placeholder="Ex: Av. Paulista" onblur="this.value = window.formatarCapitalize(this.value)" required></div>
                         <div style="flex: 1;"><label class="req">Nº</label><input type="text" id="inputNumero" placeholder="123" required></div>
                     </div>
                     <div style="display: flex; gap: 10px;">
-                        <div style="flex: 2;"><label class="req">Bairro</label><input type="text" id="inputBairro" placeholder="Ex: Centro" required></div>
-                        <div style="flex: 2;"><label class="req">Cidade</label><input type="text" id="inputCidade" placeholder="Ex: São Paulo" required></div>
-                        <div style="flex: 1;"><label class="req">UF</label><input type="text" id="inputUf" placeholder="SP" maxlength="2" required></div>
+                        <div style="flex: 2;"><label class="req">Bairro</label><input type="text" id="inputBairro" placeholder="Ex: Centro" onblur="this.value = window.formatarCapitalize(this.value)" required></div>
+                        <div style="flex: 2;"><label class="req">Cidade</label><input type="text" id="inputCidade" placeholder="Ex: São Paulo" onblur="this.value = window.formatarCapitalize(this.value)" required></div>
+                        <div style="flex: 1;"><label class="req">UF</label><input type="text" id="inputUf" placeholder="SP" maxlength="2" required style="text-transform: uppercase;" oninput="this.value = this.value.toUpperCase()"></div>
                     </div>
-                    <button onclick="window.proximoPasso(2)" id="btnBuscar" style="margin-top: 10px; width: 100%;">Buscar Prestadores</button>
+                    <div style="margin-top: 8px;">
+                        <label>Observações do Local / Link (Opcional)</label>
+                        <textarea id="inputObs" rows="2" placeholder="Ex: Ponto de referência, link do Google Maps, restrições da portaria..."></textarea>
+                    </div>
+                    <button onclick="window.proximoPasso(2)" id="btnBuscar" style="margin-top: 15px; width: 100%;">Buscar Prestadores</button>
                 </div>
             </div>
             
@@ -286,7 +322,8 @@
                         <div style="flex:1;"><label>Tipo de Serviço</label><select id="produto"></select></div>
                     </div>
                     <div style="display: flex; gap: 10px; align-items: flex-end; margin-top:10px;">
-                        <div style="flex:1;"><label>Quantidade</label><input type="number" id="quantidade" value="1"></div>
+                        <div style="flex:1.5;"><label class="req" title="Placa do veículo a ser atendido">Placa(s)</label><input type="text" id="placaServico" placeholder="ABC-1234" style="text-transform: uppercase;" oninput="this.value = this.value.toUpperCase()"></div>
+                        <div style="flex:1;"><label>Quantidade</label><input type="number" id="quantidade" value="1" min="1"></div>
                         <button onclick="window.adicionarProduto()" style="height: 42px; margin-bottom: 8px;">Adicionar</button>
                     </div>
                 </div>
@@ -295,9 +332,9 @@
                 <p>Horas Necessárias: <strong><span id="horasNecessarias">0</span></strong></p>
                 <div id="agenda-agendamento"></div>
                 
-                <div style="margin-top:15px; border-top: 1px solid #e2e8f0; padding-top: 15px;">
-                    <button onclick="window.proximoPasso(2)" style="background:gray;">Voltar</button>
-                    <button onclick="window.validarEAvancar()" style="background:var(--cobli-green);">Próximo</button>
+                <div style="margin-top:15px; border-top: 1px solid #e2e8f0; padding-top: 15px; display: flex; gap: 8px; flex-wrap: wrap;">
+                    <button onclick="window.proximoPasso(2)" style="background:gray;">⬅️ Voltar Prestadores</button>
+                    <button onclick="window.validarEAvancar()" style="background:var(--cobli-green); flex: 1;">Próximo Passo ➡️</button>
                     <button onclick="window.cancelarAgendamento()" class="btn-cancelar">Cancelar</button>
                 </div>
             </div>
@@ -309,15 +346,15 @@
                     <input id="ticket" placeholder="Ex: 123654789" required style="flex: 1;">
                     <button type="button" id="btnChecarSequencia" onclick="window.verificarSequenciaEFOP()" style="background:var(--cobli-dark); color:white; padding:0 15px; border-radius:6px; font-size:12px; cursor:pointer; border:none; height: 42px;">Checar Sequência</button>
                 </div>
-                <label class="req">Nome do Cliente</label><input id="clienteNome" required>
+                <label class="req">Nome do Cliente</label><input id="clienteNome" onblur="this.value = window.formatarCapitalize(this.value)" required>
                 <label class="req">CNPJ / CPF</label><input id="clienteCnpj" placeholder="00.000.000/0000-00" oninput="window.maskCPFCNPJ(this)" required>
                 <label class="req">Responsável pela solicitação (APEX)</label><input id="solicitante" required readonly style="background: #f1f5f9; cursor:not-allowed;">
-                <label class="req">Responsável pelo acompanhamento (Local)</label><input id="respAcompanhamento" required>
+                <label class="req">Responsável pelo acompanhamento (Local)</label><input id="respAcompanhamento" onblur="this.value = window.formatarCapitalize(this.value)" required>
                 <label class="req">Telefone do responsável</label><input id="telResponsavel" placeholder="(00) 00000-0000" oninput="window.maskPhone(this)" maxlength="15" required>
                 
-                <div style="margin-top:15px;">
-                    <button onclick="window.proximoPasso(3)" style="background:gray;">Voltar</button>
-                    <button id="btnConfirmar" onclick="window.revisarAgendamento()" style="background:var(--cobli-green);">Confirmar</button>
+                <div style="margin-top:15px; display: flex; gap: 8px; flex-wrap: wrap;">
+                    <button onclick="window.proximoPasso(3)" style="background:gray;">⬅️ Voltar Agenda</button>
+                    <button id="btnConfirmar" onclick="window.revisarAgendamento()" style="background:var(--cobli-green); flex: 1;">Revisar e Confirmar ✅</button>
                     <button onclick="window.cancelarAgendamento()" class="btn-cancelar">Cancelar</button>
                 </div>
             </div>
@@ -332,25 +369,31 @@
                 
                 <div id="etapa-1">
                     <h3 style="margin-bottom: 20px; color: var(--primary);">Dados do Prestador</h3>
-                    <label class="req">Nome / Empresa</label><input id="nomeEmpresa" required style="margin-bottom: 12px;">
-                    <label class="req">Endereço Completo</label><input id="endereco" required style="margin-bottom: 12px;">
+                    <label class="req">Nome / Empresa</label><input id="nomeEmpresa" required style="margin-bottom: 12px;" onblur="this.value = window.formatarCapitalize(this.value)">
+                    <label class="req">Endereço Completo</label><input id="endereco" required style="margin-bottom: 12px;" onblur="this.value = window.formatarCapitalize(this.value)">
                     
                     <div style="display: flex; gap: 10px; margin-bottom: 12px;">
-                        <div style="flex: 2;"><label class="req">Cidade</label><input id="cidade" required></div>
-                        <div style="flex: 1;"><label class="req">UF</label><input id="uf" required maxlength="2" placeholder="SP"></div>
+                        <div style="flex: 2;"><label class="req">Cidade</label><input id="cidade" required onblur="this.value = window.formatarCapitalize(this.value)"></div>
+                        <div style="flex: 1;"><label class="req">UF</label><input id="uf" required maxlength="2" placeholder="SP" style="text-transform: uppercase;" oninput="this.value = this.value.toUpperCase()"></div>
                         <div style="flex: 1.5;"><label class="req">CEP</label><input id="cep" required oninput="window.maskCEP(this)" placeholder="00000-000"></div>
                     </div>
 
-               <div style="display: flex; gap: 10px; margin-bottom: 12px;">
-                        <div style="flex: 1;"><label class="req">Responsável</label><input id="responsavel" required></div>
+                    <div style="display: flex; gap: 10px; margin-bottom: 12px;">
+                        <div style="flex: 1;"><label class="req">Responsável</label><input id="responsavel" required onblur="this.value = window.formatarCapitalize(this.value)"></div>
                         <div style="flex: 1;"><label class="req">Telefone</label><input id="contatoResponsavel" required oninput="window.maskPhone(this)" placeholder="(00) 00000-0000"></div>
                     </div>
 
                     <div style="display: flex; gap: 10px; margin-bottom: 15px;">
-                        <div style="flex: 1;"><label class="req">Qtd Técnicos</label><input id="qtdTecnicos" type="number" required></div>
-                        <div style="flex: 1;"><label class="req">Raio (Km)</label><input id="rangeAtendimento" type="number" required></div>
-                        <div style="flex: 1;"><label>ID Field Control</label><input id="fieldIdField" placeholder="Opcional"></div>
-                        <div style="flex: 1.5;"><label>E-mail Acesso (@apex.co)</label><input id="usuarioApex" placeholder="prestador@apex.co"></div>
+                        <div style="flex: 0.8;"><label class="req">Qtd Técnicos</label><input id="qtdTecnicos" type="number" required min="1"></div>
+                        <div style="flex: 0.8;"><label class="req">Raio (Km)</label><input id="rangeAtendimento" type="number" required></div>
+                        <div style="flex: 1.5;"><label class="req" title="Obrigatório para integração Field">ID Field Control</label><input id="fieldIdField" placeholder="Chave Única Field" required></div>
+                        <div style="flex: 1.5;"><label class="req" title="Obrigatório para login no portal">E-mail (@apex.co)</label><input type="email" id="usuarioApex" placeholder="prestador@apex.co" required onblur="this.value = this.value.toLowerCase().trim()"></div>
+                        <div style="flex: 1;"><label>Ambiente</label>
+                            <select id="statusPrestador">
+                                <option value="PRODUCAO">Produção</option>
+                                <option value="TESTE">Teste (Oculto)</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
         
@@ -391,7 +434,7 @@
                 <div style="margin-top:20px; display: flex; gap: 8px; flex-wrap: wrap;">
                     <button id="btn-voltar" onclick="window.mudarEtapa(-1)">Voltar</button>
                     <button id="btn-proximo" onclick="window.mudarEtapa(1)">Próximo</button>
-                    <button id="btn-concluir" onclick="window.salvarPrestador(this)" style="background: var(--cobli-green);">Concluir</button>
+                    <button id="btn-concluir" onclick="window.salvarPrestador(this)" style="background: var(--cobli-green);">Concluir Cadastro</button>
                     <button id="btn-limpar-agenda" onclick="window.limparAgendaCadastro()" style="background: #f59e0b; color: white; border: none; display:none;">🧹 Limpar Agenda Atual</button>
                     <button onclick="window.cancelarCadastro()" class="btn-cancelar">Cancelar</button>
                 </div>
@@ -476,16 +519,16 @@
             <div class="card">
                 <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; padding-bottom: 15px; margin-bottom: 15px;">
                     <h2 style="border:none; margin:0;">Gestão de Acessos</h2>
-                    <button onclick="window.carregarListaUsuarios()" style="background: var(--cobli-green);">🔄 Atualizar Tabela</button>
+                    <button id="btn-atualizar-user-tab" onclick="window.carregarListaUsuarios()" style="background: var(--cobli-green);">🔄 Atualizar Tabela</button>
                 </div>
-                <p style="font-size: 0.85rem; color: #64748b;">Apenas Administradores podem visualizar e alterar as permissões de acesso do sistema.</p>
+                <p style="font-size: 0.85rem; color: #64748b;">Níveis: <strong>GESTOR</strong> (Acesso Total) | <strong>ADMIN</strong> (Visualização Restrita) | <strong>SMARTOPS</strong> (Apenas Agendamentos) | <strong>PRESTADOR</strong> (Visualização Própria)</p>
                 
                 <table style="width: 100%; border-collapse: collapse; margin-top: 15px;">
                     <thead>
                         <tr>
                             <th style="text-align: left; background: #f1f5f9; padding: 12px; font-size: 0.75rem; color: #64748b; text-transform: uppercase; border-radius: 6px 0 0 0;">Usuário / E-mail</th>
                             <th style="text-align: left; background: #f1f5f9; padding: 12px; font-size: 0.75rem; color: #64748b; text-transform: uppercase;">Nível de Acesso</th>
-                            <th style="text-align: left; background: #f1f5f9; padding: 12px; font-size: 0.75rem; color: #64748b; text-transform: uppercase; border-radius: 0 6px 0 0;">Data de Criação</th>
+                            <th style="text-align: left; background: #f1f5f9; padding: 12px; font-size: 0.75rem; color: #64748b; text-transform: uppercase; border-radius: 0 6px 0 0;">Ações</th>
                         </tr>
                     </thead>
                     <tbody id="tabela-usuarios-body"></tbody>
@@ -496,7 +539,7 @@
         <div id="disponibilidade" class="aba">
             <div class="card">
                 <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; padding-bottom: 15px; margin-bottom: 15px;">
-                    <h2 style="border:none; margin:0;">Gestão de Ausências</h2>
+                    <h2 style="border:none; margin:0;">Minha Agenda / Ausências</h2>
                 </div>
                 <p style="font-size: 0.85rem; color: #64748b; margin-bottom: 20px;">Adicione feriados, férias ou imprevistos para bloquear sua agenda.</p>
                 
@@ -533,6 +576,14 @@
 
 <script>
 // ==========================================
+// FORMATADOR DE TEXTO (Title Case / Capitalize)
+// ==========================================
+window.formatarCapitalize = function(str) {
+    if(!str) return "";
+    return str.toLowerCase().replace(/(?:^|\s)\S/g, function(a) { return a.toUpperCase(); });
+};
+
+// ==========================================
 // 1. CONFIGURAÇÕES DO SUPABASE
 // ==========================================
 const SUPABASE_URL = 'https://fqaqlofndeihmhkopvan.supabase.co'; 
@@ -544,9 +595,10 @@ const EDGE_URL = `${SUPABASE_URL}/functions/v1/integracao-v2-interna`;
 const API_URL = `${SUPABASE_URL}/functions/v1/smart-service`;
 const DB_URL = `${SUPABASE_URL}/rest/v1`;
 
-const ADMIN_EMAILS = ["luiz.lackeski@cobli.co", "fernando.souza@cobli.co", "anni.torrecilhas@cobli.co"];
+// Nova estrutura de acessos
+const GESTOR_EMAILS = ["luiz.lackeski@cobli.co", "fernando.souza@cobli.co", "anni.torrecilhas@cobli.co"];
 let currentUser = null;
-let userRole = 'PRESTADOR';
+let userRole = 'PRESTADOR'; 
 
 // VARIÁVEIS GLOBAIS DA AGENDA E CADASTRO DINÂMICO
 let prestadores = [], itensSelecionados = [], agendamentos = [], etapa = 1, editingIndex = -1, prestadorSelecionadoIndex = null;
@@ -631,7 +683,7 @@ window.authAction = async function(type) {
         
         if (error) return window.showMessage("Erro: " + error.message);
         
-        window.showToast("Cadastro realizado com sucesso! Faça login.");
+        window.showToast("Cadastro realizado com sucesso! Verifique seu e-mail para validar o link.");
         document.getElementById('login-email').value = email;
         showAuthCard('card-login');
     } 
@@ -689,9 +741,9 @@ async function checkSession() {
         
         await definirPermissoes(currentUser.email, currentUser.id);
         
-        if (userRole === 'ADMIN') {
+        // Exibir Integrações apenas para o GESTOR
+        if (userRole === 'GESTOR') {
             document.getElementById('integrations-control').style.display = 'flex';
-            window.carregarListaUsuarios();
         }
         
         window.carregarProdutos();
@@ -724,28 +776,32 @@ async function definirPermissoes(email, uid) {
     const { data, error } = await supabaseClient.from('perfis_usuarios').select('nivel').eq('id', uid).maybeSingle();
     
     if (data) {
-        userRole = data.nivel;
+        userRole = data.nivel; // GESTOR, ADMIN, SMARTOPS, PRESTADOR
     } else {
         const isCobli = email.endsWith('@cobli.co');
-        const isAdmin = ADMIN_EMAILS.includes(email.toLowerCase());
-        userRole = isAdmin ? 'ADMIN' : (isCobli ? 'USUARIO' : 'PRESTADOR');
+        const isGestor = GESTOR_EMAILS.includes(email.toLowerCase());
+        userRole = isGestor ? 'GESTOR' : (isCobli ? 'SMARTOPS' : 'PRESTADOR');
     }
 
     document.getElementById('user-role-display').innerText = `${email} | ${userRole}`;
     
     const campoSol = document.getElementById('solicitante');
     if(campoSol) {
-        campoSol.value = email.endsWith('@cobli.co') ? extrairNomeDoEmail(email) : email;
+        campoSol.value = email.endsWith('@cobli.co') ? window.formatarCapitalize(extrairNomeDoEmail(email)) : email;
     }
 
-    if (userRole !== 'ADMIN') {
+    // Controle do Menu de Usuários (Apenas GESTOR e ADMIN veem, mas ADMIN não edita)
+    if (userRole !== 'GESTOR' && userRole !== 'ADMIN') {
         document.getElementById('btn-usuarios').style.display = 'none';
     }
-    
-if (userRole === 'PRESTADOR') {
-        document.getElementById('btn-consulta').style.display = 'none';
+    // Controle do Menu de Cadastro (Apenas GESTOR e ADMIN veem)
+    if (userRole !== 'GESTOR' && userRole !== 'ADMIN') {
         document.getElementById('btn-cadastro').style.display = 'none';
-        // A linha que escondia o dashboard foi removida daqui!
+    }
+    
+    // Controle Específico para o PRESTADOR
+    if (userRole === 'PRESTADOR') {
+        document.getElementById('btn-consulta').style.display = 'none';
         
         let menuLeft = document.getElementById('main-menu');
         if(!document.getElementById('btn-disponibilidade')) {
@@ -773,35 +829,47 @@ window.carregarListaUsuarios = async function() {
     
     tbody.innerHTML = data.map(u => {
         let badgeClass = 'badge-prest';
+        if(u.nivel === 'GESTOR') badgeClass = 'badge-gestor';
         if(u.nivel === 'ADMIN') badgeClass = 'badge-admin';
-        if(u.nivel === 'USUARIO') badgeClass = 'badge-user';
+        if(u.nivel === 'SMARTOPS') badgeClass = 'badge-smart';
         let d = new Date(u.created_at).toLocaleDateString('pt-BR');
         
+        // Se a pessoa logada for apenas ADMIN, o select fica disabled e não tem botão de deletar
+        let isReadOnly = (userRole !== 'GESTOR');
+        let blockDelete = isReadOnly ? '' : `<button onclick="window.excluirUsuarioPerfil('${u.id}', '${u.email}')" style="background: var(--cobli-red); padding: 4px 8px; border-radius: 4px;" title="Remover Perfil">🗑️</button>`;
+
         return `
         <tr>
             <td style="padding: 12px; border-bottom: 1px solid #e2e8f0; font-size: 0.9rem; font-weight:600; color:var(--cobli-dark);">${u.email}</td>
             <td style="padding: 12px; border-bottom: 1px solid #e2e8f0;">
-                <select onchange="window.mudarNivelUsuario('${u.id}', this.value)" style="width: auto; padding: 4px; font-weight: bold; background: ${u.nivel==='ADMIN'?'#fee2e2':u.nivel==='USUARIO'?'#e0e7ff':'#dcfce7'}; color: ${u.nivel==='ADMIN'?'#ef4444':u.nivel==='USUARIO'?'#4338ca':'#15803d'}; border: none;">
+                <select onchange="window.mudarNivelUsuario('${u.id}', this.value)" style="width: auto; padding: 4px; font-weight: bold; border: none; outline: none; border-radius: 4px;" class="${badgeClass}" ${isReadOnly ? 'disabled' : ''}>
                     <option value="PRESTADOR" ${u.nivel==='PRESTADOR'?'selected':''}>PRESTADOR</option>
-                    <option value="USUARIO" ${u.nivel==='USUARIO'?'selected':''}>USUARIO</option>
+                    <option value="SMARTOPS" ${u.nivel==='SMARTOPS'?'selected':''}>SMARTOPS</option>
                     <option value="ADMIN" ${u.nivel==='ADMIN'?'selected':''}>ADMIN</option>
+                    <option value="GESTOR" ${u.nivel==='GESTOR'?'selected':''}>GESTOR</option>
                 </select>
             </td>
             <td style="padding: 12px; border-bottom: 1px solid #e2e8f0; font-size: 0.85rem; color:#64748b;">${d}</td>
-            <td style="padding: 12px; border-bottom: 1px solid #e2e8f0; text-align: center;">
-                <button onclick="window.excluirUsuarioPerfil('${u.id}', '${u.email}')" style="background: var(--cobli-red); padding: 4px 8px; border-radius: 4px;" title="Remover Perfil">🗑️</button>
+            <td style="padding: 12px; border-bottom: 1px solid #e2e8f0; text-align: left;">
+                ${blockDelete}
             </td>
         </tr>`;
     }).join('');
+    
+    if(userRole !== 'GESTOR') {
+        document.getElementById('btn-atualizar-user-tab').style.display = 'none';
+    }
 };
 
 window.mudarNivelUsuario = async function(id, nivel) {
+    if (userRole !== 'GESTOR') return window.showMessage("Apenas GESTORES podem alterar permissões.");
     const { error } = await supabaseClient.from('perfis_usuarios').update({ nivel: nivel }).eq('id', id);
     if(error) window.showMessage("Erro ao atualizar o nível."); else window.showToast("Nível atualizado com sucesso!");
+    window.carregarListaUsuarios();
 };
 
-// ✅ PONTO 4: Exclusão chama Edge Function e remove do Banco de Dados
 window.excluirUsuarioPerfil = function(id, email) {
+    if (userRole !== 'GESTOR') return window.showMessage("Acesso negado.");
     window.showConfirm(`Tem certeza que deseja remover o perfil de <strong>${email}</strong> e revogar seu acesso?<br><br><small>O usuário perderá o acesso configurado no sistema.</small>`, `
         fetch(EDGE_URL, {
             method: 'POST',
@@ -828,7 +896,7 @@ window.excluirUsuarioPerfil = function(id, email) {
 window.carregarDadosDoBanco = async function() { 
     try { 
         const resP = await fetch(`${API_URL}/prestadores`, { headers: getHeaders() }); prestadores = await resP.json(); 
-        if (userRole !== 'PRESTADOR') window.renderizarListaPrestadores(); 
+        if (userRole === 'GESTOR' || userRole === 'ADMIN') window.renderizarListaPrestadores(); 
 
         const resA = await fetch(`${DB_URL}/agendamentos?select=*&order=created_at.desc`, { method: 'GET', headers: getHeaders() }); 
         const dataAgend = await resA.json(); agendamentos = Array.isArray(dataAgend) ? dataAgend : [];
@@ -879,18 +947,7 @@ window.verificarSequenciaEFOP = async function() {
     } catch(e){} finally { btn.innerText="Checar"; btn.disabled=false; setTimeout(()=>document.getElementById('ticket').style.border="",3000); }
 };
 
-window.getOcupacaoSlot = function(prestador, data, hora) { 
-    if (!agendamentos || agendamentos.length === 0) return 0;
-    return agendamentos.filter(a => {
-        const mesmoPrestador = (a.prestador === prestador.nome);
-        const mesmaData = (a.data === data || a.rawdate === data);
-        let contemHora = false;
-        if (Array.isArray(a.slots)) contemHora = a.slots.includes(hora);
-        else if (typeof a.slots === 'string') contemHora = a.slots.split(', ').includes(hora);
-        return mesmoPrestador && mesmaData && contemHora;
-    }).length; 
-};
-
+// Funcionalidades da Agenda Inteligente
 window.getAusenciasDoDia = function(prestador, dStr) {
     if (!prestador.agenda || !Array.isArray(prestador.agenda)) return { total: false, horasBloqueadas: new Set() };
     let ausencias = prestador.agenda.filter(a => a.isAbsence && a.data === dStr);
@@ -901,7 +958,6 @@ window.getAusenciasDoDia = function(prestador, dStr) {
     return { total: false, horasBloqueadas: new Set() };
 };
 
-// ✅ PONTO 3: Motor Inteligente consertado. Férias + Agendamentos + Folga de 1h antes/depois.
 window.podeAgendar = function(prestador, data, novosSlotsInt, dNome) {
     let maxT = parseInt(prestador.qtdtecnicos) || 1;
     
@@ -1000,9 +1056,27 @@ window.getNextDates = function(prestador) {
 };
 
 // ==========================================
-// 6. FLUXO DE AGENDAMENTO (ABA 1)
+// 6. FLUXO DE AGENDAMENTO (ABA 1) - TIMELINE UPDATE
 // ==========================================
+window.atualizarTimeline = function(step) {
+    for(let i=1; i<=3; i++) {
+        let ts = document.getElementById('ts-'+i);
+        if(!ts) continue;
+        if(i < step) {
+            ts.className = 'timeline-step completed';
+            ts.querySelector('.step-circle').innerHTML = '✔️';
+        } else if (i === step) {
+            ts.className = 'timeline-step active';
+            ts.querySelector('.step-circle').innerHTML = i;
+        } else {
+            ts.className = 'timeline-step';
+            ts.querySelector('.step-circle').innerHTML = i;
+        }
+    }
+}
+
 window.proximoPasso = async function(n) { 
+    
     if(n === 2) { 
         if(!window.validarCampos('#step-1') || !document.getElementById('inputCep').value.trim()) {
             document.getElementById('inputCep').style.borderColor = !document.getElementById('inputCep').value.trim() ? 'var(--cobli-red)' : '#cbd5e1';
@@ -1022,6 +1096,9 @@ window.proximoPasso = async function(n) {
         let prestadoresFiltrados = []; 
         for(let p of prestadores) { 
             if (!p.endereco) continue; 
+            // Regra da Flag Ambiente: Se for TESTE e eu for SMARTOPS, ignora.
+            if (p.status_prestador === 'TESTE' && userRole === 'SMARTOPS') continue;
+            
             const dist = await consultarDistancia(enderecoBusca, p.endereco); 
             let available = window.getNextDates(p); 
             if(dist !== null && dist <= parseFloat(p.range) && available.length > 0) { 
@@ -1047,9 +1124,14 @@ window.proximoPasso = async function(n) {
         return window.showMessage("Selecione um prestador!"); 
     }
     
-    document.querySelectorAll('#consulta > div').forEach(div => div.style.display = 'none'); 
-    document.getElementById('step-' + n).style.display = 'block'; 
+    document.querySelectorAll('#consulta > div.card').forEach(div => div.style.display = 'none'); 
+    document.getElementById('step-' + (n > 3 ? 4 : n)).style.display = 'block'; 
     
+    // Atualiza Timeline Visual (Passo 4 é na verdade o Check 3)
+    if(n === 1) window.atualizarTimeline(1);
+    if(n === 2 || n === 3) window.atualizarTimeline(2);
+    if(n === 4) window.atualizarTimeline(3);
+
     if (n === 3) { 
         let p = prestadores[prestadorSelecionadoIndex]; 
         document.getElementById("header-prestador-info").innerText = `Prestador: ${p.nome} | Distância: ${p.distanciaFinal} km`; 
@@ -1070,7 +1152,7 @@ window.renderizarListaPrestadoresSelecao = function(lista) {
              onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 1px 3px rgba(0,0,0,0.1)'; this.style.backgroundColor='white'; this.style.borderLeftColor='var(--primary)';">
             
             <div style="width: 100%; display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                <div style="font-size: 1.05rem; font-weight: bold; color: var(--primary);">👷 ${p.nome}</div>
+                <div style="font-size: 1.05rem; font-weight: bold; color: var(--primary);">👷 ${p.nome} ${p.status_prestador === 'TESTE' ? '<span style="color:var(--cobli-red); font-size:0.7rem;">[TESTE]</span>' : ''}</div>
                 <div style="font-size: 0.75rem; color: #64748b; font-weight: 700; background: #f1f5f9; padding: 4px 8px; border-radius: 4px; border: 1px solid #e2e8f0;">
                     📍 ${p.cidade}/${p.uf}
                 </div>
@@ -1110,20 +1192,33 @@ window.adicionarProduto = function() {
     let select = document.getElementById("produto");
     let optionSelecionada = select.options[select.selectedIndex];
     let selectManutencao = document.getElementById('tipoManutencao');
+    let inputPlaca = document.getElementById('placaServico');
+    
+    if(!inputPlaca.value.trim()) {
+        inputPlaca.style.borderColor = 'var(--cobli-red)';
+        return window.showToast('⚠️ Informe a Placa do veículo!');
+    } else {
+        inputPlaca.style.borderColor = '#cbd5e1';
+    }
+
     let idSegmento = optionSelecionada.dataset.idField;
     let descBase = optionSelecionada.text;
     let nomeManutencao = selectManutencao.options[selectManutencao.selectedIndex].text;
     let idManutencao = selectManutencao.value;
     let qtd = parseInt(document.getElementById("quantidade").value) || 1;
     let tempoBase = parseInt(select.value);
+    let placa = inputPlaca.value.toUpperCase().trim();
     
-    let itemExistente = itensSelecionados.find(i => i.segment_id === idSegmento && i.desc === descBase && i.nomeManutencao === nomeManutencao);
+    let itemExistente = itensSelecionados.find(i => i.segment_id === idSegmento && i.desc === descBase && i.nomeManutencao === nomeManutencao && i.placa === placa);
     
     if (itemExistente) {
         itemExistente.qtd += qtd; 
     } else {
-        itensSelecionados.push({ desc: descBase, nomeManutencao: nomeManutencao, maintenance_id: idManutencao, tempo: tempoBase, qtd: qtd, segment_id: idSegmento });
+        itensSelecionados.push({ desc: descBase, nomeManutencao: nomeManutencao, maintenance_id: idManutencao, tempo: tempoBase, qtd: qtd, segment_id: idSegmento, placa: placa });
     }
+    
+    inputPlaca.value = '';
+    document.getElementById("quantidade").value = '1';
     window.renderizarProdutos();
     if (prestadorSelecionadoIndex !== null) window.rdaAgendamento();
 };
@@ -1137,11 +1232,11 @@ window.renderizarProdutos = function() {
             <div class="item-lista">
                 <span>
                     <strong>Serviço:</strong> [${i.nomeManutencao.toUpperCase()}] ${i.desc} 
-                    (Qtd: ${i.qtd} | Tempo: ${formatarTempo(tempoAcumuladoItem)})
+                    <br><small style="color:var(--cobli-dark); font-weight:bold;">🚘 Placa: ${i.placa} | Qtd: ${i.qtd} | Tempo: ${formatarTempo(tempoAcumuladoItem)}</small>
                 </span> 
                 <button onclick="itensSelecionados.splice(${idx},1); window.renderizarProdutos(); window.rdaAgendamento();" 
-                        style="background:var(--cobli-red); padding:2px 8px; color:white; border:none; border-radius:4px; cursor:pointer; margin-left:10px;">
-                    x
+                        style="background:var(--cobli-red); padding:4px 10px; color:white; border:none; border-radius:4px; cursor:pointer; margin-left:10px;">
+                    🗑️
                 </button>
             </div>`;
     }).join(''); 
@@ -1303,8 +1398,7 @@ window.validarEAvancar = function() {
     if (sel.length === 0) return window.showMessage("Selecione horário!"); 
     if (sel.length !== horas && horas > 0) return window.showMessage("Selecione exatamente " + horas + " hora(s)!"); 
     
-    document.querySelectorAll('#consulta > div').forEach(div => div.style.display = 'none'); 
-    document.getElementById('step-4').style.display = 'block'; 
+    window.proximoPasso(4); 
 };
 
 window.revisarAgendamento = function() {
@@ -1329,11 +1423,14 @@ window.revisarAgendamento = function() {
     const cidade = document.getElementById('inputCidade').value;
     const uf = document.getElementById('inputUf').value;
     const cep = document.getElementById('inputCep').value;
-    const endereco = `${rua}, ${numero} - ${bairro}, ${cidade}/${uf} - CEP: ${cep}`;
+    const obsLocal = document.getElementById('inputObs').value;
+    
+    let endereco = `${rua}, ${numero} - ${bairro}, ${cidade}/${uf} - CEP: ${cep}`;
+    if (obsLocal) endereco += `<br><small><strong>Obs:</strong> ${obsLocal}</small>`;
 
     let prodHtml = itensSelecionados.map(i => {
         let tempoTotalFormatado = formatarTempo(i.tempo * i.qtd);
-        return `<div style="margin-bottom:5px;">• [${i.nomeManutencao.toUpperCase()}] ${i.desc} <strong>(Qtd: ${i.qtd} | Tempo: ${tempoTotalFormatado})</strong></div>`;
+        return `<div style="margin-bottom:5px;">• [${i.nomeManutencao.toUpperCase()}] ${i.desc} <strong>(🚘 ${i.placa} | Qtd: ${i.qtd} | Tempo: ${tempoTotalFormatado})</strong></div>`;
     }).join('');
     
     let html = `
@@ -1385,9 +1482,9 @@ window.concluirAgendamentoFinal = async function(btn) {
     const dataSelecionada = sel.length > 0 ? sel[0].dataset.date : null;
     const prestador = prestadores[prestadorSelecionadoIndex];
     
-    const dispararSlack = (userRole === 'ADMIN') ? (document.getElementById('slackSwitch').checked) : true;
-    const dispararField = (userRole === 'ADMIN') ? (document.getElementById('fieldSwitch').checked) : true;
-    const dispararBanco = (userRole === 'ADMIN') ? (document.getElementById('dbSwitch').checked) : true;
+    const dispararSlack = (userRole === 'GESTOR') ? (document.getElementById('slackSwitch').checked) : true;
+    const dispararField = (userRole === 'GESTOR') ? (document.getElementById('fieldSwitch').checked) : true;
+    const dispararBanco = (userRole === 'GESTOR') ? (document.getElementById('dbSwitch').checked) : true;
 
     if (!prestador || slotsSelecionados.length === 0) {
         window.showMessage("Erro: Selecione o prestador e o horário.");
@@ -1395,6 +1492,10 @@ window.concluirAgendamentoFinal = async function(btn) {
     }
 
     let itensOrdenados = [...itensSelecionados].sort((a, b) => b.tempo - a.tempo);
+    
+    // Concatenação de todas as placas para enviar pro Banco e pra Field Control
+    let placasArr = [...new Set(itensOrdenados.map(i => i.placa))];
+    let placasConcatenadas = placasArr.join(', ');
 
     const agendamento = {
         prestador: prestador.nome,
@@ -1417,7 +1518,8 @@ window.concluirAgendamentoFinal = async function(btn) {
         segment: itensOrdenados[0]?.nomeManutencao || "", 
         tipo_servico: itensOrdenados[0]?.desc || "Manutenção",
         field_id: prestador.field_id,
-        produtos_texto: itensOrdenados.map(i => `• [${i.nomeManutencao.toUpperCase()}] ${i.desc} (Qtd: ${i.qtd} | Tempo: ${formatarTempo(i.tempo * i.qtd)})`).join('\n'),
+        produtos_texto: itensOrdenados.map(i => `• [${i.nomeManutencao.toUpperCase()}] ${i.desc} (🚘 ${i.placa} | Qtd: ${i.qtd} | Tempo: ${formatarTempo(i.tempo * i.qtd)})`).join('\n') + `\nObservações: ${document.getElementById('inputObs').value}`,
+        placa_veiculo: placasConcatenadas, // Adicionado campo de placa concatenada
         segment_id_field: itensOrdenados[0]?.segment_id || "",
         maintenance_id_field: itensOrdenados[0]?.maintenance_id || document.getElementById('tipoManutencao').value,
         executar_field: dispararField,
@@ -1435,7 +1537,7 @@ window.concluirAgendamentoFinal = async function(btn) {
         const result = await response.json(); 
         if (response.ok) {
             if (dispararSlack) {
-                let produtosFormatados = itensOrdenados.map(i => `[${i.nomeManutencao.toUpperCase()}] ${i.desc} (${i.qtd}x)`).join(', ');
+                let produtosFormatados = itensOrdenados.map(i => `[${i.nomeManutencao.toUpperCase()}] ${i.desc} (🚘 ${i.placa} | ${i.qtd}x)`).join(', ');
                 const msgSlack = `✅ *Novo Agendamento - Ticket: ${result.ticket}*\n` +
                                  `*Cliente:* ${agendamento.cliente}\n` +
                                  `*Prestador:* ${agendamento.prestador}\n` +
@@ -1474,11 +1576,14 @@ window.limparFormulario = function() {
     document.getElementById("horasNecessarias").innerText = "0"; 
     document.getElementById("agenda-agendamento").innerHTML = ""; 
     document.getElementById("inputCep").value = ""; 
+    document.getElementById("inputObs").value = ""; 
+    document.getElementById("placaServico").value = ""; 
     document.getElementById("ticket").value = ""; 
     document.getElementById("clienteNome").value = ""; 
     document.getElementById("solicitante").value = currentUser ? extrairNomeDoEmail(currentUser.email) : ""; 
     document.getElementById("respAcompanhamento").value = ""; 
     document.getElementById("telResponsavel").value = ""; 
+    window.atualizarTimeline(1);
 };
 
 window.cancelarAgendamento = function() { window.showConfirm("Deseja realmente cancelar este agendamento?", "window.limparFormulario(); window.proximoPasso(1);"); };
@@ -1487,10 +1592,11 @@ window.cancelarAgendamento = function() { window.showConfirm("Deseja realmente c
 // 7. CADASTRO DE PRESTADOR E AUSÊNCIAS (ABA 2)
 // ==========================================
 window.renderizarListaPrestadores = function(){ 
-    document.getElementById("btn-novo-container").innerHTML = (userRole === 'ADMIN') ? `<button onclick="window.abrirCadastro()" style="margin-bottom: 20px; background: var(--cobli-dark);">+ Novo Prestador</button>` : '';
+    document.getElementById("btn-novo-container").innerHTML = (userRole === 'GESTOR' || userRole === 'ADMIN') ? `<button onclick="window.abrirCadastro()" style="margin-bottom: 20px; background: var(--cobli-dark);">+ Novo Prestador</button>` : '';
     
     document.getElementById("lista-prestadores").innerHTML = prestadores.map((p, i) => {
-        const acaoClique = (userRole === 'ADMIN') ? `window.abrirOpcoesPrestador(${i})` : `window.abrirDetalhesPrestador(${i})`;
+        // ADMIN só ve detalhes, GESTOR tem opcoes
+        const acaoClique = (userRole === 'GESTOR') ? `window.abrirOpcoesPrestador(${i})` : `window.abrirDetalhesPrestador(${i})`;
 
         return `
         <div class="painel-item" 
@@ -1500,7 +1606,7 @@ window.renderizarListaPrestadores = function(){
              onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 1px 3px rgba(0,0,0,0.1)'; this.style.backgroundColor='white'; this.style.borderLeftColor='var(--primary)';">
             
             <div style="width: 100%; display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                <div style="font-weight: bold; color: var(--primary); font-size: 1.05rem;">👷 ${p.nome}</div>
+                <div style="font-weight: bold; color: var(--primary); font-size: 1.05rem;">👷 ${p.nome} ${p.status_prestador === 'TESTE' ? '<span style="color:var(--cobli-red); font-size:0.7rem;">[TESTE]</span>' : ''}</div>
                 <div style="font-size: 0.7rem; color: #64748b; font-weight: 700; background: #f1f5f9; padding: 4px 8px; border-radius: 4px; border: 1px solid #e2e8f0;">
                     📍 ${p.cidade}/${p.uf}
                 </div>
@@ -1515,9 +1621,14 @@ window.renderizarListaPrestadores = function(){
             </div>
         </div>`; 
     }).join(''); 
+    
+    // Esconde o botão se for ADMIN (read-only)
+    if(userRole === 'ADMIN') document.getElementById("btn-novo-container").innerHTML = '';
 };
 
 window.abrirOpcoesPrestador = function(i) {
+    if(userRole !== 'GESTOR') return window.abrirDetalhesPrestador(i); // Prevenção extra
+    
     const p = prestadores[i];
     let html = `
         <div style="text-align: center;">
@@ -1609,7 +1720,7 @@ window.abrirDetalhesPrestador = function(index) {
 
     let htmlHeader = `
         <div style="margin-bottom:15px; border-bottom: 1px solid #cbd5e1; padding-bottom: 10px;">
-            <div style="font-weight:bold; font-size:1.1rem; color:var(--primary); margin-bottom: 4px;">${p.nome}</div>
+            <div style="font-weight:bold; font-size:1.1rem; color:var(--primary); margin-bottom: 4px;">${p.nome} ${p.status_prestador === 'TESTE' ? '<span style="color:var(--cobli-red); font-size:0.8rem;">[TESTE]</span>' : ''}</div>
             <div style="font-size:0.85rem; color:#64748b;">
                 👤 <strong>Resp:</strong> ${p.responsavel} | 📞 <strong>Contato:</strong> ${p.contato} | 📍 <strong>Raio:</strong> ${p.range} km
             </div>
@@ -1618,7 +1729,7 @@ window.abrirDetalhesPrestador = function(index) {
     
     let htmlBotaoFechar = `
         <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 15px;">
-            ${userRole === 'ADMIN' ? `<button onclick="window.fecharModal(); window.abrirCadastro(${index}); setTimeout(()=>window.mudarEtapa(1), 100);" style="background:var(--cobli-red); padding: 10px 20px;">➕ Adicionar Bloqueio</button>` : '<div></div>'}
+            ${userRole === 'GESTOR' ? `<button onclick="window.fecharModal(); window.abrirCadastro(${index}); setTimeout(()=>window.mudarEtapa(1), 100);" style="background:var(--cobli-red); padding: 10px 20px;">➕ Adicionar Bloqueio</button>` : '<div></div>'}
             <button onclick="window.fecharModal()" style="background:var(--primary); padding: 10px 20px;">Fechar</button>
         </div>
     `;
@@ -1685,6 +1796,8 @@ window.loadTechGrid = function(techId) {
 };
 
 window.abrirCadastro = function(index = -1){ 
+    if(userRole !== 'GESTOR') return window.showMessage("Você não tem permissão para cadastrar/editar.");
+
     editingIndex = index; 
     document.getElementById("lista-prestadores-view").style.display="none"; 
     document.getElementById("cadastro-flow").style.display="block"; 
@@ -1709,6 +1822,7 @@ window.abrirCadastro = function(index = -1){
         document.getElementById("qtdTecnicos").value = p.qtdtecnicos;
         document.getElementById("rangeAtendimento").value = p.range; 
         document.getElementById("fieldIdField").value = p.field_id || ""; 
+        document.getElementById("statusPrestador").value = p.status_prestador || "PRODUCAO"; 
         
         let qtd = parseInt(p.qtdtecnicos) || 1;
         for(let i=1; i<=qtd; i++) window.agendaCadastroObj[i] = [];
@@ -1738,6 +1852,7 @@ window.abrirCadastro = function(index = -1){
         } 
     } else { 
         document.querySelectorAll('#etapa-1 input').forEach(i => i.value = ""); 
+        document.getElementById("statusPrestador").value = "PRODUCAO";
         datasBloqueadasTemp = [];
         window.renderizarDatasBloqueadas();
     } 
@@ -1958,6 +2073,7 @@ window.salvarPrestador = async function(btn) {
             qtdtecnicos: maxT,
             range: document.getElementById("rangeAtendimento").value, 
             field_id: document.getElementById("fieldIdField").value, 
+            status_prestador: document.getElementById("statusPrestador").value,
             agenda: agenda 
         }; 
         
@@ -2145,15 +2261,15 @@ window.abrirDetalhesAgendamento = function(index) {
     
     let txt = a.produtos_texto || a.produtos || '';
     let prodHtml = String(txt).trim().length > 0 
-        ? String(txt).split('\n').map(l => `<div style="margin-bottom:6px;">• ${l.replace('•', '').trim().replace(/(\(Qtd:.*?\))/ig, '<strong>$1</strong>')}</div>`).join('')
+        ? String(txt).split('\n').map(l => `<div style="margin-bottom:6px;">• ${l.replace('•', '').trim().replace(/(\(🚘.*?\))/ig, '<strong style="color:var(--cobli-dark);">$1</strong>')}</div>`).join('')
         : '<div style="color:#64748b; font-style: italic;">Sem produtos detalhados</div>';
 
-    // Botão de atualizar status disponível para Admin e Usuário, sem travas de data aqui (manual é sempre permitido)
-    let btnSincronizarHtml = (userRole === 'ADMIN' || userRole === 'USUARIO') 
+    // Botão de atualizar status disponível para Gestor, Admin e Smartops
+    let btnSincronizarHtml = (userRole === 'GESTOR' || userRole === 'ADMIN' || userRole === 'SMARTOPS') 
         ? `<button onclick="event.stopPropagation(); window.sincronizarStatusModal('${a.ticket}', this, ${index})" style="background:var(--cobli-green); flex:1; padding:10px; color:white; border:none; border-radius:5px; cursor:pointer;">🔄 Atualizar Status</button>` 
         : '';
         
-    let btnExcluirHtml = (userRole === 'ADMIN') 
+    let btnExcluirHtml = (userRole === 'GESTOR') 
         ? `<button onclick="window.excluirAgendamento(${a.id}, '${a.data}')" class="btn-cancelar" style="flex:1; padding:10px; color:white; border:none; border-radius:5px; cursor:pointer;">Excluir</button>` 
         : '';
 
@@ -2384,8 +2500,8 @@ window.atualizarFiltrosPrestador = function(){
 };
 
 window.renderDashboard = function() {
-    let isUserDashboard = (userRole === 'USUARIO');
-    let isPrestadorDashboard = (userRole === 'PRESTADOR'); // ✅ NOVO: Identifica se é prestador
+    let isUserDashboard = (userRole === 'SMARTOPS');
+    let isPrestadorDashboard = (userRole === 'PRESTADOR');
     let nomeLogado = currentUser ? extrairNomeDoEmail(currentUser.email).toLowerCase() : '';
 
     let totalAgend = 0;
@@ -2398,13 +2514,11 @@ window.renderDashboard = function() {
     let totalServicosGeral = 0;
 
     agendamentos.forEach(a => {
-        // Filtra só o que o USUÁRIO comum pediu
         if (isUserDashboard) {
             let sol = String(a.solicitante || '').toLowerCase();
             if (!sol.includes(nomeLogado)) return; 
         }
 
-        // ✅ NOVO: Filtra só os agendamentos do PRESTADOR logado
         if (isPrestadorDashboard) {
             if (!window.meuPrestadorLogado || a.prestador !== window.meuPrestadorLogado.nome) return;
         }
@@ -2430,12 +2544,12 @@ window.renderDashboard = function() {
             let linhas = String(txt).split('\n');
             linhas.forEach(linha => {
                 let limpo = linha.replace('•', '').trim();
-                if (!limpo) return;
+                if (!limpo || limpo.startsWith('Observações:')) return;
                 
-                let nomeServico = limpo.replace(/\s*\(Qtd:.*?\)/i, '').trim();
+                let nomeServico = limpo.replace(/\s*\(🚘.*?\)/i, '').trim();
                 
                 let qtd = 1;
-                let matchQtd = limpo.match(/\(Qtd:\s*(\d+)/i);
+                let matchQtd = limpo.match(/Qtd:\s*(\d+)/i);
                 if (matchQtd) {
                     qtd = parseInt(matchQtd[1]) || 1;
                 }
