@@ -46,8 +46,8 @@
         /* --- NOVAS TELAS DE AUTENTICAÇÃO PADRÃO COBLI --- */
         #auth-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--cobli-dark); display: flex; align-items: center; justify-content: center; z-index: 50000; }
         .auth-card { background: white; padding: 40px; border-radius: 16px; width: 360px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.5); }
-        .auth-card .logo-circle { width: 50px; height: 50px; border: 4px solid var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; position: relative; }
-        .auth-card .logo-circle::after { content: ''; width: 15px; height: 15px; background: var(--primary); border-radius: 50%; }
+        /* ESTILO DA NOVA LOGO DA TELA DE LOGIN */
+        .logo-auth { max-width: 220px; /* Largura ideal para não vazar do card */ height: auto; margin: 0 auto 20px auto; display: block; }
         .auth-card h2 { color: var(--cobli-dark); margin: 0 0 5px; font-size: 1.6rem; border:none; }
         .auth-card p { color: #64748b; font-size: 0.85rem; margin-bottom: 25px; line-height: 1.4; }
         .input-group { position: relative; width: 100%; margin-bottom: 15px; text-align: left; }
@@ -215,7 +215,7 @@
 
 <div id="auth-overlay">
     <div class="auth-card" id="card-login">
-        <div class="logo-circle"></div>
+        <img src="https://fqaqlofndeihmhkopvan.supabase.co/storage/v1/object/public/icones/cobli.png" class="logo-auth" alt="Logo">
         <h2>APEX | Cobli</h2>
         <p>Gestão de Prestadores e Serviços<br><small style="color:var(--primary); font-weight:bold; text-transform:uppercase;">Agenda Exclusiva</small></p>
         <div class="input-group"><label>E-mail</label><input type="email" id="login-email" placeholder="seu.nome@cobli.co" onblur="this.value = this.value.toLowerCase().trim()"></div>
@@ -232,7 +232,7 @@
     </div>
 
     <div class="auth-card" id="card-signup" style="display:none;">
-        <div class="logo-circle"></div>
+        <img src="https://fqaqlofndeihmhkopvan.supabase.co/storage/v1/object/public/icones/cobli.png" class="logo-auth" alt="Logo">
         <h2>Criar Conta</h2>
         <p>Selecione seu tipo de perfil</p>     
         <div style="display: flex; gap: 10px; margin-bottom: 20px;">
@@ -255,7 +255,7 @@
     </div>
 
     <div class="auth-card" id="card-forgot" style="display:none;">
-        <div class="logo-circle"></div>
+        <img src="https://fqaqlofndeihmhkopvan.supabase.co/storage/v1/object/public/icones/cobli.png" class="logo-auth" alt="Logo">
         <h2>Recuperar Senha</h2>
         <p>Enviaremos um link para o seu e-mail.<br><small>Atenção: E-mails @apex.co devem solicitar ao suporte.</small></p>
         <div class="input-group"><label>E-mail Cadastrado</label><input type="email" id="reset-email" placeholder="seu@email.co"></div>
@@ -264,7 +264,7 @@
     </div>
 
     <div class="auth-card" id="card-reset-password" style="display:none;">
-        <div class="logo-circle"></div>
+        <img src="https://fqaqlofndeihmhkopvan.supabase.co/storage/v1/object/public/icones/cobli.png" class="logo-auth" alt="Logo">
         <h2>Nova Senha</h2>
         <p>Digite sua nova senha de acesso</p>
         <div class="input-group">
