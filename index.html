@@ -906,13 +906,16 @@ window.carregarListaUsuarios = async function() {
 // ----------------------------------------------------
 // BLOCO ATUALIZADO 2: MUDAR NÍVEL COM TRAVAS
 // ----------------------------------------------------
+// ----------------------------------------------------
+// BLOCO ATUALIZADO 2: MUDAR NÍVEL COM TRAVAS
+// ----------------------------------------------------
 window.mudarNivelUsuario = async function(id, novoNivel, nivelAtual) {
     if (userRole !== 'GESTOR' && userRole !== 'ADMIN') return window.showMessage("Acesso negado.");
     
     if (userRole === 'ADMIN') {
         if (nivelAtual === 'GESTOR' || nivelAtual === 'PRESTADOR') return window.showMessage("Admins só podem gerenciar SmartOps e outros Admins.");
         if (novoNivel === 'GESTOR' || novoNivel === 'PRESTADOR') return window.showMessage("Admins não têm permissão para promover para Gestor ou Prestador.");
-    }}
+    }
 
     const { error } = await supabaseClient.from('perfis_usuarios').update({ nivel: novoNivel }).eq('id', id);
     if(error) window.showMessage("Erro ao atualizar o nível."); else window.showToast("Nível atualizado com sucesso!");
