@@ -184,14 +184,14 @@
         <h2>Criar Conta</h2>
         <p>Selecione seu tipo de perfil</p>     
         <div style="display: flex; gap: 10px; margin-bottom: 20px;">
-            <button type="button" id="btn-tipo-cobli" onclick="window.selecionarTipoSignup('cobli')" style="flex: 1; padding: 10px; background: var(--primary); color: white; border: 2px solid var(--primary); border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.3s;">Colaborador</button>
+            <button type="button" id="btn-tipo-cobli" onclick="window.selecionarTipoSignup('cobli')" style="flex: 1; padding: 10px; background: white; color: #64748b; border: 2px solid #cbd5e1; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.3s;">Colaborador</button>
             <button type="button" id="btn-tipo-prestador" onclick="window.selecionarTipoSignup('prestador')" style="flex: 1; padding: 10px; background: white; color: #64748b; border: 2px solid #cbd5e1; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.3s;">Prestador</button>
         </div>
         <div class="input-group">
             <label>Usuário (Antes do @)</label>
             <div style="display: flex; align-items: stretch;">
                 <input type="text" id="signup-email-prefix" placeholder="nome.sobrenome" style="border-radius: 8px 0 0 8px; border-right: none;" onblur="this.value = this.value.toLowerCase().trim().replace(/\s+/g, '')">
-                <div id="signup-domain" style="background: #f1f5f9; border: 1px solid #cbd5e1; border-left: none; border-radius: 0 8px 8px 0; padding: 0 12px; font-weight: bold; color: var(--primary); display: flex; align-items: center; font-size: 0.85rem;">@cobli.co</div>
+                <div id="signup-domain" style="background: #f1f5f9; border: 1px solid #cbd5e1; border-left: none; border-radius: 0 8px 8px 0; padding: 0 12px; font-weight: bold; color: #9ca3af; display: flex; align-items: center; font-size: 0.85rem;">Selecione...</div>
             </div>
         </div>
         <div class="input-group">
@@ -684,7 +684,7 @@ function showAuthCard(id) { document.querySelectorAll('.auth-card').forEach(c =>
 function togglePass(id) { const el = document.getElementById(id); el.type = el.type === 'password' ? 'text' : 'password'; }
 
 // VARIÁVEL E FUNÇÃO PARA A TELA DE CADASTRO
-window.domainSignup = '@cobli.co';
+window.domainSignup = null; // Começa nulo para forçar a seleção
 window.selecionarTipoSignup = function(tipo) {
     const btnCobli = document.getElementById('btn-tipo-cobli');
     const btnPrestador = document.getElementById('btn-tipo-prestador');
@@ -699,6 +699,7 @@ window.selecionarTipoSignup = function(tipo) {
         btnPrestador.style.background = 'white';
         btnPrestador.style.color = '#64748b';
         btnPrestador.style.borderColor = '#cbd5e1';
+        domainDisplay.style.color = 'var(--primary)';
         domainDisplay.innerText = '@cobli.co';
     } else {
         window.domainSignup = '@apex.co';
@@ -709,6 +710,7 @@ window.selecionarTipoSignup = function(tipo) {
         btnCobli.style.background = 'white';
         btnCobli.style.color = '#64748b';
         btnCobli.style.borderColor = '#cbd5e1';
+        domainDisplay.style.color = 'var(--primary)';
         domainDisplay.innerText = '@apex.co';
     }
 };
@@ -719,63 +721,40 @@ window.authAction = async function(type) {
         const password = document.getElementById('signup-password').value;
         const btn = document.getElementById('btnSignup');
         
+        if (!window.domainSignup) return window.showMessage("Selecione o tipo de perfil (Colaborador ou Prestador) no topo do formulário.");
         if(!prefix || password.length < 6) return window.showMessage("Nome de usuário e senha de 6 dígitos são obrigatórios.");
         
-        // Junta o nome que o cara digitou com o domínio selecionado
         const email = prefix + window.domainSignup;
         
-        btn.innerText = "Criando...";
-        const { error } = await supabaseClient.auth.signUp({ email, password });
-        btn.innerText = "Criar Acesso";
-        
-        if (error) return window.showMessage("Erro: " + error.message);
-        
-        // MENSAGEM NOVA
-        window.showToast("Cadastro realizado com sucesso! Efetue o login.");
-        document.getElementById('login-email').value = email;
-        showAuthCard('card-login');
+        window.showConfirm(`O cadastro será criado no domínio <strong style="color:var(--primary);">${window.domainSignup}</strong>.<br>Você confirma?`, `
+            document.getElementById('btnSignup').innerText = "Criando...";
+            supabaseClient.auth.signUp({ email: '${email}', password: '${password}' }).then(res => {
+                document.getElementById('btnSignup').innerText = "Criar Acesso";
+                if (res.error) return window.showMessage("Erro: " + res.error.message);
+                window.showToast("Cadastro realizado com sucesso! Efetue o login.");
+                document.getElementById('login-email').value = '${email}';
+                showAuthCard('card-login');
+            });
+        `);
     } 
     else if (type === 'login') {
         const email = document.getElementById('login-email').value, password = document.getElementById('login-password').value, btn = document.getElementById('btnLogin'), errDiv = document.getElementById('login-error');
-        
-        btn.innerText = "Autenticando...";
-        errDiv.style.display = 'none';
-        
+        btn.innerText = "Autenticando..."; errDiv.style.display = 'none';
         const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
-        
-        if (error) {
-            btn.innerText = "Entrar";
-            errDiv.style.display = 'block';
-            errDiv.innerText = "E-mail ou senha incorretos.";
-        } else {
-            window.location.reload();
-        }
+        if (error) { btn.innerText = "Entrar"; errDiv.style.display = 'block'; errDiv.innerText = "E-mail ou senha incorretos."; } else { window.location.reload(); }
     }
     else if (type === 'reset') {
-        const email = document.getElementById('reset-email').value;
-        const btn = document.getElementById('btnReset');
+        const email = document.getElementById('reset-email').value, btn = document.getElementById('btnReset');
         if (!email) return window.showMessage("Digite o e-mail cadastrado.");
-
         if (email.toLowerCase().endsWith('@apex.co')) {
             showAuthCard('card-login');
-            window.showMessage(
-                `🔒 Contas <strong>@apex.co</strong> são gerenciadas pela equipe Cobli.<br><br>
-                Para redefinir sua senha, entre em contato com o responsável pelo sistema APEX.`
-            );
-            return;
+            return window.showMessage(`🔒 Contas <strong>@apex.co</strong> são gerenciadas pela equipe Cobli.<br><br>Para redefinir sua senha, entre em contato com o responsável.`);
         }
-
-        btn.innerText = "Enviando...";
-        btn.disabled = true;
-        const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
-            redirectTo: 'https://luizlackeski.github.io/apex-cobli-test/index.html'
-        });
-        btn.innerText = "Enviar Link";
-        btn.disabled = false;
-
+        btn.innerText = "Enviando..."; btn.disabled = true;
+        const { error } = await supabaseClient.auth.resetPasswordForEmail(email, { redirectTo: 'https://luizlackeski.github.io/apex-cobli-test/index.html' });
+        btn.innerText = "Enviar Link"; btn.disabled = false;
         if (error) return window.showMessage("Erro: " + error.message);
-        window.showToast("✅ Link de recuperação enviado para o seu e-mail!");
-        showAuthCard('card-login');
+        window.showToast("✅ Link enviado para o seu e-mail!"); showAuthCard('card-login');
     }
 }
 
@@ -888,9 +867,9 @@ window.carregarListaUsuarios = async function() {
         // REGRA DE PERMISSÃO VISUAL
         let podeEditar = false;
         if (userRole === 'GESTOR') {
-            podeEditar = true; // Gestor mexe em tudo
-        } else if (userRole === 'ADMIN' && u.nivel !== 'GESTOR') {
-            podeEditar = true; // Admin mexe em todos, menos nos Gestores
+            podeEditar = true; 
+        } else if (userRole === 'ADMIN' && (u.nivel === 'SMARTOPS' || u.nivel === 'ADMIN')) {
+            podeEditar = true; // Admin SÓ mexe em SmartOps e Admin
         }
 
         let blockDelete = podeEditar ? `<button onclick="window.excluirUsuarioPerfil('${u.id}', '${u.email}', '${u.nivel}')" style="background: var(--cobli-red); padding: 4px 8px; border-radius: 4px;" title="Remover Perfil">🗑️</button>` : '';
@@ -930,11 +909,10 @@ window.carregarListaUsuarios = async function() {
 window.mudarNivelUsuario = async function(id, novoNivel, nivelAtual) {
     if (userRole !== 'GESTOR' && userRole !== 'ADMIN') return window.showMessage("Acesso negado.");
     
-    // Trava de segurança no Backend do lado do Admin
     if (userRole === 'ADMIN') {
-        if (nivelAtual === 'GESTOR') return window.showMessage("Admins não podem alterar nível de Gestores.");
-        if (novoNivel === 'GESTOR') return window.showMessage("Admins não têm permissão para promover um usuário a Gestor.");
-    }
+        if (nivelAtual === 'GESTOR' || nivelAtual === 'PRESTADOR') return window.showMessage("Admins só podem gerenciar SmartOps e outros Admins.");
+        if (novoNivel === 'GESTOR' || novoNivel === 'PRESTADOR') return window.showMessage("Admins não têm permissão para promover para Gestor ou Prestador.");
+    }}
 
     const { error } = await supabaseClient.from('perfis_usuarios').update({ nivel: novoNivel }).eq('id', id);
     if(error) window.showMessage("Erro ao atualizar o nível."); else window.showToast("Nível atualizado com sucesso!");
@@ -947,9 +925,8 @@ window.mudarNivelUsuario = async function(id, novoNivel, nivelAtual) {
 window.excluirUsuarioPerfil = function(id, email, nivelAlvo) {
     if (userRole !== 'GESTOR' && userRole !== 'ADMIN') return window.showMessage("Acesso negado.");
     
-    // Trava para o Admin não conseguir excluir o Gestor
-    if (userRole === 'ADMIN' && nivelAlvo === 'GESTOR') {
-        return window.showMessage("Você não tem permissão para excluir um Gestor.");
+    if (userRole === 'ADMIN' && (nivelAlvo === 'GESTOR' || nivelAlvo === 'PRESTADOR')) {
+        return window.showMessage("Você não tem permissão para excluir Gestores ou Prestadores.");
     }
 
     window.showConfirm(`Tem certeza que deseja remover o perfil de <strong>${email}</strong> e revogar seu acesso?<br><br><small>O usuário perderá o acesso configurado no sistema.</small>`, `
@@ -1158,58 +1135,48 @@ window.atualizarTimeline = function(step) {
 }
 
 window.proximoPasso = async function(n) { 
-    
     if(n === 2) { 
         if(!window.validarCampos('#step-1') || !document.getElementById('inputCep').value.trim()) {
             document.getElementById('inputCep').style.borderColor = !document.getElementById('inputCep').value.trim() ? 'var(--cobli-red)' : '#cbd5e1';
             return window.showMessage("Preencha todos os campos obrigatórios em vermelho para buscar os prestadores!");
         }
 
-        if(prestadores.length === 0) return window.showMessage("Cadastre um prestador!"); 
         const rua = document.getElementById('inputRua').value; 
+        if (rua.toLowerCase().includes('http') || rua.toLowerCase().includes('www.')) {
+            return window.showMessage("⚠️ Não insira links no campo de endereço. Por favor, coloque os links de localização no campo 'Observações do Local' logo abaixo.");
+        }
+
+        if(prestadores.length === 0) return window.showMessage("Cadastre um prestador!"); 
         const num = document.getElementById('inputNumero').value; 
         const cidade = document.getElementById('inputCidade').value; 
         
         const btn = document.getElementById('btnBuscar'); 
-        btn.disabled = true; 
-        btn.innerText = "Calculando..."; 
+        btn.disabled = true; btn.innerText = "Calculando..."; 
         const enderecoBusca = `${rua}, ${num} - ${cidade} - ${document.getElementById('inputCep').value}`; 
         
         let prestadoresFiltrados = []; 
         for(let p of prestadores) { 
             if (!p.endereco) continue; 
-            // Regra da Flag Ambiente: Se for TESTE e eu for SMARTOPS, ignora.
             if (p.status_prestador === 'TESTE' && userRole === 'SMARTOPS') continue;
-            
             const dist = await consultarDistancia(enderecoBusca, p.endereco); 
             let available = window.getNextDates(p); 
             if(dist !== null && dist <= parseFloat(p.range) && available.length > 0) { 
-                p.distanciaFinal = dist.toFixed(1); 
-                p.nextDates = available.join(', '); 
-                prestadoresFiltrados.push(p); 
+                p.distanciaFinal = dist.toFixed(1); p.nextDates = available.join(', '); prestadoresFiltrados.push(p); 
             } 
         } 
         
-        btn.disabled = false; 
-        btn.innerText = "Buscar Prestadores"; 
-        
-        if(prestadoresFiltrados.length === 0) { 
-            window.showMessage("Nenhum prestador encontrado no raio de atendimento."); 
-            return; 
-        } 
+        btn.disabled = false; btn.innerText = "Buscar Prestadores"; 
+        if(prestadoresFiltrados.length === 0) return window.showMessage("Nenhum prestador encontrado no raio de atendimento."); 
         
         prestadoresFiltrados.sort((a, b) => parseFloat(a.distanciaFinal) - parseFloat(b.distanciaFinal));
         window.renderizarListaPrestadoresSelecao(prestadoresFiltrados); 
     } 
     
-    if(n === 3 && prestadorSelecionadoIndex === null) {
-        return window.showMessage("Selecione um prestador!"); 
-    }
+    if(n === 3 && prestadorSelecionadoIndex === null) return window.showMessage("Selecione um prestador!"); 
     
     document.querySelectorAll('#consulta > div.card').forEach(div => div.style.display = 'none'); 
     document.getElementById('step-' + (n > 3 ? 4 : n)).style.display = 'block'; 
     
-    // Atualiza Timeline Visual (Passo 4 é na verdade o Check 3)
     if(n === 1) window.atualizarTimeline(1);
     if(n === 2 || n === 3) window.atualizarTimeline(2);
     if(n === 4) window.atualizarTimeline(3);
@@ -1484,9 +1451,7 @@ window.validarEAvancar = function() {
 };
 
 window.revisarAgendamento = function() {
-    if(!window.validarCampos('#step-4')) {
-        return window.showMessage("Preencha todos os campos obrigatórios marcados em vermelho!");
-    }
+    if(!window.validarCampos('#step-4')) return window.showMessage("Preencha todos os campos obrigatórios marcados em vermelho!");
 
     const sel = document.querySelectorAll("#agenda-agendamento .cell.selecionado");
     const dataSelecionada = sel.length > 0 ? sel[0].dataset.date : 'N/A';
@@ -1505,15 +1470,12 @@ window.revisarAgendamento = function() {
     const cidade = document.getElementById('inputCidade').value;
     const uf = document.getElementById('inputUf').value;
     const cep = document.getElementById('inputCep').value;
-    const obsLocal = document.getElementById('inputObs').value;
+    const obsLocal = document.getElementById('inputObs').value.toLowerCase(); // Força minúsculo
     
     let endereco = `${rua}, ${numero} - ${bairro}, ${cidade}/${uf} - CEP: ${cep}`;
-    if (obsLocal) endereco += `<br><small><strong>Obs:</strong> ${obsLocal}</small>`;
+    if (obsLocal) endereco += `<br><small style="color:#64748b;"><strong>obs:</strong> ${obsLocal}</small>`;
 
-    let prodHtml = itensSelecionados.map(i => {
-        let tempoTotalFormatado = formatarTempo(i.tempo * i.qtd);
-        return `<div style="margin-bottom:5px;">• [${i.nomeManutencao.toUpperCase()}] ${i.desc} <strong>(🚘 ${i.placa} | Qtd: ${i.qtd} | Tempo: ${tempoTotalFormatado})</strong></div>`;
-    }).join('');
+    let prodHtml = itensSelecionados.map(i => `<div style="margin-bottom:5px;">• [${i.nomeManutencao.toUpperCase()}] ${i.desc} <strong>(🚘 ${i.placa} | Qtd: ${i.qtd} | Tempo: ${formatarTempo(i.tempo * i.qtd)})</strong></div>`).join('');
     
     let html = `
         <div style="background: white; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 15px; text-align: left;">
@@ -1524,8 +1486,7 @@ window.revisarAgendamento = function() {
                 <strong>🎟️ Ticket:</strong> ${ticket}<br>
                 <strong>👤 Cliente:</strong> ${cliente}<br>
                 <strong>🛠️ Prestador:</strong> ${prestador}<br>
-                <strong>📅 Data:</strong> ${dataSelecionada}<br>
-                <strong>⏰ Horários:</strong> ${slotsSelecionados}<br>
+                <strong>📅 Data e Hora:</strong> ${dataSelecionada} | ${slotsSelecionados}<br>
                 <hr style="border:0; border-top:1px solid #f1f5f9; margin:8px 0;">
                 <strong>📍 Local:</strong> ${endereco}<br>
                 <strong>📞 Contato:</strong> ${responsavel} | ${telefone}
@@ -1617,39 +1578,27 @@ window.concluirAgendamentoFinal = async function(btn) {
             body: JSON.stringify(agendamento)
         });
         const result = await response.json(); 
-        if (response.ok) {
+       if (response.ok) {
             if (dispararSlack) {
                 let produtosFormatados = itensOrdenados.map(i => `[${i.nomeManutencao.toUpperCase()}] ${i.desc} (🚘 ${i.placa} | ${i.qtd}x)`).join(', ');
-                const msgSlack = `✅ *Novo Agendamento - Ticket: ${result.ticket}*\n` +
-                                 `*Cliente:* ${agendamento.cliente}\n` +
-                                 `*Prestador:* ${agendamento.prestador}\n` +
-                                 `*Data:* ${agendamento.data} | ${agendamento.slots[0]}\n` +
-                                 `*Produtos:* ${produtosFormatados}\n` +
-                                 `*Solicitante:* ${agendamento.solicitante}`;
-                                 
+                const msgSlack = `✅ *Novo Agendamento - Ticket: ${result.ticket}*\n*Cliente:* ${agendamento.cliente}\n*Prestador:* ${agendamento.prestador}\n*Data:* ${agendamento.data} | ${agendamento.slots[0]}\n*Produtos:* ${produtosFormatados}\n*Solicitante:* ${agendamento.solicitante}`;
                 await window.enviarNotificacaoSlack(msgSlack);
             }
-            let statusMsg = `🚀 **Sucesso!**\n\n`;
-            statusMsg += `🎫 **Ticket:** ${result.ticket}\n`;
-            statusMsg += `📊 **Status EFOP:** ${result.status}\n`;
-            statusMsg += `📍 **Origem:** ${result.origin}\n`;
-            statusMsg += `\nSincronização: ` + 
-                         (dispararBanco ? "Banco [OK] " : "") + 
-                         (dispararField ? "Field [OK]" : "");
+            // Mensagem Enxuta
+            let statusMsg = `<div style="text-align:center; font-size:1.1rem; color:var(--cobli-green); margin-bottom: 15px;">✅ <strong>AGENDAMENTO CONFIRMADO COM SUCESSO!</strong></div>`;
+            statusMsg += `<div style="font-size: 0.85rem; color: #64748b; background: #f8fafc; padding: 10px; border-radius: 6px; text-align:center; border: 1px solid #cbd5e1;">`;
+            statusMsg += `<strong style="color:var(--cobli-dark);">Status das Integrações:</strong><br><br>`;
+            statusMsg += `Field Control <strong style="color:${dispararField ? 'var(--cobli-green)' : 'gray'};">[${dispararField ? 'ON' : 'OFF'}]</strong> | `;
+            statusMsg += `Banco de Dados <strong style="color:${dispararBanco ? 'var(--cobli-green)' : 'gray'};">[${dispararBanco ? 'ON' : 'OFF'}]</strong> | `;
+            statusMsg += `Slack <strong style="color:${dispararSlack ? 'var(--cobli-green)' : 'gray'};">[${dispararSlack ? 'ON' : 'OFF'}]</strong>`;
+            statusMsg += `</div>`;
+            
             window.showMessage(statusMsg, "success");
             await window.carregarDadosDoBanco();
-            
-            setTimeout(() => window.location.reload(), 2000); 
+            setTimeout(() => window.location.reload(), 3000); 
         } else {
             window.showMessage("❌ Erro: " + (result.error || "Erro na integração"), "error");
         }
-    } catch (error) {
-        console.error("Erro na chamada:", error);
-        window.showMessage("Erro de conexão com a Edge Function.");
-    } finally {
-        btn.innerText = originalText; btn.disabled = false;
-    }
-};
 
 window.limparFormulario = function() { 
     itensSelecionados = []; 
@@ -2338,22 +2287,25 @@ window.abrirDetalhesAgendamento = function(index) {
     let a = filtradosPainel[index];
     if(!a) return;
     
-    const enderecoCompleto = `${a.rua || ''}, ${a.numero || 'S/N'} - ${a.bairro || ''}, ${a.cidade || ''}/${a.uf || ''} - CEP: ${a.cep || ''}`;
-    const contatoResponsavel = `${a.acompanhamento || 'Não informado'} | ${a.telefone_responsavel || 'Sem telefone'}`;
+    // Tratamento para extrair a observação se ela existir no produtos_texto e deixar tudo minúsculo
+    let obsLocal = "";
+    if (a.produtos_texto && a.produtos_texto.includes('\nObservações:')) {
+        obsLocal = a.produtos_texto.split('\nObservações:')[1].trim().toLowerCase();
+    }
     
-    let txt = a.produtos_texto || a.produtos || '';
+    let enderecoCompleto = `${a.rua || ''}, ${a.numero || 'S/N'} - ${a.bairro || ''}, ${a.cidade || ''}/${a.uf || ''} - CEP: ${a.cep || ''}`;
+    if (obsLocal) enderecoCompleto += `<br><small style="color:#64748b;"><strong>obs:</strong> ${obsLocal}</small>`;
+    
+    let txt = a.produtos_texto ? a.produtos_texto.split('\nObservações:')[0] : (a.produtos || '');
     let prodHtml = String(txt).trim().length > 0 
         ? String(txt).split('\n').map(l => `<div style="margin-bottom:6px;">• ${l.replace('•', '').trim().replace(/(\(🚘.*?\))/ig, '<strong style="color:var(--cobli-dark);">$1</strong>')}</div>`).join('')
         : '<div style="color:#64748b; font-style: italic;">Sem produtos detalhados</div>';
 
-    // Botão de atualizar status disponível para Gestor, Admin e Smartops
     let btnSincronizarHtml = (userRole === 'GESTOR' || userRole === 'ADMIN' || userRole === 'SMARTOPS') 
-        ? `<button onclick="event.stopPropagation(); window.sincronizarStatusModal('${a.ticket}', this, ${index})" style="background:var(--cobli-green); flex:1; padding:10px; color:white; border:none; border-radius:5px; cursor:pointer;">🔄 Atualizar Status</button>` 
-        : '';
+        ? `<button onclick="event.stopPropagation(); window.sincronizarStatusModal('${a.ticket}', this, ${index})" style="background:var(--cobli-green); flex:1; padding:10px; color:white; border:none; border-radius:5px; cursor:pointer;">🔄 Atualizar Status</button>` : '';
         
     let btnExcluirHtml = (userRole === 'GESTOR') 
-        ? `<button onclick="window.excluirAgendamento(${a.id}, '${a.data}')" class="btn-cancelar" style="flex:1; padding:10px; color:white; border:none; border-radius:5px; cursor:pointer;">Excluir</button>` 
-        : '';
+        ? `<button onclick="window.excluirAgendamento(${a.id}, '${a.data}')" class="btn-cancelar" style="flex:1; padding:10px; color:white; border:none; border-radius:5px; cursor:pointer;">Excluir</button>` : '';
 
     let html = `
         <div style="background: white; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 15px;">
@@ -2365,8 +2317,9 @@ window.abrirDetalhesAgendamento = function(index) {
                 👤 <strong>Cliente:</strong> ${a.cliente}<br>
                 👔 <strong>Solicitante:</strong> ${a.solicitante}<br>
                 🛠️ <strong>Prestador:</strong> ${a.prestador}<br>
-                📅 <strong>Data:</strong> ${a.data}<br>
-                ⏰ <strong>Horários:</strong> ${Array.isArray(a.slots) ? a.slots.join(', ') : (a.slots || 'N/A')}
+                📅 <strong>Data e Hora:</strong> ${a.data} | ${Array.isArray(a.slots) ? a.slots.join(', ') : (a.slots || 'N/A')}<br>
+                <hr style="border:0; border-top:1px solid #f1f5f9; margin:8px 0;">
+                📍 <strong>Local:</strong> ${enderecoCompleto}
             </div>
         </div>
         <div style="font-weight:600; margin-bottom:5px;">📦 Serviços Solicitados:</div>
