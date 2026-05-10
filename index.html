@@ -1,12 +1,14 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
+    <link rel="manifest" href="manifest.json">
     <meta charset="UTF-8">
     <title>APEX - Sistema Completo</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
     <style>
+        
         <meta name="mobile-web-app-capable" content="yes">
         <meta name="apple-mobile-web-app-capable" content="yes">
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -152,7 +154,18 @@
         
         .timeline-step.completed .step-circle { background: var(--cobli-green); border-color: var(--cobli-green); color: white; }
         .timeline-step.completed .step-label { color: var(--cobli-green); }
-
+/* Ajustes para modo APP */
+@media (max-width: 600px) {
+    .menu { 
+        position: fixed; bottom: 0; left: 0; right: 0; z-index: 10000; 
+        margin: 0; border-radius: 15px 15px 0 0; padding: 5px 10px;
+        height: 65px; align-items: center;
+    }
+    .topo { padding: 10px 15px; }
+    .conteudo { padding-bottom: 80px; } /* Espaço para o menu debaixo */
+    button, input, select { min-height: 48px; font-size: 16px !important; } /* Padrão Apple/Android */
+    .auth-card { width: 90%; padding: 20px; }
+}
     </style>
 </head>
 <body>
