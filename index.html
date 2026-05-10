@@ -1594,7 +1594,7 @@ window.revisarAgendamento = function() {
 
     let prodHtml = itensSelecionados.map(i => `<div style="margin-bottom:5px;">• [${i.nomeManutencao.toUpperCase()}] ${i.desc} <strong>(Placa: ${i.placa} | Qtd: ${i.qtd} | Tempo: ${formatarTempo(i.tempo * i.qtd)})</strong></div>`).join('');
     
-    let html = `
+   let html = `
         <div style="background: white; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 15px; text-align: left;">
             <div style="font-weight:bold; font-size:1.1rem; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px; margin-bottom: 8px; color:var(--primary);">
                 📝 Revisão do Agendamento
