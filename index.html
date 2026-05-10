@@ -538,6 +538,7 @@
                         <tr>
                             <th style="text-align: left; background: #f1f5f9; padding: 12px; font-size: 0.75rem; color: #64748b; text-transform: uppercase; border-radius: 6px 0 0 0;">Usuário / E-mail</th>
                             <th style="text-align: left; background: #f1f5f9; padding: 12px; font-size: 0.75rem; color: #64748b; text-transform: uppercase;">Nível de Acesso</th>
+                            <th style="text-align: left; background: #f1f5f9; padding: 12px; font-size: 0.75rem; color: #64748b; text-transform: uppercase;">Data de Criação</th>
                             <th style="text-align: left; background: #f1f5f9; padding: 12px; font-size: 0.75rem; color: #64748b; text-transform: uppercase; border-radius: 0 6px 0 0;">Ações</th>
                         </tr>
                     </thead>
@@ -863,6 +864,9 @@ window.handleLogout = async function() {
     window.location.reload();
 }
 
+// ----------------------------------------------------
+// BLOCO ATUALIZADO 1: CARREGAR USUÁRIOS COM REGRAS
+// ----------------------------------------------------
 window.carregarListaUsuarios = async function() {
     const tbody = document.getElementById('tabela-usuarios-body');
     tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Carregando usuários...</td></tr>';
@@ -881,19 +885,28 @@ window.carregarListaUsuarios = async function() {
         if(u.nivel === 'SMARTOPS') badgeClass = 'badge-smart';
         let d = new Date(u.created_at).toLocaleDateString('pt-BR');
         
-        // Se a pessoa logada for apenas ADMIN, o select fica disabled e não tem botão de deletar
-        let isReadOnly = (userRole !== 'GESTOR');
-        let blockDelete = isReadOnly ? '' : `<button onclick="window.excluirUsuarioPerfil('${u.id}', '${u.email}')" style="background: var(--cobli-red); padding: 4px 8px; border-radius: 4px;" title="Remover Perfil">🗑️</button>`;
+        // REGRA DE PERMISSÃO VISUAL
+        let podeEditar = false;
+        if (userRole === 'GESTOR') {
+            podeEditar = true; // Gestor mexe em tudo
+        } else if (userRole === 'ADMIN' && u.nivel !== 'GESTOR') {
+            podeEditar = true; // Admin mexe em todos, menos nos Gestores
+        }
+
+        let blockDelete = podeEditar ? `<button onclick="window.excluirUsuarioPerfil('${u.id}', '${u.email}', '${u.nivel}')" style="background: var(--cobli-red); padding: 4px 8px; border-radius: 4px;" title="Remover Perfil">🗑️</button>` : '';
+
+        // Se o cara logado for apenas ADMIN, ele não pode ver a opção de promover a GESTOR no select.
+        let optionGestorHtml = (userRole === 'GESTOR' || u.nivel === 'GESTOR') ? `<option value="GESTOR" ${u.nivel==='GESTOR'?'selected':''}>GESTOR</option>` : '';
 
         return `
         <tr>
             <td style="padding: 12px; border-bottom: 1px solid #e2e8f0; font-size: 0.9rem; font-weight:600; color:var(--cobli-dark);">${u.email}</td>
             <td style="padding: 12px; border-bottom: 1px solid #e2e8f0;">
-                <select onchange="window.mudarNivelUsuario('${u.id}', this.value)" style="width: auto; padding: 4px; font-weight: bold; border: none; outline: none; border-radius: 4px;" class="${badgeClass}" ${isReadOnly ? 'disabled' : ''}>
+                <select onchange="window.mudarNivelUsuario('${u.id}', this.value, '${u.nivel}')" style="width: auto; padding: 4px; font-weight: bold; border: none; outline: none; border-radius: 4px;" class="${badgeClass}" ${!podeEditar ? 'disabled' : ''}>
                     <option value="PRESTADOR" ${u.nivel==='PRESTADOR'?'selected':''}>PRESTADOR</option>
                     <option value="SMARTOPS" ${u.nivel==='SMARTOPS'?'selected':''}>SMARTOPS</option>
                     <option value="ADMIN" ${u.nivel==='ADMIN'?'selected':''}>ADMIN</option>
-                    <option value="GESTOR" ${u.nivel==='GESTOR'?'selected':''}>GESTOR</option>
+                    ${optionGestorHtml}
                 </select>
             </td>
             <td style="padding: 12px; border-bottom: 1px solid #e2e8f0; font-size: 0.85rem; color:#64748b;">${d}</td>
@@ -903,20 +916,42 @@ window.carregarListaUsuarios = async function() {
         </tr>`;
     }).join('');
     
-    if(userRole !== 'GESTOR') {
+    // Mostra o botão de atualizar para GESTOR e ADMIN
+    if(userRole !== 'GESTOR' && userRole !== 'ADMIN') {
         document.getElementById('btn-atualizar-user-tab').style.display = 'none';
+    } else {
+        document.getElementById('btn-atualizar-user-tab').style.display = 'block';
     }
 };
 
-window.mudarNivelUsuario = async function(id, nivel) {
-    if (userRole !== 'GESTOR') return window.showMessage("Apenas GESTORES podem alterar permissões.");
-    const { error } = await supabaseClient.from('perfis_usuarios').update({ nivel: nivel }).eq('id', id);
+// ----------------------------------------------------
+// BLOCO ATUALIZADO 2: MUDAR NÍVEL COM TRAVAS
+// ----------------------------------------------------
+window.mudarNivelUsuario = async function(id, novoNivel, nivelAtual) {
+    if (userRole !== 'GESTOR' && userRole !== 'ADMIN') return window.showMessage("Acesso negado.");
+    
+    // Trava de segurança no Backend do lado do Admin
+    if (userRole === 'ADMIN') {
+        if (nivelAtual === 'GESTOR') return window.showMessage("Admins não podem alterar nível de Gestores.");
+        if (novoNivel === 'GESTOR') return window.showMessage("Admins não têm permissão para promover um usuário a Gestor.");
+    }
+
+    const { error } = await supabaseClient.from('perfis_usuarios').update({ nivel: novoNivel }).eq('id', id);
     if(error) window.showMessage("Erro ao atualizar o nível."); else window.showToast("Nível atualizado com sucesso!");
     window.carregarListaUsuarios();
 };
 
-window.excluirUsuarioPerfil = function(id, email) {
-    if (userRole !== 'GESTOR') return window.showMessage("Acesso negado.");
+// ----------------------------------------------------
+// BLOCO ATUALIZADO 3: EXCLUIR PERFIL COM TRAVAS
+// ----------------------------------------------------
+window.excluirUsuarioPerfil = function(id, email, nivelAlvo) {
+    if (userRole !== 'GESTOR' && userRole !== 'ADMIN') return window.showMessage("Acesso negado.");
+    
+    // Trava para o Admin não conseguir excluir o Gestor
+    if (userRole === 'ADMIN' && nivelAlvo === 'GESTOR') {
+        return window.showMessage("Você não tem permissão para excluir um Gestor.");
+    }
+
     window.showConfirm(`Tem certeza que deseja remover o perfil de <strong>${email}</strong> e revogar seu acesso?<br><br><small>O usuário perderá o acesso configurado no sistema.</small>`, `
         fetch(EDGE_URL, {
             method: 'POST',
