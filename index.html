@@ -57,7 +57,7 @@
         .menu-right { justify-content: flex-end; align-items: center; padding-bottom: 8px; }
 
         .menu button.ativo { color: white; font-weight: bold; }
-        .menu button.ativo::after { content: ''; position: absolute; bottom: 0; left: 10%; width: 80%; height: 4px; background: white; border-radius: 4px 4px 0 0; }
+        .menu button.ativo::after { content: ''; position: absolute; bottom: 0; left: 10%; width: 80%; height: 4px; background: var(--cobli-green); border-radius: 4px 4px 0 0; }
         .menu button:hover { color: white; }
         .menu .user-info { margin-left: auto; color: #ffffff; font-size: 0.8rem; margin-right: 15px; opacity: 0.8; font-weight: 600;}
         .menu .btn-sair { color: #ff9999; font-weight: bold; }
@@ -696,6 +696,24 @@ async function checkSession() {
         
         window.carregarProdutos();
         window.carregarDadosDoBanco();
+
+        // MAGIA DO TEMPO REAL (REALTIME)
+        console.log("📡 Conectando ao canal de Tempo Real do Supabase...");
+        
+        supabaseClient
+          .channel('mudancas-agendamentos')
+          .on(
+            'postgres_changes',
+            { event: '*', schema: 'public', table: 'agendamentos' },
+            (payload) => {
+              console.log('🚨 ALERTA: O Banco de Dados mudou! Atualizando a tela...', payload);
+              window.carregarDadosDoBanco(); 
+            }
+          )
+          .subscribe((status) => {
+            console.log("🔌 Status da conexão Realtime:", status);
+          });
+
     } else {
         document.getElementById('auth-overlay').style.display = 'flex';
         document.body.style.display = 'block'; 
@@ -724,10 +742,10 @@ async function definirPermissoes(email, uid) {
         document.getElementById('btn-usuarios').style.display = 'none';
     }
     
-    if (userRole === 'PRESTADOR') {
+if (userRole === 'PRESTADOR') {
         document.getElementById('btn-consulta').style.display = 'none';
         document.getElementById('btn-cadastro').style.display = 'none';
-        // Dashboard do prestador fica visível (filtrado), então não escondemos.
+        // A linha que escondia o dashboard foi removida daqui!
         
         let menuLeft = document.getElementById('main-menu');
         if(!document.getElementById('btn-disponibilidade')) {
@@ -2367,6 +2385,7 @@ window.atualizarFiltrosPrestador = function(){
 
 window.renderDashboard = function() {
     let isUserDashboard = (userRole === 'USUARIO');
+    let isPrestadorDashboard = (userRole === 'PRESTADOR'); // ✅ NOVO: Identifica se é prestador
     let nomeLogado = currentUser ? extrairNomeDoEmail(currentUser.email).toLowerCase() : '';
 
     let totalAgend = 0;
@@ -2379,9 +2398,15 @@ window.renderDashboard = function() {
     let totalServicosGeral = 0;
 
     agendamentos.forEach(a => {
+        // Filtra só o que o USUÁRIO comum pediu
         if (isUserDashboard) {
             let sol = String(a.solicitante || '').toLowerCase();
             if (!sol.includes(nomeLogado)) return; 
+        }
+
+        // ✅ NOVO: Filtra só os agendamentos do PRESTADOR logado
+        if (isPrestadorDashboard) {
+            if (!window.meuPrestadorLogado || a.prestador !== window.meuPrestadorLogado.nome) return;
         }
 
         totalAgend++;
