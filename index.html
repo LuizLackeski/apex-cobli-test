@@ -1497,7 +1497,8 @@ window.revisarAgendamento = function() {
     let endereco = `${rua}, ${numero} - ${bairro}, ${cidade}/${uf} - CEP: ${cep}`;
     if (obsLocal) endereco += `<br><small style="color:#64748b;"><strong>obs:</strong> ${obsLocal}</small>`;
 
-    let prodHtml = itensSelecionados.map(i => `<div style="margin-bottom:5px;">• [${i.nomeManutencao.toUpperCase()}] ${i.desc} <strong>(Placa: ${i.placa} | Qtd: ${i.qtd} | Tempo: ${tempoTotalFormatado})</strong></div>`).join('');
+    // 👇 O ERRO ESTAVA NESSA LINHA AQUI! AGORA TÁ CORRIGIDO 👇
+    let prodHtml = itensSelecionados.map(i => `<div style="margin-bottom:5px;">• [${i.nomeManutencao.toUpperCase()}] ${i.desc} <strong>(Placa: ${i.placa} | Qtd: ${i.qtd} | Tempo: ${formatarTempo(i.tempo * i.qtd)})</strong></div>`).join('');
     
     let html = `
         <div style="background: white; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 15px; text-align: left;">
