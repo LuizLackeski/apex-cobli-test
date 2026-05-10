@@ -975,12 +975,31 @@ window.carregarDadosDoBanco = async function() {
     } catch(e) { console.error("Erro bd:", e); } 
 };
 
+    // NOTIFICAÇÃO SLACK PERSONALIZADA
 window.enviarNotificacaoSlack = async function(msg) {
     const URL = "https://fqaqlofndeihmhkopvan.supabase.co/functions/v1/notificar-slack";
-    try { await fetch(URL, { method: 'POST', headers: getHeaders(), body: JSON.stringify({ text: msg }) }); } catch (e) { console.error("Erro Slack:", e); }
+    
+    // Formato de "Attachment" do Slack cria a barra colorida lateral
+    const payload = {
+        attachments: [
+            {
+                color: "#00AE97", // A cor da barra (Verde Cobli)
+                text: msg
+            }
+        ]
+    };
+
+    try { 
+        await fetch(URL, { 
+            method: 'POST', 
+            headers: getHeaders(), 
+            body: JSON.stringify(payload) 
+        }); 
+    } catch (e) { 
+        console.error("Erro Slack:", e); 
+    }
 };
 
-// ==========================================
 // 5. MOTOR DE AGENDA E DISTÂNCIA
 // ==========================================
 window.buscarEnderecoPorCep = async function() {
@@ -1284,7 +1303,7 @@ window.renderizarProdutos = function() {
             <div class="item-lista">
                 <span>
                     <strong>Serviço:</strong> [${i.nomeManutencao.toUpperCase()}] ${i.desc} 
-                    <br><small style="color:var(--cobli-dark); font-weight:bold;">🚘 Placa: ${i.placa} | Qtd: ${i.qtd} | Tempo: ${formatarTempo(tempoAcumuladoItem)}</small>
+                    <br><small style="color:var(--cobli-dark); font-weight:bold;">Placa: ${i.placa} | Qtd: ${i.qtd} | Tempo: ${formatarTempo(tempoAcumuladoItem)}</small>
                 </span> 
                 <button onclick="itensSelecionados.splice(${idx},1); window.renderizarProdutos(); window.rdaAgendamento();" 
                         style="background:var(--cobli-red); padding:4px 10px; color:white; border:none; border-radius:4px; cursor:pointer; margin-left:10px;">
@@ -1478,7 +1497,7 @@ window.revisarAgendamento = function() {
     let endereco = `${rua}, ${numero} - ${bairro}, ${cidade}/${uf} - CEP: ${cep}`;
     if (obsLocal) endereco += `<br><small style="color:#64748b;"><strong>obs:</strong> ${obsLocal}</small>`;
 
-    let prodHtml = itensSelecionados.map(i => `<div style="margin-bottom:5px;">• [${i.nomeManutencao.toUpperCase()}] ${i.desc} <strong>(🚘 ${i.placa} | Qtd: ${i.qtd} | Tempo: ${formatarTempo(i.tempo * i.qtd)})</strong></div>`).join('');
+    let prodHtml = itensSelecionados.map(i => `<div style="margin-bottom:5px;">• [${i.nomeManutencao.toUpperCase()}] ${i.desc} <strong>(Placa: ${i.placa} | Qtd: ${i.qtd} | Tempo: ${tempoTotalFormatado})</strong></div>`).join('');
     
     let html = `
         <div style="background: white; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 15px; text-align: left;">
@@ -1537,11 +1556,14 @@ window.concluirAgendamentoFinal = async function(btn) {
         return;
     }
 
-    let itensOrdenados = [...itensSelecionados].sort((a, b) => b.tempo - a.tempo);
+let itensOrdenados = [...itensSelecionados].sort((a, b) => b.tempo - a.tempo);
     
-    // Concatenação de todas as placas para enviar pro Banco e pra Field Control
     let placasArr = [...new Set(itensOrdenados.map(i => i.placa))];
     let placasConcatenadas = placasArr.join(', ');
+
+    // Lógica para pular a linha das observações
+    let obsLocal = document.getElementById('inputObs').value.trim();
+    let textoObservacao = obsLocal ? `\n\nObservações: ${obsLocal}` : '';
 
     const agendamento = {
         prestador: prestador.nome,
@@ -1564,8 +1586,9 @@ window.concluirAgendamentoFinal = async function(btn) {
         segment: itensOrdenados[0]?.nomeManutencao || "", 
         tipo_servico: itensOrdenados[0]?.desc || "Manutenção",
         field_id: prestador.field_id,
-        produtos_texto: itensOrdenados.map(i => `• [${i.nomeManutencao.toUpperCase()}] ${i.desc} (🚘 ${i.placa} | Qtd: ${i.qtd} | Tempo: ${formatarTempo(i.tempo * i.qtd)})`).join('\n') + `\nObservações: ${document.getElementById('inputObs').value}`,
-        placa_veiculo: placasConcatenadas, // Adicionado campo de placa concatenada
+        // Tirei o ícone do carro e adicionei a quebra de linha dupla
+        produtos_texto: itensOrdenados.map(i => `• [${i.nomeManutencao.toUpperCase()}] ${i.desc} (Placa: ${i.placa} | Qtd: ${i.qtd} | Tempo: ${formatarTempo(i.tempo * i.qtd)})`).join('\n') + textoObservacao,
+        placa_veiculo: placasConcatenadas, 
         segment_id_field: itensOrdenados[0]?.segment_id || "",
         maintenance_id_field: itensOrdenados[0]?.maintenance_id || document.getElementById('tipoManutencao').value,
         executar_field: dispararField,
@@ -1581,9 +1604,10 @@ window.concluirAgendamentoFinal = async function(btn) {
             body: JSON.stringify(agendamento)
         });
         const result = await response.json(); 
-       if (response.ok) {
+        if (response.ok) {
             if (dispararSlack) {
-                let produtosFormatados = itensOrdenados.map(i => `[${i.nomeManutencao.toUpperCase()}] ${i.desc} (🚘 ${i.placa} | ${i.qtd}x)`).join(', ');
+                // E também tiramos o carro da notificação do Slack
+                let produtosFormatados = itensOrdenados.map(i => `[${i.nomeManutencao.toUpperCase()}] ${i.desc} (Placa: ${i.placa} | ${i.qtd}x)`).join(', ');
                 const msgSlack = `✅ *Novo Agendamento - Ticket: ${result.ticket}*\n*Cliente:* ${agendamento.cliente}\n*Prestador:* ${agendamento.prestador}\n*Data:* ${agendamento.data} | ${agendamento.slots[0]}\n*Produtos:* ${produtosFormatados}\n*Solicitante:* ${agendamento.solicitante}`;
                 await window.enviarNotificacaoSlack(msgSlack);
             }
@@ -2308,7 +2332,7 @@ window.abrirDetalhesAgendamento = function(index) {
     
     let txt = a.produtos_texto ? a.produtos_texto.split('\nObservações:')[0] : (a.produtos || '');
     let prodHtml = String(txt).trim().length > 0 
-        ? String(txt).split('\n').map(l => `<div style="margin-bottom:6px;">• ${l.replace('•', '').trim().replace(/(\(🚘.*?\))/ig, '<strong style="color:var(--cobli-dark);">$1</strong>')}</div>`).join('')
+        ? String(txt).split('\n').map(l => `<div style="margin-bottom:6px;">• ${l.replace('•', '').trim().replace(/(\(Placa:.*?\))/ig, '<strong style="color:var(--cobli-dark);">$1</strong>')}</div>`).join('')
         : '<div style="color:#64748b; font-style: italic;">Sem produtos detalhados</div>';
 
     let btnSincronizarHtml = (userRole === 'GESTOR' || userRole === 'ADMIN' || userRole === 'SMARTOPS') 
@@ -2591,7 +2615,7 @@ window.renderDashboard = function() {
                 let limpo = linha.replace('•', '').trim();
                 if (!limpo || limpo.startsWith('Observações:')) return;
                 
-                let nomeServico = limpo.replace(/\s*\(🚘.*?\)/i, '').trim();
+                let nomeServico = limpo.replace(/\s*\(Placa:.*?\)/i, '').trim();
                 
                 let qtd = 1;
                 let matchQtd = limpo.match(/Qtd:\s*(\d+)/i);
