@@ -1659,30 +1659,30 @@ window.concluirAgendamentoFinal = async function(btn) {
     let obsLocal = document.getElementById('inputObs').value.trim();
     let textoObservacao = obsLocal ? `\n\nObservações: ${obsLocal}` : '';
 
+ // 👇 FORÇANDO A FORMATAÇÃO PARA O BANCO DE DADOS AQUI
     const agendamento = {
         prestador: prestador.nome,
         qtdtecnicos: prestador.qtdtecnicos,
         ticket: document.getElementById('ticket').value,
-        cliente: document.getElementById('clienteNome').value,
+        cliente: window.formatarCapitalize(document.getElementById('clienteNome').value),
         cnpj: document.getElementById('clienteCnpj').value,
         solicitante: document.getElementById('solicitante').value,
         data: dataSelecionada, 
         rawdate: dataSelecionada,
         slots: slotsSelecionados,
-        rua: document.getElementById('inputRua').value,
+        rua: window.formatarCapitalize(document.getElementById('inputRua').value),
         numero: document.getElementById('inputNumero').value,
-        bairro: document.getElementById('inputBairro').value,
-        cidade: document.getElementById('inputCidade').value,
+        bairro: window.formatarCapitalize(document.getElementById('inputBairro').value),
+        cidade: window.formatarCapitalize(document.getElementById('inputCidade').value),
         uf: document.getElementById('inputUf').value,
         cep: document.getElementById('inputCep').value,
-        acompanhamento: document.getElementById('respAcompanhamento').value,
+        acompanhamento: window.formatarCapitalize(document.getElementById('respAcompanhamento').value),
         telefone_responsavel: document.getElementById('telResponsavel').value,
         segment: itensOrdenados[0]?.nomeManutencao || "", 
         tipo_servico: itensOrdenados[0]?.desc || "Manutenção",
         field_id: prestador.field_id,
         produtos_texto: itensOrdenados.map(i => `• [${i.nomeManutencao.toUpperCase()}] ${i.desc} (Placa: ${i.placa} | Qtd: ${i.qtd} | Tempo: ${formatarTempo(i.tempo * i.qtd)})`).join('\n') + textoObservacao,
         
-        // Enviando as placas nos 3 formatos para garantir que o seu Supabase pegue!
         placa_veiculo: placasConcatenadas, 
         placa: placasConcatenadas,
         placas: placasConcatenadas,
@@ -2552,13 +2552,13 @@ window.abrirDetalhesAgendamento = function(index) {
     let a = filtradosPainel[index];
     if(!a) return;
     
-    // Tratamento para extrair a observação se ela existir no produtos_texto e deixar tudo minúsculo
     let obsLocal = "";
     if (a.produtos_texto && a.produtos_texto.includes('\nObservações:')) {
         obsLocal = a.produtos_texto.split('\nObservações:')[1].trim().toLowerCase();
     }
     
-    let enderecoCompleto = `${a.rua || ''}, ${a.numero || 'S/N'} - ${a.bairro || ''}, ${a.cidade || ''}/${a.uf || ''} - CEP: ${a.cep || ''}`;
+    // 👇 GARANTINDO QUE RUA, BAIRRO E CIDADE FIQUEM BONITOS NO POP-UP
+    let enderecoCompleto = `${window.formatarCapitalize(a.rua) || ''}, ${a.numero || 'S/N'} - ${window.formatarCapitalize(a.bairro) || ''}, ${window.formatarCapitalize(a.cidade) || ''}/${a.uf || ''} - CEP: ${a.cep || ''}`;
     if (obsLocal) enderecoCompleto += `<br><small style="color:#64748b;"><strong>obs:</strong> ${obsLocal}</small>`;
     
     let txt = a.produtos_texto ? a.produtos_texto.split('\nObservações:')[0] : (a.produtos || '');
@@ -2572,6 +2572,7 @@ window.abrirDetalhesAgendamento = function(index) {
     let btnExcluirHtml = (userRole === 'GESTOR') 
         ? `<button onclick="window.excluirAgendamento(${a.id}, '${a.data}')" class="btn-cancelar" style="flex:1; padding:10px; color:white; border:none; border-radius:5px; cursor:pointer;">Excluir</button>` : '';
 
+    // 👇 CONTATO ADICIONADO DE VOLTA COM FORMATAÇÃO
     let html = `
         <div style="background: white; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 15px;">
             <div style="display:flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px; margin-bottom: 8px;">
@@ -2579,12 +2580,13 @@ window.abrirDetalhesAgendamento = function(index) {
                 <div id="modal-status-badge" style="font-size: 0.75rem; color: white; font-weight: 700; background: var(--primary); padding: 4px 10px; border-radius: 6px;">${a.status || 'SOLICITADO'}</div>
             </div>
             <div style="font-size:0.9rem; line-height:1.6;">
-                👤 <strong>Cliente:</strong> ${a.cliente}<br>
-                👔 <strong>Solicitante:</strong> ${a.solicitante}<br>
+                👤 <strong>Cliente:</strong> ${window.formatarCapitalize(a.cliente)}<br>
+                👔 <strong>Solicitante:</strong> ${window.formatarCapitalize(a.solicitante)}<br>
                 🛠️ <strong>Prestador:</strong> ${a.prestador}<br>
                 📅 <strong>Data e Hora:</strong> ${a.data} | ${Array.isArray(a.slots) ? a.slots.join(', ') : (a.slots || 'N/A')}<br>
                 <hr style="border:0; border-top:1px solid #f1f5f9; margin:8px 0;">
-                📍 <strong>Local:</strong> ${enderecoCompleto}
+                📍 <strong>Local:</strong> ${enderecoCompleto}<br>
+                📞 <strong>Contato:</strong> ${window.formatarCapitalize(a.acompanhamento) || 'Não informado'} | ${a.telefone_responsavel || 'Sem telefone'}
             </div>
         </div>
         <div style="font-weight:600; margin-bottom:5px;">📦 Serviços Solicitados:</div>
@@ -2693,6 +2695,8 @@ window.renderPainel = function(){
     document.getElementById("painel-conteudo").innerHTML = filtradosPainel.map((a, i) => {
         let primeiroSlot = Array.isArray(a.slots) ? a.slots[0] : (String(a.slots).split(',')[0] || 'N/A');
         let dataRegistro = a.created_at ? new Date(a.created_at).toLocaleString('pt-BR') : 'N/A';
+        // 👇 FORÇANDO A FORMATAÇÃO DO NOME DO CLIENTE NO CARD
+        let nomeClienteFormatado = window.formatarCapitalize(a.cliente) || 'Não informado';
 
         return `<div class="painel-item" data-ticket="${a.ticket}" 
              onclick="window.abrirDetalhesAgendamento(${i})" 
@@ -2701,7 +2705,7 @@ window.renderPainel = function(){
              onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 1px 3px rgba(0,0,0,0.1)'; this.style.backgroundColor='white'; this.style.borderLeftColor='var(--primary)';">
             
             <div style="flex-grow: 1; font-size: 0.95rem;">
-                <strong>🎟️ #${a.ticket}</strong> | 🏷️ Status: <span style="color: var(--primary); font-weight: bold;">${a.status || 'SOLICITADO'}</span> | 👤 Cliente: <strong>${a.cliente || 'Não informado'}</strong>
+                <strong>🎟️ #${a.ticket}</strong> | 🏷️ Status: <span style="color: var(--primary); font-weight: bold;">${a.status || 'SOLICITADO'}</span> | 👤 Cliente: <strong>${nomeClienteFormatado}</strong>
                 
                 <div style="margin-top:6px; font-size: 0.85rem; color: #334155;">
                      📅 Agendado: ${a.data} às ${primeiroSlot} | 🛠️ Prestador: ${a.prestador}
