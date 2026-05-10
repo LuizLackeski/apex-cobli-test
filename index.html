@@ -19,10 +19,10 @@
     <style>
         /* PALETA DE CORES OFICIAL COBLI */
         :root { 
-            --primary: #001BB8;       /* Azul Claro */
-            --cobli-dark: #07074E;    /* Azul Escuro */
-            --cobli-green: #00AE97;   /* Verde */
-            --cobli-red: #FF4633;     /* Vermelho */
+            --primary: #001BB8;       
+            --cobli-dark: #07074E;    
+            --cobli-green: #00AE97;   
+            --cobli-red: #FF4633;     
             --bg: #f0f2f5; 
             --text: #334155; 
         }
@@ -46,8 +46,15 @@
         /* --- NOVAS TELAS DE AUTENTICAÇÃO PADRÃO COBLI --- */
         #auth-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--cobli-dark); display: flex; align-items: center; justify-content: center; z-index: 50000; }
         .auth-card { background: white; padding: 40px; border-radius: 16px; width: 360px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.5); }
+        
         /* ESTILO DA NOVA LOGO DA TELA DE LOGIN */
-        .logo-auth { max-width: 220px; /* Largura ideal para não vazar do card */ height: auto; margin: 0 auto 20px auto; display: block; }
+        .logo-auth { 
+            max-width: 220px; 
+            height: auto; 
+            margin: 0 auto 20px auto; 
+            display: block; 
+        }
+
         .auth-card h2 { color: var(--cobli-dark); margin: 0 0 5px; font-size: 1.6rem; border:none; }
         .auth-card p { color: #64748b; font-size: 0.85rem; margin-bottom: 25px; line-height: 1.4; }
         .input-group { position: relative; width: 100%; margin-bottom: 15px; text-align: left; }
@@ -74,10 +81,8 @@
         .menu button.ativo { 
             color: white; 
             font-weight: bold; 
-            background: rgba(0, 27, 184, 0.5); /* Leve realce */
+            background: rgba(0, 27, 184, 0.5);
             border-bottom: 4px solid var(--cobli-green);
-            border-left: 4px solid var(--cobli-green);
-            border-bottom-left-radius: 8px;
         }
         .menu button:hover { color: white; }
         .menu .user-info { margin-left: auto; color: #ffffff; font-size: 0.8rem; margin-right: 15px; opacity: 0.8; font-weight: 600;}
@@ -93,7 +98,7 @@
 
         button:hover { filter: brightness(1.1); transform: translateY(-1px); box-shadow: 0 2px 4px rgba(0,0,0,0.2); transition: 0.2s; }
         button:active { transform: translateY(0); filter: brightness(0.9); }
-        .conteudo { padding: 10px; max-width: 1000px; margin: 0 auto; }
+        .conteudo { padding: 10px; max-width: 1200px; margin: 0 auto; }
         .aba { display: none; } .aba.ativa { display: block; }
         
         .card { background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; border: 1px solid #e5e7eb; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); display: flex; flex-direction: column; justify-content: space-between; }
@@ -109,7 +114,6 @@
         button { cursor: pointer; padding: 8px 16px; background: var(--primary); color: white; border: none; border-radius: 5px; font-weight: 500; }
         .btn-cancelar { background: var(--cobli-red) !important; }
 
-        /* Nova Classe para Agrupar os Botões de Ação de Forma Responsiva */
         .botoes-acao { display: flex; gap: 10px; flex-wrap: wrap; }
         
         .agenda-day-card { background: #fafafa; padding: 10px; border-radius: 6px; margin-bottom: 8px; border: 1px solid #e5e7eb; }
@@ -159,12 +163,16 @@
         .step-circle { width: 32px; height: 32px; border-radius: 50%; background: white; border: 3px solid #cbd5e1; display: flex; align-items: center; justify-content: center; font-weight: bold; color: #64748b; font-size: 0.9rem; transition: 0.3s; }
         .step-label { font-size: 0.75rem; font-weight: 700; color: #64748b; text-align: center; text-transform: uppercase; transition: 0.3s;}
         
-        /* Estados da Timeline */
         .timeline-step.active .step-circle { border-color: var(--primary); color: var(--primary); box-shadow: 0 0 0 4px rgba(0, 27, 184, 0.1); }
         .timeline-step.active .step-label { color: var(--primary); }
-        
         .timeline-step.completed .step-circle { background: var(--cobli-green); border-color: var(--cobli-green); color: white; }
         .timeline-step.completed .step-label { color: var(--cobli-green); }
+
+        /* Custom scrollbar para as listas do dashboard */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
         /* Ajustes Mobile (PWA) */
         @media (max-width: 600px) {
@@ -182,7 +190,6 @@
             .botoes-acao { flex-direction: column; }
             .botoes-acao button { width: 100%; margin-bottom: 5px; flex: none !important; }
 
-            /* Redução do texto na lista de produtos para não espremer no celular */
             .item-lista { font-size: 0.75rem !important; line-height: 1.3; }
             .item-lista small { font-size: 0.65rem !important; }
             .item-lista button { width: auto; min-height: 36px; padding: 4px 12px !important; margin-left: 5px; }
@@ -215,8 +222,8 @@
 
 <div id="auth-overlay">
     <div class="auth-card" id="card-login">
-        <img src="https://fqaqlofndeihmhkopvan.supabase.co/storage/v1/object/public/icones/cobli.png" class="logo-auth" alt="Logo">
-        <h2>APEX</h2>
+        <img src="https://fqaqlofndeihmhkopvan.supabase.co/storage/v1/object/public/icones/logo-apex.png" class="logo-auth" alt="Logo">
+        <h2>APEX | Cobli</h2>
         <p>Gestão de Prestadores e Serviços<br><small style="color:var(--primary); font-weight:bold; text-transform:uppercase;">Agenda Exclusiva</small></p>
         <div class="input-group"><label>E-mail</label><input type="email" id="login-email" placeholder="seu.nome@cobli.co" onblur="this.value = this.value.toLowerCase().trim()"></div>
         <div class="input-group">
@@ -232,7 +239,7 @@
     </div>
 
     <div class="auth-card" id="card-signup" style="display:none;">
-        <img src="https://fqaqlofndeihmhkopvan.supabase.co/storage/v1/object/public/icones/cobli.png" class="logo-auth" alt="Logo">
+        <img src="https://fqaqlofndeihmhkopvan.supabase.co/storage/v1/object/public/icones/logo-apex.png" class="logo-auth" alt="Logo">
         <h2>Criar Conta</h2>
         <p>Selecione seu tipo de perfil</p>     
         <div style="display: flex; gap: 10px; margin-bottom: 20px;">
@@ -255,7 +262,7 @@
     </div>
 
     <div class="auth-card" id="card-forgot" style="display:none;">
-        <img src="https://fqaqlofndeihmhkopvan.supabase.co/storage/v1/object/public/icones/cobli.png" class="logo-auth" alt="Logo">
+        <img src="https://fqaqlofndeihmhkopvan.supabase.co/storage/v1/object/public/icones/logo-apex.png" class="logo-auth" alt="Logo">
         <h2>Recuperar Senha</h2>
         <p>Enviaremos um link para o seu e-mail.<br><small>Atenção: E-mails @apex.co devem solicitar ao suporte.</small></p>
         <div class="input-group"><label>E-mail Cadastrado</label><input type="email" id="reset-email" placeholder="seu@email.co"></div>
@@ -264,7 +271,7 @@
     </div>
 
     <div class="auth-card" id="card-reset-password" style="display:none;">
-        <img src="https://fqaqlofndeihmhkopvan.supabase.co/storage/v1/object/public/icones/cobli.png" class="logo-auth" alt="Logo">
+        <img src="https://fqaqlofndeihmhkopvan.supabase.co/storage/v1/object/public/icones/logo-apex.png" class="logo-auth" alt="Logo">
         <h2>Nova Senha</h2>
         <p>Digite sua nova senha de acesso</p>
         <div class="input-group">
@@ -526,13 +533,15 @@
                 <div class="campo-filtro"><label>Início</label><input type="date" id="filtroDataInicio"></div>
                 <div class="campo-filtro"><label>Fim</label><input type="date" id="filtroDataFim"></div>
                 <div class="campo-filtro"><label>Ticket</label><input type="text" id="filtroTicket" placeholder="Nº OS"></div>
-                <div class="campo-filtro">
+                
+                <div class="campo-filtro" id="filtro-box-prestador">
                     <label>Prestador</label>
                     <details id="dropdown-prestador" onmouseleave="this.removeAttribute('open')" style="background: white; border: 1px solid #cbd5e1; border-radius: 6px; cursor: pointer; position: relative; width: 100%;">
                         <summary style="padding: 8px; font-size: 0.8rem; list-style: none;">👷 Selecionar...</summary>
                         <div id="container-prestadores" style="position: absolute; top: 100%; left: 0; background: white; border: 1px solid #cbd5e1; border-radius: 6px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); padding: 10px; z-index: 1000; display: flex; flex-direction: column; gap: 8px; min-width: 180px; max-height: 200px; overflow-y: auto;"></div>
                     </details>
                 </div>
+                
                 <div class="campo-filtro">
                     <label>Status</label>
                     <details id="dropdown-status" onmouseleave="this.removeAttribute('open')" style="background: white; border: 1px solid #cbd5e1; border-radius: 6px; cursor: pointer; position: relative; width: 100%;">
@@ -548,7 +557,9 @@
                         </div>
                     </details>
                 </div>
-                <div class="campo-filtro"><label>Solicitante</label><input type="text" id="filtroSolicitante" placeholder="Nome..."></div>
+                
+                <div class="campo-filtro" id="filtro-box-solicitante"><label>Solicitante</label><input type="text" id="filtroSolicitante" placeholder="Nome..."></div>
+                
                 <div class="botoes-container">
                     <button onclick="window.renderPainel();" style="flex: 1; height: 100%; background: var(--primary); padding:0;">Filtrar</button>
                     <button onclick="window.limparFiltros()" style="flex: 1; height: 100%; background: gray; padding:0;">Limpar</button>
@@ -565,16 +576,26 @@
                 <div class="stats-card">Concluídos <span style="font-size:0.6rem; color:#64748b; font-weight:normal;">(Inc. Impedidos)</span><br><strong id="dash-concluidos" style="color: var(--cobli-green);">0</strong></div>
                 <div class="stats-card">Programados <span style="font-size:0.6rem; color:#64748b; font-weight:normal;">(A acontecer)</span><br><strong id="dash-programados" style="color: #f59e0b;">0</strong></div>
             </div>
+            
             <div style="display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap;">
-                <div class="card" style="flex: 1; min-width: 300px; margin-bottom: 0;">
+                
+                <div class="card" id="card-dist-prestadores" style="flex: 1; min-width: 300px; margin-bottom: 0;">
                     <h2 style="font-size: 1rem;">Distribuição por Prestador</h2>
                     <div style="position: relative; height: 280px; width: 100%;"><canvas id="chartPrestadores"></canvas></div>
                 </div>
+
+                <div class="card" id="card-ocupacao-diaria" style="flex: 1; min-width: 300px; margin-bottom: 0; max-height: 355px; display: flex; flex-direction: column;">
+                    <h2 style="font-size: 1rem; flex-shrink: 0;">Ocupação da Agenda (15 Dias)</h2>
+                    <div id="ocupacao-filtros-prestador" style="display:flex; gap:5px; overflow-x:auto; margin-bottom:10px; padding-bottom:5px;"></div>
+                    <div id="ocupacao-lista" style="display: flex; flex-direction: column; gap: 8px; overflow-y: auto; padding-right: 5px; flex-grow: 1;"></div>
+                </div>
+
                 <div class="card" style="flex: 1; min-width: 300px; margin-bottom: 0; max-height: 355px; display: flex; flex-direction: column;">
                     <h2 style="font-size: 1rem; flex-shrink: 0;">Tipos de Serviços/Manutenção</h2>
                     <div id="lista-dashboard-servicos" style="display: flex; flex-direction: column; gap: 8px; overflow-y: auto; padding-right: 5px; flex-grow: 1;"></div>
                 </div>
             </div>
+            
             <div class="card">
                 <h2 style="font-size: 1rem;">Volume por Localidade (Top 10)</h2>
                 <div style="position: relative; height: 250px; width: 100%;"><canvas id="chartLocais"></canvas></div>
@@ -652,7 +673,7 @@ window.addEventListener('load', () => {
             splash.style.opacity = '0';
             setTimeout(() => splash.style.display = 'none', 500);
         }
-    }, 1000); // Exibe o splash por 2.5 segundos
+    }, 1000); 
 });
 
 // ==========================================
@@ -693,10 +714,10 @@ window.currentTech = 1;
 window.meuPrestadorLogado = null;
 
 const serviçosDisponíveis = {
-    "Telemetria": [{desc:"Instalado veículos leves ou pesados", tempo:40, id_field: "b2098d2f-c060-445b-8e4b-bdcc5b6e613a"}, {desc:"Instalado motos ou maquinários", tempo:40, id_field: "fe2057ba-abd5-44b6-9686-2f50e7717f16"}, {desc:"Leves ou pesados + CAN", tempo:60, id_field: "b04b9472-5663-4d77-8dc9-a79b2f06aa28"}], 
-    "Identificador": [{desc:"Instalado veículos leves e pesados identificador", tempo:60, id_field: "a5aa5112-5b34-48fe-bf9b-1d655522db0b"}, {desc:"Leves ou pesados + CAN", tempo:90, id_field: "b04b9472-5663-4d77-8dc9-a79b2f06aa28"}], 
-    "Trava de ignição": [{desc:"Instalado trava de Iginição", tempo:80, id_field: "cb5857b4-8312-4650-b388-69b878772337"}, {desc:"Leves ou pesados + CAN", tempo:100, id_field: "b04b9472-5663-4d77-8dc9-a79b2f06aa28"}], 
-    "Videotelemetria": [{desc:"Coblicam (1 câmeras)", tempo:90, id_field: "3003972e-cd7a-46d8-9194-d611e54e4093"}, {desc:"Coblicam Cabine (2 câmeras)", tempo:90, id_field: "3d4a1cd8-f290-48fb-8e9e-4fa3353d9ab7"}, {desc:"Coblicam Fadiga (2 câmeras)", tempo:90, id_field: "ce4c9906-84d3-4ff2-a295-8b23f51c5eb2"}, {desc:"Coblicam-Multi (3 câmeras internas)", tempo:120, id_field: "33eeb8a1-e867-469b-9701-bcfe695c74e5"}, {desc:"Coblicam-Multi (2 cameras + 1 externa)", tempo:240, id_field: "33eeb8a1-e867-469b-9701-bcfe695c74e5"}, {desc:"Coblicam-Multi (4 câmeras)", tempo:240, id_field: "33eeb8a1-e867-469b-9701-bcfe695c74e5"}, {desc:"Coblicam-Multi (5 câmeras)", tempo:300, id_field: "33eeb8a1-e867-469b-9701-bcfe695c74e5"}]
+    "Telemetria": [{desc:"Telemetria: Leves ou Pesados", tempo:40, id_field: "b2098d2f-c060-445b-8e4b-bdcc5b6e613a"}, {desc:"Telemetria: Motos / Maquinários", tempo:40, id_field: "fe2057ba-abd5-44b6-9686-2f50e7717f16"}, {desc:"Leves ou pesados + CAN", tempo:60, id_field: "b04b9472-5663-4d77-8dc9-a79b2f06aa28"}], 
+    "Identificador": [{desc:"Identificador: Leves e Pesados", tempo:60, id_field: "a5aa5112-5b34-48fe-bf9b-1d655522db0b"}, {desc:"Identificador + CAN", tempo:90, id_field: "b04b9472-5663-4d77-8dc9-a79b2f06aa28"}], 
+    "Trava de ignição": [{desc:"Trava de Ignição: Leves e Pesados", tempo:80, id_field: "cb5857b4-8312-4650-b388-69b878772337"}, {desc:"Trava + CAN", tempo:100, id_field: "b04b9472-5663-4d77-8dc9-a79b2f06aa28"}], 
+    "Videotelemetria": [{desc:"Coblicam (1 câmera)", tempo:90, id_field: "3003972e-cd7a-46d8-9194-d611e54e4093"}, {desc:"Coblicam Cabine (2 câmeras)", tempo:90, id_field: "3d4a1cd8-f290-48fb-8e9e-4fa3353d9ab7"}, {desc:"Coblicam Fadiga (2 câmeras)", tempo:90, id_field: "ce4c9906-84d3-4ff2-a295-8b23f51c5eb2"}, {desc:"Coblicam-Multi (3 câmeras)", tempo:120, id_field: "33eeb8a1-e867-469b-9701-bcfe695c74e5"}, {desc:"Coblicam-Multi (2 cam + 1 ext)", tempo:240, id_field: "33eeb8a1-e867-469b-9701-bcfe695c74e5"}, {desc:"Coblicam-Multi (4 câmeras)", tempo:240, id_field: "33eeb8a1-e867-469b-9701-bcfe695c74e5"}, {desc:"Coblicam-Multi (5 câmeras)", tempo:300, id_field: "33eeb8a1-e867-469b-9701-bcfe695c74e5"}]
 };
 
 // ==========================================
@@ -752,8 +773,7 @@ window.salvarNovaSenha = async function() {
 function showAuthCard(id) { document.querySelectorAll('.auth-card').forEach(c => c.style.display = 'none'); document.getElementById(id).style.display = 'block'; }
 function togglePass(id) { const el = document.getElementById(id); el.type = el.type === 'password' ? 'text' : 'password'; }
 
-// VARIÁVEL E FUNÇÃO PARA A TELA DE CADASTRO
-window.domainSignup = null; // Começa nulo para forçar a seleção
+window.domainSignup = null; 
 window.selecionarTipoSignup = function(tipo) {
     const btnCobli = document.getElementById('btn-tipo-cobli');
     const btnPrestador = document.getElementById('btn-tipo-prestador');
@@ -886,7 +906,7 @@ async function definirPermissoes(email, uid) {
         campoSol.value = email.endsWith('@cobli.co') ? window.formatarCapitalize(extrairNomeDoEmail(email)) : email;
     }
 
-    // Controle do Menu de Usuários (Apenas GESTOR e ADMIN veem, mas ADMIN não edita)
+    // Controle do Menu de Usuários (Apenas GESTOR e ADMIN veem)
     if (userRole !== 'GESTOR' && userRole !== 'ADMIN') {
         document.getElementById('btn-usuarios').style.display = 'none';
     }
@@ -895,9 +915,19 @@ async function definirPermissoes(email, uid) {
         document.getElementById('btn-cadastro').style.display = 'none';
     }
     
-    // Controle Específico para o PRESTADOR
+    // 🔥 CONTROLE ESPECÍFICO PARA O PRESTADOR (LIMPEZA DO PAINEL)
     if (userRole === 'PRESTADOR') {
         document.getElementById('btn-consulta').style.display = 'none';
+        
+        // Oculta Filtros de Prestador e Solicitante no Painel
+        const filtroP = document.getElementById('filtro-box-prestador');
+        if(filtroP) filtroP.style.display = 'none';
+        const filtroS = document.getElementById('filtro-box-solicitante');
+        if(filtroS) filtroS.style.display = 'none';
+
+        // Oculta Gráfico de Prestador no Dashboard
+        const cardDistP = document.getElementById('card-dist-prestadores');
+        if(cardDistP) cardDistP.style.display = 'none';
         
         let menuLeft = document.getElementById('main-menu');
         if(!document.getElementById('btn-disponibilidade')) {
@@ -972,9 +1002,6 @@ window.carregarListaUsuarios = async function() {
     }
 };
 
-// ----------------------------------------------------
-// BLOCO ATUALIZADO 2: MUDAR NÍVEL COM TRAVAS
-// ----------------------------------------------------
 window.mudarNivelUsuario = async function(id, novoNivel, nivelAtual) {
     if (userRole !== 'GESTOR' && userRole !== 'ADMIN') return window.showMessage("Acesso negado.");
     
@@ -988,9 +1015,6 @@ window.mudarNivelUsuario = async function(id, novoNivel, nivelAtual) {
     window.carregarListaUsuarios();
 };
 
-// ----------------------------------------------------
-// BLOCO ATUALIZADO 3: EXCLUIR PERFIL COM TRAVAS
-// ----------------------------------------------------
 window.excluirUsuarioPerfil = function(id, email, nivelAlvo) {
     if (userRole !== 'GESTOR' && userRole !== 'ADMIN') return window.showMessage("Acesso negado.");
     
@@ -1186,7 +1210,7 @@ window.getNextDates = function(prestador) {
     
     for (let i = 2; i < 60; i++) { 
         if(dates.length >= 10) break;
-        let d = new Date(); d.setDate(today.getDate() + i); let dStr = d.toLocaleDateString(); let dNome = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sab"][d.getDay()]; 
+        let d = new Date(); d.setDate(today.getDate() + i); let dStr = d.toLocaleDateString('pt-BR'); let dNome = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sab"][d.getDay()]; 
         if (!agendaDays.includes(d.getDay())) continue;
         
         let slotsDoDia = agendaNormal.filter(a => a.dia == dNome); 
@@ -1400,7 +1424,7 @@ window.rdaAgendamento = function() {
     for(let i=2; i<60; i++){ 
         let data = new Date(); 
         data.setDate(hoje.getDate() + i); 
-        let dStr = data.toLocaleDateString(); 
+        let dStr = data.toLocaleDateString('pt-BR'); 
         let dNome = diasSemana[data.getDay()]; 
 
         let allSlotsRaw = (p.agenda && Array.isArray(p.agenda)) ? p.agenda.filter(a => !a.isAbsence && a.dia == dNome) : []; 
@@ -1628,7 +1652,6 @@ window.concluirAgendamentoFinal = async function(btn) {
     let placasArr = [...new Set(itensOrdenados.map(i => i.placa))];
     let placasConcatenadas = placasArr.join(', ');
 
-    // Lógica para pular a linha das observações
     let obsLocal = document.getElementById('inputObs').value.trim();
     let textoObservacao = obsLocal ? `\n\nObservações: ${obsLocal}` : '';
 
@@ -1653,7 +1676,6 @@ window.concluirAgendamentoFinal = async function(btn) {
         segment: itensOrdenados[0]?.nomeManutencao || "", 
         tipo_servico: itensOrdenados[0]?.desc || "Manutenção",
         field_id: prestador.field_id,
-        // Tirei o ícone do carro e adicionei a quebra de linha dupla
         produtos_texto: itensOrdenados.map(i => `• [${i.nomeManutencao.toUpperCase()}] ${i.desc} (Placa: ${i.placa} | Qtd: ${i.qtd} | Tempo: ${formatarTempo(i.tempo * i.qtd)})`).join('\n') + textoObservacao,
         placa_veiculo: placasConcatenadas, 
         segment_id_field: itensOrdenados[0]?.segment_id || "",
@@ -1673,12 +1695,10 @@ window.concluirAgendamentoFinal = async function(btn) {
         const result = await response.json(); 
         if (response.ok) {
             if (dispararSlack) {
-                // E também tiramos o carro da notificação do Slack
                 let produtosFormatados = itensOrdenados.map(i => `[${i.nomeManutencao.toUpperCase()}] ${i.desc} (Placa: ${i.placa} | ${i.qtd}x)`).join(', ');
                 const msgSlack = `✅ *Novo Agendamento - Ticket: ${result.ticket}*\n*Cliente:* ${agendamento.cliente}\n*Prestador:* ${agendamento.prestador}\n*Data:* ${agendamento.data} | ${agendamento.slots[0]}\n*Produtos:* ${produtosFormatados}\n*Solicitante:* ${agendamento.solicitante}`;
                 await window.enviarNotificacaoSlack(msgSlack);
             }
-            // Mensagem Enxuta
             let statusMsg = `<div style="text-align:center; font-size:1.1rem; color:var(--cobli-green); margin-bottom: 15px;">✅ <strong>AGENDAMENTO CONFIRMADO COM SUCESSO!</strong></div>`;
             statusMsg += `<div style="font-size: 0.85rem; color: #64748b; background: #f8fafc; padding: 10px; border-radius: 6px; text-align:center; border: 1px solid #cbd5e1;">`;
             statusMsg += `<strong style="color:var(--cobli-dark);">Status das Integrações:</strong><br><br>`;
@@ -1727,7 +1747,6 @@ window.renderizarListaPrestadores = function(){
     document.getElementById("btn-novo-container").innerHTML = (userRole === 'GESTOR' || userRole === 'ADMIN') ? `<button onclick="window.abrirCadastro()" style="margin-bottom: 20px; background: var(--cobli-dark);">+ Novo Prestador</button>` : '';
     
     document.getElementById("lista-prestadores").innerHTML = prestadores.map((p, i) => {
-        // ADMIN só ve detalhes, GESTOR tem opcoes
         const acaoClique = (userRole === 'GESTOR') ? `window.abrirOpcoesPrestador(${i})` : `window.abrirDetalhesPrestador(${i})`;
 
         return `
@@ -1754,12 +1773,11 @@ window.renderizarListaPrestadores = function(){
         </div>`; 
     }).join(''); 
     
-    // Esconde o botão se for ADMIN (read-only)
     if(userRole === 'ADMIN') document.getElementById("btn-novo-container").innerHTML = '';
 };
 
 window.abrirOpcoesPrestador = function(i) {
-    if(userRole !== 'GESTOR') return window.abrirDetalhesPrestador(i); // Prevenção extra
+    if(userRole !== 'GESTOR') return window.abrirDetalhesPrestador(i); 
     
     const p = prestadores[i];
     let html = `
@@ -1796,7 +1814,6 @@ window.abrirDetalhesPrestador = function(index) {
     let qtd = parseInt(p.qtdtecnicos) || 1;
     let temTecnicos = p.agenda && p.agenda.some(a => a.tecnico);
 
-    // Abas no modal
     if (temTecnicos || qtd > 1) {
         agendaHtml += '<div style="display:flex; gap:5px; margin-bottom:15px; border-bottom:1px solid #cbd5e1; padding-bottom:10px; overflow-x:auto;">';
         for (let t = 1; t <= qtd; t++) {
@@ -2225,7 +2242,7 @@ window.salvarPrestador = async function(btn) {
 window.excluirPrestador = async function(i) { window.showConfirm("Tem certeza que deseja excluir?", `fetch('${API_URL}/prestadores/${prestadores[i].id}', { method: 'DELETE', headers: getHeaders() }).then(async () => { await window.carregarDadosDoBanco(); window.showToast("Prestador excluído com sucesso!"); })`); };
 
 // ==========================================
-// ✅ ABA DE DISPONIBILIDADE DO PRESTADOR
+// ✅ ABA DE DISPONIBILIDADE DO PRESTADOR E OCUPAÇÃO
 // ==========================================
 window.renderizarMinhaDisponibilidade = function() {
     let p = window.meuPrestadorLogado;
@@ -2364,6 +2381,141 @@ window.removerMeuBloqueio = async function(indexVisivel) {
     } catch(e) {
         window.showMessage("Erro ao remover o bloqueio.");
     }
+};
+
+// ==========================================
+// CÁLCULO E RENDERIZAÇÃO DA OCUPAÇÃO DIÁRIA
+// ==========================================
+function calcularOcupacao(prestadorNome) {
+    let p = prestadores.find(x => x.nome === prestadorNome);
+    if (!p) return [];
+
+    let hoje = new Date();
+    const diasSemana = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sab"];
+    let maxT = parseInt(p.qtdtecnicos) || 1;
+    let resultado = [];
+
+    for (let i = 0; i < 15; i++) { 
+        let d = new Date();
+        d.setDate(hoje.getDate() + i);
+        let dStr = d.toLocaleDateString('pt-BR'); 
+        let dNome = diasSemana[d.getDay()];
+
+        // Base capacity
+        let slotsBase = (p.agenda && Array.isArray(p.agenda)) ? p.agenda.filter(a => !a.isAbsence && a.dia === dNome) : [];
+        if (slotsBase.length === 0) continue;
+
+        let absenceMatrix = Array.from({length: maxT + 1}, () => new Set());
+        if (p.agenda) {
+            p.agenda.filter(a => a.isAbsence && a.data === dStr).forEach(a => {
+                let start = a.tipo === 'total' ? 0 : parseInt(a.inicio);
+                let end = a.tipo === 'total' ? 24 : parseInt(a.fim);
+                if (a.tecnico && a.tecnico !== 'Todos') {
+                    for(let h=start; h<end; h++) absenceMatrix[parseInt(a.tecnico)].add(h);
+                } else if (a.tecnico === 'Todos' || !a.qtd) {
+                    for(let t=1; t<=maxT; t++) {
+                        for(let h=start; h<end; h++) absenceMatrix[t].add(h);
+                    }
+                } else if (a.qtd) {
+                    for(let t=1; t<=Math.min(maxT, parseInt(a.qtd)); t++) {
+                        for(let h=start; h<end; h++) absenceMatrix[t].add(h);
+                    }
+                }
+            });
+        }
+
+        let totalCapacidade = 0;
+        let tem_tecnico_especifico = p.agenda.some(a => a.tecnico);
+
+        for (let t = 1; t <= maxT; t++) {
+            let worksHours = [];
+            if (tem_tecnico_especifico) {
+                worksHours = p.agenda.filter(a => a.dia === dNome && a.tecnico == t && !a.isAbsence).map(a => parseInt(a.hora));
+            } else {
+                worksHours = p.agenda.filter(a => a.dia === dNome && !a.isAbsence).map(a => parseInt(a.hora));
+            }
+            let availableHours = worksHours.filter(h => !absenceMatrix[t].has(h));
+            totalCapacidade += availableHours.length;
+        }
+
+        if (totalCapacidade === 0) continue;
+
+        let ocupadas = 0;
+        agendamentos.filter(a => a.prestador === p.nome && (a.data === dStr || a.rawdate === dStr) && !String(a.status).toLowerCase().includes('cancelado')).forEach(a => {
+            let slotsArr = Array.isArray(a.slots) ? a.slots : (typeof a.slots === 'string' ? a.slots.split(', ') : []);
+            ocupadas += slotsArr.length;
+        });
+
+        let livres = Math.max(0, totalCapacidade - ocupadas);
+        let pct = Math.round((ocupadas / totalCapacidade) * 100);
+
+        resultado.push({
+            data: dStr,
+            dia: dNome,
+            livres: livres,
+            ocupadas: ocupadas,
+            total: totalCapacidade,
+            pct: pct
+        });
+    }
+    return resultado;
+}
+
+window.renderOcupacaoDiaria = function(prestadorNome) {
+    let containerFiltros = document.getElementById('ocupacao-filtros-prestador');
+    let containerLista = document.getElementById('ocupacao-lista');
+
+    if (!containerLista) return;
+
+    if (userRole !== 'PRESTADOR') {
+        containerFiltros.style.display = 'flex';
+        let htmlFiltros = '';
+        prestadores.forEach(p => {
+            let isSelected = p.nome === prestadorNome;
+            htmlFiltros += `<button onclick="window.renderOcupacaoDiaria('${p.nome}')" style="padding:4px 10px; font-size:0.75rem; border-radius:15px; border:1px solid #cbd5e1; background:${isSelected ? 'var(--primary)' : 'white'}; color:${isSelected ? 'white' : '#64748b'}; white-space:nowrap; cursor:pointer;">${p.nome}</button>`;
+        });
+        containerFiltros.innerHTML = htmlFiltros;
+    } else {
+        containerFiltros.style.display = 'none';
+        if (window.meuPrestadorLogado) {
+            prestadorNome = window.meuPrestadorLogado.nome;
+        } else {
+            containerLista.innerHTML = `<div style="font-size:0.85rem; color:#64748b;">Conta não vinculada a prestador.</div>`;
+            return;
+        }
+    }
+
+    if (!prestadorNome) {
+        if (prestadores.length > 0) prestadorNome = prestadores[0].nome;
+        else {
+            containerLista.innerHTML = `<div style="font-size:0.85rem; color:#64748b;">Nenhum prestador encontrado.</div>`;
+            return;
+        }
+    }
+
+    let ocupacao = calcularOcupacao(prestadorNome);
+
+    if (ocupacao.length === 0) {
+        containerLista.innerHTML = `<div style="font-size:0.85rem; color:#64748b; padding:10px;">Sem agenda configurada para os próximos dias.</div>`;
+        return;
+    }
+
+    containerLista.innerHTML = ocupacao.map(o => {
+        let bgPill = '#e0e6ff'; let colorPill = 'var(--primary)';
+        if (o.pct >= 80) { bgPill = '#fee2e2'; colorPill = 'var(--cobli-red)'; }
+        else if (o.pct >= 50) { bgPill = '#fef3c7'; colorPill = '#d97706'; }
+
+        return `
+        <div style="display: flex; justify-content: space-between; align-items: center; background: #f8fafc; padding: 10px 12px; border-radius: 6px; border: 1px solid #e2e8f0;">
+            <div style="font-size: 0.8rem; font-weight: bold; color: var(--cobli-dark); width: 85px;">${o.data.substring(0,5)} <span style="color:#64748b; font-weight:normal; font-size:0.7rem;">(${o.dia})</span></div>
+            <div style="font-size: 0.75rem; color: #64748b; flex:1; text-align:center;">
+                <span style="color:var(--cobli-green); font-weight:bold;">${o.livres}h livres</span> <span style="opacity:0.5;">|</span> <span style="color:var(--cobli-red); font-weight:bold;">${o.ocupadas}h ocupadas</span>
+            </div>
+            <div style="font-size: 0.85rem; font-weight: 800; color: ${colorPill}; background: ${bgPill}; padding: 4px 10px; border-radius: 6px; min-width:40px; text-align:center;">
+                ${o.pct}%
+            </div>
+        </div>`;
+    }).join('');
 };
 
 // ==========================================
@@ -2776,6 +2928,9 @@ window.renderDashboard = function() {
             plugins: [ChartDataLabels]
         });
     }
+
+    // Chama a renderização da Nova Ocupação Diária
+    window.renderOcupacaoDiaria(window.meuPrestadorLogado ? window.meuPrestadorLogado.nome : null);
 };
 
 const hashParams = new URLSearchParams(window.location.hash.replace('#', '?'));
