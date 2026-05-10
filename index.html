@@ -582,7 +582,7 @@
             <div id="painel-conteudo" style="max-height: 500px; overflow-y: auto;"></div>
         </div>
 
-        <div id="dashboard" class="aba">
+<div id="dashboard" class="aba">
             <div class="flex-cards">
                 <div class="stats-card">Agendados<br><strong id="dash-agend" style="color: var(--primary);">0</strong></div>
                 <div class="stats-card">Concluídos <span style="font-size:0.6rem; color:#64748b; font-weight:normal;">(Inc. Impedidos)</span><br><strong id="dash-concluidos" style="color: var(--cobli-green);">0</strong></div>
@@ -590,12 +590,6 @@
             </div>
             
             <div style="display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap;">
-                
-                <div class="card" id="card-dist-prestadores" style="flex: 1; min-width: 300px; margin-bottom: 0;">
-                    <h2 style="font-size: 1rem;">Distribuição por Prestador</h2>
-                    <div style="position: relative; height: 280px; width: 100%;"><canvas id="chartPrestadores"></canvas></div>
-                </div>
-
                 <div class="card" id="card-ocupacao-diaria" style="flex: 1; min-width: 300px; margin-bottom: 0; max-height: 355px; display: flex; flex-direction: column;">
                     <h2 style="font-size: 1rem; flex-shrink: 0;">Ocupação da Agenda (15 Dias)</h2>
                     <div id="ocupacao-filtros-prestador" style="display:flex; gap:5px; overflow-x:auto; margin-bottom:10px; padding-bottom:5px;"></div>
@@ -608,9 +602,16 @@
                 </div>
             </div>
             
-            <div class="card">
-                <h2 style="font-size: 1rem;">Volume por Localidade (Top 10)</h2>
-                <div style="position: relative; height: 250px; width: 100%;"><canvas id="chartLocais"></canvas></div>
+            <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+                <div class="card" id="card-dist-prestadores" style="flex: 1; min-width: 300px; margin-bottom: 20px;">
+                    <h2 style="font-size: 1rem;">Distribuição por Prestador</h2>
+                    <div style="position: relative; height: 250px; width: 100%;"><canvas id="chartPrestadores"></canvas></div>
+                </div>
+
+                <div class="card" style="flex: 1; min-width: 300px; margin-bottom: 20px;">
+                    <h2 style="font-size: 1rem;">Volume por Localidade (Top 10)</h2>
+                    <div style="position: relative; height: 250px; width: 100%;"><canvas id="chartLocais"></canvas></div>
+                </div>
             </div>
         </div>
         
