@@ -83,14 +83,17 @@
         .menu-left, .menu-right { display: flex; align-items: center; flex: 1; }
         .menu-right { justify-content: flex-end; align-items: center; padding-bottom: 8px; }
 
-             /* Estilo da barra lateral verde do botão ativo */
+            
+            /* Estilo do botão ativo com barra lateral E inferior */
         .menu button.ativo { 
             color: white; 
             font-weight: bold; 
-            background: rgba(0, 0, 0, 0.15); /* Fundo sutil */
-            border-bottom: none;
-            border-left: 4px solid var(--cobli-green); /* Voltamos com a barra lateral */
-        }
+            background: rgba(0, 0, 0, 0.25); /* Fundo um pouco mais escurinho para destacar as linhas */
+            border-left: 4px solid var(--cobli-green);   /* Linha Lateral */
+            border-bottom: 4px solid var(--cobli-green); /* Linha Inferior */
+            /* Ajuste fino no padding para compensar as bordas e o texto não sambar */
+            padding-left: 16px; 
+            padding-bottom: 6px;
         .menu button:hover { color: white; }
         .menu .btn-sair { color: #ff9999 !important; font-weight: bold; }
         
