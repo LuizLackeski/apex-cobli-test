@@ -3,9 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <title>APEX - Sistema Completo</title>
+    
+    <link rel="manifest" href="manifest.json">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="APEX Cobli">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link rel="apple-touch-icon" href="https://fqaqlofndeihmhkopvan.supabase.co/storage/v1/object/public/icones/logo-apex.png">
+
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+    
     <style>
         /* PALETA DE CORES OFICIAL COBLI */
         :root { 
@@ -13,7 +23,6 @@
             --cobli-dark: #07074E;    /* Azul Escuro */
             --cobli-green: #00AE97;   /* Verde */
             --cobli-red: #FF4633;     /* Vermelho */
-            
             --bg: #f0f2f5; 
             --text: #334155; 
         }
@@ -147,6 +156,18 @@
         .timeline-step.completed .step-circle { background: var(--cobli-green); border-color: var(--cobli-green); color: white; }
         .timeline-step.completed .step-label { color: var(--cobli-green); }
 
+        /* Ajustes Mobile (PWA) */
+        @media (max-width: 600px) {
+            .menu { 
+                position: fixed; bottom: 0; left: 0; right: 0; z-index: 10000; 
+                margin: 0; border-radius: 15px 15px 0 0; padding: 5px 10px;
+                height: 65px; align-items: center;
+            }
+            .topo { padding: 10px 15px; }
+            .conteudo { padding-bottom: 80px; } 
+            button, input, select { min-height: 48px; font-size: 16px !important; } 
+            .auth-card { width: 90%; padding: 20px; }
+        }
     </style>
 </head>
 <body>
@@ -179,7 +200,7 @@
         </div>
     </div>
 
-<div class="auth-card" id="card-signup" style="display:none;">
+    <div class="auth-card" id="card-signup" style="display:none;">
         <div class="logo-circle"></div>
         <h2>Criar Conta</h2>
         <p>Selecione seu tipo de perfil</p>     
@@ -906,9 +927,6 @@ window.carregarListaUsuarios = async function() {
 // ----------------------------------------------------
 // BLOCO ATUALIZADO 2: MUDAR NÍVEL COM TRAVAS
 // ----------------------------------------------------
-// ----------------------------------------------------
-// BLOCO ATUALIZADO 2: MUDAR NÍVEL COM TRAVAS
-// ----------------------------------------------------
 window.mudarNivelUsuario = async function(id, novoNivel, nivelAtual) {
     if (userRole !== 'GESTOR' && userRole !== 'ADMIN') return window.showMessage("Acesso negado.");
     
@@ -975,12 +993,32 @@ window.carregarDadosDoBanco = async function() {
     } catch(e) { console.error("Erro bd:", e); } 
 };
 
-    // NOTIFICAÇÃO SLACK PERSONALIZADA
+// NOTIFICAÇÃO SLACK PERSONALIZADA
 window.enviarNotificacaoSlack = async function(msg) {
-    const msgSlack = `> ✅ *Novo Agendamento - Ticket: ${result.ticket}*\n> *Cliente:* ${agendamento.cliente}\n> *Prestador:* ${agendamento.prestador}\n> *Data:* ${agendamento.data} | ${agendamento.slots[0]}\n> *Produtos:* ${produtosFormatados}\n> *Solicitante:* ${agendamento.solicitante}`;
-    try { await fetch(URL, { method: 'POST', headers: getHeaders(), body: JSON.stringify({ text: msg }) }); } catch (e) { console.error("Erro Slack:", e); }
+    const URL = "https://fqaqlofndeihmhkopvan.supabase.co/functions/v1/notificar-slack";
+    
+    // Formato de "Attachment" do Slack cria a barra colorida lateral
+    const payload = {
+        attachments: [
+            {
+                color: "#00AE97", // A cor da barra (Verde Cobli)
+                text: msg
+            }
+        ]
+    };
+
+    try { 
+        await fetch(URL, { 
+            method: 'POST', 
+            headers: getHeaders(), 
+            body: JSON.stringify(payload) 
+        }); 
+    } catch (e) { 
+        console.error("Erro Slack:", e); 
+    }
 };
 
+// ==========================================
 // 5. MOTOR DE AGENDA E DISTÂNCIA
 // ==========================================
 window.buscarEnderecoPorCep = async function() {
@@ -1478,7 +1516,6 @@ window.revisarAgendamento = function() {
     let endereco = `${rua}, ${numero} - ${bairro}, ${cidade}/${uf} - CEP: ${cep}`;
     if (obsLocal) endereco += `<br><small style="color:#64748b;"><strong>obs:</strong> ${obsLocal}</small>`;
 
-    // 👇 O ERRO ESTAVA NESSA LINHA AQUI! AGORA TÁ CORRIGIDO 👇
     let prodHtml = itensSelecionados.map(i => `<div style="margin-bottom:5px;">• [${i.nomeManutencao.toUpperCase()}] ${i.desc} <strong>(Placa: ${i.placa} | Qtd: ${i.qtd} | Tempo: ${formatarTempo(i.tempo * i.qtd)})</strong></div>`).join('');
     
     let html = `
@@ -1538,7 +1575,7 @@ window.concluirAgendamentoFinal = async function(btn) {
         return;
     }
 
-let itensOrdenados = [...itensSelecionados].sort((a, b) => b.tempo - a.tempo);
+    let itensOrdenados = [...itensSelecionados].sort((a, b) => b.tempo - a.tempo);
     
     let placasArr = [...new Set(itensOrdenados.map(i => i.placa))];
     let placasConcatenadas = placasArr.join(', ');
@@ -1568,7 +1605,6 @@ let itensOrdenados = [...itensSelecionados].sort((a, b) => b.tempo - a.tempo);
         segment: itensOrdenados[0]?.nomeManutencao || "", 
         tipo_servico: itensOrdenados[0]?.desc || "Manutenção",
         field_id: prestador.field_id,
-        // Tirei o ícone do carro e adicionei a quebra de linha dupla
         produtos_texto: itensOrdenados.map(i => `• [${i.nomeManutencao.toUpperCase()}] ${i.desc} (Placa: ${i.placa} | Qtd: ${i.qtd} | Tempo: ${formatarTempo(i.tempo * i.qtd)})`).join('\n') + textoObservacao,
         placa_veiculo: placasConcatenadas, 
         segment_id_field: itensOrdenados[0]?.segment_id || "",
@@ -1588,7 +1624,6 @@ let itensOrdenados = [...itensSelecionados].sort((a, b) => b.tempo - a.tempo);
         const result = await response.json(); 
         if (response.ok) {
             if (dispararSlack) {
-                // E também tiramos o carro da notificação do Slack
                 let produtosFormatados = itensOrdenados.map(i => `[${i.nomeManutencao.toUpperCase()}] ${i.desc} (Placa: ${i.placa} | ${i.qtd}x)`).join(', ');
                 const msgSlack = `✅ *Novo Agendamento - Ticket: ${result.ticket}*\n*Cliente:* ${agendamento.cliente}\n*Prestador:* ${agendamento.prestador}\n*Data:* ${agendamento.data} | ${agendamento.slots[0]}\n*Produtos:* ${produtosFormatados}\n*Solicitante:* ${agendamento.solicitante}`;
                 await window.enviarNotificacaoSlack(msgSlack);
@@ -1605,16 +1640,16 @@ let itensOrdenados = [...itensSelecionados].sort((a, b) => b.tempo - a.tempo);
             window.showMessage(statusMsg, "success");
             await window.carregarDadosDoBanco();
             setTimeout(() => window.location.reload(), 3000); 
-     } else {
+        } else {
             window.showMessage("❌ Erro: " + (result.error || "Erro na integração"), "error");
         }
-    } catch(e) {
-        window.showMessage("❌ Erro ao processar: " + e.message);
+    } catch (error) {
+        console.error("Erro na chamada:", error);
+        window.showMessage("Erro de conexão com a Edge Function.");
     } finally {
-        btn.innerText = originalText;
-        btn.disabled = false;
+        btn.innerText = originalText; btn.disabled = false;
     }
-};  // fecha concluirAgendamentoFinal
+};
 
 window.limparFormulario = function() { 
     itensSelecionados = []; 
