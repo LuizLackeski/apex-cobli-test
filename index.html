@@ -2557,7 +2557,6 @@ window.abrirDetalhesAgendamento = function(index) {
         obsLocal = a.produtos_texto.split('\nObservações:')[1].trim().toLowerCase();
     }
     
-    // 👇 GARANTINDO QUE RUA, BAIRRO E CIDADE FIQUEM BONITOS NO POP-UP
     let enderecoCompleto = `${window.formatarCapitalize(a.rua) || ''}, ${a.numero || 'S/N'} - ${window.formatarCapitalize(a.bairro) || ''}, ${window.formatarCapitalize(a.cidade) || ''}/${a.uf || ''} - CEP: ${a.cep || ''}`;
     if (obsLocal) enderecoCompleto += `<br><small style="color:#64748b;"><strong>obs:</strong> ${obsLocal}</small>`;
     
@@ -2572,7 +2571,6 @@ window.abrirDetalhesAgendamento = function(index) {
     let btnExcluirHtml = (userRole === 'GESTOR') 
         ? `<button onclick="window.excluirAgendamento(${a.id}, '${a.data}')" class="btn-cancelar" style="flex:1; padding:10px; color:white; border:none; border-radius:5px; cursor:pointer;">Excluir</button>` : '';
 
-    // 👇 CONTATO ADICIONADO DE VOLTA COM FORMATAÇÃO
     let html = `
         <div style="background: white; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 15px;">
             <div style="display:flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px; margin-bottom: 8px;">
@@ -2584,9 +2582,9 @@ window.abrirDetalhesAgendamento = function(index) {
                 👔 <strong>Solicitante:</strong> ${window.formatarCapitalize(a.solicitante)}<br>
                 🛠️ <strong>Prestador:</strong> ${a.prestador}<br>
                 📅 <strong>Data e Hora:</strong> ${a.data} | ${Array.isArray(a.slots) ? a.slots.join(', ') : (a.slots || 'N/A')}<br>
+                📞 <strong>Contato:</strong> ${window.formatarCapitalize(a.acompanhamento) || 'Não informado'} | ${a.telefone_responsavel || 'Sem telefone'}<br>
                 <hr style="border:0; border-top:1px solid #f1f5f9; margin:8px 0;">
-                📍 <strong>Local:</strong> ${enderecoCompleto}<br>
-                📞 <strong>Contato:</strong> ${window.formatarCapitalize(a.acompanhamento) || 'Não informado'} | ${a.telefone_responsavel || 'Sem telefone'}
+                📍 <strong>Local:</strong> ${enderecoCompleto}
             </div>
         </div>
         <div style="font-weight:600; margin-bottom:5px;">📦 Serviços Solicitados:</div>
