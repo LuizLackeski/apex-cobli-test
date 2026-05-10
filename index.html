@@ -101,6 +101,9 @@
         label { font-size: 0.75rem; color: #64748b; font-weight: 600; text-transform: uppercase; margin-bottom: 2px; display: block;}
         button { cursor: pointer; padding: 8px 16px; background: var(--primary); color: white; border: none; border-radius: 5px; font-weight: 500; }
         .btn-cancelar { background: var(--cobli-red) !important; }
+
+        /* Nova Classe para Agrupar os Botões de Ação de Forma Responsiva */
+        .botoes-acao { display: flex; gap: 10px; flex-wrap: wrap; }
         
         .agenda-day-card { background: #fafafa; padding: 10px; border-radius: 6px; margin-bottom: 8px; border: 1px solid #e5e7eb; }
         .agenda-day-title { font-weight: 600; color: var(--primary); margin-bottom: 6px; font-size: 0.85rem; }
@@ -165,8 +168,13 @@
             }
             .topo { padding: 10px 15px; }
             .conteudo { padding-bottom: 80px; } 
-            button, input, select { min-height: 48px; font-size: 16px !important; } 
+            button, input { min-height: 48px; font-size: 15px !important; } 
+            select { min-height: 48px; font-size: 13px !important; } /* Letra menor no select */
             .auth-card { width: 90%; padding: 20px; }
+
+            /* Empilha os botões de avançar/voltar no celular para não amassar o texto */
+            .botoes-acao { flex-direction: column; }
+            .botoes-acao button { width: 100%; margin-bottom: 5px; flex: none !important; }
         }
     </style>
 </head>
@@ -327,7 +335,7 @@
             <div id="step-2" class="card" style="display:none; padding-bottom: 30px;">
                 <h2>Selecione o Prestador</h2>
                 <div id="lista-prestadores-selecao" style="margin-bottom: 20px;"></div>
-                <div style="display: flex; gap: 10px;">
+                <div class="botoes-acao">
                     <button onclick="window.proximoPasso(1)" style="background:gray; flex:1;">⬅️ Voltar e Alterar CEP</button>
                     <button onclick="window.cancelarAgendamento()" class="btn-cancelar" style="flex:1;">❌ Cancelar Tudo</button>
                 </div>
@@ -363,7 +371,7 @@
                 <p>Horas Necessárias: <strong><span id="horasNecessarias">0</span></strong></p>
                 <div id="agenda-agendamento"></div>
                 
-                <div style="margin-top:15px; border-top: 1px solid #e2e8f0; padding-top: 15px; display: flex; gap: 8px; flex-wrap: wrap;">
+                <div class="botoes-acao" style="margin-top:15px; border-top: 1px solid #e2e8f0; padding-top: 15px;">
                     <button onclick="window.proximoPasso(2)" style="background:gray;">⬅️ Voltar Prestadores</button>
                     <button onclick="window.validarEAvancar()" style="background:var(--cobli-green); flex: 1;">Próximo Passo ➡️</button>
                     <button onclick="window.cancelarAgendamento()" class="btn-cancelar">Cancelar</button>
@@ -383,7 +391,7 @@
                 <label class="req">Responsável pelo acompanhamento (Local)</label><input id="respAcompanhamento" onblur="this.value = window.formatarCapitalize(this.value)" required>
                 <label class="req">Telefone do responsável</label><input id="telResponsavel" placeholder="(00) 00000-0000" oninput="window.maskPhone(this)" maxlength="15" required>
                 
-                <div style="margin-top:15px; display: flex; gap: 8px; flex-wrap: wrap;">
+                <div class="botoes-acao" style="margin-top:15px;">
                     <button onclick="window.proximoPasso(3)" style="background:gray;">⬅️ Voltar Agenda</button>
                     <button id="btnConfirmar" onclick="window.revisarAgendamento()" style="background:var(--cobli-green); flex: 1;">Revisar e Confirmar ✅</button>
                     <button onclick="window.cancelarAgendamento()" class="btn-cancelar">Cancelar</button>
@@ -462,7 +470,7 @@
                         <div id="lista-datas-bloqueadas" style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 15px;"></div>
                     </div>
                 </div>
-                <div style="margin-top:20px; display: flex; gap: 8px; flex-wrap: wrap;">
+                <div class="botoes-acao" style="margin-top:20px;">
                     <button id="btn-voltar" onclick="window.mudarEtapa(-1)">Voltar</button>
                     <button id="btn-proximo" onclick="window.mudarEtapa(1)">Próximo</button>
                     <button id="btn-concluir" onclick="window.salvarPrestador(this)" style="background: var(--cobli-green);">Concluir Cadastro</button>
@@ -1537,7 +1545,7 @@ window.revisarAgendamento = function() {
         <div style="background: #f8fafc; padding: 10px; border-radius: 6px; border: 1px solid #cbd5e1; margin-bottom: 20px; font-size: 0.85rem; text-align: left;">
             ${prodHtml}
         </div>
-        <div style="display: flex; gap: 10px;">
+        <div class="botoes-acao">
             <button onclick="window.fecharModal()" style="background:gray; flex:1;">⬅️ Editar Dados</button>
             <button onclick="window.confirmarEnvioReal()" style="background:var(--cobli-green); flex:1;">✅ Confirmar e Salvar</button>
         </div>
@@ -1605,6 +1613,7 @@ window.concluirAgendamentoFinal = async function(btn) {
         segment: itensOrdenados[0]?.nomeManutencao || "", 
         tipo_servico: itensOrdenados[0]?.desc || "Manutenção",
         field_id: prestador.field_id,
+        // Tirei o ícone do carro e adicionei a quebra de linha dupla
         produtos_texto: itensOrdenados.map(i => `• [${i.nomeManutencao.toUpperCase()}] ${i.desc} (Placa: ${i.placa} | Qtd: ${i.qtd} | Tempo: ${formatarTempo(i.tempo * i.qtd)})`).join('\n') + textoObservacao,
         placa_veiculo: placasConcatenadas, 
         segment_id_field: itensOrdenados[0]?.segment_id || "",
@@ -1624,6 +1633,7 @@ window.concluirAgendamentoFinal = async function(btn) {
         const result = await response.json(); 
         if (response.ok) {
             if (dispararSlack) {
+                // E também tiramos o carro da notificação do Slack
                 let produtosFormatados = itensOrdenados.map(i => `[${i.nomeManutencao.toUpperCase()}] ${i.desc} (Placa: ${i.placa} | ${i.qtd}x)`).join(', ');
                 const msgSlack = `✅ *Novo Agendamento - Ticket: ${result.ticket}*\n*Cliente:* ${agendamento.cliente}\n*Prestador:* ${agendamento.prestador}\n*Data:* ${agendamento.data} | ${agendamento.slots[0]}\n*Produtos:* ${produtosFormatados}\n*Solicitante:* ${agendamento.solicitante}`;
                 await window.enviarNotificacaoSlack(msgSlack);
@@ -2375,7 +2385,7 @@ window.abrirDetalhesAgendamento = function(index) {
         </div>
         <div style="font-weight:600; margin-bottom:5px;">📦 Serviços Solicitados:</div>
         <div style="background: #f8fafc; padding: 12px; border-radius: 6px; border: 1px solid #cbd5e1; margin-bottom: 15px; font-size: 0.9rem;">${prodHtml}</div>
-        <div style="display:flex; gap:10px; flex-wrap: wrap;">
+        <div class="botoes-acao">
             <button onclick="window.fecharModal()" style="background:gray; flex:1; padding:10px; color:white; border:none; border-radius:5px; cursor:pointer;">Fechar</button>
             ${btnSincronizarHtml}
             ${btnExcluirHtml}
