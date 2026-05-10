@@ -977,27 +977,8 @@ window.carregarDadosDoBanco = async function() {
 
     // NOTIFICAÇÃO SLACK PERSONALIZADA
 window.enviarNotificacaoSlack = async function(msg) {
-    const URL = "https://fqaqlofndeihmhkopvan.supabase.co/functions/v1/notificar-slack";
-    
-    // Formato de "Attachment" do Slack cria a barra colorida lateral
-    const payload = {
-        attachments: [
-            {
-                color: "#00AE97", // A cor da barra (Verde Cobli)
-                text: msg
-            }
-        ]
-    };
-
-    try { 
-        await fetch(URL, { 
-            method: 'POST', 
-            headers: getHeaders(), 
-            body: JSON.stringify(payload) 
-        }); 
-    } catch (e) { 
-        console.error("Erro Slack:", e); 
-    }
+    const msgSlack = `> ✅ *Novo Agendamento - Ticket: ${result.ticket}*\n> *Cliente:* ${agendamento.cliente}\n> *Prestador:* ${agendamento.prestador}\n> *Data:* ${agendamento.data} | ${agendamento.slots[0]}\n> *Produtos:* ${produtosFormatados}\n> *Solicitante:* ${agendamento.solicitante}`;
+    try { await fetch(URL, { method: 'POST', headers: getHeaders(), body: JSON.stringify({ text: msg }) }); } catch (e) { console.error("Erro Slack:", e); }
 };
 
 // 5. MOTOR DE AGENDA E DISTÂNCIA
