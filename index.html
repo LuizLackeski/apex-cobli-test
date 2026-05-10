@@ -72,6 +72,12 @@
         /* MENU TOPO NOME E BOTOES */
         .topo { background: var(--cobli-dark); color: white; padding: 15px 30px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center; margin: -20px -20px 0 -20px;}
         
+        .header-logo-text { display: flex; align-items: baseline; }
+        .txt-apex { font-size: 1.25rem; font-weight: bold; }
+        .txt-cobli { font-size: 1.15rem; font-weight: 500; margin: 0 4px; }
+        .txt-agenda { font-size: 0.7rem; opacity: 0.6; text-transform: uppercase; letter-spacing: 1px; margin-left: 5px; }
+        .user-role-mobile { font-size: 0.85rem; font-weight: 600; opacity: 0.9; text-align: right; max-width: 200px; }
+
         .menu { background: var(--primary); padding: 0 30px; display: flex; align-items: flex-end; justify-content: space-between; min-height: 45px; margin: 0 -20px 20px -20px;}
         .menu button { background: none; border: none; color: rgba(255,255,255,0.7); padding: 12px 20px; cursor: pointer; font-size: 0.9rem; transition: 0.3s; margin-bottom: 0; position: relative;}
         .menu-left, .menu-right { display: flex; align-items: center; flex: 1; }
@@ -85,7 +91,6 @@
             border-bottom: 4px solid var(--cobli-green);
         }
         .menu button:hover { color: white; }
-        .menu .user-info { margin-left: auto; color: #ffffff; font-size: 0.8rem; margin-right: 15px; opacity: 0.8; font-weight: 600;}
         .menu .btn-sair { color: #ff9999 !important; font-weight: bold; }
         
         .integracoes-topo { display: none; align-items: center; gap: 15px; background: rgba(255,255,255,0.1); padding: 5px 15px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.2); }
@@ -193,6 +198,13 @@
             .item-lista { font-size: 0.75rem !important; line-height: 1.3; }
             .item-lista small { font-size: 0.65rem !important; }
             .item-lista button { width: auto; min-height: 36px; padding: 4px 12px !important; margin-left: 5px; }
+
+            /* 📱 AJUSTES DO CABEÇALHO PARA CELULAR 📱 */
+            .txt-apex { display: none !important; } /* Esconde o APEX | no celular */
+            .header-logo-text { flex-direction: column; align-items: flex-start; line-height: 1.1; }
+            .txt-cobli { font-size: 1.3rem !important; font-weight: 800 !important; margin: 0 !important; }
+            .txt-agenda { margin-left: 0 !important; font-size: 0.65rem !important; letter-spacing: 0 !important; margin-top: 2px; }
+            .user-role-mobile { font-size: 0.75rem !important; max-width: 140px; text-align: right; }
         }
     </style>
 </head>
@@ -291,22 +303,22 @@
 
 <div id="app-content">
     <div class="topo">
-        <div style="display:flex; align-items:center; gap: 20px;">
-            <div style="display: flex; align-items: baseline;">
-                <strong style="font-size: 1.25rem;">APEX</strong> 
-                <span style="font-size: 1.15rem; font-weight: 500; margin: 0 4px;">| Cobli</span> 
-                <span style="font-size: 0.7rem; opacity: 0.6; text-transform: uppercase; letter-spacing: 1px; margin-left: 5px;">agenda exclusiva</span>
+        <div style="display:flex; align-items:center; min-width: 0;">
+            <div class="header-logo-text">
+                <span class="txt-apex">APEX <span style="font-weight: 500; margin: 0 4px;">|</span></span> 
+                <span class="txt-cobli">Cobli</span> 
+                <span class="txt-agenda">agenda exclusiva</span>
             </div>
         </div>
         
-        <div style="display:flex; align-items:center; gap: 20px;">
+        <div style="display:flex; align-items:center; gap: 10px; min-width: 0;">
             <div id="integrations-control" class="integracoes-topo">
                 <span style="font-size:0.6rem; opacity:0.7; font-weight:bold;">INTEGRAÇÕES:</span>
                 <label title="Avisos no Slack">SLACK <input type="checkbox" id="slackSwitch" class="toggle-switch"></label>
                 <label title="Lançar OS no Field">FIELD <input type="checkbox" id="fieldSwitch" class="toggle-switch"></label>
                 <label title="Salvar no BD">BANCO <input type="checkbox" id="dbSwitch" class="toggle-switch" checked></label>
             </div>
-            <div id="user-role-display" style="font-size: 0.85rem; font-weight: 600; opacity: 0.9; text-align: right;"></div>
+            <div id="user-role-display" class="user-role-mobile"></div>
         </div>
     </div>
 
@@ -673,7 +685,7 @@ window.addEventListener('load', () => {
             splash.style.opacity = '0';
             setTimeout(() => splash.style.display = 'none', 500);
         }
-    }, 600); 
+    }, 500); 
 });
 
 // ==========================================
@@ -899,7 +911,8 @@ async function definirPermissoes(email, uid) {
         userRole = isGestor ? 'GESTOR' : (isCobli ? 'SMARTOPS' : 'PRESTADOR');
     }
 
-    document.getElementById('user-role-display').innerText = `${email} | ${userRole}`;
+    // AJUSTE: Empilhar email e role para não quebrar layout no mobile
+    document.getElementById('user-role-display').innerHTML = `<div style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${email}</div><div style="font-size: 0.75em; opacity: 0.8; margin-top: 2px; text-transform: uppercase;">${userRole}</div>`;
     
     const campoSol = document.getElementById('solicitante');
     if(campoSol) {
