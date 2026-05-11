@@ -990,7 +990,7 @@ window.carregarListaUsuarios = async function() {
             podeEditar = true; // Admin SÓ mexe em SmartOps e Admin
         }
 
-        let blockDelete = podeEditar ? `<button onclick="window.excluirUsuarioPerfil('${u.id}', '${u.email}', '${u.nivel}')" style="background: var(--cobli-red); padding: 4px 8px; border-radius: 4px;" title="Remover Perfil">🗑️</button>` : '';
+        let blockDelete = podeEditar ? `<button onclick="window.excluirUsuarioPerfil('${u.id}', '${u.email}', '${u.nivel}')" style="background: var(--cobli-red); padding: 4px 8px; border-radius: 4px;" title="Remover Perfil"></button>` : '';
 
         // Se o cara logado for apenas ADMIN, ele não pode ver a opção de promover a GESTOR no select.
         let optionGestorHtml = (userRole === 'GESTOR' || u.nivel === 'GESTOR') ? `<option value="GESTOR" ${u.nivel==='GESTOR'?'selected':''}>GESTOR</option>` : '';
@@ -1407,7 +1407,7 @@ window.renderizarProdutos = function() {
                 </span> 
                 <button onclick="itensSelecionados.splice(${idx},1); window.renderizarProdutos(); window.rdaAgendamento();" 
                         style="background:var(--cobli-red); padding:4px 10px; color:white; border:none; border-radius:4px; cursor:pointer; margin-left:10px;">
-                    🗑️
+                    
                 </button>
             </div>`;
     }).join(''); 
@@ -1813,7 +1813,7 @@ window.abrirOpcoesPrestador = function(i) {
                 </button>            
                 <button onclick="window.fecharModal(); window.excluirPrestador(${i})" 
                         style="background:var(--cobli-red); padding: 12px; font-size: 1rem; font-weight:bold; border-radius:8px;">
-                    🗑️ Excluir Prestador
+                     Excluir Prestador
                 </button>          
                 <button onclick="window.fecharModal()" 
                         style="background:#9ca3af; padding: 12px; font-size: 1rem; font-weight:bold; border-radius:8px;">
@@ -2083,7 +2083,7 @@ window.criarGridCadastro = function(id){
         } 
         
         let clearBtn = document.createElement("button");
-        clearBtn.innerHTML = "🗑️";
+        clearBtn.innerHTML = "";
         clearBtn.title = "Limpar " + d;
         clearBtn.style.background = "transparent";
         clearBtn.style.border = "1px solid #ef4444";
