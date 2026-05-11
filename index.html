@@ -185,31 +185,151 @@
         ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
         /* Ajustes Mobile (PWA) */
+/* Ajustes Mobile (PWA) */
         @media (max-width: 600px) {
+/* 📱 1. CABEÇALHO COMPACTO E ORGANIZADO 📱 */
+            .topo { 
+                flex-direction: column; 
+                align-items: stretch;
+                padding: 10px 15px;
+            }
+            .user-role-mobile { 
+                position: absolute; 
+                top: 15px; 
+                right: 15px; 
+                text-align: right;
+                font-size: 0.70rem !important;
+            }
+            .integracoes-topo { 
+                margin-top: 10px; /* Reduzido o espaço em cima */
+                width: 100%; 
+                justify-content: space-between; 
+                padding: 5px 15px; /* Reduzido a altura da caixa aqui */
+            }
+            .integracoes-topo > span { display: none; } 
+            .integracoes-topo label { 
+                flex-direction: column; 
+                gap: 2px; /* Deixa o texto mais perto da chavinha */
+                font-size: 0.65rem;
+            }
+            /* Travando a altura para a chavinha não esticar igual chiclete */
+            .toggle-switch { 
+                width: 32px !important; 
+                height: 16px !important; 
+                min-height: 16px !important; 
+                margin: 0 auto !important;
+            }
+            .toggle-switch::after { width: 12px; height: 12px; }
+            .toggle-switch:checked::after { transform: translateX(16px); }
+
+            /* 📱 2. MENU INFERIOR DESLIZÁVEL (SWIPE) 📱 */
             .menu { 
                 position: fixed; bottom: 0; left: 0; right: 0; z-index: 10000; 
-                margin: 0; border-radius: 15px 15px 0 0; padding: 5px 10px;
+                margin: 0; border-radius: 15px 15px 0 0; padding: 5px 0;
                 height: 65px; align-items: center;
+                justify-content: space-between; /* Garante que os itens vão até as pontas */
+                width: 100%; /* Força o azul ir até o final da tela */
             }
-            .topo { padding: 10px 15px; }
-            .conteudo { padding-bottom: 80px; } 
+            .menu-left {
+                flex: 1; /* 👈 Engole todo o espaço livre da tela */
+                min-width: 0; /* 👈 Segredo pro flexbox não bugar no celular */
+                overflow-x: auto; 
+                white-space: nowrap; 
+                padding-left: 10px;
+                padding-right: 10px;
+                -webkit-overflow-scrolling: touch;
+                scrollbar-width: none; 
+            }
+            .menu-left::-webkit-scrollbar { display: none; }
+            
+            .menu-right {
+                flex: 0 0 auto; /* 👈 Trava o azul EXATAMENTE no tamanho do botão Sair, nem um milímetro a mais! */
+                padding-left: 5px; 
+                padding-right: 15px;
+                background: var(--primary); 
+                box-shadow: -8px 0 10px var(--primary); 
+                z-index: 5;
+            }
+            .menu button { font-size: 0.8rem; padding: 8px 12px; margin-bottom: 0; }
+
+/* 📱 3. O RESTO DOS AJUSTES MOBILE E ROLAGEM 📱 */
+            html, body { 
+                overflow-x: hidden; /* Proíbe a tela de "sambar" para os lados */
+                width: 100%; 
+            }      
+            .conteudo { 
+                padding-bottom: 90px; /* Espaço para o menu azul não cobrir os últimos dados */
+                overflow-y: auto; /* Habilita a rolagem vertical da tela */
+                overflow-x: hidden;
+                width: 100%;
+                -webkit-overflow-scrolling: touch; /* Deixa o scroll "macio" no Android/iOS */
+            }       
+            /* Trava a caixa de formulário/usuário na tela e cria rolagem interna se ficar gigante */
+            .auth-card { 
+                width: 95%; 
+                padding: 15px; 
+                max-height: 75vh; /* Altura máxima (75% da tela) para não vazar pelo rodapé */
+                overflow-y: auto; /* Habilita rolagem dentro da caixa */
+                overflow-x: hidden;
+            }      
+            /* Tabelas e grids não podem quebrar a tela */
+            table, .table-container { 
+                max-width: 100%; 
+                overflow-x: auto; /* Rola pro lado apenas a tabela, e não a tela toda */
+            }
             button, input { min-height: 48px; font-size: 15px !important; } 
             select { min-height: 48px; font-size: 13px !important; } 
-            .auth-card { width: 90%; padding: 20px; }
-
             .botoes-acao { flex-direction: column; }
             .botoes-acao button { width: 100%; margin-bottom: 5px; flex: none !important; }
-
-            .item-lista { font-size: 0.75rem !important; line-height: 1.3; }
-            .item-lista small { font-size: 0.65rem !important; }
-            .item-lista button { width: auto; min-height: 36px; padding: 4px 12px !important; margin-left: 5px; }
-
-            /* 📱 AJUSTES DO CABEÇALHO PARA CELULAR 📱 */
-            .txt-apex { display: none !important; } /* Esconde o APEX | no celular */
+/* 📱 FORÇA BRUTA: CARDS DE USUÁRIOS 📱 */
+            .item-lista, 
+            .auth-card div[style*="flex"] { 
+                display: flex !important;
+                flex-direction: column !important; /* Empilha: Texto em cima, botão embaixo */
+                align-items: flex-start !important;
+                width: 100% !important;
+                max-width: 100% !important;
+                box-sizing: border-box !important;
+                padding: 10px 0 !important;
+            }      
+            /* Obriga o e-mail e a data a quebrarem linha, proibindo de vazar */
+            .item-lista > div, 
+            .auth-card div[style*="flex"] > div {
+                width: 100% !important;
+                white-space: normal !important;
+                word-break: break-word !important; /* Corta o texto na marra se for grande */
+                margin-bottom: 10px !important;
+            }
+            /* Estica o botão Excluir para ficar grandão embaixo */
+            .item-lista button, 
+            .auth-card div[style*="flex"] button { 
+                width: 100% !important; 
+                margin-left: 0 !important; 
+                margin-top: 5px !important;
+                padding: 12px !important; /* Mais gordinho para o dedo clicar fácil */
+            }
+            .txt-apex { display: none !important; } 
             .header-logo-text { flex-direction: column; align-items: flex-start; line-height: 1.1; }
             .txt-cobli { font-size: 1.3rem !important; font-weight: 800 !important; margin: 0 !important; }
             .txt-agenda { margin-left: 0 !important; font-size: 0.65rem !important; letter-spacing: 0 !important; margin-top: 2px; }
-            .user-role-mobile { font-size: 0.75rem !important; max-width: 140px; text-align: right; }
+          
+            /* 📱 TABELAS DESLIZÁVEIS (USUÁRIOS E PRESTADORES) 📱 */
+            .auth-card {
+                padding: 15px 10px !important; /* Dá um pouquinho mais de espaço pro card */
+            }
+
+            table {
+                display: block !important; /* Transforma a tabela num bloco rolável */
+                width: 100% !important;
+                overflow-x: auto !important; /* Cria a barra de rolagem horizontal! */
+                -webkit-overflow-scrolling: touch !important; /* Deixa o deslize macio no dedo */
+                white-space: nowrap !important; /* Proíbe o texto de amassar e quebrar pra baixo */
+            }
+
+            table th, table td {
+                padding: 10px 15px !important; /* Dá um respiro entre as colunas */
+                font-size: 0.8rem !important; 
+            }
         }
     </style>
 </head>
@@ -388,7 +508,7 @@
                 <div id="lista-prestadores-selecao" style="margin-bottom: 20px;"></div>
                 <div class="botoes-acao">
                     <button onclick="window.proximoPasso(1)" style="background:gray; flex:1;">⬅️ Voltar e Alterar CEP</button>
-                    <button onclick="window.cancelarAgendamento()" class="btn-cancelar" style="flex:1;">🚮 Cancelar Tudo</button>
+                    <button onclick="window.cancelarAgendamento()" class="btn-cancelar" style="flex:1;">❌ Cancelar Tudo</button>
                 </div>
             </div>
             
@@ -710,7 +830,7 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-const EDGE_URL = `${SUPABASE_URL}/functions/v1/integracao-v2-interna`;
+const EDGE_URL = `${SUPABASE_URL}/functions/v1/integracao-field`;
 const API_URL = `${SUPABASE_URL}/functions/v1/smart-service`;
 const DB_URL = `${SUPABASE_URL}/rest/v1`;
 
@@ -990,7 +1110,7 @@ window.carregarListaUsuarios = async function() {
             podeEditar = true; // Admin SÓ mexe em SmartOps e Admin
         }
 
-        let blockDelete = podeEditar ? `<button onclick="window.excluirUsuarioPerfil('${u.id}', '${u.email}', '${u.nivel}')" style="background: var(--cobli-red); padding: 4px 8px; border-radius: 4px;" title="Remover Perfil"></button>` : '';
+        let blockDelete = podeEditar ? `<button onclick="window.excluirUsuarioPerfil('${u.id}', '${u.email}', '${u.nivel}')" style="background: var(--cobli-red); padding: 4px 8px; border-radius: 4px;" title="Remover Perfil">🚮</button>` : '';
 
         // Se o cara logado for apenas ADMIN, ele não pode ver a opção de promover a GESTOR no select.
         let optionGestorHtml = (userRole === 'GESTOR' || u.nivel === 'GESTOR') ? `<option value="GESTOR" ${u.nivel==='GESTOR'?'selected':''}>GESTOR</option>` : '';
@@ -1407,7 +1527,7 @@ window.renderizarProdutos = function() {
                 </span> 
                 <button onclick="itensSelecionados.splice(${idx},1); window.renderizarProdutos(); window.rdaAgendamento();" 
                         style="background:var(--cobli-red); padding:4px 10px; color:white; border:none; border-radius:4px; cursor:pointer; margin-left:10px;">
-                    
+                    🗑️
                 </button>
             </div>`;
     }).join(''); 
@@ -1637,7 +1757,7 @@ window.concluirAgendamentoFinal = async function(btn) {
     if (elCnpj) {
         const documentoNumeros = elCnpj.value.replace(/\D/g, '');        
         if (documentoNumeros.length > 0 && documentoNumeros.length !== 14) {
-            window.showMessage("🚮 O CNPJ está incompleto! Digite todos os 14 números.");
+            window.showMessage("❌ O CNPJ está incompleto! Digite todos os 14 números.");
             return; 
         }
     }
@@ -1728,7 +1848,7 @@ window.concluirAgendamentoFinal = async function(btn) {
             await window.carregarDadosDoBanco();
             setTimeout(() => window.location.reload(), 3000); 
         } else {
-            window.showMessage("🚮 Erro: " + (result.error || "Erro na integração"), "error");
+            window.showMessage("❌ Erro: " + (result.error || "Erro na integração"), "error");
         }
     } catch (error) {
         console.error("Erro na chamada:", error);
@@ -1813,7 +1933,7 @@ window.abrirOpcoesPrestador = function(i) {
                 </button>            
                 <button onclick="window.fecharModal(); window.excluirPrestador(${i})" 
                         style="background:var(--cobli-red); padding: 12px; font-size: 1rem; font-weight:bold; border-radius:8px;">
-                     Excluir Prestador
+                    🗑️ Excluir Prestador
                 </button>          
                 <button onclick="window.fecharModal()" 
                         style="background:#9ca3af; padding: 12px; font-size: 1rem; font-weight:bold; border-radius:8px;">
@@ -2083,7 +2203,7 @@ window.criarGridCadastro = function(id){
         } 
         
         let clearBtn = document.createElement("button");
-        clearBtn.innerHTML = "";
+        clearBtn.innerHTML = "🗑️";
         clearBtn.title = "Limpar " + d;
         clearBtn.style.background = "transparent";
         clearBtn.style.border = "1px solid #ef4444";
@@ -2746,10 +2866,10 @@ window.sincronizarStatusModal = async function(ticket, btn, index) {
             if(badge) badge.innerText = result.status;
             await window.carregarDadosDoBanco(); 
         } else {
-            window.showMessage("🚮 Erro ao sincronizar: " + result.error);
+            window.showMessage("❌ Erro ao sincronizar: " + result.error);
         }
     } catch (err) {
-        window.showMessage("🚮 Erro de conexão.");
+        window.showMessage("❌ Erro de conexão.");
     } finally {
         btn.innerHTML = originalText;
         btn.disabled = false;
