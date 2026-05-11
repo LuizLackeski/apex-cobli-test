@@ -388,7 +388,7 @@
                 <div id="lista-prestadores-selecao" style="margin-bottom: 20px;"></div>
                 <div class="botoes-acao">
                     <button onclick="window.proximoPasso(1)" style="background:gray; flex:1;">⬅️ Voltar e Alterar CEP</button>
-                    <button onclick="window.cancelarAgendamento()" class="btn-cancelar" style="flex:1;">❌ Cancelar Tudo</button>
+                    <button onclick="window.cancelarAgendamento()" class="btn-cancelar" style="flex:1;">🚮 Cancelar Tudo</button>
                 </div>
             </div>
             
@@ -1637,7 +1637,7 @@ window.concluirAgendamentoFinal = async function(btn) {
     if (elCnpj) {
         const documentoNumeros = elCnpj.value.replace(/\D/g, '');        
         if (documentoNumeros.length > 0 && documentoNumeros.length !== 14) {
-            window.showMessage("❌ O CNPJ está incompleto! Digite todos os 14 números.");
+            window.showMessage("🚮 O CNPJ está incompleto! Digite todos os 14 números.");
             return; 
         }
     }
@@ -1728,7 +1728,7 @@ window.concluirAgendamentoFinal = async function(btn) {
             await window.carregarDadosDoBanco();
             setTimeout(() => window.location.reload(), 3000); 
         } else {
-            window.showMessage("❌ Erro: " + (result.error || "Erro na integração"), "error");
+            window.showMessage("🚮 Erro: " + (result.error || "Erro na integração"), "error");
         }
     } catch (error) {
         console.error("Erro na chamada:", error);
@@ -2746,10 +2746,10 @@ window.sincronizarStatusModal = async function(ticket, btn, index) {
             if(badge) badge.innerText = result.status;
             await window.carregarDadosDoBanco(); 
         } else {
-            window.showMessage("❌ Erro ao sincronizar: " + result.error);
+            window.showMessage("🚮 Erro ao sincronizar: " + result.error);
         }
     } catch (err) {
-        window.showMessage("❌ Erro de conexão.");
+        window.showMessage("🚮 Erro de conexão.");
     } finally {
         btn.innerHTML = originalText;
         btn.disabled = false;
