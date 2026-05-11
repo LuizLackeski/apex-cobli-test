@@ -161,10 +161,10 @@
         td { padding: 12px; border-bottom: 1px solid #e2e8f0; font-size: 0.9rem; }
         
         /* Badges de Roles */
-        .badge-gestor { background: #7fd6cb; color: #00685a; padding:4px; border-radius:4px; font-size:0.7rem; font-weight:bold;}
+        .badge-gestor { background: #fee2e2; color: #ef4444; padding:4px; border-radius:4px; font-size:0.7rem; font-weight:bold;}
         .badge-admin { background: #fef08a; color: #b45309; padding:4px; border-radius:4px; font-size:0.7rem; font-weight:bold;}
         .badge-smart { background: #e0e7ff; color: #4338ca; padding:4px; border-radius:4px; font-size:0.7rem; font-weight:bold;}
-        .badge-prest { background: #7f8ddb; color: #000d5c; padding:4px; border-radius:4px; font-size:0.7rem; font-weight:bold;}
+        .badge-prest { background: #dcfce7; color: #15803d; padding:4px; border-radius:4px; font-size:0.7rem; font-weight:bold;}
 
         /* TIMELINE DO AGENDAMENTO */
         .timeline-container { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; position: relative; padding: 0 20px;}
@@ -508,7 +508,7 @@
                 <div id="lista-prestadores-selecao" style="margin-bottom: 20px;"></div>
                 <div class="botoes-acao">
                     <button onclick="window.proximoPasso(1)" style="background:gray; flex:1;">⬅️ Voltar e Alterar CEP</button>
-                    <button onclick="window.cancelarAgendamento()" class="btn-cancelar" style="flex:1;">Cancelar Tudo</button>
+                    <button onclick="window.cancelarAgendamento()" class="btn-cancelar" style="flex:1;">❌ Cancelar Tudo</button>
                 </div>
             </div>
             
@@ -1925,15 +1925,15 @@ window.abrirOpcoesPrestador = function(i) {
             <div style="display: flex; flex-direction: column; gap: 10px;">
                 <button onclick="window.fecharModal(); window.abrirDetalhesPrestador(${i})" 
                         style="background:var(--cobli-green); padding: 12px; font-size: 1rem; font-weight:bold; border-radius:8px;">
-                    🗓️Ver Agenda e Detalhes
+                    👁️ Ver Agenda e Detalhes
                 </button>            
                 <button onclick="window.fecharModal(); window.abrirCadastro(${i})" 
                         style="background:var(--primary); padding: 12px; font-size: 1rem; font-weight:bold; border-radius:8px;">
                     📝 Editar Cadastro
                 </button>            
                 <button onclick="window.fecharModal(); window.excluirPrestador(${i})" 
-                        style="background: #ffb5ad; color: var(--cobli-red); border: none; padding: 12px; font-size: 1rem; font-weight: bold; cursor: pointer;">
-                    🚮 Excluir Prestador
+                        style="background: transparent; color: var(--cobli-red); border: none; padding: 12px; font-size: 1rem; font-weight: bold; cursor: pointer;">
+                    ❌ Excluir Prestador
                 </button>         
                 <button onclick="window.fecharModal()" 
                         style="background:#9ca3af; padding: 12px; font-size: 1rem; font-weight:bold; border-radius:8px;">
