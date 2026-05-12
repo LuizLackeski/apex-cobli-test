@@ -1312,7 +1312,7 @@
                         <div style="flex: 0.8;"><label class="req">Qtd Técnicos</label><input id="qtdTecnicos" type="number" required min="1"></div>
                         <div style="flex: 0.8;"><label class="req">Raio (Km)</label><input id="rangeAtendimento" type="number" required></div>
                         <div style="flex: 1.5;"><label class="req" title="Obrigatório para integração Field">ID Field Control</label><input id="fieldIdField" placeholder="Chave Única Field" required></div>
-                        <div style="flex: 1.5;"><label class="req" title="Obrigatório para login no portal">E-mail (@apex.co)</label><input type="email" id="usuarioApex" placeholder="prestador@apex.co" required onblur="this.value = this.value.toLowerCase().trim()"></div>
+                        <div style="flex: 1.5;"><label class="req" title="Obrigatório para login no portal. Separe múltiplos e-mails com ponto-e-vírgula ( ; )">E-mail(s) @apex.co</label><input type="text" id="usuarioApex" placeholder="tecnico1@apex.co; tecnico2@apex.co" required onblur="this.value = this.value.toLowerCase().replace(/\s/g,'')"></div>
                         <div style="flex: 1;"><label>Ambiente</label>
                             <select id="statusPrestador">
                                 <option value="PRODUCAO">Produção</option>
@@ -1369,9 +1369,9 @@
                 <div class="status-bar" style="display: flex; align-items: center;">
                     <div style="display: flex; flex: 1; min-width: 650px;">
                         <div class="status-bar-item"><div class="sb-label">Solicitado</div><div class="sb-value" id="st-solicitado">0</div></div>
-                        <div class="status-bar-item"><div class="sb-label">Negociação</div><div class="sb-value" id="st-negociacao">0</div></div>
+                        <div class="status-bar-item"><div class="sb-label">Em Negociação</div><div class="sb-value" id="st-negociacao">0</div></div>
                         <div class="status-bar-item"><div class="sb-label">Agendado</div><div class="sb-value" id="st-agendado">0</div></div>
-                        <div class="status-bar-item"><div class="sb-label">Andamento</div><div class="sb-value" id="st-andamento">0</div></div>
+                        <div class="status-bar-item"><div class="sb-label">Em Andamento</div><div class="sb-value" id="st-andamento">0</div></div>
                         <div class="status-bar-item"><div class="sb-label">Impedido</div><div class="sb-value red" id="st-impedido">0</div></div>
                         <div class="status-bar-item"><div class="sb-label">Concluído</div><div class="sb-value green" id="st-concluido">0</div></div>
                         <div class="status-bar-item"><div class="sb-label">Cancelado</div><div class="sb-value gray" id="st-cancelado">0</div></div>
@@ -1388,10 +1388,17 @@
                 
                 <div class="campo-filtro" id="filtro-box-prestador">
                     <label>Prestador</label>
-                    <details id="dropdown-prestador" onmouseleave="this.removeAttribute('open')" style="background: white; border: 1.5px solid var(--border); border-radius: var(--radius-sm); cursor: pointer; position: relative; width: 100%;">
-                        <summary style="padding: 8px 10px; font-size: 0.8rem; list-style: none; color: var(--muted);">👷 Selecionar...</summary>
-                        <div id="container-prestadores" style="position: absolute; top: 100%; left: 0; background: white; border: 1px solid var(--border); border-radius: var(--radius-sm); box-shadow: var(--shadow-md); padding: 10px; z-index: 1000; display: flex; flex-direction: column; gap: 8px; min-width: 180px; max-height: 200px; overflow-y: auto;"></div>
-                    </details>
+                    <div style="position: relative;">
+                        <button type="button" id="btn-dropdown-prestador" onclick="window.toggleDropdownPrestador()" style="width:100%; height:38px; background:white; border:1.5px solid var(--border); border-radius:var(--radius-sm); padding:0 10px; font-size:0.8rem; color:var(--muted); cursor:pointer; display:flex; align-items:center; justify-content:space-between; font-family:var(--font-main); min-height:auto; font-weight:600;">
+                            <span id="label-prestador-filtro">👷 Selecionar...</span><span>▾</span>
+                        </button>
+                        <div id="dropdown-prestador-panel" style="display:none; position:absolute; top:calc(100% + 4px); left:0; background:white; border:1px solid var(--border); border-radius:var(--radius-sm); box-shadow:var(--shadow-md); padding:10px; z-index:2000; min-width:200px; max-height:220px; overflow-y:auto; flex-direction:column; gap:6px;">
+                            <div id="container-prestadores" style="display:flex; flex-direction:column; gap:6px;"></div>
+                            <div style="border-top:1px solid var(--border); margin-top:6px; padding-top:6px;">
+                                <button type="button" onclick="window.limparFiltroPrestador()" style="width:100%; background:var(--muted); color:white; padding:5px 8px; border-radius:4px; font-size:0.7rem; font-weight:700; border:none; cursor:pointer; min-height:auto;">Limpar Seleção</button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 
                 <div class="campo-filtro">
@@ -1419,6 +1426,7 @@
             </div>
             
             <div id="indicador-filtro" style="display: none; text-align: center; color: var(--cobli-red); font-size: 0.72rem; font-weight: 700; margin-top: -8px; margin-bottom: 14px; letter-spacing: 1px;">⚠️ FILTROS ATIVOS — CLIQUE EM LIMPAR PARA VER TODOS</div>
+            <div id="painel-detalhe-tecnicos" style="display:none;"></div>
             <div id="painel-conteudo" style="max-height: 520px; overflow-y: auto;"></div>
         </div>
 
@@ -1437,13 +1445,19 @@
             </div>
             
             <div style="display: flex; gap: 16px; margin-bottom: 20px; flex-wrap: wrap;">
-                <div class="card" id="card-ocupacao-diaria" style="flex: 1; min-width: 300px; margin-bottom: 0; max-height: 360px; display: flex; flex-direction: column;">
+                <div class="card" id="card-ocupacao-diaria" style="flex: 1; min-width: 300px; margin-bottom: 0; max-height: 400px; display: flex; flex-direction: column;">
                     <h2 style="flex-shrink: 0;">Ocupação da Agenda (15 Dias)</h2>
                     <div id="ocupacao-filtros-prestador" style="display:flex; gap:5px; overflow-x:auto; margin-bottom:10px; padding-bottom:5px;"></div>
                     <div id="ocupacao-lista" style="display: flex; flex-direction: column; gap: 6px; overflow-y: auto; padding-right: 5px; flex-grow: 1;"></div>
                 </div>
 
-                <div class="card" style="flex: 1; min-width: 300px; margin-bottom: 0; max-height: 360px; display: flex; flex-direction: column;">
+                <div class="card" id="card-ocupacao-tecnicos" style="flex: 1; min-width: 300px; margin-bottom: 0; max-height: 400px; display: none; flex-direction: column;">
+                    <h2 style="flex-shrink: 0;" id="titulo-ocupacao-tecnicos">Por Técnico (15 Dias)</h2>
+                    <div id="tabs-ocupacao-tecnicos" style="display:flex; gap:5px; margin-bottom:10px; overflow-x:auto;"></div>
+                    <div id="ocupacao-tecnicos-lista" style="display: flex; flex-direction: column; gap: 6px; overflow-y: auto; padding-right: 5px; flex-grow: 1;"></div>
+                </div>
+
+                <div class="card" style="flex: 1; min-width: 300px; margin-bottom: 0; max-height: 400px; display: flex; flex-direction: column;">
                     <h2 style="flex-shrink: 0;">Tipos de Serviços/Manutenção</h2>
                     <div id="lista-dashboard-servicos" style="display: flex; flex-direction: column; gap: 6px; overflow-y: auto; padding-right: 5px; flex-grow: 1;"></div>
                 </div>
@@ -1656,9 +1670,14 @@ function getIntervaloResumo(periodo) {
 
 function filtrarAgendamentosPeriodo(ini, fim) {
     return agendamentos.filter(a => {
-        if (!a.data) return false;
-        let [d, m, y] = a.data.split('/');
-        let dt = new Date(y, m - 1, d);
+        // Usa created_at (data de solicitação) como referência
+        let dt;
+        if (a.created_at) {
+            dt = new Date(a.created_at);
+        } else if (a.data) {
+            let [d, m, y] = a.data.split('/');
+            dt = new Date(y, m - 1, d);
+        } else { return false; }
         return dt >= ini && dt <= fim;
     });
 }
@@ -1677,13 +1696,15 @@ window.atualizarPreviewResumo = function() {
     
     let fmtDate = (d) => d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
     
-    // Contagens
+    // Contagens de todos os status
     let total = lista.length;
     let concluidos = lista.filter(a => String(a.status||'').toLowerCase().match(/conclu|completed|finalizado/)).length;
     let agendados = lista.filter(a => String(a.status||'').toLowerCase().match(/agendado|scheduled/)).length;
     let impedidos = lista.filter(a => String(a.status||'').toLowerCase().match(/impedido|reportado|falha/)).length;
     let cancelados = lista.filter(a => String(a.status||'').toLowerCase().match(/cancelado|canceled/)).length;
     let andamento = lista.filter(a => String(a.status||'').toLowerCase().match(/andamento|progress|deslocamento/)).length;
+    let negociacao = lista.filter(a => String(a.status||'').toLowerCase().match(/negocia|aguardando/)).length;
+    let solicitado = lista.filter(a => { let s = String(a.status||'').toLowerCase(); return !s.match(/conclu|completed|finalizado|agendado|scheduled|impedido|reportado|falha|cancelado|canceled|andamento|progress|deslocamento|negocia|aguardando/); }).length;
     
     // Por prestador
     let distPrest = {};
@@ -1702,15 +1723,21 @@ window.atualizarPreviewResumo = function() {
         'personalizado': 'Período Personalizado'
     }[window.periodoResumoAtual] || 'Período';
     
+    // Montar lista de status — apenas os que têm valor > 0
+    let statusLines = [];
+    if (solicitado > 0)  statusLines.push(`  • 📋 Solicitados: ${solicitado}`);
+    if (negociacao > 0)  statusLines.push(`  • 🤝 Em Negociação: ${negociacao}`);
+    if (agendados > 0)   statusLines.push(`  • 📅 Agendados: ${agendados}`);
+    if (andamento > 0)   statusLines.push(`  • ⚡ Em Andamento: ${andamento}`);
+    if (concluidos > 0)  statusLines.push(`  • ✅ Concluídos: ${concluidos}`);
+    if (impedidos > 0)   statusLines.push(`  • 🛑 Impedidos: ${impedidos}`);
+    if (cancelados > 0)  statusLines.push(`  • ❌ Cancelados: ${cancelados}`);
+    
     let texto = `📊 *Resumo APEX | Cobli — ${periodoLabel}*\n` +
         `📅 ${fmtDate(ini)} → ${fmtDate(fim)}\n\n` +
         `*Visão Geral:*\n` +
-        `  • Total de agendamentos: ${total}\n` +
-        `  • ✅ Concluídos: ${concluidos}\n` +
-        `  • 📅 Agendados: ${agendados}\n` +
-        `  • ⚡ Em andamento: ${andamento}\n` +
-        `  • 🛑 Impedidos: ${impedidos}\n` +
-        `  • ❌ Cancelados: ${cancelados}\n\n` +
+        `  • Total de solicitações: ${total}\n` +
+        (statusLines.length > 0 ? statusLines.join('\n') + '\n' : '') + '\n' +
         (prestStr ? `*Por Prestador:*\n${prestStr}\n\n` : '') +
         (cidadeStr ? `*Principais Cidades:*\n${cidadeStr}\n\n` : '') +
         `_Enviado via APEX · Cobli_`;
@@ -1932,7 +1959,11 @@ window.carregarDadosDoBanco = async function() {
         const dataAgend = await resA.json(); agendamentos = Array.isArray(dataAgend) ? dataAgend : [];
         if (userRole === 'PRESTADOR' && currentUser) {
             let emailLogado = currentUser.email.toLowerCase();
-            window.meuPrestadorLogado = prestadores.find(p => p.usuario_apex && p.usuario_apex.toLowerCase() === emailLogado);
+            window.meuPrestadorLogado = prestadores.find(p => {
+                if (!p.usuario_apex) return false;
+                let emails = p.usuario_apex.toLowerCase().split(';').map(e => e.trim()).filter(Boolean);
+                return emails.includes(emailLogado);
+            });
             if(window.meuPrestadorLogado) window.renderizarMinhaDisponibilidade();
         }
         window.renderPainel(); 
@@ -2573,7 +2604,8 @@ window.salvarPrestador = async function(btn) {
                 if (nome && nome.trim()) nomesTecnicos[t] = nome.trim();
             }
         }
-        let p = { nome: document.getElementById("nomeEmpresa").value, endereco: document.getElementById("endereco").value, cidade: document.getElementById("cidade").value, uf: document.getElementById("uf").value, cep: document.getElementById("cep").value, responsavel: document.getElementById("responsavel").value, contato: document.getElementById("contatoResponsavel").value, usuario_apex: document.getElementById("usuarioApex").value.toLowerCase().trim(), qtdtecnicos: maxT, range: document.getElementById("rangeAtendimento").value, field_id: document.getElementById("fieldIdField").value, status_prestador: document.getElementById("statusPrestador").value, agenda: agenda, nomes_tecnicos: nomesTecnicos }; 
+        let usuarioApexRaw = document.getElementById("usuarioApex").value.toLowerCase().replace(/\s/g, '');
+        let p = { nome: document.getElementById("nomeEmpresa").value, endereco: document.getElementById("endereco").value, cidade: document.getElementById("cidade").value, uf: document.getElementById("uf").value, cep: document.getElementById("cep").value, responsavel: document.getElementById("responsavel").value, contato: document.getElementById("contatoResponsavel").value, usuario_apex: usuarioApexRaw, qtdtecnicos: maxT, range: document.getElementById("rangeAtendimento").value, field_id: document.getElementById("fieldIdField").value, status_prestador: document.getElementById("statusPrestador").value, agenda: agenda, nomes_tecnicos: nomesTecnicos }; 
         const url = (editingIndex !== -1) ? `${API_URL}/prestadores/${prestadores[editingIndex].id}` : `${API_URL}/prestadores`; 
         await fetch(url, { method: (editingIndex !== -1) ? 'PUT' : 'POST', headers: getHeaders(), body: JSON.stringify(p) }); 
         editingIndex = -1; await window.carregarDadosDoBanco(); 
@@ -2687,6 +2719,85 @@ window.renderOcupacaoDiaria = function(prestadorNome) {
             <div style="font-size: 0.82rem; font-weight: 800; color: ${colorPill}; background: ${bgPill}; padding: 4px 10px; border-radius: 5px; min-width:42px; text-align:center; font-family:var(--font-mono);">${o.pct}%</div>
         </div>`;
     }).join('');
+
+    // Card por técnico — apenas para PRESTADOR com +1 técnico
+    let cardTec = document.getElementById('card-ocupacao-tecnicos');
+    if (userRole === 'PRESTADOR' && window.meuPrestadorLogado) {
+        let pObj = window.meuPrestadorLogado;
+        let qtd = parseInt(pObj.qtdtecnicos) || 1;
+        if (qtd > 1 && cardTec) {
+            cardTec.style.display = 'flex';
+            let tituloEl = document.getElementById('titulo-ocupacao-tecnicos');
+            if (tituloEl) tituloEl.textContent = 'Por Técnico (15 Dias)';
+            // Tabs por técnico
+            let tabsEl = document.getElementById('tabs-ocupacao-tecnicos');
+            if (tabsEl) {
+                tabsEl.innerHTML = '';
+                for (let t = 1; t <= qtd; t++) {
+                    let nome = window.getNomeTecnico(pObj, t);
+                    tabsEl.innerHTML += `<button onclick="window.renderOcupacaoPorTecnico(${t})" id="tab-tec-ocup-${t}" style="padding:4px 10px; font-size:0.72rem; border-radius:14px; border:1px solid var(--border); background:${t===1?'var(--primary)':'white'}; color:${t===1?'white':'var(--muted)'}; white-space:nowrap; cursor:pointer; font-family:var(--font-main); min-height:auto; font-weight:700;">${nome}</button>`;
+                }
+            }
+            window.renderOcupacaoPorTecnico(1);
+        } else if (cardTec) { cardTec.style.display = 'none'; }
+    } else if (cardTec) { cardTec.style.display = 'none'; }
+};
+
+window.renderOcupacaoPorTecnico = function(tecId) {
+    let pObj = window.meuPrestadorLogado; if (!pObj) return;
+    let qtd = parseInt(pObj.qtdtecnicos) || 1;
+    let hoje = new Date(); const diasSemana = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sab"];
+    let resultado = [];
+    for (let i = 0; i < 15; i++) {
+        let d = new Date(); d.setDate(hoje.getDate() + i); let dStr = d.toLocaleDateString('pt-BR'); let dNome = diasSemana[d.getDay()];
+        // Horas do técnico nesse dia
+        let tem_tec = pObj.agenda && pObj.agenda.some(a => a.tecnico);
+        let worksHours = tem_tec
+            ? (pObj.agenda ? pObj.agenda.filter(a => a.dia === dNome && a.tecnico == tecId && !a.isAbsence).map(a => parseInt(a.hora)) : [])
+            : (pObj.agenda ? pObj.agenda.filter(a => a.dia === dNome && !a.isAbsence).map(a => parseInt(a.hora)) : []);
+        if (worksHours.length === 0) continue;
+        // Ausências do técnico
+        let ausencias = pObj.agenda ? pObj.agenda.filter(a => a.isAbsence && a.data === dStr) : [];
+        let bloqueadas = new Set();
+        ausencias.forEach(a => {
+            let start = a.tipo === 'total' ? 0 : parseInt(a.inicio);
+            let end = a.tipo === 'total' ? 24 : parseInt(a.fim);
+            if (a.tecnico == tecId || a.tecnico === 'Todos' || !a.tecnico) { for (let h = start; h < end; h++) bloqueadas.add(h); }
+        });
+        let available = worksHours.filter(h => !bloqueadas.has(h));
+        if (available.length === 0) continue;
+        // Slots ocupados (total do prestador dividido igualmente por técnico como heurística)
+        let totalOcupadoGeral = 0;
+        agendamentos.filter(a => a.prestador === pObj.nome && (a.data === dStr || a.rawdate === dStr) && !String(a.status).toLowerCase().includes('cancelado')).forEach(a => { let s = Array.isArray(a.slots) ? a.slots : (typeof a.slots === 'string' ? a.slots.split(', ') : []); totalOcupadoGeral += s.length; });
+        // Heurística: ocupação proporcional à capacidade do técnico
+        let totalCap = 0;
+        for (let t2 = 1; t2 <= qtd; t2++) {
+            let hw = tem_tec ? (pObj.agenda ? pObj.agenda.filter(a => a.dia === dNome && a.tecnico == t2 && !a.isAbsence).map(a => parseInt(a.hora)) : []) : worksHours;
+            totalCap += hw.length;
+        }
+        let proporcao = totalCap > 0 ? available.length / totalCap : 0;
+        let ocupadas = Math.round(totalOcupadoGeral * proporcao);
+        let livres = Math.max(0, available.length - ocupadas);
+        let pct = available.length > 0 ? Math.round((ocupadas / available.length) * 100) : 0;
+        resultado.push({ data: dStr, dia: dNome, livres, ocupadas, total: available.length, pct });
+    }
+    // Atualizar tabs visuais
+    for (let t = 1; t <= qtd; t++) {
+        let btn = document.getElementById(`tab-tec-ocup-${t}`);
+        if (btn) { btn.style.background = t === tecId ? 'var(--primary)' : 'white'; btn.style.color = t === tecId ? 'white' : 'var(--muted)'; }
+    }
+    let lista = document.getElementById('ocupacao-tecnicos-lista');
+    if (!lista) return;
+    if (resultado.length === 0) { lista.innerHTML = `<div style="font-size:0.82rem; color:var(--muted); padding:10px;">Sem agenda para este técnico.</div>`; return; }
+    lista.innerHTML = resultado.map(o => {
+        let bgPill = '#e8ecff'; let colorPill = 'var(--primary)';
+        if (o.pct >= 80) { bgPill = '#fee2e2'; colorPill = 'var(--cobli-red)'; } else if (o.pct >= 50) { bgPill = '#fef3c7'; colorPill = '#d97706'; }
+        return `<div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg); padding: 10px 12px; border-radius: var(--radius-sm); border: 1px solid var(--border);">
+            <div style="font-size: 0.78rem; font-weight: 700; color: var(--cobli-dark); width: 85px; font-family:var(--font-mono);">${o.data.substring(0,5)} <span style="color:var(--muted); font-weight:400;">(${o.dia})</span></div>
+            <div style="font-size: 0.72rem; color: var(--muted); flex:1; text-align:center;"><span style="color:var(--cobli-green); font-weight:700;">${o.livres}h livres</span> <span style="opacity:0.4;">|</span> <span style="color:var(--cobli-red); font-weight:700;">${o.ocupadas}h ocup.</span></div>
+            <div style="font-size: 0.82rem; font-weight: 800; color: ${colorPill}; background: ${bgPill}; padding: 4px 10px; border-radius: 5px; min-width:42px; text-align:center; font-family:var(--font-mono);">${o.pct}%</div>
+        </div>`;
+    }).join('');
 };
 
 // ==========================================
@@ -2747,7 +2858,14 @@ window.renderPainel = function(){
     let temFiltroAtivo = fInicio || fFim || fTicket || fSol || statusMarcados.length > 0 || prestadoresMarcados.length > 0;
     let indicador = document.getElementById('indicador-filtro'); if(indicador) indicador.style.display = temFiltroAtivo ? 'block' : 'none';
     let prestadorVinculado = null;
-    if(userRole === 'PRESTADOR' && currentUser) { let emailLogado = currentUser.email.toLowerCase(); prestadorVinculado = prestadores.find(p => p.usuario_apex && p.usuario_apex.toLowerCase() === emailLogado); }
+    if(userRole === 'PRESTADOR' && currentUser) { 
+        let emailLogado = currentUser.email.toLowerCase(); 
+        prestadorVinculado = prestadores.find(p => {
+            if (!p.usuario_apex) return false;
+            let emails = p.usuario_apex.toLowerCase().split(';').map(e => e.trim()).filter(Boolean);
+            return emails.includes(emailLogado);
+        });
+    }
     filtradosPainel = agendamentos.filter(a => { 
         if(!a.data || !a.ticket) return false;
         if(userRole === 'PRESTADOR') { if (!prestadorVinculado || a.prestador !== prestadorVinculado.nome) return false; }
@@ -2791,7 +2909,41 @@ window.renderPainel = function(){
                 <div style="margin-top: 5px; font-size: 0.68rem; color: var(--muted); border-top: 1px dashed var(--border); padding-top: 5px; letter-spacing: 0.3px;">Registrado: ${dataRegistro} &nbsp;|&nbsp; Por: ${a.solicitante}</div>
             </div>
         </div>`;
-    }).join(''); 
+    }).join('');
+
+    // Detalhe por técnico (quando apenas 1 prestador está selecionado)
+    let painelTecBox = document.getElementById('painel-detalhe-tecnicos');
+    let prestadoresMarcadosAgora = Array.from(document.querySelectorAll('.cb-prestador:checked')).map(cb => cb.value);
+    if (painelTecBox) {
+        if (prestadoresMarcadosAgora.length === 1) {
+            let nomePrest = prestadoresMarcadosAgora[0];
+            let pObj = prestadores.find(p => p.nome === nomePrest);
+            let qtd = pObj ? (parseInt(pObj.qtdtecnicos) || 1) : 1;
+            if (pObj && qtd > 1) {
+                // Contagem por técnico via ocupação de slots
+                let contagemTec = {};
+                for (let t = 1; t <= qtd; t++) contagemTec[t] = 0;
+                // Distribuição heurística: jobs são alocados sequencialmente por técnico disponível
+                let agendsPrest = filtradosPainel.filter(a => a.prestador === nomePrest);
+                // Por simplificação: mostrar total de agendamentos e slots consumidos por dia/técnico via calcularOcupacao por técnico
+                let rows = '';
+                for (let t = 1; t <= qtd; t++) {
+                    let nomeTec = window.getNomeTecnico(pObj, t);
+                    // Slots disponíveis do técnico (capacidade base)
+                    let slotsTec = pObj.agenda ? pObj.agenda.filter(a => !a.isAbsence && a.tecnico == t).length : 0;
+                    rows += `<div style="display:flex; justify-content:space-between; align-items:center; background:var(--bg); padding:9px 12px; border-radius:var(--radius-sm); border:1px solid var(--border);">
+                        <div style="font-size:0.8rem; font-weight:700; color:var(--cobli-dark);">👷 ${nomeTec}</div>
+                        <div style="font-size:0.72rem; color:var(--muted);">${slotsTec} slots/semana de capacidade</div>
+                    </div>`;
+                }
+                painelTecBox.innerHTML = `<div class="card" style="margin-bottom:12px; padding:16px;">
+                    <h2 style="margin-bottom:10px;">👥 Equipe — ${nomePrest}</h2>
+                    <div style="display:flex; flex-direction:column; gap:6px;">${rows}</div>
+                </div>`;
+                painelTecBox.style.display = 'block';
+            } else { painelTecBox.style.display = 'none'; painelTecBox.innerHTML = ''; }
+        } else { painelTecBox.style.display = 'none'; painelTecBox.innerHTML = ''; }
+    }
 };
 
 window.sincronizarStatusModal = async function(ticket, btn, index) {
@@ -2819,15 +2971,59 @@ window.processarAtualizarTodosStatus = async function() {
 window.limparFiltros = function(){ 
     ["filtroDataInicio","filtroDataFim","filtroTicket","filtroSolicitante"].forEach(id => document.getElementById(id).value = "");
     document.querySelectorAll('.cb-status').forEach(cb => cb.checked = false); document.querySelectorAll('.cb-prestador').forEach(cb => cb.checked = false);
-    ['dropdown-status','dropdown-prestador'].forEach(id => { let el = document.getElementById(id); if(el) el.removeAttribute('open'); });
+    ['dropdown-status'].forEach(id => { let el = document.getElementById(id); if(el) el.removeAttribute('open'); });
+    window.fecharDropdownPrestador();
+    window.atualizarLabelPrestadorFiltro();
     window.renderPainel(); 
+};
+
+window.toggleDropdownPrestador = function() {
+    let panel = document.getElementById('dropdown-prestador-panel');
+    if (!panel) return;
+    let isOpen = panel.style.display === 'flex';
+    panel.style.display = isOpen ? 'none' : 'flex';
+    panel.style.flexDirection = 'column';
+    if (!isOpen) {
+        // Fechar ao clicar fora
+        setTimeout(() => {
+            document.addEventListener('click', window._fecharDropdownPrestadorOutside = function(e) {
+                if (!document.getElementById('dropdown-prestador-panel').contains(e.target) && e.target.id !== 'btn-dropdown-prestador') {
+                    window.fecharDropdownPrestador();
+                }
+            }, { once: false });
+        }, 10);
+    } else {
+        document.removeEventListener('click', window._fecharDropdownPrestadorOutside);
+    }
+};
+
+window.fecharDropdownPrestador = function() {
+    let panel = document.getElementById('dropdown-prestador-panel');
+    if (panel) panel.style.display = 'none';
+    document.removeEventListener('click', window._fecharDropdownPrestadorOutside);
+};
+
+window.limparFiltroPrestador = function() {
+    document.querySelectorAll('.cb-prestador').forEach(cb => cb.checked = false);
+    window.atualizarLabelPrestadorFiltro();
+};
+
+window.atualizarLabelPrestadorFiltro = function() {
+    let marcados = Array.from(document.querySelectorAll('.cb-prestador:checked')).map(cb => cb.value);
+    let label = document.getElementById('label-prestador-filtro');
+    if (!label) return;
+    if (marcados.length === 0) label.textContent = '👷 Selecionar...';
+    else if (marcados.length === 1) label.textContent = '👷 ' + marcados[0];
+    else label.textContent = `👷 ${marcados.length} selecionados`;
 };
 
 window.atualizarFiltrosPrestador = function(){ 
     let container = document.getElementById("container-prestadores"); if(!container) return;
     let providersWithAgend = [...new Set(agendamentos.map(a => a.prestador).filter(Boolean))].sort();
     container.innerHTML = ''; 
-    providersWithAgend.forEach(p => { container.innerHTML += `<label style="display:flex; align-items:center; gap:8px; margin:0; cursor:pointer; font-size: 0.72rem; font-weight: 700; color: var(--text); white-space: nowrap; text-transform: uppercase; letter-spacing:0.3px;"><input type="checkbox" value="${p}" class="cb-prestador" style="width: auto; margin: 0; padding: 0;"> ${p}</label>`; });
+    providersWithAgend.forEach(p => { 
+        container.innerHTML += `<label style="display:flex; align-items:center; gap:8px; margin:0; cursor:pointer; font-size: 0.75rem; font-weight: 700; color: var(--text); white-space: nowrap; text-transform: uppercase; letter-spacing:0.3px; padding: 3px 0;"><input type="checkbox" value="${p}" class="cb-prestador" onchange="window.atualizarLabelPrestadorFiltro()" style="width: auto; margin: 0; padding: 0;"> ${p}</label>`; 
+    });
 };
 
 // ==========================================
