@@ -2844,19 +2844,16 @@ window.renderOcupacaoDiaria = function(prestadorNome, tecnicoId) {
 };
 
 window.toggleTecOcupacao = function(tecId, prestadorNome) {
-    // Verifica se já está selecionado — se sim, deseleciona (volta para todos)
     let btn = document.getElementById(`btn-ocup-tec-${tecId}`);
-    let jaAtivo = btn && btn.style.background.includes('var(--primary)') || (btn && btn.style.background === 'var(--primary)');
-    // Checa pelo dataset
     let atualAtivo = btn && btn.dataset.ativo === '1';
     if (atualAtivo) {
-        // Deseleciona → mostra todos
         window.renderOcupacaoDiaria(prestadorNome, null);
     } else {
-        // Seleciona este técnico
         window.renderOcupacaoDiaria(prestadorNome, tecId);
     }
 };
+
+window.renderOcupacaoPorTecnico = function(tecId) {
     let pObj = window.meuPrestadorLogado; if (!pObj) return;
     let qtd = parseInt(pObj.qtdtecnicos) || 1;
     let hoje = new Date(); const diasSemana = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sab"];
