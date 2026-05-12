@@ -2831,6 +2831,7 @@ window.renderOcupacaoDiaria = function(prestadorNome, tecnicoId) {
             if(wH.length===0)continue;
             let bl=new Set();(pO.agenda?pO.agenda.filter(a=>a.isAbsence&&a.data===dStr):[]).forEach(a=>{let s=a.tipo==='total'?0:parseInt(a.inicio);let e=a.tipo==='total'?24:parseInt(a.fim);if(a.tecnico==tecnicoId||a.tecnico==='Todos'||!a.tecnico)for(let h=s;h<e;h++)bl.add(h);});
             let avail=wH.filter(h=>!bl.has(h));if(avail.length===0)continue;
+            let totCap=0;for(let t2=1;t2<=qtd;t2++){let hw=tem_tec?(pO.agenda?pO.agenda.filter(a=>a.dia===dNome&&a.tecnico==t2&&!a.isAbsence).map(a=>parseInt(a.hora)):[]):wH;totCap+=hw.length;}
             let totOcup = 0;
             agendamentos.filter(a => a.prestador === pO.nome && (a.data === dStr || a.rawdate === dStr) && !String(a.status).toLowerCase().includes('cancelado')).forEach(a => {
                 let s = Array.isArray(a.slots)?a.slots:(typeof a.slots==='string'?a.slots.split(', '):[]);
@@ -2841,7 +2842,6 @@ window.renderOcupacaoDiaria = function(prestadorNome, tecnicoId) {
                     totOcup += Math.round(s.length * prop);
                 }
             });
-            let totCap=0;for(let t2=1;t2<=qtd;t2++){let hw=tem_tec?(pO.agenda?pO.agenda.filter(a=>a.dia===dNome&&a.tecnico==t2&&!a.isAbsence).map(a=>parseInt(a.hora)):[]):wH;totCap+=hw.length;}
             let prop=totCap>0?avail.length/totCap:0;let ocup=Math.round(totOcup*prop);let livres=Math.max(0,avail.length-ocup);let pct=avail.length>0?Math.round((ocup/avail.length)*100):0;
             resultado.push({data:dStr,dia:dNome,livres,ocupadas:ocup,total:avail.length,pct});
         }
