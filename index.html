@@ -1447,7 +1447,7 @@
             <div style="display: flex; gap: 16px; margin-bottom: 20px; flex-wrap: wrap;">
                 <div class="card" id="card-ocupacao-diaria" style="flex: 1; min-width: 300px; margin-bottom: 0; max-height: 400px; display: flex; flex-direction: column;">
                     <h2 style="flex-shrink: 0;">Ocupação da Agenda (15 Dias)</h2>
-                    <div id="ocupacao-filtros-prestador" style="display:flex; gap:5px; overflow-x:auto; margin-bottom:10px; padding-bottom:5px;"></div>
+                    <div id="ocupacao-filtros-prestador" style="margin-bottom:10px;"></div>
                     <div id="ocupacao-lista" style="display: flex; flex-direction: column; gap: 6px; overflow-y: auto; padding-right: 5px; flex-grow: 1;"></div>
                 </div>
 
@@ -2197,6 +2197,20 @@ window.renderizarAgendaPaginada = function() {
     if (window.agendaDiasDisponiveis.length === 0) { container.innerHTML = `<div style="color:var(--cobli-red); font-size:0.85rem; font-weight:700; padding: 12px; background: #fff5f5; border-radius: var(--radius-sm); border: 1px solid #fecaca;">⚠️ Sem horários disponíveis com as horas necessárias seguidas.</div>`; return; }
     let startIndex = window.agendaPaginaAtual * 5; let endIndex = startIndex + 5;
     let diasPagina = window.agendaDiasDisponiveis.slice(startIndex, endIndex);
+    let totalPags = Math.ceil(window.agendaDiasDisponiveis.length / 5);
+    let pagAtual = window.agendaPaginaAtual + 1;
+
+    // Paginação no TOPO
+    let paginacaoTopo = document.createElement("div");
+    paginacaoTopo.style.cssText = "display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; background:var(--bg); padding:8px 12px; border-radius:var(--radius-sm); border:1px solid var(--border);";
+    paginacaoTopo.innerHTML = `<span style="font-size:0.72rem; color:var(--muted); font-weight:700; font-family:var(--font-mono);">Página ${pagAtual} de ${totalPags}</span>`;
+    let btnAntTopo = document.createElement("button"); btnAntTopo.innerText = "← Anteriores"; btnAntTopo.style.cssText = "background:#64748b; padding:5px 12px; border-radius:var(--radius-sm); min-height:auto; font-size:0.78rem;"; btnAntTopo.disabled = window.agendaPaginaAtual === 0; if(btnAntTopo.disabled) btnAntTopo.style.opacity = "0.35"; btnAntTopo.onclick = () => { window.agendaPaginaAtual--; window.renderizarAgendaPaginada(); };
+    let btnProxTopo = document.createElement("button"); btnProxTopo.innerText = "Próximos →"; btnProxTopo.style.cssText = "background:var(--primary); padding:5px 12px; border-radius:var(--radius-sm); min-height:auto; font-size:0.78rem;"; btnProxTopo.disabled = endIndex >= window.agendaDiasDisponiveis.length; if(btnProxTopo.disabled) btnProxTopo.style.opacity = "0.35"; btnProxTopo.onclick = () => { window.agendaPaginaAtual++; window.renderizarAgendaPaginada(); };
+    let btnsWrapper = document.createElement("div"); btnsWrapper.style.cssText = "display:flex; gap:8px;";
+    btnsWrapper.appendChild(btnAntTopo); btnsWrapper.appendChild(btnProxTopo);
+    paginacaoTopo.appendChild(btnsWrapper);
+    container.appendChild(paginacaoTopo);
+
     diasPagina.forEach(diaInfo => {
         let card = document.createElement("div"); card.className = "agenda-day-card"; card.innerHTML = `<div class="agenda-day-title">${diaInfo.dStr} (${diaInfo.dNome})</div>`; 
         let wrapper = document.createElement("div"); wrapper.className = "slots-wrapper"; 
@@ -2214,10 +2228,6 @@ window.renderizarAgendaPaginada = function() {
         }); 
         card.appendChild(wrapper); container.appendChild(card); 
     });
-    let paginacaoHtml = document.createElement("div"); paginacaoHtml.style.cssText = "display:flex; justify-content:space-between; margin-top:15px;";
-    let btnAnt = document.createElement("button"); btnAnt.innerText = "← Anteriores"; btnAnt.style.cssText = "background:#64748b; padding:8px 16px; border-radius:var(--radius-sm); min-height:auto;"; btnAnt.disabled = window.agendaPaginaAtual === 0; if(btnAnt.disabled) btnAnt.style.opacity = "0.4"; btnAnt.onclick = () => { window.agendaPaginaAtual--; window.renderizarAgendaPaginada(); };
-    let btnProx = document.createElement("button"); btnProx.innerText = "Próximos →"; btnProx.style.cssText = "background:var(--primary); padding:8px 16px; border-radius:var(--radius-sm); min-height:auto;"; btnProx.disabled = endIndex >= window.agendaDiasDisponiveis.length; if(btnProx.disabled) btnProx.style.opacity = "0.4"; btnProx.onclick = () => { window.agendaPaginaAtual++; window.renderizarAgendaPaginada(); };
-    paginacaoHtml.appendChild(btnAnt); paginacaoHtml.appendChild(btnProx); container.appendChild(paginacaoHtml);
 };
 
 window.validarEAvancar = function() { 
@@ -2700,8 +2710,13 @@ window.renderOcupacaoDiaria = function(prestadorNome) {
     let containerFiltros = document.getElementById('ocupacao-filtros-prestador'); let containerLista = document.getElementById('ocupacao-lista');
     if (!containerLista) return;
     if (userRole !== 'PRESTADOR') {
-        containerFiltros.style.display = 'flex';
-        containerFiltros.innerHTML = prestadores.map(p => { let isSelected = p.nome === prestadorNome; return `<button onclick="window.renderOcupacaoDiaria('${p.nome}')" style="padding:4px 10px; font-size:0.72rem; border-radius:14px; border:1px solid var(--border); background:${isSelected?'var(--primary)':'white'}; color:${isSelected?'white':'var(--muted)'}; white-space:nowrap; cursor:pointer; font-family:var(--font-main); min-height:auto; font-weight:700;">${p.nome}</button>`; }).join('');
+        containerFiltros.style.display = 'block';
+        let selectHtml = `<select onchange="window.renderOcupacaoDiaria(this.value)" style="width:100%; padding:7px 10px; font-size:0.8rem; border:1.5px solid var(--border); border-radius:var(--radius-sm); background:white; font-family:var(--font-main); font-weight:700; color:var(--text); cursor:pointer;">`;
+        prestadores.forEach(p => {
+            selectHtml += `<option value="${p.nome}" ${p.nome === prestadorNome ? 'selected' : ''}>${p.nome}</option>`;
+        });
+        selectHtml += `</select>`;
+        containerFiltros.innerHTML = selectHtml;
     } else {
         containerFiltros.style.display = 'none';
         if (window.meuPrestadorLogado) prestadorNome = window.meuPrestadorLogado.nome;
