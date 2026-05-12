@@ -593,7 +593,7 @@
                         <div style="flex: 1;"><label class="req">Telefone</label><input id="contatoResponsavel" required oninput="window.maskPhone(this)" placeholder="(00) 00000-0000"></div>
                     </div>
 
-                        <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                    <div style="display: flex; gap: 10px; margin-bottom: 15px;">
                         <div style="flex: 0.8;"><label class="req">Qtd Técnicos</label><input id="qtdTecnicos" type="number" required min="1" onchange="window.gerarCamposNomesTecnicos()"></div>
                         <div style="flex: 0.8;"><label class="req">Raio (Km)</label><input id="rangeAtendimento" type="number" required></div>
                         <div style="flex: 1.5;"><label class="req" title="Obrigatório para integração Field">ID Field Control</label><input id="fieldIdField" placeholder="Chave Única Field" required></div>
@@ -605,6 +605,7 @@
                             </select>
                         </div>
                     </div>
+               </div>
                     <div id="box-nomes-tecnicos" style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 15px;"></div>
                 </div>
         
@@ -831,7 +832,7 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-const EDGE_URL = `${SUPABASE_URL}/functions/v1/ntegracao-v2-interna`;
+const EDGE_URL = `${SUPABASE_URL}/functions/v1/integracao-field`;
 const API_URL = `${SUPABASE_URL}/functions/v1/smart-service`;
 const DB_URL = `${SUPABASE_URL}/rest/v1`;
 
@@ -1260,7 +1261,7 @@ window.getAusenciasDoDia = function(prestador, dStr) {
     return { total: false, horasBloqueadas: new Set() };
 };
 
-    window.getAlocacaoTecnico = function(p, d, ns, dn) {
+window.getAlocacaoTecnico = function(p, d, ns, dn) {
     let mt = parseInt(p.qtdtecnicos) || 1, jobs = [];
     agendamentos.filter(a => a.prestador && a.prestador.split(' | ')[0] === p.nome && (a.data === d || a.rawdate === d)).forEach(a => {
         let sa = Array.isArray(a.slots) ? a.slots : (typeof a.slots === 'string' ? a.slots.split(', ') : []);
@@ -1679,6 +1680,7 @@ window.revisarAgendamento = function() {
     if(!window.validarCampos('#step-4')) return window.showMessage("Campos obrigatórios.");
     const s = document.querySelectorAll("#agenda-agendamento .cell.selecionado"), ds = s.length > 0 ? s[0].dataset.date : 'N/A', sl = Array.from(s).map(c => c.dataset.hora).join(', ');
     const pr = prestadores[prestadorSelecionadoIndex];
+    
     let nt = "Técnico 1";
     if (ds !== 'N/A' && s.length > 0) {
         let parts = ds.split('/'), dObj = new Date(parts[2], parts[1] - 1, parts[0]), dn = ["Dom","Seg","Ter","Qua","Qui","Sex","Sab"][dObj.getDay()], si = Array.from(s).map(c => parseInt(c.dataset.hora.split(':')[0]));
@@ -1686,6 +1688,7 @@ window.revisarAgendamento = function() {
         nt = (pr.nomes_tecnicos && pr.nomes_tecnicos[tid-1]) ? pr.nomes_tecnicos[tid-1] : `Técnico ${tid}`;
     }
     const nomeExibicao = `${pr.nome} | ${nt}`;
+    
     const tk = document.getElementById('ticket').value, cl = document.getElementById('clienteNome').value, rh = document.getElementById('respAcompanhamento').value, tl = document.getElementById('telResponsavel').value;
     const r = document.getElementById('inputRua').value, n = document.getElementById('inputNumero').value, b = document.getElementById('inputBairro').value, c = document.getElementById('inputCidade').value, u = document.getElementById('inputUf').value, ob = document.getElementById('inputObs').value;
     let ph = itensSelecionados.map(i => `<div>• [${i.nomeManutencao.toUpperCase()}] ${i.desc} (Placa: ${i.placa})</div>`).join('');
@@ -1699,12 +1702,14 @@ window.concluirAgendamentoFinal = async function(btn) {
     const s = document.querySelectorAll("#agenda-agendamento .cell.selecionado"), slots = Array.from(s).map(c => c.dataset.hora.substring(0, 5)), dsel = s.length > 0 ? s[0].dataset.date : null, p = prestadores[prestadorSelecionadoIndex];
     const ds = (userRole === 'GESTOR') ? document.getElementById('slackSwitch').checked : true, df = (userRole === 'GESTOR') ? document.getElementById('fieldSwitch').checked : true, db = (userRole === 'GESTOR') ? document.getElementById('dbSwitch').checked : true;
     let io = [...itensSelecionados].sort((a, b) => b.tempo - a.tempo), ob = document.getElementById('inputObs').value.trim();
+    
     let nt = "Técnico 1";
     if (dsel && slots.length > 0) {
         let parts = dsel.split('/'), dObj = new Date(parts[2], parts[1] - 1, parts[0]), dn = ["Dom","Seg","Ter","Qua","Qui","Sex","Sab"][dObj.getDay()], si = slots.map(sl => parseInt(sl));
         let tid = window.getAlocacaoTecnico(p, dsel, si, dn);
         nt = (p.nomes_tecnicos && p.nomes_tecnicos[tid-1]) ? p.nomes_tecnicos[tid-1] : `Técnico ${tid}`;
     }
+
     const ag = {
         prestador: `${p.nome} | ${nt}`, qtdtecnicos: p.qtdtecnicos, ticket: document.getElementById('ticket').value, cliente: window.formatarCapitalize(document.getElementById('clienteNome').value),
         cnpj: document.getElementById('clienteCnpj').value, solicitante: document.getElementById('solicitante').value, data: dsel, rawdate: dsel, slots: slots,
@@ -1813,16 +1818,12 @@ window.abrirOpcoesPrestador = function(i) {
 };
 
 window.abrirDetalhesPrestador = function(index) { 
-    let p = prestadores[index]; 
-    let agendaHtml = '';  
-    let qtd = parseInt(p.qtdtecnicos) || 1;
-    let temTecnicos = p.agenda && p.agenda.some(a => a.tecnico);
-
-    if (temTecnicos || qtd > 1) {
-        agendaHtml += '<div style="display:flex; gap:5px; margin-bottom:15px; border-bottom:1px solid #cbd5e1; padding-bottom:10px; overflow-x:auto;">';
-        for (let t = 1; t <= qtd; t++) {
-            agendaHtml += `<button onclick="window.mudarAbaModalTecnico(${t}, ${qtd})" id="btn-mod-tec-${t}" style="padding:6px 12px; border:none; border-radius:4px; font-weight:bold; cursor:pointer; background:${t===1?'var(--primary)':'#cbd5e1'}; color:white; transition:0.2s;">Técnico ${t}</button>`;
-        }
+    let p = prestadores[index], ah = '', q = parseInt(p.qtdtecnicos) || 1;
+    ah += '<div style="display:flex; gap:5px; margin-bottom:10px; overflow-x:auto;">';
+    for (let t = 1; t <= q; t++) {
+        let nt = (p.nomes_tecnicos && p.nomes_tecnicos[t-1]) ? p.nomes_tecnicos[t-1] : `Téc ${t}`;
+        ah += `<button onclick="window.mudarAbaModalTecnico(${t}, ${q})" id="btn-mod-tec-${t}" style="padding:6px; background:${t===1?'var(--primary)':'#ccc'}; color:white;">${nt}</button>`;
+    }
         agendaHtml += '</div>';
 
         for (let t = 1; t <= qtd; t++) {
@@ -1898,7 +1899,7 @@ window.mudarAbaModalTecnico = function(tId, total) {
     }
 };
 
-    window.gerarCamposNomesTecnicos = function() {
+window.gerarCamposNomesTecnicos = function() {
     let q = parseInt(document.getElementById("qtdTecnicos").value) || 1, b = document.getElementById("box-nomes-tecnicos");
     b.innerHTML = '';
     for (let i = 1; i <= q; i++) {
@@ -1919,15 +1920,6 @@ window.renderTechTabs = function(q) {
         c.appendChild(btn); sb.innerHTML += `<option value="${i}">${nt}</option>`;
     }
 };
-    
-window.renderTechTabs = function(qtd) {
-    let container = document.getElementById("tabs-tecnicos");
-    container.innerHTML = "";
-    
-    let selectBloqueio = document.getElementById("tecnicoBloqueio");
-    if(selectBloqueio) {
-        selectBloqueio.innerHTML = '<option value="Todos">Todos (Empresa)</option>';
-    }
 
 window.saveCurrentTechGrid = function() {
     let selected = [...document.querySelectorAll('#agenda-cadastro .cell.selecionado')].map(c => `${c.dataset.dia}-${c.dataset.hora}`);
@@ -1950,27 +1942,78 @@ window.loadTechGrid = function(techId) {
     });
 };
 
-window.abrirCadastro = function(idx = -1){ 
-    if(userRole !== 'GESTOR') return window.showMessage("Acesso negado.");
-    editingIndex = idx; document.getElementById("lista-prestadores-view").style.display="none"; document.getElementById("cadastro-flow").style.display="block"; 
-    etapa = 1; document.getElementById("etapa-1").style.display="block"; document.getElementById("etapa-2").style.display="none"; 
-    window.criarGridCadastro("agenda-cadastro"); window.agendaCadastroObj = {}; window.currentTech = 1;
-    if(idx !== -1){ 
-        let p = prestadores[idx]; document.getElementById("nomeEmpresa").value = p.nome; document.getElementById("endereco").value = p.endereco; 
-        document.getElementById("cidade").value = p.cidade; document.getElementById("uf").value = p.uf; document.getElementById("cep").value = p.cep; 
-        document.getElementById("responsavel").value = p.responsavel; document.getElementById("contatoResponsavel").value = p.contato; 
-        document.getElementById("usuarioApex").value = p.usuario_apex || ""; document.getElementById("qtdTecnicos").value = p.qtdtecnicos;
-        document.getElementById("rangeAtendimento").value = p.range; document.getElementById("fieldIdField").value = p.field_id; 
+window.abrirCadastro = function(index = -1){ 
+    if(userRole !== 'GESTOR') return window.showMessage("Você não tem permissão para cadastrar/editar.");
+
+    editingIndex = index; 
+    document.getElementById("lista-prestadores-view").style.display="none"; 
+    document.getElementById("cadastro-flow").style.display="block"; 
+    etapa = 1; 
+    document.getElementById("etapa-1").style.display="block"; 
+    document.getElementById("etapa-2").style.display="none"; 
+    window.criarGridCadastro("agenda-cadastro"); 
+    
+    window.agendaCadastroObj = {};
+    window.currentTech = 1;
+
+    if(index !== -1){ 
+        let p = prestadores[index]; 
+        document.getElementById("nomeEmpresa").value = p.nome; 
+        document.getElementById("endereco").value = p.endereco; 
+        document.getElementById("cidade").value = p.cidade; 
+        document.getElementById("uf").value = p.uf; 
+        document.getElementById("cep").value = p.cep; 
+        document.getElementById("responsavel").value = p.responsavel; 
+        document.getElementById("contatoResponsavel").value = p.contato; 
+        document.getElementById("usuarioApex").value = p.usuario_apex || "";
+        document.getElementById("qtdTecnicos").value = p.qtdtecnicos;
+        document.getElementById("rangeAtendimento").value = p.range; 
+        document.getElementById("fieldIdField").value = p.field_id || ""; 
         document.getElementById("statusPrestador").value = p.status_prestador || "PRODUCAO";
         window.gerarCamposNomesTecnicos();
         let q = parseInt(p.qtdtecnicos) || 1; for(let i=1; i<=q; i++) window.agendaCadastroObj[i] = [];
+
         if(p.agenda) { 
-            p.agenda.forEach(it => { if(it.isAbsence) return; if(it.tecnico) { if(!window.agendaCadastroObj[it.tecnico]) window.agendaCadastroObj[it.tecnico]=[]; window.agendaCadastroObj[it.tecnico].push(`${it.dia}-${it.hora}`); } else for(let i=1; i<=q; i++) window.agendaCadastroObj[i].push(`${it.dia}-${it.hora}`); });
-            datasBloqueadasTemp = p.agenda.filter(a => a.isAbsence).map(a => ({ data: a.data, tipo: a.tipo, inicio: a.inicio, fim: a.fim, tecnico: a.tecnico || 'Todos' }));
+            p.agenda.forEach(item => {
+                if (item.isAbsence) return;
+                if (item.tecnico) {
+                    if (!window.agendaCadastroObj[item.tecnico]) window.agendaCadastroObj[item.tecnico] = [];
+                    window.agendaCadastroObj[item.tecnico].push(`${item.dia}-${item.hora}`);
+                } else {
+                    for(let i=1; i<=qtd; i++) window.agendaCadastroObj[i].push(`${item.dia}-${item.hora}`);
+                }
+            });
+            
+            let hoje = new Date();
+            hoje.setHours(0,0,0,0);
+            
+            datasBloqueadasTemp = p.agenda.filter(a => a.isAbsence).map(a => ({
+                data: a.data, tipo: a.tipo, inicio: a.inicio, fim: a.fim, tecnico: a.tecnico || (a.qtd ? 'Todos' : 'Todos')
+            })).filter(b => {
+                let parts = b.data.split('/');
+                let dataB = new Date(parts[2], parts[1] - 1, parts[0]);
+                return dataB >= hoje;
+            });
             window.renderizarDatasBloqueadas();
         } 
-    } else { document.querySelectorAll('#etapa-1 input').forEach(i => i.value = ""); document.getElementById("box-nomes-tecnicos").innerHTML = ''; datasBloqueadasTemp = []; window.renderizarDatasBloqueadas(); } 
-    window.toggleTipoBloqueio(); window.updateButtons(); 
+    } else { 
+        document.querySelectorAll('#etapa-1 input').forEach(i => i.value = ""); 
+        document.getElementById("statusPrestador").value = "PRODUCAO";
+        datasBloqueadasTemp = [];
+        window.renderizarDatasBloqueadas();
+    } 
+    document.getElementById('dataBloqueio').value = '';
+    document.getElementById('dataBloqueioFim').value = '';
+    document.getElementById('tipoBloqueio').value = 'total';
+    if(document.getElementById('tecnicoBloqueio')) document.getElementById('tecnicoBloqueio').value = 'Todos';
+    
+    document.querySelectorAll('#etapa-1 input').forEach(el => {
+        el.style.borderColor = '#cbd5e1';
+        el.style.backgroundColor = 'white';
+    });
+
+    window.toggleTipoBloqueio();
+    window.updateButtons(); 
 };
 
 window.cancelarCadastro = function() { 
@@ -2130,25 +2173,59 @@ window.renderizarDatasBloqueadas = function() {
 };
 
 window.salvarPrestador = async function(btn) { 
-    btn.innerText = "Salvando..."; btn.disabled = true; 
+    const originalText = btn.innerText; 
+    btn.innerText = "Salvando..."; 
+    btn.disabled = true; 
     try { 
-        if(!window.validarCampos('#etapa-1')) return window.showMessage("Preencha obrigatórios!");
-        window.saveCurrentTechGrid(); let ag = [], mt = parseInt(document.getElementById("qtdTecnicos").value) || 1, nms = [];
+        if(!window.validarCampos('#etapa-1')) {
+            return window.showMessage("Preencha todos os campos obrigatórios marcados em vermelho!");
+        }
+        
+window.saveCurrentTechGrid(); let ag = [], mt = parseInt(document.getElementById("qtdTecnicos").value) || 1, nms = [];
         for (let t=1; t<=mt; t++) { 
             let ni = document.getElementById("nomeTecnico"+t);
             nms.push(ni && ni.value.trim() !== '' ? ni.value.trim() : `Téc ${t}`);
             if (window.agendaCadastroObj[t]) window.agendaCadastroObj[t].forEach(s=>{ let [d,h]=s.split('-'); ag.push({dia:d, hora:h, tecnico:t}); }); 
         }
-        datasBloqueadasTemp.forEach(b => ag.push({ isAbsence: true, data: b.data, tipo: b.tipo, inicio: b.inicio, fim: b.fim, tecnico: b.tecnico }));
+   }
+        
+        datasBloqueadasTemp.forEach(b => {
+            agenda.push({
+                isAbsence: true,
+                data: b.data,
+                tipo: b.tipo,
+                inicio: b.inicio,
+                fim: b.fim,
+                tecnico: b.tecnico
+            });
+        });
+
         let p = { 
-            nome: document.getElementById("nomeEmpresa").value, endereco: document.getElementById("endereco").value, cidade: document.getElementById("cidade").value, uf: document.getElementById("uf").value, cep: document.getElementById("cep").value, 
-            responsavel: document.getElementById("responsavel").value, contato: document.getElementById("contatoResponsavel").value, usuario_apex: document.getElementById("usuarioApex").value.toLowerCase(), 
-            qtdtecnicos: mt, nomes_tecnicos: nms, range: document.getElementById("rangeAtendimento").value, field_id: document.getElementById("fieldIdField").value, status_prestador: document.getElementById("statusPrestador").value, agenda: ag 
+            nome: document.getElementById("nomeEmpresa").value, 
+            endereco: document.getElementById("endereco").value, 
+            cidade: document.getElementById("cidade").value, 
+            uf: document.getElementById("uf").value, 
+            cep: document.getElementById("cep").value, 
+            responsavel: document.getElementById("responsavel").value, 
+            contato: document.getElementById("contatoResponsavel").value, 
+            usuario_apex: document.getElementById("usuarioApex").value.toLowerCase().trim(),
+            qtdtecnicos: maxT,
+            qtdtecnicos: mt, nomes_tecnicos: nms, range: document.getElementById("rangeAtendimento").value, field_id: document.getElementById("fieldIdField").value, 
+            status_prestador: document.getElementById("statusPrestador").value,
+            agenda: agenda 
         }; 
+        
         const url = (editingIndex !== -1) ? `${API_URL}/prestadores/${prestadores[editingIndex].id}` : `${API_URL}/prestadores`; 
         await fetch(url, { method: (editingIndex !== -1) ? 'PUT' : 'POST', headers: getHeaders(), body: JSON.stringify(p) }); 
-        await window.carregarDadosDoBanco(); window.cancelarCadastro(); window.showToast("Salvo!"); 
-    } finally { btn.disabled = false; btn.innerText = "Concluir"; } 
+        
+        editingIndex = -1; 
+        await window.carregarDadosDoBanco(); 
+        document.getElementById("cadastro-flow").style.display="none"; 
+        document.getElementById("lista-prestadores-view").style.display="block"; 
+        window.showToast("Prestador salvo com sucesso!"); 
+    } finally { 
+        btn.disabled = false; btn.innerText = originalText; 
+    } 
 };
 
 window.excluirPrestador = async function(i) { window.showConfirm("Tem certeza que deseja excluir?", `fetch('${API_URL}/prestadores/${prestadores[i].id}', { method: 'DELETE', headers: getHeaders() }).then(async () => { await window.carregarDadosDoBanco(); window.showToast("Prestador excluído com sucesso!"); })`); };
@@ -2360,7 +2437,7 @@ window.renderDashboard = function() {
         if(userRole === 'PRESTADOR' && (!window.meuPrestadorLogado || pBase !== window.meuPrestadorLogado.nome)) return;
         ta++; let s = String(a.status).toLowerCase();
         if (s.includes('conclu') || s.includes('impedido')) cc++; else if (!s.includes('cancel')) pc++;
-        if(a.prestador) dp[a.prestador] = (dp[a.prestador] || 0) + 1;
+        if(a.prestador) dp[a.prestador] = (dp[a.prestador] || 0) + 1; // Cria a divisão Empresa | Técnico
     });
     document.getElementById("dash-agend").innerText = ta; document.getElementById("dash-concluidos").innerText = cc; document.getElementById("dash-programados").innerText = pc;
     if(myChart) myChart.destroy(); const cp = document.getElementById('chartPrestadores');
@@ -2373,227 +2450,6 @@ window.atualizarFiltrosPrestador = function(){
     let ps = [...new Set(agendamentos.map(a => a.prestador ? a.prestador.split(' | ')[0] : ''))].filter(Boolean).sort();
     c.innerHTML = ps.map(p => `<label><input type="checkbox" value="${p}" class="cb-prestador"> ${p}</label>`).join('');
 };
-
-// ==========================================
-// 8. PAINEL - DETALHES E EXCLUSÃO DE AGENDAMENTO
-// ==========================================
-window.excluirAgendamento = function(id, data) {
-    window.fecharModal();
-    window.showConfirm(
-        `Tem certeza que deseja excluir o agendamento da data <strong>${data}</strong>?<br><br><small>Esta ação não pode ser desfeita.</small>`,
-        `window.confirmarExclusaoAgendamento(${id})`
-    );
-};
-
-window.confirmarExclusaoAgendamento = async function(id) { 
-    await fetch(`${API_URL}/agendamentos/${id}`, { method: 'DELETE', headers: getHeaders() }); 
-    await window.carregarDadosDoBanco(); 
-    window.showToast("Agendamento excluído!"); 
-    window.fecharModal(); 
-};
-
-window.abrirDetalhesAgendamento = function(index) {
-    let a = filtradosPainel[index];
-    if(!a) return;
-    
-    let txtRaw = a.produtos_texto || a.produtos || '';
-    let obsLocal = "";
-    let txtServicos = txtRaw;
-
-    // ✂️ EXTRAÇÃO CIRÚRGICA DA OBSERVAÇÃO
-    if (txtRaw.toLowerCase().includes('observações:')) {
-        let parts = txtRaw.split(/observações:/i);
-        txtServicos = parts[0].trim(); // Pega só a parte dos serviços
-        obsLocal = parts[1].trim(); // Pega só a observação
-    }
-    
-    let enderecoCompleto = `${window.formatarCapitalize(a.rua) || ''}, ${a.numero || 'S/N'} - ${window.formatarCapitalize(a.bairro) || ''}, ${window.formatarCapitalize(a.cidade) || ''}/${a.uf || ''} - CEP: ${a.cep || ''}`;
-    
-    // 🧹 LIMPEZA DOS SERVIÇOS (Remove linhas vazias para não criar "•" vazio)
-    let prodHtml = txtServicos.length > 0 
-        ? txtServicos.split('\n').filter(l => l.trim() !== '').map(l => `<div style="margin-bottom:6px;">• ${l.replace('•', '').trim().replace(/(\(Placa:.*?\))/ig, '<strong style="color:var(--cobli-dark);">$1</strong>')}</div>`).join('')
-        : '<div style="color:#64748b; font-style: italic;">Sem produtos detalhados</div>';
-
-    let btnSincronizarHtml = (userRole === 'GESTOR' || userRole === 'ADMIN' || userRole === 'SMARTOPS') 
-        ? `<button onclick="event.stopPropagation(); window.sincronizarStatusModal('${a.ticket}', this, ${index})" style="background:var(--cobli-green); flex:1; padding:10px; color:white; border:none; border-radius:5px; cursor:pointer;">🔄 Atualizar Status</button>` : '';
-        
-    let btnExcluirHtml = (userRole === 'GESTOR') 
-        ? `<button onclick="window.excluirAgendamento(${a.id}, '${a.data}')" class="btn-cancelar" style="flex:1; padding:10px; color:white; border:none; border-radius:5px; cursor:pointer;">Excluir</button>` : '';
-
-    let html = `
-        <div style="background: white; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 15px;">
-            <div style="display:flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px; margin-bottom: 8px;">
-                <div style="font-weight:bold; font-size:1.1rem; color:var(--primary);">🎟️ Ticket: ${a.ticket}</div>
-                <div id="modal-status-badge" style="font-size: 0.75rem; color: white; font-weight: 700; background: var(--primary); padding: 4px 10px; border-radius: 6px;">${a.status || 'SOLICITADO'}</div>
-            </div>
-            <div style="font-size:0.9rem; line-height:1.6;">
-                👤 <strong>Cliente:</strong> ${window.formatarCapitalize(a.cliente)}<br>
-                👔 <strong>Solicitante:</strong> ${window.formatarCapitalize(a.solicitante)}<br>
-                🛠️ <strong>Prestador:</strong> ${a.prestador}<br>
-                📅 <strong>Data e Hora:</strong> ${a.data} | ${Array.isArray(a.slots) ? a.slots.join(', ') : (a.slots || 'N/A')}<br>
-                📞 <strong>Contato:</strong> ${window.formatarCapitalize(a.acompanhamento) || 'Não informado'} | ${a.telefone_responsavel || 'Sem telefone'}<br>
-                <hr style="border:0; border-top:1px solid #f1f5f9; margin:8px 0;">
-                📍 <strong>Local:</strong> ${enderecoCompleto}
-                ${obsLocal ? `<br><small style="color:#64748b; margin-left: 20px;"><strong>📌 Obs:</strong> ${obsLocal}</small>` : ''}
-            </div>
-        </div>
-        <div style="font-weight:600; margin-bottom:5px;">📦 Serviços Solicitados:</div>
-        <div style="background: #f8fafc; padding: 12px; border-radius: 6px; border: 1px solid #cbd5e1; margin-bottom: 15px; font-size: 0.9rem;">${prodHtml}</div>
-        <div class="botoes-acao">
-            <button onclick="window.fecharModal()" style="background:gray; flex:1; padding:10px; color:white; border:none; border-radius:5px; cursor:pointer;">Fechar</button>
-            ${btnSincronizarHtml}
-            ${btnExcluirHtml}
-        </div>
-    `;
-    window.exibirModal("Detalhes do Agendamento", html);
-};
-
-
-window.sincronizarStatusModal = async function(ticket, btn, index) {
-    const originalText = btn.innerHTML;
-    btn.innerHTML = `<span class="icone-girando">🔄</span> Atualizando...`;
-    btn.disabled = true;
-    
-    try {
-        const response = await fetch(EDGE_URL, {
-            method: 'POST',
-            headers: getHeaders(),
-            body: JSON.stringify({ acao: 'sincronizar_status', ticket: ticket })
-        });
-        const result = await response.json();
-        if (response.ok) {
-            window.showToast(`✅ Ticket ${ticket} atualizado para: ${result.status}`);
-            const badge = document.getElementById('modal-status-badge');
-            if(badge) badge.innerText = result.status;
-            await window.carregarDadosDoBanco(); 
-        } else {
-            window.showMessage("❌ Erro ao sincronizar: " + result.error);
-        }
-    } catch (err) {
-        window.showMessage("❌ Erro de conexão.");
-    } finally {
-        btn.innerHTML = originalText;
-        btn.disabled = false;
-    }
-};
-
-window.atualizarTodosStatus = async function() {
-    if (filtradosPainel.length === 0) {
-        return window.showMessage("Nenhum ticket visível para atualizar. Limpe os filtros se necessário.");
-    }
-    
-    window.showConfirm(`Deseja verificar o status dos ${filtradosPainel.length} tickets visíveis no painel?`, "window.processarAtualizarTodosStatus()");
-};
-
-window.processarAtualizarTodosStatus = async function() {
-    window.showToast("Iniciando varredura em massa...");
-        
-    for (let a of filtradosPainel) {
-        if (a.ticket) {
-            try {
-                await fetch(EDGE_URL, {
-                    method: 'POST',
-                    headers: getHeaders(),
-                    body: JSON.stringify({ acao: 'sincronizar_status', ticket: a.ticket })
-                });
-            } catch(e) {}
-        }
-    }
-        
-    window.showToast("✅ Varredura completa!");
-    await window.carregarDadosDoBanco(); 
-};
-
-window.limparFiltros = function(){ 
-    document.getElementById("filtroDataInicio").value = ""; 
-    document.getElementById("filtroDataFim").value = ""; 
-    document.getElementById("filtroTicket").value = ""; 
-    document.getElementById("filtroSolicitante").value = ""; 
-    
-    document.querySelectorAll('.cb-status').forEach(cb => cb.checked = false);
-    document.querySelectorAll('.cb-prestador').forEach(cb => cb.checked = false);
-    
-    document.getElementById('dropdown-status').removeAttribute('open');
-    if(document.getElementById('dropdown-prestador')) document.getElementById('dropdown-prestador').removeAttribute('open');
-    
-    window.renderPainel(); 
-};
-
-
-    document.getElementById("dash-agend").innerText = totalAgend;
-    document.getElementById("dash-concluidos").innerText = concluidosCount;
-    document.getElementById("dash-programados").innerText = programadosCount;
-    
-    if(myChart) myChart.destroy();
-    const ctxPrest = document.getElementById('chartPrestadores');
-    if (ctxPrest) {
-        myChart = new Chart(ctxPrest.getContext('2d'), {
-            type: 'bar',
-            data: { 
-                labels: Object.keys(distPrest), 
-                datasets: [{ label: 'Agendamentos', data: Object.values(distPrest), backgroundColor: '#001BB8', borderRadius: 4 }] 
-            },
-            options: { 
-                responsive: true, 
-                maintainAspectRatio: false, 
-                plugins: { 
-                    legend: { display: false }, 
-                    datalabels: { 
-                        anchor: 'center', align: 'center', color: 'white', font: {weight: 'bold', size: 12},
-                        formatter: function(value, context) { 
-                            let percent = totalAgend > 0 ? Math.round((value / totalAgend) * 100) : 0; 
-                            return `${String(value).padStart(2, '0')} | ${percent}%`; 
-                        } 
-                    } 
-                }, 
-                scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } 
-            },
-            plugins: [ChartDataLabels]
-        });
-    }
-
-    let servicosOrdenados = Object.entries(distServ).sort((a,b) => b[1] - a[1]);
-    let listaHtml = servicosOrdenados.map(s => {
-        let qtd = s[1];
-        let percent = totalServicosGeral > 0 ? Math.round((qtd / totalServicosGeral) * 100) : 0;
-        
-        return `
-        <div style="display: flex; justify-content: space-between; align-items: center; background: #f8fafc; padding: 12px; border-radius: 6px; border: 1px solid #e2e8f0; margin-bottom: 8px;">
-            <div style="font-size: 0.8rem; font-weight: 600; color: var(--cobli-dark); flex: 1; padding-right: 10px; line-height: 1.4;">${s[0]}</div>
-            <div style="font-size: 0.95rem; font-weight: bold; color: var(--primary); background: #e0e6ff; padding: 6px 12px; border-radius: 6px; border: 1px solid #c2d1ff; white-space: nowrap;">
-                ${qtd} <span style="color: #64748b; font-weight: 600; font-size: 0.75rem; margin-left: 4px;">(${percent}%)</span>
-            </div>
-        </div>`;
-    }).join('');
-    
-    if (!listaHtml) listaHtml = `<div style="font-size:0.85rem; color:#64748b; padding: 10px;">Nenhum serviço computado ainda.</div>`;
-    const listaServicosElement = document.getElementById('lista-dashboard-servicos');
-    if (listaServicosElement) listaServicosElement.innerHTML = listaHtml;
-
-    let locaisOrdenados = Object.entries(distLocais).sort((a,b) => b[1] - a[1]).slice(0, 10); 
-    
-    if(chartLocais) chartLocais.destroy();
-    const ctxLocais = document.getElementById('chartLocais');
-    if (ctxLocais) {
-        chartLocais = new Chart(ctxLocais.getContext('2d'), {
-            type: 'bar',
-            data: { 
-                labels: locaisOrdenados.map(l => l[0]), 
-                datasets: [{ label: 'Atendimentos', data: locaisOrdenados.map(l => l[1]), backgroundColor: '#00AE97', borderRadius: 4 }] 
-            },
-            options: { 
-                responsive: true, 
-                maintainAspectRatio: false, 
-                plugins: { 
-                    legend: { display: false }, 
-                    datalabels: { color: 'white', font: {weight: 'bold', size: 12} } 
-                }, 
-                scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } 
-            },
-            plugins: [ChartDataLabels]
-        });
-    }
-
     // Chama a renderização da Nova Ocupação Diária
     window.renderOcupacaoDiaria(window.meuPrestadorLogado ? window.meuPrestadorLogado.nome : null);
 };
