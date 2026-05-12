@@ -1863,8 +1863,9 @@ async function definirPermissoes(email, uid) {
     window.handleLogout = async function() {
     await supabaseClient.auth.signOut();
     window.location.reload();
+    }
 }
-
+    
 // ==========================================
 // USUÁRIOS
 // ==========================================
