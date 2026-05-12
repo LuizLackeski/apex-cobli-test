@@ -1383,7 +1383,7 @@
             <div class="grid-filtros">
                 <div class="campo-filtro"><label>Início</label><input type="date" id="filtroDataInicio"></div>
                 <div class="campo-filtro"><label>Fim</label><input type="date" id="filtroDataFim"></div>
-                <div class="campo-filtro"><label>Ticket</label><input type="text" id="filtroTicket" placeholder="Nº OS"></div>
+                <div class="campo-filtro"><label>Ticket</label><input type="text" id="filtroTicket" placeholder="Nº OS" oninput="window.renderPainel()"></div>
                 
                 <div class="campo-filtro" id="filtro-box-prestador">
                     <label>Prestador</label>
@@ -1416,7 +1416,7 @@
                     </details>
                 </div>
                 
-                <div class="campo-filtro" id="filtro-box-solicitante"><label>Solicitante</label><input type="text" id="filtroSolicitante" placeholder="Nome..."></div>
+                <div class="campo-filtro" id="filtro-box-solicitante"><label>Solicitante</label><input type="text" id="filtroSolicitante" placeholder="Nome..." oninput="window.renderPainel()"></div>
                 
                 <div class="botoes-container">
                     <button onclick="window.renderPainel();" style="flex: 1; height: 100%; background: var(--primary); padding:0; min-height: auto;">Filtrar</button>
@@ -2760,13 +2760,13 @@ window.renderOcupacaoDiaria = function(prestadorNome, tecnicoId) {
         // Select II — Técnico (só aparece se prestador selecionado tem +1 técnico)
         let selectTec = '';
         if (pObj && qtdTec > 1) {
-            selectTec = `<select id="sel-ocup-tec" onchange="window.renderOcupacaoDiaria('${prestadorNome}',this.value?parseInt(this.value):null)" style="width:100%;padding:7px 10px;font-size:0.8rem;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:white;font-family:var(--font-main);font-weight:700;color:var(--text);cursor:pointer;">`;
-            selectTec += `<option value="">— Todos os Técnicos —</option>`;
+            selectTec = `<div id="sel-ocup-tec" style="display:flex; gap:6px; overflow-x:auto; padding:6px 0; flex-wrap:nowrap;">`;
             for (let t = 1; t <= qtdTec; t++) {
                 let nomeTec = window.getNomeTecnico(pObj, t);
-                selectTec += `<option value="${t}" ${tecnicoId==t?'selected':''}>${nomeTec}</option>`;
+                let isSelected = tecnicoId == t;
+                selectTec += `<button onclick="window.toggleTecOcupacao(${t},'${prestadorNome}')" id="btn-ocup-tec-${t}" data-ativo="${isSelected?'1':'0'}" style="padding:5px 12px;font-size:0.75rem;border-radius:14px;border:1px solid var(--border);background:${isSelected?'var(--primary)':'white'};color:${isSelected?'white':'var(--muted)'};white-space:nowrap;cursor:pointer;font-family:var(--font-main);min-height:auto;font-weight:700;flex-shrink:0;">${nomeTec}</button>`;
             }
-            selectTec += `</select>`;
+            selectTec += `</div>`;
         }
         containerFiltros.innerHTML = selectPrest + selectTec;
     } else {
@@ -2843,7 +2843,20 @@ window.renderOcupacaoDiaria = function(prestadorNome, tecnicoId) {
     } else if(cardTec) { cardTec.style.display='none'; }
 };
 
-window.renderOcupacaoPorTecnico = function(tecId) {
+window.toggleTecOcupacao = function(tecId, prestadorNome) {
+    // Verifica se já está selecionado — se sim, deseleciona (volta para todos)
+    let btn = document.getElementById(`btn-ocup-tec-${tecId}`);
+    let jaAtivo = btn && btn.style.background.includes('var(--primary)') || (btn && btn.style.background === 'var(--primary)');
+    // Checa pelo dataset
+    let atualAtivo = btn && btn.dataset.ativo === '1';
+    if (atualAtivo) {
+        // Deseleciona → mostra todos
+        window.renderOcupacaoDiaria(prestadorNome, null);
+    } else {
+        // Seleciona este técnico
+        window.renderOcupacaoDiaria(prestadorNome, tecId);
+    }
+};
     let pObj = window.meuPrestadorLogado; if (!pObj) return;
     let qtd = parseInt(pObj.qtdtecnicos) || 1;
     let hoje = new Date(); const diasSemana = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sab"];
