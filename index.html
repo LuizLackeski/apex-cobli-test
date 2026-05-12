@@ -2213,16 +2213,27 @@ window.rdaAgendamento = function() {
         let horasAgendaSet = new Set(allSlotsRaw.map(item => parseInt(item.hora.split(':')[0])));
         let horasAgenda = Array.from(horasAgendaSet).sort((a,b)=>a-b);
         let validStarts = []; 
+        let validStartsTecnico = {}; // hora → tecnico id
         for (let h of horasAgenda) {
             let seqOk = true; let testSlots = [];
             for (let k = 0; k < horasNecessarias; k++) { if (!horasAgenda.includes(h + k)) { seqOk = false; break; } testSlots.push(h + k); }
-            if (seqOk) { if (window.podeAgendar(p, dStr, testSlots, dNome)) validStarts.push(h); }
+            if (seqOk) { 
+                if (window.podeAgendar(p, dStr, testSlots, dNome)) {
+                    validStarts.push(h);
+                    // Descobrir qual técnico tem este slot (primeiro encontrado)
+                    let temTec = allSlotsRaw.some(a => a.tecnico);
+                    if (temTec) {
+                        let slotTec = allSlotsRaw.find(a => parseInt(a.hora) === h && a.tecnico);
+                        validStartsTecnico[h] = slotTec ? slotTec.tecnico : null;
+                    }
+                }
+            }
         }
         let enabledCells = new Set();
         validStarts.forEach(start => { for (let k = 0; k < horasNecessarias; k++) enabledCells.add(start + k); });
         if(validStarts.length > 0){ 
             let allSlots = Array.from(horasAgendaSet).sort((a,b)=>a-b).map(h => ({hora: h + ':00'}));
-            window.agendaDiasDisponiveis.push({ dStr, dNome, allSlots, validStarts, enabledCells, horasNecessarias });
+            window.agendaDiasDisponiveis.push({ dStr, dNome, allSlots, validStarts, validStartsTecnico, enabledCells, horasNecessarias });
         } 
     } 
     window.agendaPaginaAtual = 0;
@@ -2259,6 +2270,9 @@ window.renderizarAgendaPaginada = function() {
                 let horaInicioReal = hInt;
                 if (!diaInfo.validStarts.includes(hInt)) { for (let b = 1; b < diaInfo.horasNecessarias; b++) { let testStart = hInt - b; if (diaInfo.validStarts.includes(testStart)) { horaInicioReal = testStart; break; } } }
                 document.querySelectorAll("#agenda-agendamento .cell").forEach(c => c.classList.remove('selecionado'));
+                // Gravar técnico alocado no container para usar no agendamento
+                let tecnicoAlocado = diaInfo.validStartsTecnico ? (diaInfo.validStartsTecnico[horaInicioReal] || null) : null;
+                container.dataset.tecnicoAlocado = tecnicoAlocado || '';
                 for(let m=0; m < diaInfo.horasNecessarias; m++) { let targetH = `${horaInicioReal + m}:00`; let targetCell = Array.from(wrapper.children).find(c => c.dataset.hora === targetH); if(targetCell) targetCell.classList.add("selecionado"); }
             }; }
             wrapper.appendChild(div); 
@@ -2334,6 +2348,7 @@ window.concluirAgendamentoFinal = async function(btn) {
         prestador: prestador.nome, qtdtecnicos: prestador.qtdtecnicos, ticket: document.getElementById('ticket').value,
         cliente: window.formatarCapitalize(document.getElementById('clienteNome').value), cnpj: document.getElementById('clienteCnpj').value,
         solicitante: document.getElementById('solicitante').value, data: dataSelecionada, rawdate: dataSelecionada, slots: slotsSelecionados,
+        tecnico_alocado: document.getElementById('agenda-agendamento')?.dataset?.tecnicoAlocado || null,
         rua: window.formatarCapitalize(document.getElementById('inputRua').value), numero: document.getElementById('inputNumero').value,
         bairro: window.formatarCapitalize(document.getElementById('inputBairro').value), cidade: window.formatarCapitalize(document.getElementById('inputCidade').value),
         uf: document.getElementById('inputUf').value, cep: document.getElementById('inputCep').value,
@@ -2816,7 +2831,16 @@ window.renderOcupacaoDiaria = function(prestadorNome, tecnicoId) {
             if(wH.length===0)continue;
             let bl=new Set();(pO.agenda?pO.agenda.filter(a=>a.isAbsence&&a.data===dStr):[]).forEach(a=>{let s=a.tipo==='total'?0:parseInt(a.inicio);let e=a.tipo==='total'?24:parseInt(a.fim);if(a.tecnico==tecnicoId||a.tecnico==='Todos'||!a.tecnico)for(let h=s;h<e;h++)bl.add(h);});
             let avail=wH.filter(h=>!bl.has(h));if(avail.length===0)continue;
-            let totOcup=0;agendamentos.filter(a=>a.prestador===pO.nome&&(a.data===dStr||a.rawdate===dStr)&&!String(a.status).toLowerCase().includes('cancelado')).forEach(a=>{let s=Array.isArray(a.slots)?a.slots:(typeof a.slots==='string'?a.slots.split(', '):[]);totOcup+=s.length;});
+            let totOcup = 0;
+            agendamentos.filter(a => a.prestador === pO.nome && (a.data === dStr || a.rawdate === dStr) && !String(a.status).toLowerCase().includes('cancelado')).forEach(a => {
+                let s = Array.isArray(a.slots)?a.slots:(typeof a.slots==='string'?a.slots.split(', '):[]);
+                if (a.tecnico_alocado != null && a.tecnico_alocado !== '') {
+                    if (String(a.tecnico_alocado) === String(tecnicoId)) totOcup += s.length;
+                } else {
+                    let prop = totCap > 0 ? avail.length / totCap : 0;
+                    totOcup += Math.round(s.length * prop);
+                }
+            });
             let totCap=0;for(let t2=1;t2<=qtd;t2++){let hw=tem_tec?(pO.agenda?pO.agenda.filter(a=>a.dia===dNome&&a.tecnico==t2&&!a.isAbsence).map(a=>parseInt(a.hora)):[]):wH;totCap+=hw.length;}
             let prop=totCap>0?avail.length/totCap:0;let ocup=Math.round(totOcup*prop);let livres=Math.max(0,avail.length-ocup);let pct=avail.length>0?Math.round((ocup/avail.length)*100):0;
             resultado.push({data:dStr,dia:dNome,livres,ocupadas:ocup,total:avail.length,pct});
@@ -2860,13 +2884,11 @@ window.renderOcupacaoPorTecnico = function(tecId) {
     let resultado = [];
     for (let i = 0; i < 15; i++) {
         let d = new Date(); d.setDate(hoje.getDate() + i); let dStr = d.toLocaleDateString('pt-BR'); let dNome = diasSemana[d.getDay()];
-        // Horas do técnico nesse dia
         let tem_tec = pObj.agenda && pObj.agenda.some(a => a.tecnico);
         let worksHours = tem_tec
             ? (pObj.agenda ? pObj.agenda.filter(a => a.dia === dNome && a.tecnico == tecId && !a.isAbsence).map(a => parseInt(a.hora)) : [])
             : (pObj.agenda ? pObj.agenda.filter(a => a.dia === dNome && !a.isAbsence).map(a => parseInt(a.hora)) : []);
         if (worksHours.length === 0) continue;
-        // Ausências do técnico
         let ausencias = pObj.agenda ? pObj.agenda.filter(a => a.isAbsence && a.data === dStr) : [];
         let bloqueadas = new Set();
         ausencias.forEach(a => {
@@ -2876,17 +2898,25 @@ window.renderOcupacaoPorTecnico = function(tecId) {
         });
         let available = worksHours.filter(h => !bloqueadas.has(h));
         if (available.length === 0) continue;
-        // Slots ocupados (total do prestador dividido igualmente por técnico como heurística)
-        let totalOcupadoGeral = 0;
-        agendamentos.filter(a => a.prestador === pObj.nome && (a.data === dStr || a.rawdate === dStr) && !String(a.status).toLowerCase().includes('cancelado')).forEach(a => { let s = Array.isArray(a.slots) ? a.slots : (typeof a.slots === 'string' ? a.slots.split(', ') : []); totalOcupadoGeral += s.length; });
-        // Heurística: ocupação proporcional à capacidade do técnico
-        let totalCap = 0;
-        for (let t2 = 1; t2 <= qtd; t2++) {
-            let hw = tem_tec ? (pObj.agenda ? pObj.agenda.filter(a => a.dia === dNome && a.tecnico == t2 && !a.isAbsence).map(a => parseInt(a.hora)) : []) : worksHours;
-            totalCap += hw.length;
-        }
-        let proporcao = totalCap > 0 ? available.length / totalCap : 0;
-        let ocupadas = Math.round(totalOcupadoGeral * proporcao);
+        // Usar tecnico_alocado real quando disponível
+        let agendsDia = agendamentos.filter(a => a.prestador === pObj.nome && (a.data === dStr || a.rawdate === dStr) && !String(a.status).toLowerCase().includes('cancelado'));
+        let ocupadas = 0;
+        agendsDia.forEach(a => {
+            let s = Array.isArray(a.slots) ? a.slots : (typeof a.slots === 'string' ? a.slots.split(', ') : []);
+            if (a.tecnico_alocado != null && a.tecnico_alocado !== '') {
+                // Dado real — só conta se for deste técnico
+                if (String(a.tecnico_alocado) === String(tecId)) ocupadas += s.length;
+            } else {
+                // Sem dado real — divide proporcionalmente pela capacidade
+                let totalCap = 0;
+                for (let t2 = 1; t2 <= qtd; t2++) {
+                    let hw = tem_tec ? (pObj.agenda ? pObj.agenda.filter(x => x.dia === dNome && x.tecnico == t2 && !x.isAbsence).length : 0) : worksHours.length;
+                    totalCap += hw;
+                }
+                let prop = totalCap > 0 ? available.length / totalCap : 0;
+                ocupadas += Math.round(s.length * prop);
+            }
+        });
         let livres = Math.max(0, available.length - ocupadas);
         let pct = available.length > 0 ? Math.round((ocupadas / available.length) * 100) : 0;
         resultado.push({ data: dStr, dia: dNome, livres, ocupadas, total: available.length, pct });
