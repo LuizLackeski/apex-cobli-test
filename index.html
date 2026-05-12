@@ -1859,6 +1859,10 @@ async function definirPermissoes(email, uid) {
         if(!document.getElementById('btn-disponibilidade')) menuLeft.innerHTML += `<button id="btn-disponibilidade" onclick="window.trocarAba('disponibilidade', this)">Ausências</button>`;
         window.trocarAba('painel', document.getElementById('btn-painel'));
     }
+
+    window.handleLogout = async function() {
+    await supabaseClient.auth.signOut();
+    window.location.reload();
 }
 
 // ==========================================
