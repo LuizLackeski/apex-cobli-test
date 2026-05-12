@@ -659,10 +659,6 @@
         @keyframes girar { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         .icone-girando { display: inline-block; animation: girar 1s linear infinite; }
         
-        /* Tabs técnicos com nome */
-        #tabs-tecnicos { flex-wrap: wrap; align-items: flex-start; }
-        .input-nome-tecnico:focus { border-color: var(--primary) !important; outline: none; box-shadow: 0 0 0 2px rgba(0,27,184,0.12); }
-        
         /* ============================================================
            TABELAS
         ============================================================ */
@@ -1430,12 +1426,6 @@
                 <div class="stats-card">Programados <span style="font-size:0.6rem; color:var(--muted); font-weight:400;">(a acontecer)</span><strong id="dash-programados" style="color: #f59e0b;">0</strong></div>
             </div>
             
-            <!-- Card de equipe técnica (visível apenas para prestador com +1 técnico) -->
-            <div class="card" id="card-prod-tecnicos" style="display:none; margin-bottom:20px;">
-                <h2>👷 Equipe Técnica</h2>
-                <div id="lista-prod-tecnicos" style="display:flex; flex-direction:column; gap:8px;"></div>
-            </div>
-            
             <div style="display: flex; gap: 16px; margin-bottom: 20px; flex-wrap: wrap;">
                 <div class="card" id="card-ocupacao-diaria" style="flex: 1; min-width: 300px; margin-bottom: 0; max-height: 360px; display: flex; flex-direction: column;">
                     <h2 style="flex-shrink: 0;">Ocupação da Agenda (15 Dias)</h2>
@@ -1860,7 +1850,10 @@ async function definirPermissoes(email, uid) {
         window.trocarAba('painel', document.getElementById('btn-painel'));
     }
 }
-
+window.handleLogout = async function() {
+    await supabaseClient.auth.signOut();
+    window.location.reload();
+}
 // ==========================================
 // USUÁRIOS
 // ==========================================
@@ -2339,7 +2332,7 @@ window.abrirDetalhesPrestador = function(index) {
     let temTecnicos = p.agenda && p.agenda.some(a => a.tecnico);
     if (temTecnicos || qtd > 1) {
         agendaHtml += '<div style="display:flex; gap:5px; margin-bottom:15px; border-bottom:1px solid var(--border); padding-bottom:10px; overflow-x:auto;">';
-        for (let t = 1; t <= qtd; t++) { let nomeTab = window.getNomeTecnico(p, t); agendaHtml += `<button onclick="window.mudarAbaModalTecnico(${t}, ${qtd})" id="btn-mod-tec-${t}" style="padding:6px 12px; border:none; border-radius:4px; font-weight:700; cursor:pointer; background:${t===1?'var(--primary)':'var(--border)'}; color:${t===1?'white':'var(--text)'}; transition:0.2s; min-height:auto;">${nomeTab}</button>`; }
+        for (let t = 1; t <= qtd; t++) agendaHtml += `<button onclick="window.mudarAbaModalTecnico(${t}, ${qtd})" id="btn-mod-tec-${t}" style="padding:6px 12px; border:none; border-radius:4px; font-weight:700; cursor:pointer; background:${t===1?'var(--primary)':'var(--border)'}; color:${t===1?'white':'var(--text)'}; transition:0.2s; min-height:auto;">Técnico ${t}</button>`;
         agendaHtml += '</div>';
         for (let t = 1; t <= qtd; t++) {
             agendaHtml += `<div id="mod-tec-${t}" style="display:${t===1?'block':'none'};">`;
@@ -2361,7 +2354,7 @@ window.abrirDetalhesPrestador = function(index) {
         let ausencias = p.agenda.filter(a => a.isAbsence).filter(b => { let parts = b.data.split('/'); let dataB = new Date(parts[2], parts[1] - 1, parts[0]); return dataB >= hoje; });
         if (ausencias.length > 0) {
             ausenciasHtml = `<div style="margin-top: 15px; border-top: 1px solid var(--border); padding-top: 10px;"><div style="font-weight:700; font-size:0.85rem; color:var(--cobli-red); margin-bottom: 8px;">🛑 Ausências Programadas</div><div style="display: flex; flex-wrap: wrap; gap: 6px;">`;
-            ausenciasHtml += ausencias.map(b => { let texto = b.tipo === 'total' ? `${b.data} (Dia Inteiro)` : `${b.data} (${b.inicio}h às ${b.fim}h)`; let nomeTecnico = (b.tecnico === 'Todos' || !b.tecnico) ? 'Todos' : window.getNomeTecnico(p, b.tecnico); texto += ` | ${nomeTecnico}`; return `<span class="pill" style="background: #fee2e2; color: var(--cobli-red); border: 1px solid #fca5a5; font-size: 0.7rem;">${texto}</span>`; }).join('');
+            ausenciasHtml += ausencias.map(b => { let texto = b.tipo === 'total' ? `${b.data} (Dia Inteiro)` : `${b.data} (${b.inicio}h às ${b.fim}h)`; texto += ` | ${b.tecnico === 'Todos' ? 'Todos' : 'Téc ' + b.tecnico}`; return `<span class="pill" style="background: #fee2e2; color: var(--cobli-red); border: 1px solid #fca5a5; font-size: 0.7rem;">${texto}</span>`; }).join('');
             ausenciasHtml += `</div></div>`;
         }
     }
@@ -2378,68 +2371,17 @@ window.mudarAbaModalTecnico = function(tId, total) {
     }
 };
 
-// ==========================================
-// HELPER: nome do técnico (com fallback)
-// ==========================================
-window.getNomeTecnico = function(prestador, tecId) {
-    if (!prestador) return `Técnico ${tecId}`;
-    let nomes = prestador.nomes_tecnicos;
-    if (nomes && typeof nomes === 'object' && nomes[tecId] && nomes[tecId].trim()) return nomes[tecId].trim();
-    return `Técnico ${tecId}`;
-};
-
 window.renderTechTabs = function(qtd) {
     let container = document.getElementById("tabs-tecnicos"); container.innerHTML = "";
     let selectBloqueio = document.getElementById("tecnicoBloqueio");
     if(selectBloqueio) selectBloqueio.innerHTML = '<option value="Todos">Todos (Empresa)</option>';
-    // Garantir que o objeto de nomes existe
-    if (!window.nomesTecnicosTemp) window.nomesTecnicosTemp = {};
     for(let i=1; i<=qtd; i++) {
         if(!window.agendaCadastroObj[i]) window.agendaCadastroObj[i] = [];
-        let nomeAtual = (window.nomesTecnicosTemp[i] || '');
-        
-        // Wrapper para tab + campo de nome
-        let wrapper = document.createElement("div");
-        wrapper.style.cssText = "display:flex; flex-direction:column; align-items:center; gap:4px;";
-        
-        let btn = document.createElement("button"); 
-        btn.innerText = nomeAtual ? nomeAtual : `Técnico ${i}`; 
-        btn.className = "btn-tech-tab";
-        btn.dataset.techId = i;
-        btn.style.cssText = `padding: 8px 15px; border:none; border-radius:var(--radius-sm); cursor:pointer; font-weight:700; transition: 0.3s; font-family:var(--font-main); min-height:auto; background:${i===window.currentTech?'var(--primary)':'var(--border)'}; color:${i===window.currentTech?'white':'var(--text)'};`;
+        let btn = document.createElement("button"); btn.innerText = "Técnico " + i; btn.className = "btn-tech-tab";
+        btn.style.cssText = `padding: 8px 15px; border:none; border-radius:var(--radius-sm); cursor:pointer; font-weight:700; color:white; transition: 0.3s; font-family:var(--font-main); min-height:auto; background:${i===window.currentTech?'var(--primary)':'var(--border)'}; color:${i===window.currentTech?'white':'var(--text)'};`;
         btn.onclick = (e) => { e.preventDefault(); window.saveCurrentTechGrid(); window.loadTechGrid(i); };
-        
-        let input = document.createElement("input");
-        input.type = "text";
-        input.placeholder = `Nome Técnico ${i}`;
-        input.value = nomeAtual;
-        input.dataset.techId = i;
-        input.className = "input-nome-tecnico";
-        input.style.cssText = "width: 130px; padding: 4px 8px; font-size: 0.72rem; border: 1px solid var(--border); border-radius: var(--radius-sm); text-align:center; margin:0; height:auto; font-family:var(--font-main);";
-        input.oninput = function() {
-            window.nomesTecnicosTemp[i] = this.value;
-            // Atualizar label do botão
-            let tabBtn = document.querySelector(`.btn-tech-tab[data-tech-id="${i}"]`);
-            if(tabBtn) tabBtn.innerText = this.value.trim() || `Técnico ${i}`;
-            // Atualizar select de bloqueio
-            window.atualizarSelectBloqueioNomes();
-        };
-        
-        wrapper.appendChild(btn);
-        wrapper.appendChild(input);
-        container.appendChild(wrapper);
-        if(selectBloqueio) selectBloqueio.innerHTML += `<option value="${i}">${nomeAtual || 'Técnico ' + i}</option>`;
-    }
-};
-
-window.atualizarSelectBloqueioNomes = function() {
-    let selectBloqueio = document.getElementById("tecnicoBloqueio");
-    if(!selectBloqueio) return;
-    let qtd = parseInt(document.getElementById("qtdTecnicos").value) || 1;
-    selectBloqueio.innerHTML = '<option value="Todos">Todos (Empresa)</option>';
-    for(let i=1; i<=qtd; i++) {
-        let nome = (window.nomesTecnicosTemp && window.nomesTecnicosTemp[i] && window.nomesTecnicosTemp[i].trim()) ? window.nomesTecnicosTemp[i].trim() : `Técnico ${i}`;
-        selectBloqueio.innerHTML += `<option value="${i}">${nome}</option>`;
+        container.appendChild(btn);
+        if(selectBloqueio) selectBloqueio.innerHTML += `<option value="${i}">Técnico ${i}</option>`;
     }
 };
 
@@ -2457,19 +2399,12 @@ window.abrirCadastro = function(index = -1){
     editingIndex = index; document.getElementById("lista-prestadores-view").style.display="none"; document.getElementById("cadastro-flow").style.display="block"; etapa = 1; 
     document.getElementById("etapa-1").style.display="block"; document.getElementById("etapa-2").style.display="none"; 
     window.criarGridCadastro("agenda-cadastro"); window.agendaCadastroObj = {}; window.currentTech = 1;
-    window.nomesTecnicosTemp = {}; // Resetar nomes
     if(index !== -1){ 
         let p = prestadores[index]; 
         ["nomeEmpresa","endereco","cidade","uf","cep","responsavel","contatoResponsavel","usuarioApex","qtdTecnicos","rangeAtendimento","fieldIdField"].forEach(id => { let el = document.getElementById(id); if(el && p[{nomeEmpresa:'nome',endereco:'endereco',cidade:'cidade',uf:'uf',cep:'cep',responsavel:'responsavel',contatoResponsavel:'contato',usuarioApex:'usuario_apex',qtdTecnicos:'qtdtecnicos',rangeAtendimento:'range',fieldIdField:'field_id'}[id]] !== undefined) el.value = p[{nomeEmpresa:'nome',endereco:'endereco',cidade:'cidade',uf:'uf',cep:'cep',responsavel:'responsavel',contatoResponsavel:'contato',usuarioApex:'usuario_apex',qtdTecnicos:'qtdtecnicos',rangeAtendimento:'range',fieldIdField:'field_id'}[id]] || ''; });
         document.getElementById("usuarioApex").value = p.usuario_apex || "";
         document.getElementById("statusPrestador").value = p.status_prestador || "PRODUCAO"; 
         let qtd = parseInt(p.qtdtecnicos) || 1;
-        // Carregar nomes dos técnicos existentes
-        if (p.nomes_tecnicos && typeof p.nomes_tecnicos === 'object') {
-            for (let t = 1; t <= qtd; t++) {
-                window.nomesTecnicosTemp[t] = p.nomes_tecnicos[t] || '';
-            }
-        }
         for(let i=1; i<=qtd; i++) window.agendaCadastroObj[i] = [];
         if(p.agenda) { 
             p.agenda.forEach(item => {
@@ -2512,8 +2447,6 @@ window.mudarEtapa = function(dir) {
     document.getElementById("etapa-"+etapa).style.display="none"; etapa += dir; if(etapa < 1) etapa = 1; if(etapa > 2) etapa = 2; document.getElementById("etapa-"+etapa).style.display="block"; window.updateButtons(); 
 };
 
-window.nomesTecnicosTemp = {};
-
 window.updateButtons = function() { 
     document.getElementById('btn-voltar').style.display = (etapa === 1) ? 'none' : 'inline-block'; 
     document.getElementById('btn-proximo').style.display = (etapa === 1) ? 'inline-block' : 'none'; 
@@ -2547,8 +2480,7 @@ window.removerBloqueioData = function(index) { datasBloqueadasTemp.splice(index,
 window.renderizarDatasBloqueadas = function() {
     document.getElementById('lista-datas-bloqueadas').innerHTML = datasBloqueadasTemp.map((b, i) => {
         let texto = b.tipo === 'total' ? `${b.data} (Dia Inteiro)` : `${b.data} (${b.inicio}h às ${b.fim}h)`;
-        let nomeTec = (b.tecnico === 'Todos' || !b.tecnico) ? 'Todos' : ((window.nomesTecnicosTemp && window.nomesTecnicosTemp[b.tecnico] && window.nomesTecnicosTemp[b.tecnico].trim()) ? window.nomesTecnicosTemp[b.tecnico].trim() : `Técnico ${b.tecnico}`);
-        texto += ` | ${nomeTec}`;
+        texto += ` | ${b.tecnico === 'Todos' ? 'Todos' : 'Téc ' + b.tecnico}`;
         return `<span class="pill" style="background: var(--cobli-red); color: white; border: none; display: flex; align-items: center; gap: 6px;">${texto} <span style="cursor:pointer; font-weight:800; padding-left: 4px; border-left: 1px solid rgba(255,255,255,0.4);" onclick="window.removerBloqueioData(${i})">×</span></span>`;
     }).join('');
 };
@@ -2561,15 +2493,7 @@ window.salvarPrestador = async function(btn) {
         let agenda = []; let maxT = parseInt(document.getElementById("qtdTecnicos").value) || 1;
         for (let t = 1; t <= maxT; t++) { if (window.agendaCadastroObj[t]) { window.agendaCadastroObj[t].forEach(slot => { let [dia, hora] = slot.split('-'); agenda.push({ dia: dia, hora: hora, tecnico: parseInt(t) }); }); } }
         datasBloqueadasTemp.forEach(b => { agenda.push({ isAbsence: true, data: b.data, tipo: b.tipo, inicio: b.inicio, fim: b.fim, tecnico: b.tecnico }); });
-        // Montar objeto de nomes dos técnicos (somente não-vazios)
-        let nomesTecnicos = {};
-        if (window.nomesTecnicosTemp) {
-            for (let t = 1; t <= maxT; t++) {
-                let nome = window.nomesTecnicosTemp[t];
-                if (nome && nome.trim()) nomesTecnicos[t] = nome.trim();
-            }
-        }
-        let p = { nome: document.getElementById("nomeEmpresa").value, endereco: document.getElementById("endereco").value, cidade: document.getElementById("cidade").value, uf: document.getElementById("uf").value, cep: document.getElementById("cep").value, responsavel: document.getElementById("responsavel").value, contato: document.getElementById("contatoResponsavel").value, usuario_apex: document.getElementById("usuarioApex").value.toLowerCase().trim(), qtdtecnicos: maxT, range: document.getElementById("rangeAtendimento").value, field_id: document.getElementById("fieldIdField").value, status_prestador: document.getElementById("statusPrestador").value, agenda: agenda, nomes_tecnicos: nomesTecnicos }; 
+        let p = { nome: document.getElementById("nomeEmpresa").value, endereco: document.getElementById("endereco").value, cidade: document.getElementById("cidade").value, uf: document.getElementById("uf").value, cep: document.getElementById("cep").value, responsavel: document.getElementById("responsavel").value, contato: document.getElementById("contatoResponsavel").value, usuario_apex: document.getElementById("usuarioApex").value.toLowerCase().trim(), qtdtecnicos: maxT, range: document.getElementById("rangeAtendimento").value, field_id: document.getElementById("fieldIdField").value, status_prestador: document.getElementById("statusPrestador").value, agenda: agenda }; 
         const url = (editingIndex !== -1) ? `${API_URL}/prestadores/${prestadores[editingIndex].id}` : `${API_URL}/prestadores`; 
         await fetch(url, { method: (editingIndex !== -1) ? 'PUT' : 'POST', headers: getHeaders(), body: JSON.stringify(p) }); 
         editingIndex = -1; await window.carregarDadosDoBanco(); 
@@ -2587,14 +2511,13 @@ window.renderizarMinhaDisponibilidade = function() {
     let p = window.meuPrestadorLogado; if (!p) return;
     let qtd = parseInt(p.qtdtecnicos) || 1;
     let selectTec = document.getElementById('meuTecnicoBloqueio');
-    if(selectTec) { selectTec.innerHTML = '<option value="Todos">Todos</option>'; for(let i=1; i<=qtd; i++) { let nome = window.getNomeTecnico(p, i); selectTec.innerHTML += `<option value="${i}">${nome}</option>`; } }
+    if(selectTec) { selectTec.innerHTML = '<option value="Todos">Todos</option>'; for(let i=1; i<=qtd; i++) selectTec.innerHTML += `<option value="${i}">Técnico ${i}</option>`; }
     let ausencias = p.agenda ? p.agenda.filter(a => a.isAbsence) : [];
     let hoje = new Date(); hoje.setHours(0,0,0,0);
     ausencias = ausencias.filter(b => { let parts = b.data.split('/'); let dataB = new Date(parts[2], parts[1] - 1, parts[0]); return dataB >= hoje; });
     document.getElementById('lista-meus-bloqueios-ui').innerHTML = ausencias.map((b, i) => {
         let texto = b.tipo === 'total' ? `${b.data} (Dia Inteiro)` : `${b.data} (${b.inicio}h às ${b.fim}h)`;
-        let nomeTec = (b.tecnico === 'Todos' || !b.tecnico) ? 'Todos' : window.getNomeTecnico(p, b.tecnico);
-        texto += ` | ${nomeTec}`;
+        texto += ` | ${b.tecnico === 'Todos' ? 'Todos' : 'Téc ' + b.tecnico}`;
         return `<span class="pill" style="background: var(--cobli-red); color: white; border: none; display: flex; align-items: center; gap: 6px;">${texto} <span style="cursor:pointer; font-weight:800; padding-left: 4px; border-left: 1px solid rgba(255,255,255,0.4);" onclick="window.removerMeuBloqueio(${i})">×</span></span>`;
     }).join('');
 };
@@ -2858,43 +2781,6 @@ window.renderDashboard = function() {
     document.getElementById("dash-agend").innerText = totalAgend;
     document.getElementById("dash-concluidos").innerText = concluidosCount;
     document.getElementById("dash-programados").innerText = programadosCount;
-    
-    // ---- PRODUÇÃO POR TÉCNICO (novo) ----
-    // Para cada prestador visível, calcular agendamentos por técnico
-    let distTecnicos = {}; // chave: "PrestadorNome > NomeTecnico"
-    agendamentos.forEach(a => {
-        if (isUserDashboard) { let sol = String(a.solicitante || '').toLowerCase(); if (!sol.includes(nomeLogado)) return; }
-        if (isPrestadorDashboard) { if (!window.meuPrestadorLogado || a.prestador !== window.meuPrestadorLogado.nome) return; }
-        // Tentar identificar o técnico via slot/occupancy (via prestador)
-        let pObj = prestadores.find(p => p.nome === a.prestador);
-        if (!pObj || !parseInt(pObj.qtdtecnicos) || parseInt(pObj.qtdtecnicos) <= 1) return;
-        // Sem coluna "tecnico" no agendamento; mostrar apenas se prestador tem >1 técnico
-        // (placeholder para futura expansão)
-    });
-    
-    // Renderizar card de produção por técnico se for prestador
-    let cardProdTec = document.getElementById('card-prod-tecnicos');
-    if (isPrestadorDashboard && window.meuPrestadorLogado) {
-        let pObj = window.meuPrestadorLogado;
-        let qtd = parseInt(pObj.qtdtecnicos) || 1;
-        if (qtd > 1 && cardProdTec) {
-            cardProdTec.style.display = 'block';
-            // Contar por posição de slot vs capacidade (heurística: dividir atribuição por ordem de slots)
-            // Como o agendamento não armazena o técnico alocado, mostramos capacidade de cada um
-            let listaTec = '';
-            for (let t = 1; t <= qtd; t++) {
-                let nomeTec = window.getNomeTecnico(pObj, t);
-                // Slots do técnico nesse período
-                let slotsCapacidade = pObj.agenda ? pObj.agenda.filter(a => !a.isAbsence && a.tecnico == t).length : 0;
-                listaTec += `<div style="display:flex; justify-content:space-between; align-items:center; background:var(--bg); padding:10px 12px; border-radius:var(--radius-sm); border:1px solid var(--border);">
-                    <div style="font-size:0.82rem; font-weight:700; color:var(--cobli-dark);">👷 ${nomeTec}</div>
-                    <div style="font-size:0.75rem; color:var(--muted);">${slotsCapacidade} slots/semana</div>
-                </div>`;
-            }
-            let bodyTec = document.getElementById('lista-prod-tecnicos');
-            if (bodyTec) bodyTec.innerHTML = listaTec;
-        } else if (cardProdTec) { cardProdTec.style.display = 'none'; }
-    } else if (cardProdTec) { cardProdTec.style.display = 'none'; }
     
     if(myChart) myChart.destroy();
     const ctxPrest = document.getElementById('chartPrestadores');
