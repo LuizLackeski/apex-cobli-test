@@ -2824,80 +2824,79 @@ window.removerMeuBloqueio = async function(indexVisivel) {
 
 // NOVO HELPER: Unifica a regra da gordura para o Dashboard (mesma do agendamento)
 window.getOcupacaoReal = function(prestador, dataStr, dNome) {
+    if (!prestador) return { geral: { total: 0, ocupadas: 0, livres: 0, pct: 0 }, tecnicos: {} };
+    
     let maxT = parseInt(prestador.qtdtecnicos) || 1;
     let tem_tecnico_especifico = prestador.agenda && prestador.agenda.some(a => a.tecnico);
 
+    // 1. Mapear Agendamentos (Independente de quem é o técnico)
     let jobsExistentes = [];
-    agendamentos.filter(a => a.prestador === prestador.nome && (a.data === dataStr || a.rawdate === dataStr) && !String(a.status).toLowerCase().includes('cancelado')).forEach(a => {
+    agendamentos.filter(a => {
+        let nomeAgend = String(a.prestador || '').trim().toUpperCase();
+        let nomeMeu = String(prestador.nome || '').trim().toUpperCase();
+        return nomeAgend === nomeMeu && (a.data === dataStr || a.rawdate === dataStr) && !String(a.status).toLowerCase().includes('cancelado');
+    }).forEach(a => {
         let slotsArr = Array.isArray(a.slots) ? a.slots : (typeof a.slots === 'string' ? a.slots.split(', ') : []);
         if (slotsArr.length > 0) {
             let ints = slotsArr.map(s => parseInt(s.split(':')[0])).filter(x => !isNaN(x)).sort((x,y) => x-y);
             if (ints.length > 0) {
                 let tecnicoIdx = resolverTecnico(a.tecnico_alocado, maxT, prestador, dNome);
-                jobsExistentes.push({ start: ints[0], end: ints[ints.length - 1], tecnico: tecnicoIdx });
+                jobsExistentes.push({ start: ints[0], end: ints[ints.length - 1], tecnico: tecnicoIdx, slotsCount: ints.length });
             }
         }
     });
 
-    let absenceMatrix = Array.from({length: maxT + 1}, () => new Set());
-    if (prestador.agenda) {
-        prestador.agenda.filter(a => a.isAbsence && a.data === dataStr).forEach(a => {
-            let start = a.tipo === 'total' ? 0 : parseInt(a.inicio);
-            let end = a.tipo === 'total' ? 24 : parseInt(a.fim);
-            if (a.tecnico && a.tecnico !== 'Todos') { for(let i=start; i<end; i++) absenceMatrix[parseInt(a.tecnico)].add(i); }
-            else { for(let t=1; t<=maxT; t++) { for(let i=start; i<end; i++) absenceMatrix[t].add(i); } }
-        });
-    }
-
+    // 2. Capacidade da Base (Agenda de hoje)
     let techHours = [];
+    let baseTotalEmpresa = 0;
     for (let t = 1; t <= maxT; t++) {
         let worksHours = tem_tecnico_especifico
             ? (prestador.agenda ? prestador.agenda.filter(a => a.dia === dNome && a.tecnico == t && !a.isAbsence).map(a => parseInt(a.hora)) : [])
             : (prestador.agenda ? prestador.agenda.filter(a => a.dia === dNome && !a.isAbsence).map(a => parseInt(a.hora)) : []);
-        techHours.push(new Set(worksHours.filter(h => !absenceMatrix[t].has(h))));
-    }
-
-    let techOcupadoJobs = Array.from({length: maxT}, () => new Set());
-    let techOcupadoGordura = Array.from({length: maxT}, () => new Set());
-
-    let alocarEm = (t, job) => {
-        for (let h = job.start; h <= job.end; h++) techOcupadoJobs[t].add(h);
-        for (let g = 1; g <= GORDURA_HORAS; g++) { techOcupadoGordura[t].add(job.start - g); techOcupadoGordura[t].add(job.end + g); }
-    };
-
-    for (let job of jobsExistentes) {
-        if (job.tecnico !== null && job.tecnico >= 0 && job.tecnico < maxT) {
-            alocarEm(job.tecnico, job);
-        } else {
-            let alocado = false;
-            for (let t = 0; t < maxT; t++) {
-                let pode = true;
-                for (let h = job.start; h <= job.end; h++) { if (techOcupadoJobs[t].has(h) || techOcupadoGordura[t].has(h)) { pode = false; break; } }
-                if (pode) { for (let g = 1; g <= GORDURA_HORAS; g++) { if (techOcupadoJobs[t].has(job.start - g) || techOcupadoJobs[t].has(job.end + g)) { pode = false; break; } } }
-                if (pode) { alocarEm(t, job); alocado = true; break; }
-            }
-            if (!alocado) { for (let t = 0; t < maxT; t++) alocarEm(t, job); }
+        
+        // Descontar Ausências
+        let blk = new Set();
+        if (prestador.agenda) {
+            prestador.agenda.filter(a => a.isAbsence && a.data === dataStr).forEach(a => {
+                let s = a.tipo === 'total' ? 0 : parseInt(a.inicio);
+                let e = a.tipo === 'total' ? 24 : parseInt(a.fim);
+                if (a.tecnico == t || a.tecnico === 'Todos' || !a.tecnico) { for(let i=s; i<e; i++) blk.add(i); }
+            });
         }
+        let finalHours = worksHours.filter(h => !blk.has(h));
+        techHours.push(new Set(finalHours));
+        baseTotalEmpresa += finalHours.length;
     }
 
+    // 3. Contagem de Ocupação (Lógica Blindada)
+    // Se o job existe no banco, ele CONSOME capacidade, mesmo que o técnico tenha mudado.
+    let ocupadasGeral = 0;
     let statsPorTecnico = {};
-    for (let t = 0; t < maxT; t++) {
-        let baseTotal = techHours[t].size;
-        let ocupadas = 0;
-        techHours[t].forEach(h => {
-            if (techOcupadoJobs[t].has(h) || techOcupadoGordura[t].has(h)) ocupadas++;
-        });
-        let livres = Math.max(0, baseTotal - ocupadas);
-        let pct = baseTotal > 0 ? Math.round((ocupadas / baseTotal) * 100) : 0;
-        statsPorTecnico[t + 1] = { total: baseTotal, ocupadas: ocupadas, livres: livres, pct: pct };
+    for (let i = 1; i <= maxT; i++) statsPorTecnico[i] = { total: techHours[i-1].size, ocupadas: 0 };
+
+    jobsExistentes.forEach(job => {
+        // Horas do job + gordura (estimativa de consumo de agenda)
+        let peso = job.slotsCount + (GORDURA_HORAS * 2); 
+        ocupadasGeral += job.slotsCount; // Para o Geral, somamos apenas a hora real
+
+        if (job.tecnico !== null && statsPorTecnico[job.tecnico + 1]) {
+            statsPorTecnico[job.tecnico + 1].ocupadas += job.slotsCount;
+        }
+    });
+
+    // 4. Finalizar cálculos
+    for (let t in statsPorTecnico) {
+        let s = statsPorTecnico[t];
+        s.livres = Math.max(0, s.total - s.ocupadas);
+        s.pct = s.total > 0 ? Math.round((s.ocupadas / s.total) * 100) : 0;
     }
+
+    let pctGeral = baseTotalEmpresa > 0 ? Math.round((ocupadasGeral / baseTotalEmpresa) * 100) : 0;
     
-    let totalGeral = 0, ocupadasGeral = 0;
-    Object.values(statsPorTecnico).forEach(s => { totalGeral += s.total; ocupadasGeral += s.ocupadas; });
-    let livresGeral = Math.max(0, totalGeral - ocupadasGeral);
-    let pctGeral = totalGeral > 0 ? Math.round((ocupadasGeral / totalGeral) * 100) : 0;
-    
-    return { geral: { total: totalGeral, ocupadas: ocupadasGeral, livres: livresGeral, pct: pctGeral }, tecnicos: statsPorTecnico };
+    return { 
+        geral: { total: baseTotalEmpresa, ocupadas: ocupadasGeral, livres: Math.max(0, baseTotalEmpresa - ocupadasGeral), pct: pctGeral }, 
+        tecnicos: statsPorTecnico 
+    };
 };
 
 function calcularOcupacao(prestadorNome) {
@@ -3292,12 +3291,9 @@ window.renderDashboard = function() {
     let nomeLogado = currentUser ? extrairNomeDoEmail(currentUser.email).toLowerCase() : '';
     let totalAgend = 0, concluidosCount = 0, programadosCount = 0;
     let distPrest = {}, distServ = {}, distLocais = {}, totalServicosGeral = 0;
-    
-    // Objeto para contar a produção real por técnico (independente de estar na base ou não)
     let contagemProducaoTecnico = {}; 
 
     agendamentos.forEach(a => {
-        // 1. Filtro de Permissão
         if (isUserDashboard) { 
             let sol = String(a.solicitante || '').toLowerCase(); 
             if (!sol.includes(nomeLogado)) return; 
@@ -3312,22 +3308,18 @@ window.renderDashboard = function() {
         
         totalAgend++;
         let status = a.status ? String(a.status).toLowerCase() : '';
-        if (status.includes('conclu') || status.includes('completed') || status.includes('finalizado') || status.includes('impedido') || status.includes('reportado') || status.includes('falha')) concluidosCount++;
+        if (status.includes('conclu') || status.includes('completed') || status.includes('finalizado') || status.includes('impedido')) concluidosCount++;
         if (status.includes('agendado') || status.includes('scheduled')) programadosCount++;
-        
-        // 2. Coletar estatísticas gerais
         if(a.prestador) distPrest[a.prestador] = (distPrest[a.prestador] || 0) + 1;
         if(a.cidade && a.uf) { let local = `${a.cidade}/${a.uf}`.toUpperCase(); distLocais[local] = (distLocais[local] || 0) + 1; }
         
-        // 3. Contagem por Técnico (A MÁGICA ESTÁ AQUI)
+        // Captura o técnico (trata número legado e nome novo)
         let tecAlocado = a.tecnico_alocado || "Não Alocado";
-        // Se o dado for um número antigo (ID), tentamos traduzir para o nome se possível
-        if (/^\d+$/.test(tecAlocado) && isPrestadorDashboard && window.meuPrestadorLogado) {
+        if (/^\d+$/.test(tecAlocado) && window.meuPrestadorLogado) {
             tecAlocado = window.getNomeTecnico(window.meuPrestadorLogado, tecAlocado);
         }
         contagemProducaoTecnico[tecAlocado] = (contagemProducaoTecnico[tecAlocado] || 0) + 1;
 
-        // 4. Detalhamento de produtos
         let txt = a.produtos_texto || a.produtos || '';
         if (String(txt).trim().length > 0) {
             let linhas = String(txt).split('\n');
@@ -3344,77 +3336,52 @@ window.renderDashboard = function() {
     document.getElementById("dash-concluidos").innerText = concluidosCount;
     document.getElementById("dash-programados").innerText = programadosCount;
     
-    // ---- RENDERIZAR PRODUÇÃO POR TÉCNICO (COM HISTÓRICO) ----
     let cardProdTec = document.getElementById('card-prod-tecnicos');
     if (isPrestadorDashboard && window.meuPrestadorLogado) {
         cardProdTec.style.display = 'block';
         let pObj = window.meuPrestadorLogado;
         let listaTecHtml = '';
-
-        // Pegamos os nomes dos técnicos que estão ATIVOS na base agora
         let nomesAtivos = [];
         let qtdAtivos = parseInt(pObj.qtdtecnicos) || 0;
-        for(let i=1; i <= qtdAtivos; i++) {
-            nomesAtivos.push(window.getNomeTecnico(pObj, i).trim().toLowerCase());
-        }
+        for(let i=1; i <= qtdAtivos; i++) nomesAtivos.push(window.getNomeTecnico(pObj, i).trim().toLowerCase());
 
-        // Ordenamos: primeiro os ativos, depois os inativos (históricos)
-        let todosTecnicosVistos = Object.keys(contagemProducaoTecnico).sort((a, b) => {
-            let aAtivo = nomesAtivos.includes(a.trim().toLowerCase());
-            let bAtivo = nomesAtivos.includes(b.trim().toLowerCase());
-            if (aAtivo && !bAtivo) return -1;
-            if (!aAtivo && bAtivo) return 1;
-            return b - a;
+        Object.keys(contagemProducaoTecnico).sort().forEach(nomeTec => {
+            let ehAtivo = nomesAtivos.includes(nomeTec.trim().toLowerCase()) || nomeTec === "Não Alocado";
+            let estilo = ehAtivo ? "font-weight:700;" : "text-decoration:line-through; opacity:0.6;";
+            let tag = ehAtivo ? "" : " <span style='font-size:0.6rem; background:#eee; padding:2px 4px; border-radius:3px;'>HISTÓRICO</span>";
+            listaTecHtml += `<div style="display:flex; justify-content:space-between; padding:8px 12px; background:var(--bg); border-radius:6px; margin-bottom:4px; border:1px solid var(--border);">
+                <div style="font-size:0.8rem; ${estilo}">👷 ${nomeTec}${tag}</div>
+                <div style="font-size:0.85rem; font-weight:800; color:var(--primary);">${contagemProducaoTecnico[nomeTec]} OSs</div>
+            </div>`;
         });
-
-        todosTecnicosVistos.forEach(nomeTec => {
-            let qtdJobs = contagemProducaoTecnico[nomeTec];
-            let ehAtivo = nomesAtivos.includes(nomeTec.trim().toLowerCase());
-            let estiloNome = ehAtivo ? "font-weight:700; color:var(--cobli-dark);" : "text-decoration: line-through; color:var(--muted); opacity: 0.7;";
-            let badgeInativo = ehAtivo ? "" : " <span style='font-size:0.6rem; background:#dde1f0; padding:2px 5px; border-radius:3px; text-decoration:none !important; display:inline-block;'>FORA DA BASE</span>";
-
-            listaTecHtml += `
-                <div style="display:flex; justify-content:space-between; align-items:center; background:var(--bg); padding:10px 12px; border-radius:var(--radius-sm); border:1px solid var(--border); margin-bottom:4px;">
-                    <div style="font-size:0.82rem; ${estiloNome}">👷 ${nomeTec}${badgeInativo}</div>
-                    <div style="font-size:0.85rem; font-weight:800; color:var(--primary); font-family:var(--font-mono);">${qtdJobs} OSs</div>
-                </div>`;
-        });
-
-        document.getElementById('lista-prod-tecnicos').innerHTML = listaTecHtml || '<div style="font-size:0.8rem; color:var(--muted);">Nenhum técnico alocado no período.</div>';
+        document.getElementById('lista-prod-tecnicos').innerHTML = listaTecHtml;
     } else {
         cardProdTec.style.display = 'none';
     }
     
-    // ---- GRÁFICOS (MANTIDOS IGUAIS) ----
     if(myChart) myChart.destroy();
     const ctxPrest = document.getElementById('chartPrestadores');
     if (ctxPrest) {
         myChart = new Chart(ctxPrest.getContext('2d'), {
             type: 'bar',
             data: { labels: Object.keys(distPrest), datasets: [{ label: 'Agendamentos', data: Object.values(distPrest), backgroundColor: '#001BB8', borderRadius: 5 }] },
-            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, datalabels: { anchor: 'center', align: 'center', color: 'white', font: {weight: 'bold', size: 12, family: "'Space Mono', monospace"}, formatter: function(value, context) { let percent = totalAgend > 0 ? Math.round((value / totalAgend) * 100) : 0; return `${value} | ${percent}%`; } } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, datalabels: { anchor: 'center', align: 'center', color: 'white', font: {weight: 'bold', size: 12}, formatter: (v) => v } }, scales: { y: { beginAtZero: true } } },
             plugins: [ChartDataLabels]
         });
     }
 
     let servicosOrdenados = Object.entries(distServ).sort((a,b) => b[1] - a[1]);
-    let listaHtml = servicosOrdenados.map(s => {
-        let qtd = s[1]; let percent = totalServicosGeral > 0 ? Math.round((qtd / totalServicosGeral) * 100) : 0;
-        return `<div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg); padding: 10px 12px; border-radius: var(--radius-sm); border: 1px solid var(--border);">
-            <div style="font-size: 0.78rem; font-weight: 600; color: var(--cobli-dark); flex: 1; padding-right: 10px; line-height: 1.4;">${s[0]}</div>
-            <div style="font-size: 0.88rem; font-weight: 800; color: var(--primary); background: #e8ecff; padding: 5px 12px; border-radius: 5px; border: 1px solid rgba(0,27,184,0.15); white-space: nowrap; font-family:var(--font-mono);">${qtd} <span style="color: var(--muted); font-weight: 600; font-size: 0.7rem;">(${percent}%)</span></div>
-        </div>`;
-    }).join('');
-    if (document.getElementById('lista-dashboard-servicos')) document.getElementById('lista-dashboard-servicos').innerHTML = listaHtml || `<div style="font-size:0.82rem; color:var(--muted); padding: 10px;">Nenhum serviço computado.</div>`;
+    let listaHtml = servicosOrdenados.map(s => `<div style="display:flex; justify-content:space-between; align-items:center; background:var(--bg); padding:10px 12px; border-radius:var(--radius-sm); border:1px solid var(--border); margin-bottom:4px;"><div style="font-size:0.78rem; font-weight:600; color:var(--cobli-dark); flex:1;">${s[0]}</div><div style="font-size:0.88rem; font-weight:800; color:var(--primary); background:#e8ecff; padding:5px 12px; border-radius:5px;">${s[1]}</div></div>`).join('');
+    if (document.getElementById('lista-dashboard-servicos')) document.getElementById('lista-dashboard-servicos').innerHTML = listaHtml || "Sem dados.";
 
-    let locaisOrdenados = Object.entries(distLocais).sort((a,b) => b[1] - a[1]).slice(0, 10); 
     if(chartLocais) chartLocais.destroy();
     const ctxLocais = document.getElementById('chartLocais');
     if (ctxLocais) {
+        let locaisOrdenados = Object.entries(distLocais).sort((a,b) => b[1] - a[1]).slice(0, 10);
         chartLocais = new Chart(ctxLocais.getContext('2d'), {
             type: 'bar',
             data: { labels: locaisOrdenados.map(l => l[0]), datasets: [{ label: 'Atendimentos', data: locaisOrdenados.map(l => l[1]), backgroundColor: '#00AE97', borderRadius: 5 }] },
-            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, datalabels: { color: 'white', font: {weight: 'bold', size: 12, family: "'Space Mono', monospace"} } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, datalabels: { color: 'white', font: {weight: 'bold'} } } },
             plugins: [ChartDataLabels]
         });
     }
