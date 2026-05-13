@@ -3284,7 +3284,7 @@ window.atualizarFiltrosPrestador = function(){
 // DASHBOARD
 // ==========================================
 // ==========================================
-// DASHBOARD
+// DASHBOARD (VERSÃO COM HISTÓRICO DE TÉCNICOS)
 // ==========================================
 window.renderDashboard = function() {
     let isUserDashboard = (userRole === 'SMARTOPS'); 
@@ -3293,14 +3293,16 @@ window.renderDashboard = function() {
     let totalAgend = 0, concluidosCount = 0, programadosCount = 0;
     let distPrest = {}, distServ = {}, distLocais = {}, totalServicosGeral = 0;
     
+    // Objeto para contar a produção real por técnico (independente de estar na base ou não)
+    let contagemProducaoTecnico = {}; 
+
     agendamentos.forEach(a => {
-        // Filtro SmartOps
+        // 1. Filtro de Permissão
         if (isUserDashboard) { 
             let sol = String(a.solicitante || '').toLowerCase(); 
             if (!sol.includes(nomeLogado)) return; 
         }
         
-        // Filtro Prestador (NOVA LÓGICA ROBUSTA AQUI)
         if (isPrestadorDashboard) { 
             if (!window.meuPrestadorLogado) return;
             let nomeAgend = String(a.prestador || '').trim().toUpperCase();
@@ -3312,8 +3314,20 @@ window.renderDashboard = function() {
         let status = a.status ? String(a.status).toLowerCase() : '';
         if (status.includes('conclu') || status.includes('completed') || status.includes('finalizado') || status.includes('impedido') || status.includes('reportado') || status.includes('falha')) concluidosCount++;
         if (status.includes('agendado') || status.includes('scheduled')) programadosCount++;
+        
+        // 2. Coletar estatísticas gerais
         if(a.prestador) distPrest[a.prestador] = (distPrest[a.prestador] || 0) + 1;
         if(a.cidade && a.uf) { let local = `${a.cidade}/${a.uf}`.toUpperCase(); distLocais[local] = (distLocais[local] || 0) + 1; }
+        
+        // 3. Contagem por Técnico (A MÁGICA ESTÁ AQUI)
+        let tecAlocado = a.tecnico_alocado || "Não Alocado";
+        // Se o dado for um número antigo (ID), tentamos traduzir para o nome se possível
+        if (/^\d+$/.test(tecAlocado) && isPrestadorDashboard && window.meuPrestadorLogado) {
+            tecAlocado = window.getNomeTecnico(window.meuPrestadorLogado, tecAlocado);
+        }
+        contagemProducaoTecnico[tecAlocado] = (contagemProducaoTecnico[tecAlocado] || 0) + 1;
+
+        // 4. Detalhamento de produtos
         let txt = a.produtos_texto || a.produtos || '';
         if (String(txt).trim().length > 0) {
             let linhas = String(txt).split('\n');
@@ -3323,35 +3337,55 @@ window.renderDashboard = function() {
                 let qtd = 1; let matchQtd = limpo.match(/Qtd:\s*(\d+)/i); if (matchQtd) qtd = parseInt(matchQtd[1]) || 1;
                 distServ[nomeServico] = (distServ[nomeServico] || 0) + qtd; totalServicosGeral += qtd;
             });
-        } else if (a.segment && a.tipo_servico) { let nomeServ = `[${String(a.segment).toUpperCase()}] ${a.tipo_servico}`; distServ[nomeServ] = (distServ[nomeServ] || 0) + 1; totalServicosGeral += 1; }
-        else { distServ['Outros'] = (distServ['Outros'] || 0) + 1; totalServicosGeral += 1; }
+        }
     });
     
     document.getElementById("dash-agend").innerText = totalAgend;
     document.getElementById("dash-concluidos").innerText = concluidosCount;
     document.getElementById("dash-programados").innerText = programadosCount;
     
-    // ---- PRODUÇÃO POR TÉCNICO ----
+    // ---- RENDERIZAR PRODUÇÃO POR TÉCNICO (COM HISTÓRICO) ----
     let cardProdTec = document.getElementById('card-prod-tecnicos');
     if (isPrestadorDashboard && window.meuPrestadorLogado) {
+        cardProdTec.style.display = 'block';
         let pObj = window.meuPrestadorLogado;
-        let qtd = parseInt(pObj.qtdtecnicos) || 1;
-        if (qtd > 1 && cardProdTec) {
-            cardProdTec.style.display = 'block';
-            let listaTec = '';
-            for (let t = 1; t <= qtd; t++) {
-                let nomeTec = window.getNomeTecnico(pObj, t);
-                let slotsCapacidade = pObj.agenda ? pObj.agenda.filter(a => !a.isAbsence && a.tecnico == t).length : 0;
-                listaTec += `<div style="display:flex; justify-content:space-between; align-items:center; background:var(--bg); padding:10px 12px; border-radius:var(--radius-sm); border:1px solid var(--border);">
-                    <div style="font-size:0.82rem; font-weight:700; color:var(--cobli-dark);">👷 ${nomeTec}</div>
-                    <div style="font-size:0.75rem; color:var(--muted);">${slotsCapacidade} slots/semana base</div>
+        let listaTecHtml = '';
+
+        // Pegamos os nomes dos técnicos que estão ATIVOS na base agora
+        let nomesAtivos = [];
+        let qtdAtivos = parseInt(pObj.qtdtecnicos) || 0;
+        for(let i=1; i <= qtdAtivos; i++) {
+            nomesAtivos.push(window.getNomeTecnico(pObj, i).trim().toLowerCase());
+        }
+
+        // Ordenamos: primeiro os ativos, depois os inativos (históricos)
+        let todosTecnicosVistos = Object.keys(contagemProducaoTecnico).sort((a, b) => {
+            let aAtivo = nomesAtivos.includes(a.trim().toLowerCase());
+            let bAtivo = nomesAtivos.includes(b.trim().toLowerCase());
+            if (aAtivo && !bAtivo) return -1;
+            if (!aAtivo && bAtivo) return 1;
+            return b - a;
+        });
+
+        todosTecnicosVistos.forEach(nomeTec => {
+            let qtdJobs = contagemProducaoTecnico[nomeTec];
+            let ehAtivo = nomesAtivos.includes(nomeTec.trim().toLowerCase());
+            let estiloNome = ehAtivo ? "font-weight:700; color:var(--cobli-dark);" : "text-decoration: line-through; color:var(--muted); opacity: 0.7;";
+            let badgeInativo = ehAtivo ? "" : " <span style='font-size:0.6rem; background:#dde1f0; padding:2px 5px; border-radius:3px; text-decoration:none !important; display:inline-block;'>FORA DA BASE</span>";
+
+            listaTecHtml += `
+                <div style="display:flex; justify-content:space-between; align-items:center; background:var(--bg); padding:10px 12px; border-radius:var(--radius-sm); border:1px solid var(--border); margin-bottom:4px;">
+                    <div style="font-size:0.82rem; ${estiloNome}">👷 ${nomeTec}${badgeInativo}</div>
+                    <div style="font-size:0.85rem; font-weight:800; color:var(--primary); font-family:var(--font-mono);">${qtdJobs} OSs</div>
                 </div>`;
-            }
-            let bodyTec = document.getElementById('lista-prod-tecnicos');
-            if (bodyTec) bodyTec.innerHTML = listaTec;
-        } else if (cardProdTec) { cardProdTec.style.display = 'none'; }
-    } else if (cardProdTec) { cardProdTec.style.display = 'none'; }
+        });
+
+        document.getElementById('lista-prod-tecnicos').innerHTML = listaTecHtml || '<div style="font-size:0.8rem; color:var(--muted);">Nenhum técnico alocado no período.</div>';
+    } else {
+        cardProdTec.style.display = 'none';
+    }
     
+    // ---- GRÁFICOS (MANTIDOS IGUAIS) ----
     if(myChart) myChart.destroy();
     const ctxPrest = document.getElementById('chartPrestadores');
     if (ctxPrest) {
@@ -3371,8 +3405,7 @@ window.renderDashboard = function() {
             <div style="font-size: 0.88rem; font-weight: 800; color: var(--primary); background: #e8ecff; padding: 5px 12px; border-radius: 5px; border: 1px solid rgba(0,27,184,0.15); white-space: nowrap; font-family:var(--font-mono);">${qtd} <span style="color: var(--muted); font-weight: 600; font-size: 0.7rem;">(${percent}%)</span></div>
         </div>`;
     }).join('');
-    if (!listaHtml) listaHtml = `<div style="font-size:0.82rem; color:var(--muted); padding: 10px;">Nenhum serviço computado.</div>`;
-    const listaServicosElement = document.getElementById('lista-dashboard-servicos'); if (listaServicosElement) listaServicosElement.innerHTML = listaHtml;
+    if (document.getElementById('lista-dashboard-servicos')) document.getElementById('lista-dashboard-servicos').innerHTML = listaHtml || `<div style="font-size:0.82rem; color:var(--muted); padding: 10px;">Nenhum serviço computado.</div>`;
 
     let locaisOrdenados = Object.entries(distLocais).sort((a,b) => b[1] - a[1]).slice(0, 10); 
     if(chartLocais) chartLocais.destroy();
