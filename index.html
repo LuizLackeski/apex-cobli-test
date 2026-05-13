@@ -2046,6 +2046,24 @@ window.getAusenciasDoDia = function(prestador, dStr) {
 };
 
 // Gordura de deslocamento entre atendimentos (em horas)
+// Helper: resolve tecnico_alocado (nome ou número) para índice 0-based, ou null
+function resolverTecnico(tecnicoAlocado, maxT, prestador, dNome) {
+    if (!tecnicoAlocado) return null;
+    let val = String(tecnicoAlocado).trim();
+    // Se for número puro (legado), usar como índice
+    if (/^\d+$/.test(val)) {
+        let idx = parseInt(val) - 1;
+        return (idx >= 0 && idx < maxT) ? idx : null;
+    }
+    // Se for nome, procurar no nomes_tecnicos
+    if (prestador.nomes_tecnicos) {
+        for (let t = 1; t <= maxT; t++) {
+            if (prestador.nomes_tecnicos[t] && prestador.nomes_tecnicos[t].trim() === val) return t - 1;
+        }
+    }
+    return null;
+}
+
 const GORDURA_HORAS = 1;
 
 window.podeAgendar = function(prestador, data, novosSlotsInt, dNome) {
@@ -2058,8 +2076,8 @@ window.podeAgendar = function(prestador, data, novosSlotsInt, dNome) {
         let slotsArr = Array.isArray(a.slots) ? a.slots : (typeof a.slots === 'string' ? a.slots.split(', ') : []);
         if (slotsArr.length > 0) {
             let ints = slotsArr.map(s => parseInt(s.split(':')[0])).sort((x,y) => x-y);
-            let tecnico = a.tecnico_alocado ? parseInt(a.tecnico_alocado) : null;
-            jobsExistentes.push({ start: ints[0], end: ints[ints.length - 1], tecnico });
+            let tecnicoIdx = resolverTecnico(a.tecnico_alocado, maxT, prestador, dNome);
+            jobsExistentes.push({ start: ints[0], end: ints[ints.length - 1], tecnico: tecnicoIdx });
         }
     });
 
@@ -2096,8 +2114,8 @@ window.podeAgendar = function(prestador, data, novosSlotsInt, dNome) {
 
     for (let job of jobsExistentes) {
         // Se o job tem técnico alocado, bloqueia só nesse técnico
-        if (job.tecnico && job.tecnico >= 1 && job.tecnico <= maxT) {
-            let t = job.tecnico - 1;
+        if (job.tecnico !== null && job.tecnico >= 0 && job.tecnico < maxT) {
+            let t = job.tecnico;
             for (let h = job.start; h <= job.end; h++) techOcupado[t].add(h);
             // Gordura antes e depois
             for (let g = 1; g <= GORDURA_HORAS; g++) { techOcupado[t].add(job.start - g); techOcupado[t].add(job.end + g); }
@@ -2143,8 +2161,8 @@ window.getTecnicoParaJob = function(prestador, data, novosSlotsInt, dNome) {
         let slotsArr = Array.isArray(a.slots) ? a.slots : (typeof a.slots === 'string' ? a.slots.split(', ') : []);
         if (slotsArr.length > 0) {
             let ints = slotsArr.map(s => parseInt(s.split(':')[0])).sort((x,y) => x-y);
-            let tecnico = a.tecnico_alocado ? parseInt(a.tecnico_alocado) : null;
-            jobsExistentes.push({ start: ints[0], end: ints[ints.length - 1], tecnico });
+            let tecnicoIdx = resolverTecnico(a.tecnico_alocado, maxT, prestador, dNome);
+            jobsExistentes.push({ start: ints[0], end: ints[ints.length - 1], tecnico: tecnicoIdx });
         }
     });
 
@@ -2168,8 +2186,8 @@ window.getTecnicoParaJob = function(prestador, data, novosSlotsInt, dNome) {
 
     let techOcupado = Array.from({length: maxT}, () => new Set());
     for (let job of jobsExistentes) {
-        if (job.tecnico && job.tecnico >= 1 && job.tecnico <= maxT) {
-            let t = job.tecnico - 1;
+        if (job.tecnico !== null && job.tecnico >= 0 && job.tecnico < maxT) {
+            let t = job.tecnico;
             for (let h = job.start; h <= job.end; h++) techOcupado[t].add(h);
             for (let g = 1; g <= GORDURA_HORAS; g++) { techOcupado[t].add(job.start - g); techOcupado[t].add(job.end + g); }
         } else {
@@ -2192,7 +2210,11 @@ window.getTecnicoParaJob = function(prestador, data, novosSlotsInt, dNome) {
         if (!temSlots) continue;
         let conflito = false;
         for (let h = novoJob.start - GORDURA_HORAS; h <= novoJob.end + GORDURA_HORAS; h++) { if (techOcupado[t].has(h)) { conflito = true; break; } }
-        if (!conflito) return t + 1; // 1-based
+        if (!conflito) {
+            // Retornar NOME do técnico (t é 0-based, técnico é t+1)
+            let nomeTec = window.getNomeTecnico(prestador, t + 1);
+            return nomeTec;
+        }
     }
     return null;
 };
