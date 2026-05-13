@@ -2870,17 +2870,39 @@ window.getOcupacaoReal = function(prestador, dataStr, dNome) {
 
     // 3. Contagem de Ocupação (Lógica Blindada)
     // Se o job existe no banco, ele CONSOME capacidade, mesmo que o técnico tenha mudado.
+// 3. Contagem de Ocupação (Lógica Blindada com correção de Órfãos)
     let ocupadasGeral = 0;
     let statsPorTecnico = {};
     for (let i = 1; i <= maxT; i++) statsPorTecnico[i] = { total: techHours[i-1].size, ocupadas: 0 };
 
+    let jobsOrfaos = []; // Array para guardar os jobs do técnico que mudou de nome
+
     jobsExistentes.forEach(job => {
-        // Horas do job + gordura (estimativa de consumo de agenda)
         let peso = job.slotsCount + (GORDURA_HORAS * 2); 
-        ocupadasGeral += job.slotsCount; // Para o Geral, somamos apenas a hora real
+        ocupadasGeral += job.slotsCount; 
 
         if (job.tecnico !== null && statsPorTecnico[job.tecnico + 1]) {
             statsPorTecnico[job.tecnico + 1].ocupadas += job.slotsCount;
+        } else {
+            // Se não achou o técnico (ex: mudou o nome), guarda para distribuir
+            jobsOrfaos.push(job);
+        }
+    });
+
+    // Pega as OSs do ex-técnico e joga no técnico atual que tiver espaço
+    // para garantir que a agenda de 15 dias mostre esse tempo como ocupado!
+    jobsOrfaos.forEach(job => {
+        let alocado = false;
+        for (let i = 1; i <= maxT; i++) {
+            if (statsPorTecnico[i].total - statsPorTecnico[i].ocupadas >= job.slotsCount) {
+                statsPorTecnico[i].ocupadas += job.slotsCount;
+                alocado = true;
+                break;
+            }
+        }
+        // Se a agenda estiver lotada, força no Técnico 1 pra não sumir do gráfico
+        if (!alocado && maxT > 0) {
+            statsPorTecnico[1].ocupadas += job.slotsCount;
         }
     });
 
@@ -3336,19 +3358,35 @@ window.renderDashboard = function() {
     document.getElementById("dash-concluidos").innerText = concluidosCount;
     document.getElementById("dash-programados").innerText = programadosCount;
     
-    let cardProdTec = document.getElementById('card-prod-tecnicos');
+let cardProdTec = document.getElementById('card-prod-tecnicos');
+    
+    // Libera a visualização tanto para o Prestador quanto para o Gestor (se o gestor tiver filtrado 1 prestador)
+    let prestadorAlvo = null;
     if (isPrestadorDashboard && window.meuPrestadorLogado) {
+        prestadorAlvo = window.meuPrestadorLogado;
+    } else if (!isPrestadorDashboard) {
+        let prestadoresMarcadosAgora = Array.from(document.querySelectorAll('.cb-prestador:checked')).map(cb => cb.value);
+        if (prestadoresMarcadosAgora.length === 1) {
+            prestadorAlvo = prestadores.find(p => p.nome === prestadoresMarcadosAgora[0]);
+        }
+    }
+
+    if (prestadorAlvo) {
         cardProdTec.style.display = 'block';
-        let pObj = window.meuPrestadorLogado;
+        let pObj = prestadorAlvo;
         let listaTecHtml = '';
         let nomesAtivos = [];
         let qtdAtivos = parseInt(pObj.qtdtecnicos) || 0;
         for(let i=1; i <= qtdAtivos; i++) nomesAtivos.push(window.getNomeTecnico(pObj, i).trim().toLowerCase());
 
         Object.keys(contagemProducaoTecnico).sort().forEach(nomeTec => {
+            // Regra do Tachado: Se não está na lista de ativos, é ex-técnico!
             let ehAtivo = nomesAtivos.includes(nomeTec.trim().toLowerCase()) || nomeTec === "Não Alocado";
-            let estilo = ehAtivo ? "font-weight:700;" : "text-decoration:line-through; opacity:0.6;";
-            let tag = ehAtivo ? "" : " <span style='font-size:0.6rem; background:#eee; padding:2px 4px; border-radius:3px;'>HISTÓRICO</span>";
+            
+            // Aqui aplicamos o vermelho e o line-through
+            let estilo = ehAtivo ? "font-weight:700;" : "text-decoration:line-through; color: var(--cobli-red); opacity:0.8;";
+            let tag = ehAtivo ? "" : " <span style='font-size:0.6rem; background:#fee2e2; color:var(--cobli-red); padding:2px 5px; border-radius:4px; font-weight:800; margin-left: 5px;'>EX-TÉCNICO</span>";
+            
             listaTecHtml += `<div style="display:flex; justify-content:space-between; padding:8px 12px; background:var(--bg); border-radius:6px; margin-bottom:4px; border:1px solid var(--border);">
                 <div style="font-size:0.8rem; ${estilo}">👷 ${nomeTec}${tag}</div>
                 <div style="font-size:0.85rem; font-weight:800; color:var(--primary);">${contagemProducaoTecnico[nomeTec]} OSs</div>
