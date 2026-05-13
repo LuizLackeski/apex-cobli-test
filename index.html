@@ -1976,27 +1976,37 @@ window.excluirUsuarioPerfil = function(id, email, nivelAlvo) {
 // ==========================================
 window.carregarDadosDoBanco = async function() { 
     try { 
-        const resP = await fetch(`${API_URL}/prestadores`, { headers: getHeaders() }); prestadores = await resP.json(); 
-        if (userRole === 'GESTOR' || userRole === 'ADMIN') window.renderizarListaPrestadores(); 
-        const resA = await fetch(`${DB_URL}/agendamentos?select=*&order=created_at.desc`, { method: 'GET', headers: getHeaders() }); 
-        const dataAgend = await resA.json(); agendamentos = Array.isArray(dataAgend) ? dataAgend : [];
-        if (userRole === 'PRESTADOR' && currentUser) {
-            let emailLogado = currentUser.email.toLowerCase();
+        // 1. Busca Prestadores
+        const resP = await fetch(`${API_URL}/prestadores`, { headers: getHeaders() }); 
+        prestadores = await resP.json(); 
+        
+        // 2. Identifica o Vínculo do Usuário Logado
+        if (currentUser) {
+            let emailLogado = currentUser.email.toLowerCase().trim();
             window.meuPrestadorLogado = prestadores.find(p => {
                 if (!p.usuario_apex) return false;
+                // Lógica de múltiplos e-mails separados por ;
                 let emails = p.usuario_apex.toLowerCase().split(';').map(e => e.trim()).filter(Boolean);
                 return emails.includes(emailLogado);
             });
-            if(window.meuPrestadorLogado) window.renderizarMinhaDisponibilidade();
+            
+            // Se achou o prestador e ele é um PRESTADOR, renderiza as ausências dele
+            if (userRole === 'PRESTADOR' && window.meuPrestadorLogado) {
+                window.renderizarMinhaDisponibilidade();
+            }
         }
+
+        if (userRole === 'GESTOR' || userRole === 'ADMIN') window.renderizarListaPrestadores(); 
+        
+        // 3. Busca Agendamentos
+        const resA = await fetch(`${DB_URL}/agendamentos?select=*&order=created_at.desc`, { method: 'GET', headers: getHeaders() }); 
+        const dataAgend = await resA.json(); 
+        agendamentos = Array.isArray(dataAgend) ? dataAgend : [];
+
+        // 4. Renderiza as telas
         window.renderPainel(); 
         window.renderDashboard(); 
     } catch(e) { console.error("Erro bd:", e); } 
-};
-
-window.enviarNotificacaoSlack = async function(msg) {
-    const URL = "https://fqaqlofndeihmhkopvan.supabase.co/functions/v1/notificar-slack";
-    try { await fetch(URL, { method: 'POST', headers: getHeaders(), body: JSON.stringify({ text: msg }) }); } catch (e) { console.error("Erro Slack:", e); }
 };
 
 // ==========================================
@@ -3087,37 +3097,45 @@ window.trocarAba = function(id, btn){
 
 window.renderPainel = function(){ 
     if (!Array.isArray(agendamentos)) { document.getElementById("painel-conteudo").innerHTML = "Nenhum dado."; return; }
-    let fInicio = document.getElementById("filtroDataInicio").value; let fFim = document.getElementById("filtroDataFim").value; 
-    let fTicket = document.getElementById("filtroTicket").value.toLowerCase(); let fSol = document.getElementById("filtroSolicitante").value.toLowerCase();
+    
+    let fInicio = document.getElementById("filtroDataInicio").value; 
+    let fFim = document.getElementById("filtroDataFim").value; 
+    let fTicket = document.getElementById("filtroTicket").value.toLowerCase(); 
+    let fSol = document.getElementById("filtroSolicitante").value.toLowerCase();
     let statusMarcados = Array.from(document.querySelectorAll('.cb-status:checked')).map(cb => cb.value);
     let prestadoresMarcados = Array.from(document.querySelectorAll('.cb-prestador:checked')).map(cb => cb.value);
-    let temFiltroAtivo = fInicio || fFim || fTicket || fSol || statusMarcados.length > 0 || prestadoresMarcados.length > 0;
-    let indicador = document.getElementById('indicador-filtro'); if(indicador) indicador.style.display = temFiltroAtivo ? 'block' : 'none';
-    let prestadorVinculado = null;
-    if(userRole === 'PRESTADOR' && currentUser) { 
-        let emailLogado = currentUser.email.toLowerCase(); 
-        prestadorVinculado = prestadores.find(p => {
-            if (!p.usuario_apex) return false;
-            let emails = p.usuario_apex.toLowerCase().split(';').map(e => e.trim()).filter(Boolean);
-            return emails.includes(emailLogado);
-        });
-    }
+
     filtradosPainel = agendamentos.filter(a => { 
         if(!a.data || !a.ticket) return false;
-        if(userRole === 'PRESTADOR') { if (!prestadorVinculado || a.prestador !== prestadorVinculado.nome) return false; }
-        let [d, m, y] = a.data.split('/'); let dataAgendada = `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
+
+        // SE FOR PRESTADOR: Só vê o que está vinculado ao seu e-mail
+        if(userRole === 'PRESTADOR') { 
+            if (!window.meuPrestadorLogado) return false; 
+            // Comparação robusta (sem espaços e tudo em maiúsculo)
+            let nomeAgendamento = String(a.prestador || '').trim().toUpperCase();
+            let nomePrestadorLogado = String(window.meuPrestadorLogado.nome || '').trim().toUpperCase();
+            if (nomeAgendamento !== nomePrestadorLogado) return false; 
+        }
+
+        // Filtros normais (Data, Ticket, etc)
+        let [d, m, y] = a.data.split('/'); 
+        let dataAgendada = `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
         let matchDate = (!fInicio || dataAgendada >= fInicio) && (!fFim || dataAgendada <= fFim); 
         let matchTicket = (!fTicket || (a.ticket && a.ticket.toLowerCase().includes(fTicket)));
         let matchSol = (!fSol || (a.solicitante && a.solicitante.toLowerCase().includes(fSol)));
         let matchPrest = prestadoresMarcados.length === 0 || prestadoresMarcados.includes(a.prestador);
-        let statusOriginal = String(a.status || 'solicitado').trim().toLowerCase(); let statusMapeado = 'solicitado';
+        
+        let statusOriginal = String(a.status || 'solicitado').trim().toLowerCase(); 
+        let statusMapeado = 'solicitado';
         if (statusOriginal.includes('negocia') || statusOriginal.includes('aguardando')) statusMapeado = 'negociacao';
         else if (statusOriginal.includes('agendado') || statusOriginal.includes('scheduled')) statusMapeado = 'agendado';
-        else if (statusOriginal.includes('andamento') || statusOriginal.includes('progress') || statusOriginal.includes('deslocamento')) statusMapeado = 'andamento';
-        else if (statusOriginal.includes('impedido') || statusOriginal.includes('reportado') || statusOriginal.includes('falha')) statusMapeado = 'impedido';
-        else if (statusOriginal.includes('conclu') || statusOriginal.includes('completed') || statusOriginal.includes('finalizado')) statusMapeado = 'concluido';
-        else if (statusOriginal.includes('cancelado') || statusOriginal.includes('canceled')) statusMapeado = 'cancelado';
+        else if (statusOriginal.includes('andamento') || statusOriginal.includes('progress')) statusMapeado = 'andamento';
+        else if (statusOriginal.includes('impedido') || statusOriginal.includes('reportado')) statusMapeado = 'impedido';
+        else if (statusOriginal.includes('conclu') || statusOriginal.includes('finalizado')) statusMapeado = 'concluido';
+        else if (statusOriginal.includes('cancelado')) statusMapeado = 'cancelado';
+        
         let matchStatus = statusMarcados.length === 0 || statusMarcados.includes(statusMapeado);
+        
         return matchDate && matchTicket && matchSol && matchPrest && matchStatus; 
     }).sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
 
@@ -3265,14 +3283,31 @@ window.atualizarFiltrosPrestador = function(){
 // ==========================================
 // DASHBOARD
 // ==========================================
+// ==========================================
+// DASHBOARD
+// ==========================================
 window.renderDashboard = function() {
-    let isUserDashboard = (userRole === 'SMARTOPS'); let isPrestadorDashboard = (userRole === 'PRESTADOR');
+    let isUserDashboard = (userRole === 'SMARTOPS'); 
+    let isPrestadorDashboard = (userRole === 'PRESTADOR');
     let nomeLogado = currentUser ? extrairNomeDoEmail(currentUser.email).toLowerCase() : '';
     let totalAgend = 0, concluidosCount = 0, programadosCount = 0;
     let distPrest = {}, distServ = {}, distLocais = {}, totalServicosGeral = 0;
+    
     agendamentos.forEach(a => {
-        if (isUserDashboard) { let sol = String(a.solicitante || '').toLowerCase(); if (!sol.includes(nomeLogado)) return; }
-        if (isPrestadorDashboard) { if (!window.meuPrestadorLogado || a.prestador !== window.meuPrestadorLogado.nome) return; }
+        // Filtro SmartOps
+        if (isUserDashboard) { 
+            let sol = String(a.solicitante || '').toLowerCase(); 
+            if (!sol.includes(nomeLogado)) return; 
+        }
+        
+        // Filtro Prestador (NOVA LÓGICA ROBUSTA AQUI)
+        if (isPrestadorDashboard) { 
+            if (!window.meuPrestadorLogado) return;
+            let nomeAgend = String(a.prestador || '').trim().toUpperCase();
+            let nomeMeu = String(window.meuPrestadorLogado.nome || '').trim().toUpperCase();
+            if (nomeAgend !== nomeMeu) return; 
+        }
+        
         totalAgend++;
         let status = a.status ? String(a.status).toLowerCase() : '';
         if (status.includes('conclu') || status.includes('completed') || status.includes('finalizado') || status.includes('impedido') || status.includes('reportado') || status.includes('falha')) concluidosCount++;
@@ -3291,6 +3326,7 @@ window.renderDashboard = function() {
         } else if (a.segment && a.tipo_servico) { let nomeServ = `[${String(a.segment).toUpperCase()}] ${a.tipo_servico}`; distServ[nomeServ] = (distServ[nomeServ] || 0) + 1; totalServicosGeral += 1; }
         else { distServ['Outros'] = (distServ['Outros'] || 0) + 1; totalServicosGeral += 1; }
     });
+    
     document.getElementById("dash-agend").innerText = totalAgend;
     document.getElementById("dash-concluidos").innerText = concluidosCount;
     document.getElementById("dash-programados").innerText = programadosCount;
