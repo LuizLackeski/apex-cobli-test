@@ -3215,7 +3215,7 @@ window.renderPainel = function(){
         </div>`;
     }).join('');
 
-    // Detalhe por técnico (quando apenas 1 prestador está selecionado)
+// Detalhe por técnico (quando apenas 1 prestador está selecionado)
     let painelTecBox = document.getElementById('painel-detalhe-tecnicos');
     let prestadoresMarcadosAgora = Array.from(document.querySelectorAll('.cb-prestador:checked')).map(cb => cb.value);
     if (painelTecBox) {
@@ -3224,25 +3224,19 @@ window.renderPainel = function(){
             let pObj = prestadores.find(p => p.nome === nomePrest);
             let qtd = pObj ? (parseInt(pObj.qtdtecnicos) || 1) : 1;
             if (pObj && qtd > 1) {
-                // Contagem por técnico via ocupação de slots
-                let contagemTec = {};
-                for (let t = 1; t <= qtd; t++) contagemTec[t] = 0;
-                // Distribuição heurística: jobs são alocados sequencialmente por técnico disponível
-                let agendsPrest = filtradosPainel.filter(a => a.prestador === nomePrest);
-                // Por simplificação: mostrar total de agendamentos e slots consumidos por dia/técnico via calcularOcupacao por técnico
                 let rows = '';
                 for (let t = 1; t <= qtd; t++) {
                     let nomeTec = window.getNomeTecnico(pObj, t);
-                    // Slots disponíveis do técnico (capacidade base)
                     let slotsTec = pObj.agenda ? pObj.agenda.filter(a => !a.isAbsence && a.tecnico == t).length : 0;
-                    rows += `<div style="display:flex; justify-content:space-between; align-items:center; background:var(--bg); padding:9px 12px; border-radius:var(--radius-sm); border:1px solid var(--border);">
-                        <div style="font-size:0.8rem; font-weight:700; color:var(--cobli-dark);">👷 ${nomeTec}</div>
-                        <div style="font-size:0.72rem; color:var(--muted);">${slotsTec} slots/semana de capacidade</div>
+                    // Layout Horizontal (Inline) com formato de "pílula"
+                    rows += `<div style="display:flex; align-items:center; gap:8px; background:var(--bg); padding:6px 14px; border-radius:20px; border:1px solid var(--border);">
+                        <span style="font-size:0.75rem; font-weight:700; color:var(--cobli-dark); white-space:nowrap;">👷 ${nomeTec}</span>
+                        <span style="font-size:0.65rem; color:var(--muted); border-left:1px solid #cbd5e1; padding-left:8px; white-space:nowrap;">${slotsTec} slots/sem.</span>
                     </div>`;
                 }
-                painelTecBox.innerHTML = `<div class="card" style="margin-bottom:12px; padding:16px;">
-                    <h2 style="margin-bottom:10px;">👥 Equipe — ${nomePrest}</h2>
-                    <div style="display:flex; flex-direction:column; gap:6px;">${rows}</div>
+                painelTecBox.innerHTML = `<div class="card" style="margin-bottom:12px; padding:14px 16px;">
+                    <div style="font-size:0.82rem; font-weight:800; color:var(--primary); text-transform:uppercase; margin-bottom:10px; letter-spacing:0.5px;">👥 EQUIPE — ${nomePrest}</div>
+                    <div style="display:flex; flex-wrap:wrap; gap:8px;">${rows}</div>
                 </div>`;
                 painelTecBox.style.display = 'block';
             } else { painelTecBox.style.display = 'none'; painelTecBox.innerHTML = ''; }
@@ -3389,28 +3383,22 @@ window.renderDashboard = function() {
     
 let cardProdTec = document.getElementById('card-prod-tecnicos');
     
-    // Libera a visualização tanto para o Prestador quanto para o Gestor (se o gestor tiver filtrado 1 prestador)
+    // Libera a visualização da Equipe Técnica APENAS para o Prestador no Dashboard
     let prestadorAlvo = null;
     if (isPrestadorDashboard && window.meuPrestadorLogado) {
         prestadorAlvo = window.meuPrestadorLogado;
-    } else if (!isPrestadorDashboard) {
-        let prestadoresMarcadosAgora = Array.from(document.querySelectorAll('.cb-prestador:checked')).map(cb => cb.value);
-        if (prestadoresMarcadosAgora.length === 1) {
-            prestadorAlvo = prestadores.find(p => p.nome === prestadoresMarcadosAgora[0]);
-        }
     }
 
     if (prestadorAlvo) {
         cardProdTec.style.display = 'block';
         let contagemProducaoTecnico = {};
         
-        // 1. INICIALIZA TODOS OS TÉCNICOS ATIVOS (Mesmo com 0 OSs)
+        // 1. INICIALIZA TODOS OS TÉCNICOS ATIVOS
         let qtdAtivos = parseInt(prestadorAlvo.qtdtecnicos) || 0;
         let nomesAtivos = [];
         for(let i=1; i <= qtdAtivos; i++) {
             let nomeTec = window.getNomeTecnico(prestadorAlvo, i).trim();
             nomesAtivos.push(nomeTec.toLowerCase());
-            // Preenche com 0 logo de cara
             contagemProducaoTecnico[nomeTec] = { nome: nomeTec, count: 0, isAtivo: true };
         }
 
@@ -3423,7 +3411,6 @@ let cardProdTec = document.getElementById('card-prod-tecnicos');
                 tecAlocado = window.getNomeTecnico(prestadorAlvo, tecAlocado).trim();
             }
             
-            // Se o técnico não estiver na lista de ativos, é um Ex-Técnico
             if (!contagemProducaoTecnico[tecAlocado]) {
                 contagemProducaoTecnico[tecAlocado] = { nome: tecAlocado, count: 0, isAtivo: false };
             }
@@ -3433,13 +3420,11 @@ let cardProdTec = document.getElementById('card-prod-tecnicos');
         // 3. GERA O HTML NA ORDEM CERTA
         let listaTecHtml = '';
         let techsOrdenados = Object.values(contagemProducaoTecnico).sort((a,b) => {
-            // Ativos ficam no topo, Ex-Técnicos vão pro final
             if (a.isAtivo === b.isAtivo) return b.count - a.count;
             return a.isAtivo ? -1 : 1; 
         });
 
         techsOrdenados.forEach(item => {
-            // Se for ex-técnico e tiver 0 OSs, oculta. Ativos sempre aparecem!
             if (!item.isAtivo && item.count === 0 && item.nome !== "Não Alocado") return;
             
             let estilo = item.isAtivo ? "font-weight:700;" : "text-decoration:line-through; color: var(--cobli-red); opacity:0.8;";
@@ -3453,7 +3438,7 @@ let cardProdTec = document.getElementById('card-prod-tecnicos');
         document.getElementById('lista-prod-tecnicos').innerHTML = listaTecHtml;
     } else {
         cardProdTec.style.display = 'none';
-    }    
+    }   
     
     if(myChart) myChart.destroy();
     const ctxPrest = document.getElementById('chartPrestadores');
