@@ -3402,29 +3402,58 @@ let cardProdTec = document.getElementById('card-prod-tecnicos');
 
     if (prestadorAlvo) {
         cardProdTec.style.display = 'block';
-        let pObj = prestadorAlvo;
-        let listaTecHtml = '';
+        let contagemProducaoTecnico = {};
+        
+        // 1. INICIALIZA TODOS OS TÉCNICOS ATIVOS (Mesmo com 0 OSs)
+        let qtdAtivos = parseInt(prestadorAlvo.qtdtecnicos) || 0;
         let nomesAtivos = [];
-        let qtdAtivos = parseInt(pObj.qtdtecnicos) || 0;
-        for(let i=1; i <= qtdAtivos; i++) nomesAtivos.push(window.getNomeTecnico(pObj, i).trim().toLowerCase());
+        for(let i=1; i <= qtdAtivos; i++) {
+            let nomeTec = window.getNomeTecnico(prestadorAlvo, i).trim();
+            nomesAtivos.push(nomeTec.toLowerCase());
+            // Preenche com 0 logo de cara
+            contagemProducaoTecnico[nomeTec] = { nome: nomeTec, count: 0, isAtivo: true };
+        }
 
-        Object.keys(contagemProducaoTecnico).sort().forEach(nomeTec => {
-            // Regra do Tachado: Se não está na lista de ativos, é ex-técnico!
-            let ehAtivo = nomesAtivos.includes(nomeTec.trim().toLowerCase()) || nomeTec === "Não Alocado";
+        // 2. CONTA OS TICKETS (SOMENTE DO PRESTADOR ALVO)
+        filtradosPainel.forEach(a => {
+            if (a.prestador !== prestadorAlvo.nome) return;
             
-            // Aqui aplicamos o vermelho e o line-through
-            let estilo = ehAtivo ? "font-weight:700;" : "text-decoration:line-through; color: var(--cobli-red); opacity:0.8;";
-            let tag = ehAtivo ? "" : " <span style='font-size:0.6rem; background:#fee2e2; color:var(--cobli-red); padding:2px 5px; border-radius:4px; font-weight:800; margin-left: 5px;'>EX-TÉCNICO</span>";
+            let tecAlocado = a.tecnico_alocado || "Não Alocado";
+            if (/^\d+$/.test(tecAlocado)) {
+                tecAlocado = window.getNomeTecnico(prestadorAlvo, tecAlocado).trim();
+            }
+            
+            // Se o técnico não estiver na lista de ativos, é um Ex-Técnico
+            if (!contagemProducaoTecnico[tecAlocado]) {
+                contagemProducaoTecnico[tecAlocado] = { nome: tecAlocado, count: 0, isAtivo: false };
+            }
+            contagemProducaoTecnico[tecAlocado].count++;
+        });
+
+        // 3. GERA O HTML NA ORDEM CERTA
+        let listaTecHtml = '';
+        let techsOrdenados = Object.values(contagemProducaoTecnico).sort((a,b) => {
+            // Ativos ficam no topo, Ex-Técnicos vão pro final
+            if (a.isAtivo === b.isAtivo) return b.count - a.count;
+            return a.isAtivo ? -1 : 1; 
+        });
+
+        techsOrdenados.forEach(item => {
+            // Se for ex-técnico e tiver 0 OSs, oculta. Ativos sempre aparecem!
+            if (!item.isAtivo && item.count === 0 && item.nome !== "Não Alocado") return;
+            
+            let estilo = item.isAtivo ? "font-weight:700;" : "text-decoration:line-through; color: var(--cobli-red); opacity:0.8;";
+            let tag = item.isAtivo ? "" : " <span style='font-size:0.6rem; background:#fee2e2; color:var(--cobli-red); padding:2px 5px; border-radius:4px; font-weight:800; margin-left: 5px;'>EX-TÉCNICO</span>";
             
             listaTecHtml += `<div style="display:flex; justify-content:space-between; padding:8px 12px; background:var(--bg); border-radius:6px; margin-bottom:4px; border:1px solid var(--border);">
-                <div style="font-size:0.8rem; ${estilo}">👷 ${nomeTec}${tag}</div>
-                <div style="font-size:0.85rem; font-weight:800; color:var(--primary);">${contagemProducaoTecnico[nomeTec]} OSs</div>
+                <div style="font-size:0.8rem; ${estilo}">👷 ${item.nome}${tag}</div>
+                <div style="font-size:0.85rem; font-weight:800; color:var(--primary);">${item.count} OSs</div>
             </div>`;
         });
         document.getElementById('lista-prod-tecnicos').innerHTML = listaTecHtml;
     } else {
         cardProdTec.style.display = 'none';
-    }
+    }    
     
     if(myChart) myChart.destroy();
     const ctxPrest = document.getElementById('chartPrestadores');
