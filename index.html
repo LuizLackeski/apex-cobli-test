@@ -2809,42 +2809,95 @@ window.removerMeuBloqueio = async function(indexVisivel) {
 };
 
 // ==========================================
-// OCUPAÇÃO DIÁRIA
+// OCUPAÇÃO DIÁRIA E DASHBOARD UNIFICADO
 // ==========================================
+
+// NOVO HELPER: Unifica a regra da gordura para o Dashboard (mesma do agendamento)
+window.getOcupacaoReal = function(prestador, dataStr, dNome) {
+    let maxT = parseInt(prestador.qtdtecnicos) || 1;
+    let tem_tecnico_especifico = prestador.agenda && prestador.agenda.some(a => a.tecnico);
+
+    let jobsExistentes = [];
+    agendamentos.filter(a => a.prestador === prestador.nome && (a.data === dataStr || a.rawdate === dataStr) && !String(a.status).toLowerCase().includes('cancelado')).forEach(a => {
+        let slotsArr = Array.isArray(a.slots) ? a.slots : (typeof a.slots === 'string' ? a.slots.split(', ') : []);
+        if (slotsArr.length > 0) {
+            let ints = slotsArr.map(s => parseInt(s.split(':')[0])).filter(x => !isNaN(x)).sort((x,y) => x-y);
+            if (ints.length > 0) {
+                let tecnicoIdx = resolverTecnico(a.tecnico_alocado, maxT, prestador, dNome);
+                jobsExistentes.push({ start: ints[0], end: ints[ints.length - 1], tecnico: tecnicoIdx });
+            }
+        }
+    });
+
+    let absenceMatrix = Array.from({length: maxT + 1}, () => new Set());
+    if (prestador.agenda) {
+        prestador.agenda.filter(a => a.isAbsence && a.data === dataStr).forEach(a => {
+            let start = a.tipo === 'total' ? 0 : parseInt(a.inicio);
+            let end = a.tipo === 'total' ? 24 : parseInt(a.fim);
+            if (a.tecnico && a.tecnico !== 'Todos') { for(let i=start; i<end; i++) absenceMatrix[parseInt(a.tecnico)].add(i); }
+            else { for(let t=1; t<=maxT; t++) { for(let i=start; i<end; i++) absenceMatrix[t].add(i); } }
+        });
+    }
+
+    let techHours = [];
+    for (let t = 1; t <= maxT; t++) {
+        let worksHours = tem_tecnico_especifico
+            ? (prestador.agenda ? prestador.agenda.filter(a => a.dia === dNome && a.tecnico == t && !a.isAbsence).map(a => parseInt(a.hora)) : [])
+            : (prestador.agenda ? prestador.agenda.filter(a => a.dia === dNome && !a.isAbsence).map(a => parseInt(a.hora)) : []);
+        techHours.push(new Set(worksHours.filter(h => !absenceMatrix[t].has(h))));
+    }
+
+    let techOcupadoJobs = Array.from({length: maxT}, () => new Set());
+    let techOcupadoGordura = Array.from({length: maxT}, () => new Set());
+
+    let alocarEm = (t, job) => {
+        for (let h = job.start; h <= job.end; h++) techOcupadoJobs[t].add(h);
+        for (let g = 1; g <= GORDURA_HORAS; g++) { techOcupadoGordura[t].add(job.start - g); techOcupadoGordura[t].add(job.end + g); }
+    };
+
+    for (let job of jobsExistentes) {
+        if (job.tecnico !== null && job.tecnico >= 0 && job.tecnico < maxT) {
+            alocarEm(job.tecnico, job);
+        } else {
+            let alocado = false;
+            for (let t = 0; t < maxT; t++) {
+                let pode = true;
+                for (let h = job.start; h <= job.end; h++) { if (techOcupadoJobs[t].has(h) || techOcupadoGordura[t].has(h)) { pode = false; break; } }
+                if (pode) { for (let g = 1; g <= GORDURA_HORAS; g++) { if (techOcupadoJobs[t].has(job.start - g) || techOcupadoJobs[t].has(job.end + g)) { pode = false; break; } } }
+                if (pode) { alocarEm(t, job); alocado = true; break; }
+            }
+            if (!alocado) { for (let t = 0; t < maxT; t++) alocarEm(t, job); }
+        }
+    }
+
+    let statsPorTecnico = {};
+    for (let t = 0; t < maxT; t++) {
+        let baseTotal = techHours[t].size;
+        let ocupadas = 0;
+        techHours[t].forEach(h => {
+            if (techOcupadoJobs[t].has(h) || techOcupadoGordura[t].has(h)) ocupadas++;
+        });
+        let livres = Math.max(0, baseTotal - ocupadas);
+        let pct = baseTotal > 0 ? Math.round((ocupadas / baseTotal) * 100) : 0;
+        statsPorTecnico[t + 1] = { total: baseTotal, ocupadas: ocupadas, livres: livres, pct: pct };
+    }
+    
+    let totalGeral = 0, ocupadasGeral = 0;
+    Object.values(statsPorTecnico).forEach(s => { totalGeral += s.total; ocupadasGeral += s.ocupadas; });
+    let livresGeral = Math.max(0, totalGeral - ocupadasGeral);
+    let pctGeral = totalGeral > 0 ? Math.round((ocupadasGeral / totalGeral) * 100) : 0;
+    
+    return { geral: { total: totalGeral, ocupadas: ocupadasGeral, livres: livresGeral, pct: pctGeral }, tecnicos: statsPorTecnico };
+};
+
 function calcularOcupacao(prestadorNome) {
     let p = prestadores.find(x => x.nome === prestadorNome); if (!p) return [];
     let hoje = new Date(); const diasSemana = ["Dom","Seg","Ter","Qua","Qui","Sex","Sab"];
-    let resultado = []; let maxT = parseInt(p.qtdtecnicos) || 1;
-    let tem_tec = p.agenda && p.agenda.some(a => a.tecnico);
+    let resultado = [];
     for (let i = 0; i < 15; i++) {
-        let d = new Date(); d.setDate(hoje.getDate() + i);
-        let dStr = d.toLocaleDateString('pt-BR'); let dNome = diasSemana[d.getDay()];
-        // Horas totais disponíveis (todos os técnicos)
-        let allWorksHours = new Set();
-        for (let t = 1; t <= maxT; t++) {
-            let wh = tem_tec ? (p.agenda ? p.agenda.filter(a => a.dia === dNome && a.tecnico == t && !a.isAbsence).map(a => parseInt(a.hora)) : [])
-                             : (p.agenda ? p.agenda.filter(a => a.dia === dNome && !a.isAbsence).map(a => parseInt(a.hora)) : []);
-            wh.forEach(h => allWorksHours.add(h));
-        }
-        if (allWorksHours.size === 0) continue;
-        // Ausências
-        let bloqueadas = new Set();
-        if (p.agenda) p.agenda.filter(a => a.isAbsence && a.data === dStr).forEach(a => { let s = a.tipo==='total'?0:parseInt(a.inicio); let e = a.tipo==='total'?24:parseInt(a.fim); for(let h=s;h<e;h++) bloqueadas.add(h); });
-        let available = [...allWorksHours].filter(h => !bloqueadas.has(h));
-        if (available.length === 0) continue;
-        // Horas ocupadas: slots + gordura de deslocamento
-        let horasOcupadasSet = new Set();
-        agendamentos.filter(a => a.prestador === p.nome && (a.data === dStr || a.rawdate === dStr) && !String(a.status).toLowerCase().includes('cancelado')).forEach(a => {
-            let s = Array.isArray(a.slots) ? a.slots : (typeof a.slots === 'string' ? a.slots.split(', ') : []);
-            let ints = s.map(x => parseInt(x.split(':')[0])).filter(x => !isNaN(x)).sort((a,b)=>a-b);
-            if (ints.length === 0) return;
-            for (let h = ints[0]; h <= ints[ints.length-1]; h++) horasOcupadasSet.add(h);
-            for (let g = 1; g <= GORDURA_HORAS; g++) { horasOcupadasSet.add(ints[0] - g); horasOcupadasSet.add(ints[ints.length-1] + g); }
-        });
-        let ocupadas = available.filter(h => horasOcupadasSet.has(h)).length;
-        let livres = available.length - ocupadas;
-        let pct = available.length > 0 ? Math.round((ocupadas / available.length) * 100) : 0;
-        resultado.push({ data: dStr, dia: dNome, livres, ocupadas, total: available.length, pct });
+        let d = new Date(); d.setDate(hoje.getDate() + i); let dStr = d.toLocaleDateString('pt-BR'); let dNome = diasSemana[d.getDay()];
+        let stats = window.getOcupacaoReal(p, dStr, dNome);
+        if (stats.geral.total > 0) { resultado.push({ data: dStr, dia: dNome, livres: stats.geral.livres, ocupadas: stats.geral.ocupadas, total: stats.geral.total, pct: stats.geral.pct }); }
     }
     return resultado;
 }
@@ -2856,14 +2909,12 @@ window.renderOcupacaoDiaria = function(prestadorNome, tecnicoId) {
 
     if (userRole !== 'PRESTADOR') {
         containerFiltros.style.display = 'block';
-        // Select I — Prestador (com opção em branco = todos)
         let pObj = prestadorNome ? prestadores.find(p => p.nome === prestadorNome) : null;
         let qtdTec = pObj ? (parseInt(pObj.qtdtecnicos) || 1) : 1;
         let selectPrest = `<select id="sel-ocup-prest" onchange="window.renderOcupacaoDiaria(this.value||null,null)" style="width:100%;padding:7px 10px;font-size:0.8rem;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:white;font-family:var(--font-main);font-weight:700;color:var(--text);cursor:pointer;margin-bottom:${pObj&&qtdTec>1?'8px':'0'};">`;
         selectPrest += `<option value="">— Todos os Prestadores —</option>`;
         prestadores.forEach(p => { selectPrest += `<option value="${p.nome}" ${p.nome === prestadorNome ? 'selected' : ''}>${p.nome}</option>`; });
         selectPrest += `</select>`;
-        // Select II — Técnico (só aparece se prestador selecionado tem +1 técnico)
         let selectTec = '';
         if (pObj && qtdTec > 1) {
             selectTec = `<div id="sel-ocup-tec" style="display:flex; gap:6px; overflow-x:auto; padding:6px 0; flex-wrap:nowrap;">`;
@@ -2881,21 +2932,19 @@ window.renderOcupacaoDiaria = function(prestadorNome, tecnicoId) {
         else { containerLista.innerHTML = `<div style="font-size:0.85rem;color:var(--muted);">Conta não vinculada.</div>`; return; }
     }
 
-    // Helper render de linha
     function linhaOcupacao(o) {
-        let pct = o.pct !== undefined ? o.pct : (o.total > 0 ? Math.round((o.ocupadas/o.total)*100) : 0);
         let bgPill='#e8ecff'; let colorPill='var(--primary)';
-        if(pct>=80){bgPill='#fee2e2';colorPill='var(--cobli-red)';}else if(pct>=50){bgPill='#fef3c7';colorPill='#d97706';}
+        if(o.pct>=80){bgPill='#fee2e2';colorPill='var(--cobli-red)';}else if(o.pct>=50){bgPill='#fef3c7';colorPill='#d97706';}
         return `<div style="display:flex;justify-content:space-between;align-items:center;background:var(--bg);padding:10px 12px;border-radius:var(--radius-sm);border:1px solid var(--border);">
             <div style="font-size:0.78rem;font-weight:700;color:var(--cobli-dark);width:85px;font-family:var(--font-mono);">${o.data.substring(0,5)} <span style="color:var(--muted);font-weight:400;">(${o.dia})</span></div>
             <div style="font-size:0.72rem;color:var(--muted);flex:1;text-align:center;"><span style="color:var(--cobli-green);font-weight:700;">${o.livres}h livres</span> <span style="opacity:0.4;">|</span> <span style="color:var(--cobli-red);font-weight:700;">${o.ocupadas}h ocup.</span></div>
-            <div style="font-size:0.82rem;font-weight:800;color:${colorPill};background:${bgPill};padding:4px 10px;border-radius:5px;min-width:42px;text-align:center;font-family:var(--font-mono);">${pct}%</div>
+            <div style="font-size:0.82rem;font-weight:800;color:${colorPill};background:${bgPill};padding:4px 10px;border-radius:5px;min-width:42px;text-align:center;font-family:var(--font-mono);">${o.pct}%</div>
         </div>`;
     }
 
     let cardTec = document.getElementById('card-ocupacao-tecnicos');
 
-    // ── CASO 1: Nenhum prestador selecionado → agrega todos (só gestor/admin)
+    // CASO 1: Agrega todos
     if (!prestadorNome && userRole !== 'PRESTADOR') {
         let diasMap = {};
         prestadores.forEach(p => {
@@ -2905,49 +2954,35 @@ window.renderOcupacaoDiaria = function(prestadorNome, tecnicoId) {
             });
         });
         let lista = Object.values(diasMap).sort((a,b)=>{let[d1,m1,y1]=a.data.split('/');let[d2,m2,y2]=b.data.split('/');return new Date(y1,m1-1,d1)-new Date(y2,m2-1,d2);});
+        lista.forEach(o => { o.pct = o.total > 0 ? Math.round((o.ocupadas/o.total)*100) : 0; });
         containerLista.innerHTML = lista.length===0 ? `<div style="font-size:0.82rem;color:var(--muted);padding:10px;">Nenhuma agenda configurada.</div>` : lista.map(linhaOcupacao).join('');
         if(cardTec) cardTec.style.display='none';
         return;
     }
 
-    // ── CASO 2: Prestador selecionado + técnico específico (gestor filtrando)
+    // CASO 2: Técnico específico
     if (tecnicoId && prestadorNome && userRole !== 'PRESTADOR') {
         let pO = prestadores.find(p=>p.nome===prestadorNome);
         if (!pO) { containerLista.innerHTML=''; return; }
-        let qtd=parseInt(pO.qtdtecnicos)||1; let hoje=new Date(); const ds=["Dom","Seg","Ter","Qua","Qui","Sex","Sab"]; let resultado=[];
-        for(let i=0;i<15;i++){
-            let d=new Date();d.setDate(hoje.getDate()+i);let dStr=d.toLocaleDateString('pt-BR');let dNome=ds[d.getDay()];
-            let tem_tec=pO.agenda&&pO.agenda.some(a=>a.tecnico);
-            let wH=tem_tec?(pO.agenda?pO.agenda.filter(a=>a.dia===dNome&&a.tecnico==tecnicoId&&!a.isAbsence).map(a=>parseInt(a.hora)):[]):(pO.agenda?pO.agenda.filter(a=>a.dia===dNome&&!a.isAbsence).map(a=>parseInt(a.hora)):[]);
-            if(wH.length===0)continue;
-            let bl=new Set();(pO.agenda?pO.agenda.filter(a=>a.isAbsence&&a.data===dStr):[]).forEach(a=>{let s=a.tipo==='total'?0:parseInt(a.inicio);let e=a.tipo==='total'?24:parseInt(a.fim);if(a.tecnico==tecnicoId||a.tecnico==='Todos'||!a.tecnico)for(let h=s;h<e;h++)bl.add(h);});
-            let avail=wH.filter(h=>!bl.has(h));if(avail.length===0)continue;
-            let totCap=0;for(let t2=1;t2<=qtd;t2++){let hw=tem_tec?(pO.agenda?pO.agenda.filter(a=>a.dia===dNome&&a.tecnico==t2&&!a.isAbsence).map(a=>parseInt(a.hora)):[]):wH;totCap+=hw.length;}
-            let totOcup = 0;
-            agendamentos.filter(a => a.prestador === pO.nome && (a.data === dStr || a.rawdate === dStr) && !String(a.status).toLowerCase().includes('cancelado')).forEach(a => {
-                let s = Array.isArray(a.slots)?a.slots:(typeof a.slots==='string'?a.slots.split(', '):[]);
-                if (a.tecnico_alocado != null && a.tecnico_alocado !== '') {
-                    // Verifica se o alocado é este técnico específico (por id numeral base-0/base-1 ou por nome)
-                    let alocadoIdx = resolverTecnico(a.tecnico_alocado, qtd, pO, dNome);
-                    if (alocadoIdx === (tecnicoId - 1)) totOcup += s.length;
-                } else {
-                    let prop = totCap > 0 ? avail.length / totCap : 0;
-                    totOcup += Math.round(s.length * prop);
-                }
-            });
-            let prop=totCap>0?avail.length/totCap:0;let ocup=Math.round(totOcup*prop);let livres=Math.max(0,avail.length-ocup);let pct=avail.length>0?Math.round((ocup/avail.length)*100):0;
-            resultado.push({data:dStr,dia:dNome,livres,ocupadas:ocup,total:avail.length,pct});
+        let hoje = new Date(); const ds = ["Dom","Seg","Ter","Qua","Qui","Sex","Sab"]; let resultado = [];
+        for(let i=0; i<15; i++){
+            let d=new Date(); d.setDate(hoje.getDate()+i); let dStr=d.toLocaleDateString('pt-BR'); let dNome=ds[d.getDay()];
+            let stats = window.getOcupacaoReal(pO, dStr, dNome);
+            let tStats = stats.tecnicos[tecnicoId];
+            if (tStats && tStats.total > 0) {
+                resultado.push({data:dStr, dia:dNome, livres:tStats.livres, ocupadas:tStats.ocupadas, total:tStats.total, pct:tStats.pct});
+            }
         }
         containerLista.innerHTML = resultado.length===0 ? `<div style="font-size:0.82rem;color:var(--muted);padding:10px;">Sem agenda para este técnico.</div>` : resultado.map(linhaOcupacao).join('');
         if(cardTec) cardTec.style.display='none';
         return;
     }
 
-    // ── CASO 3: Prestador selecionado, todos técnicos
+    // CASO 3: Todos os técnicos do prestador
     let ocupacao = calcularOcupacao(prestadorNome);
     containerLista.innerHTML = ocupacao.length===0 ? `<div style="font-size:0.82rem;color:var(--muted);padding:10px;">Sem agenda configurada.</div>` : ocupacao.map(linhaOcupacao).join('');
 
-    // Card por técnico — apenas para PRESTADOR logado com +1 técnico
+    // Card por técnico (Visão do Prestador Logado)
     if (userRole === 'PRESTADOR' && window.meuPrestadorLogado) {
         let pObj = window.meuPrestadorLogado; let qtd = parseInt(pObj.qtdtecnicos) || 1;
         if (qtd > 1 && cardTec) {
@@ -2963,11 +2998,8 @@ window.renderOcupacaoDiaria = function(prestadorNome, tecnicoId) {
 window.toggleTecOcupacao = function(tecId, prestadorNome) {
     let btn = document.getElementById(`btn-ocup-tec-${tecId}`);
     let atualAtivo = btn && btn.dataset.ativo === '1';
-    if (atualAtivo) {
-        window.renderOcupacaoDiaria(prestadorNome, null);
-    } else {
-        window.renderOcupacaoDiaria(prestadorNome, tecId);
-    }
+    if (atualAtivo) window.renderOcupacaoDiaria(prestadorNome, null);
+    else window.renderOcupacaoDiaria(prestadorNome, tecId);
 };
 
 window.renderOcupacaoPorTecnico = function(tecId) {
@@ -2977,52 +3009,22 @@ window.renderOcupacaoPorTecnico = function(tecId) {
     let resultado = [];
     for (let i = 0; i < 15; i++) {
         let d = new Date(); d.setDate(hoje.getDate() + i); let dStr = d.toLocaleDateString('pt-BR'); let dNome = diasSemana[d.getDay()];
-        let tem_tec = pObj.agenda && pObj.agenda.some(a => a.tecnico);
-        let worksHours = tem_tec
-            ? (pObj.agenda ? pObj.agenda.filter(a => a.dia === dNome && a.tecnico == tecId && !a.isAbsence).map(a => parseInt(a.hora)) : [])
-            : (pObj.agenda ? pObj.agenda.filter(a => a.dia === dNome && !a.isAbsence).map(a => parseInt(a.hora)) : []);
-        if (worksHours.length === 0) continue;
-        let ausencias = pObj.agenda ? pObj.agenda.filter(a => a.isAbsence && a.data === dStr) : [];
-        let bloqueadas = new Set();
-        ausencias.forEach(a => {
-            let start = a.tipo === 'total' ? 0 : parseInt(a.inicio);
-            let end = a.tipo === 'total' ? 24 : parseInt(a.fim);
-            if (a.tecnico == tecId || a.tecnico === 'Todos' || !a.tecnico) { for (let h = start; h < end; h++) bloqueadas.add(h); }
-        });
-        let available = worksHours.filter(h => !bloqueadas.has(h));
-        if (available.length === 0) continue;
-        // Usar tecnico_alocado real quando disponível
-        let agendsDia = agendamentos.filter(a => a.prestador === pObj.nome && (a.data === dStr || a.rawdate === dStr) && !String(a.status).toLowerCase().includes('cancelado'));
-        let ocupadas = 0;
-        agendsDia.forEach(a => {
-            let s = Array.isArray(a.slots) ? a.slots : (typeof a.slots === 'string' ? a.slots.split(', ') : []);
-            if (a.tecnico_alocado != null && a.tecnico_alocado !== '') {
-                // Checa com a nova lógica robusta
-                let alocadoIdx = resolverTecnico(a.tecnico_alocado, qtd, pObj, dNome);
-                if (alocadoIdx === (tecId - 1)) ocupadas += s.length;
-            } else {
-                // Sem dado real — divide proporcionalmente pela capacidade
-                let totalCap = 0;
-                for (let t2 = 1; t2 <= qtd; t2++) {
-                    let hw = tem_tec ? (pObj.agenda ? pObj.agenda.filter(x => x.dia === dNome && x.tecnico == t2 && !x.isAbsence).length : 0) : worksHours.length;
-                    totalCap += hw;
-                }
-                let prop = totalCap > 0 ? available.length / totalCap : 0;
-                ocupadas += Math.round(s.length * prop);
-            }
-        });
-        let livres = Math.max(0, available.length - ocupadas);
-        let pct = available.length > 0 ? Math.round((ocupadas / available.length) * 100) : 0;
-        resultado.push({ data: dStr, dia: dNome, livres, ocupadas, total: available.length, pct });
+        let stats = window.getOcupacaoReal(pObj, dStr, dNome);
+        let tStats = stats.tecnicos[tecId];
+        if (tStats && tStats.total > 0) {
+            resultado.push({data:dStr, dia:dNome, livres:tStats.livres, ocupadas:tStats.ocupadas, total:tStats.total, pct:tStats.pct});
+        }
     }
-    // Atualizar tabs visuais
+    
     for (let t = 1; t <= qtd; t++) {
         let btn = document.getElementById(`tab-tec-ocup-${t}`);
         if (btn) { btn.style.background = t === tecId ? 'var(--primary)' : 'white'; btn.style.color = t === tecId ? 'white' : 'var(--muted)'; }
     }
+    
     let lista = document.getElementById('ocupacao-tecnicos-lista');
     if (!lista) return;
     if (resultado.length === 0) { lista.innerHTML = `<div style="font-size:0.82rem; color:var(--muted); padding:10px;">Sem agenda para este técnico.</div>`; return; }
+    
     lista.innerHTML = resultado.map(o => {
         let bgPill = '#e8ecff'; let colorPill = 'var(--primary)';
         if (o.pct >= 80) { bgPill = '#fee2e2'; colorPill = 'var(--cobli-red)'; } else if (o.pct >= 50) { bgPill = '#fef3c7'; colorPill = '#d97706'; }
