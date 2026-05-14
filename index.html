@@ -1300,7 +1300,7 @@
                     </div>
 
                     <div style="display: flex; gap: 10px; margin-bottom: 15px;">
-                        <div style="flex: 0.8;"><label class="req">Qtd Técnicos</label><input id="qtdTecnicos" type="number" required min="1"></div>
+                       <div style="flex: 0.8; display: none;"><label class="req">Qtd Técnicos</label><input id="qtdTecnicos" type="number" required min="1"></div>
                         <div style="flex: 0.8;"><label class="req">Raio (Km)</label><input id="rangeAtendimento" type="number" required></div>
                         <div style="flex: 1.5;"><label class="req" title="Obrigatório para integração Field">ID Field Control</label><input id="fieldIdField" placeholder="Chave Única Field" required></div>
                         <div style="flex: 1.5;"><label class="req" title="Obrigatório para login no portal. Separe múltiplos e-mails com ponto-e-vírgula ( ; )">E-mail(s) @apex.co</label><input type="text" id="usuarioApex" placeholder="tecnico1@apex.co; tecnico2@apex.co" required onblur="this.value = this.value.toLowerCase().replace(/\s/g,'')"></div>
@@ -1391,6 +1391,12 @@
                     </div>
                 </div>
                 
+                <div class="campo-filtro" id="filtro-box-tecnico">
+                    <label>Técnico</label>
+                    <select id="filtroTecnico" onchange="window.renderPainel()" style="margin: 0; height: 38px; box-sizing: border-box; font-family: var(--font-main); font-weight: 600; font-size: 0.8rem; color: var(--text);">
+                        <option value="">Todos</option>
+                    </select>
+                </div>
                 <div class="campo-filtro">
                     <label>Status</label>
                     <details id="dropdown-status" onmouseleave="this.removeAttribute('open')" style="background: white; border: 1.5px solid var(--border); border-radius: var(--radius-sm); cursor: pointer; position: relative; width: 100%;">
@@ -2049,18 +2055,15 @@ const GORDURA_HORAS = 1;
 function resolverTecnico(tecnicoAlocado, maxT, prestador, dNome) {
     if (!tecnicoAlocado) return null;
     let val = String(tecnicoAlocado).trim();
-    // 1. Se for número puro (legado do banco antigo), usar como índice (0-based)
     if (/^\d+$/.test(val)) {
         let idx = parseInt(val) - 1;
         return (idx >= 0 && idx < maxT) ? idx : null;
     }
-    // 2. Se for nome salvo, procurar na lista de nomes
     if (prestador.nomes_tecnicos) {
         for (let t = 1; t <= maxT; t++) {
             if (prestador.nomes_tecnicos[t] && prestador.nomes_tecnicos[t].trim().toLowerCase() === val.toLowerCase()) return t - 1;
         }
     }
-    // 3. Fallback se salvou "Técnico 1", "Técnico 2", etc.
     let match = val.match(/^Técnico\s+(\d+)$/i);
     if (match) {
         let idx = parseInt(match[1]) - 1;
@@ -2073,31 +2076,43 @@ window.checarDisponibilidadeCore = function(prestador, data, novosSlotsInt, dNom
     let maxT = parseInt(prestador.qtdtecnicos) || 1;
     let tem_tecnico_especifico = prestador.agenda && prestador.agenda.some(a => a.tecnico);
 
-    // 1. Puxa os agendamentos já existentes (ignorando os cancelados)
+    let dataStrPad = data.split('/').map(x => x.padStart(2, '0')).join('/');
+
     let jobsExistentes = [];
-    agendamentos.filter(a => a.prestador === prestador.nome && (a.data === data || a.rawdate === data) && !String(a.status).toLowerCase().includes('cancelado')).forEach(a => {
+    agendamentos.filter(a => {
+        let nomeAgend = String(a.prestador || '').trim().toUpperCase();
+        let nomeMeu = String(prestador.nome || '').trim().toUpperCase();
+        let aData = a.data ? String(a.data).split('/').map(x => x.padStart(2, '0')).join('/') : '';
+        let aRaw = a.rawdate ? String(a.rawdate).split('/').map(x => x.padStart(2, '0')).join('/') : '';
+        return nomeAgend === nomeMeu && (aData === dataStrPad || aRaw === dataStrPad) && !String(a.status).toLowerCase().includes('cancelado');
+    }).forEach(a => {
         let slotsArr = Array.isArray(a.slots) ? a.slots : (typeof a.slots === 'string' ? a.slots.split(', ') : []);
-        if (slotsArr.length > 0) {
+        if (slotsArr.length > 0 && slotsArr[0].trim() !== '') {
             let ints = slotsArr.map(s => parseInt(s.split(':')[0])).filter(x => !isNaN(x)).sort((x,y) => x-y);
             if (ints.length > 0) {
                 let tecnicoIdx = resolverTecnico(a.tecnico_alocado, maxT, prestador, dNome);
-                jobsExistentes.push({ start: ints[0], end: ints[ints.length - 1], tecnico: tecnicoIdx });
+                jobsExistentes.push({ start: ints[0], end: ints[ints.length - 1], tecnico: tecnicoIdx, ticket: a.ticket });
             }
         }
     });
 
-    // 2. Processar ausências do prestador
     let absenceMatrix = Array.from({length: maxT + 1}, () => new Set());
+    let absenceNames = Array.from({length: maxT + 1}, () => new Map()); // Guarda o motivo da ausência
     if (prestador.agenda) {
         prestador.agenda.filter(a => a.isAbsence && a.data === data).forEach(a => {
             let start = a.tipo === 'total' ? 0 : parseInt(a.inicio);
             let end = a.tipo === 'total' ? 24 : parseInt(a.fim);
-            if (a.tecnico && a.tecnico !== 'Todos') { for(let i=start; i<end; i++) absenceMatrix[parseInt(a.tecnico)].add(i); }
-            else { for(let t=1; t<=maxT; t++) { for(let i=start; i<end; i++) absenceMatrix[t].add(i); } }
+            let razao = a.tipo === 'total' ? 'Ausência/Feriado' : 'Ausência Parcial';
+            if (a.tecnico && a.tecnico !== 'Todos') { 
+                for(let i=start; i<end; i++) { absenceMatrix[parseInt(a.tecnico)].add(i); absenceNames[parseInt(a.tecnico)].set(i, razao); }
+            } else { 
+                for(let t=1; t<=maxT; t++) { 
+                    for(let i=start; i<end; i++) { absenceMatrix[t].add(i); absenceNames[t].set(i, razao); }
+                } 
+            }
         });
     }
 
-    // 3. Capacidade de Horas de cada Técnico (Agenda Normal - Ausências)
     let techHours = [];
     for (let t = 1; t <= maxT; t++) {
         let worksHours = tem_tecnico_especifico
@@ -2106,62 +2121,86 @@ window.checarDisponibilidadeCore = function(prestador, data, novosSlotsInt, dNom
         techHours.push(new Set(worksHours.filter(h => !absenceMatrix[t].has(h))));
     }
 
-    // 4. Mapear o que está ocupado. Separamos as horas *Reais do Job* das horas de *Gordura*
-    // Motivo: A gordura de um job PODE conflitar com a gordura do outro, mas NUNCA com a hora real do outro.
-    let techOcupadoJobs = Array.from({length: maxT}, () => new Set());
-    let techOcupadoGordura = Array.from({length: maxT}, () => new Set());
+    let techOcupadoJobs = Array.from({length: maxT}, () => new Map());
+    let techOcupadoGordura = Array.from({length: maxT}, () => new Map());
 
     let alocarEm = (t, job) => {
-        for (let h = job.start; h <= job.end; h++) techOcupadoJobs[t].add(h);
-        for (let g = 1; g <= GORDURA_HORAS; g++) { techOcupadoGordura[t].add(job.start - g); techOcupadoGordura[t].add(job.end + g); }
+        for (let h = job.start; h <= job.end; h++) techOcupadoJobs[t].set(h, job.ticket);
+        for (let g = 1; g <= GORDURA_HORAS; g++) { 
+            techOcupadoGordura[t].set(job.start - g, job.ticket); 
+            techOcupadoGordura[t].set(job.end + g, job.ticket); 
+        }
     };
 
     for (let job of jobsExistentes) {
         if (job.tecnico !== null && job.tecnico >= 0 && job.tecnico < maxT) {
             alocarEm(job.tecnico, job);
         } else {
-            // Se o histórico antigo não tem técnico, simula o preenchimento no primeiro que couber
             let alocado = false;
             for (let t = 0; t < maxT; t++) {
                 let pode = true;
-                // Hora real do Job não pode bater em nada existente
                 for (let h = job.start; h <= job.end; h++) { if (techOcupadoJobs[t].has(h) || techOcupadoGordura[t].has(h)) { pode = false; break; } }
-                // Gordura do Job não pode bater na hora real de ninguém
                 if (pode) { for (let g = 1; g <= GORDURA_HORAS; g++) { if (techOcupadoJobs[t].has(job.start - g) || techOcupadoJobs[t].has(job.end + g)) { pode = false; break; } } }
-                
                 if (pode) { alocarEm(t, job); alocado = true; break; }
             }
-            if (!alocado) { for (let t = 0; t < maxT; t++) alocarEm(t, job); } // Se não coube limpo, suja a agenda de todos pra evitar overbooking
+            if (!alocado) { for (let t = 0; t < maxT; t++) alocarEm(t, job); }
         }
     }
 
-    // 5. Se não tem novos slots sendo consultados, só queríamos saber se rodava até aqui.
-    if (!novosSlotsInt || novosSlotsInt.length === 0) return { pode: true, nomeTecnico: null };
+    if (!novosSlotsInt || novosSlotsInt.length === 0) return { pode: true, nomeTecnico: null, motivo: "OK" };
     
     let ints = [...novosSlotsInt].sort((x,y) => x-y);
     let novoJob = { start: ints[0], end: ints[ints.length - 1] };
 
-    // 6. Tentar encaixar o novo job
+    let motivosFalha = [];
+
     for (let t = 0; t < maxT; t++) {
         let temSlots = true;
-        // O técnico precisa ter a hora base habilitada na agenda dele
-        for (let h = novoJob.start; h <= novoJob.end; h++) { if (!techHours[t].has(h)) { temSlots = false; break; } }
-        if (!temSlots) continue;
+        let motivoFaltaSlot = "";
+        for (let h = novoJob.start; h <= novoJob.end; h++) { 
+            if (!techHours[t].has(h)) { 
+                temSlots = false; 
+                motivoFaltaSlot = absenceMatrix[t+1] && absenceMatrix[t+1].has(h) ? (absenceNames[t+1].get(h) || "Ausência Bloqueada") : "Fora do turno do técnico";
+                break; 
+            } 
+        }
+        if (!temSlots) {
+            motivosFalha.push(motivoFaltaSlot);
+            continue;
+        }
 
         let conflito = false;
-        // A) Hora real do novo job não pode colidir com Job ou Gordura dos outros
-        for (let h = novoJob.start; h <= novoJob.end; h++) { if (techOcupadoJobs[t].has(h) || techOcupadoGordura[t].has(h)) { conflito = true; break; } }
+        let motivoConflito = "";
         
-        // B) A Gordura do novo job não pode colidir com a hora real dos outros jobs
-        if (!conflito) {
-            for (let g = 1; g <= GORDURA_HORAS; g++) { if (techOcupadoJobs[t].has(novoJob.start - g) || techOcupadoJobs[t].has(novoJob.end + g)) { conflito = true; break; } }
+        // Verifica conflito de hora real ou gordura
+        for (let h = novoJob.start; h <= novoJob.end; h++) { 
+            if (techOcupadoJobs[t].has(h)) { conflito = true; motivoConflito = `Choca com OS #${techOcupadoJobs[t].get(h)}`; break; }
+            if (techOcupadoGordura[t].has(h)) { conflito = true; motivoConflito = `Deslocamento da OS #${techOcupadoGordura[t].get(h)}`; break; } 
         }
         
         if (!conflito) {
-            return { pode: true, nomeTecnico: window.getNomeTecnico(prestador, t + 1) };
+            for (let g = 1; g <= GORDURA_HORAS; g++) { 
+                if (techOcupadoJobs[t].has(novoJob.start - g)) { conflito = true; motivoConflito = `Sua gordura choca com OS #${techOcupadoJobs[t].get(novoJob.start - g)}`; break; }
+                if (techOcupadoJobs[t].has(novoJob.end + g)) { conflito = true; motivoConflito = `Sua gordura choca com OS #${techOcupadoJobs[t].get(novoJob.end + g)}`; break; } 
+            }
+        }
+        
+        if (!conflito) {
+            return { pode: true, nomeTecnico: window.getNomeTecnico(prestador, t + 1), motivo: "OK" };
+        } else {
+            motivosFalha.push(motivoConflito);
         }
     }
-    return { pode: false, nomeTecnico: null };
+    
+    // Resume o motivo para o usuário
+    let motivoFinal = "Indisponível";
+    if (motivosFalha.length > 0) {
+        let conflitosOS = motivosFalha.filter(m => m.includes("OS #"));
+        if (conflitosOS.length > 0) motivoFinal = conflitosOS[0];
+        else motivoFinal = motivosFalha[0];
+    }
+
+    return { pode: false, nomeTecnico: null, motivo: motivoFinal };
 };
 
 window.podeAgendar = function(prestador, data, novosSlotsInt, dNome) {
@@ -2323,9 +2362,62 @@ window.rdaAgendamento = function() {
     window.renderizarAgendaPaginada();
 };
 
+window.rdaAgendamento = function() { 
+    let p = prestadores[prestadorSelecionadoIndex]; let container = document.getElementById("agenda-agendamento"); 
+    container.innerHTML = `<div style="text-align:center; padding:20px; font-weight:700; color:var(--primary); font-family:var(--font-mono);">Calculando horários...</div>`; 
+    let hoje = new Date(); const diasSemana = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sab"]; 
+    let totalMinutos = itensSelecionados.reduce((a, b) => a + (b.tempo * b.qtd), 0);
+    let horasNecessarias = Math.ceil(totalMinutos / 60);
+    if (itensSelecionados.length === 0) { container.innerHTML = `<div style="font-weight:600; color:var(--primary); font-size:0.85rem;">Adicione um serviço para ver a agenda.</div>`; return; }
+    window.agendaDiasDisponiveis = [];
+    
+    for(let i=2; i<60; i++){ 
+        let data = new Date(); data.setDate(hoje.getDate() + i); let dStr = data.toLocaleDateString('pt-BR'); let dNome = diasSemana[data.getDay()]; 
+        let allSlotsRaw = (p.agenda && Array.isArray(p.agenda)) ? p.agenda.filter(a => !a.isAbsence && a.dia == dNome) : []; 
+        if (allSlotsRaw.length === 0) continue;
+        let horasAgendaSet = new Set(allSlotsRaw.map(item => parseInt(item.hora.split(':')[0])));
+        let horasAgenda = Array.from(horasAgendaSet).sort((a,b)=>a-b);
+        
+        let validStarts = []; 
+        let validStartsTecnico = {}; 
+        let invalidStartsMotivo = {}; // Novo: Armazena o motivo de falha de cada hora
+        
+        for (let h of horasAgenda) {
+            let seqOk = true; let testSlots = [];
+            for (let k = 0; k < horasNecessarias; k++) { 
+                if (!horasAgenda.includes(h + k)) { seqOk = false; invalidStartsMotivo[h] = `Faltam slots para completar ${horasNecessarias}h`; break; } 
+                testSlots.push(h + k); 
+            }
+            if (seqOk) { 
+                let info = window.checarDisponibilidadeCore(p, dStr, testSlots, dNome);
+                if (info.pode) {
+                    validStarts.push(h);
+                    if (info.nomeTecnico) validStartsTecnico[h] = info.nomeTecnico;
+                } else {
+                    invalidStartsMotivo[h] = info.motivo;
+                }
+            }
+        }
+        let enabledCells = new Set();
+        validStarts.forEach(start => { for (let k = 0; k < horasNecessarias; k++) enabledCells.add(start + k); });
+        
+        if(validStarts.length > 0 || Object.keys(invalidStartsMotivo).length > 0){ 
+            let allSlots = Array.from(horasAgendaSet).sort((a,b)=>a-b).map(h => ({hora: h + ':00'}));
+            window.agendaDiasDisponiveis.push({ dStr, dNome, allSlots, validStarts, validStartsTecnico, enabledCells, horasNecessarias, invalidStartsMotivo });
+        } 
+    } 
+    window.agendaPaginaAtual = 0;
+    window.renderizarAgendaPaginada();
+};
+
 window.renderizarAgendaPaginada = function() {
     let container = document.getElementById("agenda-agendamento"); container.innerHTML = "";
-    if (window.agendaDiasDisponiveis.length === 0) { container.innerHTML = `<div style="color:var(--cobli-red); font-size:0.85rem; font-weight:700; padding: 12px; background: #fff5f5; border-radius: var(--radius-sm); border: 1px solid #fecaca;">⚠️ Sem horários disponíveis com as horas necessárias seguidas.</div>`; return; }
+    // Ajuste para não bugar caso o dia todo esteja indisponível, mas tenha que renderizar a aba
+    if (window.agendaDiasDisponiveis.filter(d => d.validStarts.length > 0).length === 0) { 
+        container.innerHTML = `<div style="color:var(--cobli-red); font-size:0.85rem; font-weight:700; padding: 12px; background: #fff5f5; border-radius: var(--radius-sm); border: 1px solid #fecaca;">⚠️ Sem horários disponíveis com as horas necessárias seguidas.</div>`; 
+        return; 
+    }
+    
     let startIndex = window.agendaPaginaAtual * 5; let endIndex = startIndex + 5;
     let diasPagina = window.agendaDiasDisponiveis.slice(startIndex, endIndex);
     let totalPags = Math.ceil(window.agendaDiasDisponiveis.length / 5);
@@ -2342,13 +2434,25 @@ window.renderizarAgendaPaginada = function() {
     container.appendChild(paginacaoTopo);
 
     diasPagina.forEach(diaInfo => {
+        // Pula os dias que não têm pelo menos 1 slot válido na renderização
+        if(diaInfo.validStarts.length === 0) return;
+        
         let card = document.createElement("div"); card.className = "agenda-day-card"; card.innerHTML = `<div class="agenda-day-title">${diaInfo.dStr} (${diaInfo.dNome})</div>`; 
         let wrapper = document.createElement("div"); wrapper.className = "slots-wrapper"; 
         diaInfo.allSlots.forEach(item => { 
             let hInt = parseInt(item.hora.split(':')[0]);
             let div = document.createElement("div"); div.className = "cell"; div.innerText = item.hora; div.dataset.hora = item.hora; div.dataset.date = diaInfo.dStr; 
-            if (!diaInfo.enabledCells.has(hInt)) { div.style.opacity = "0.3"; div.style.cursor = "not-allowed"; div.onclick = () => window.showToast(`Horário indisponível para ${diaInfo.horasNecessarias}h seguidas.`); }
-            else { div.onclick = function() { 
+            if (!diaInfo.enabledCells.has(hInt)) { 
+                // AQUI ENTRA A MÁGICA DO UX
+                let motivoErro = diaInfo.invalidStartsMotivo ? (diaInfo.invalidStartsMotivo[hInt] || "Indisponível") : "Indisponível";
+                div.style.opacity = "0.3"; 
+                div.style.cursor = "not-allowed"; 
+                div.title = motivoErro; // Aparece ao parar o mouse
+                div.onclick = () => window.showToast(`🔒 ${motivoErro}`); // Mostra no Toast ao clicar
+            }
+            else { 
+                div.title = "Disponível para agendamento";
+                div.onclick = function() { 
                 let horaInicioReal = hInt;
                 if (!diaInfo.validStarts.includes(hInt)) { for (let b = 1; b < diaInfo.horasNecessarias; b++) { let testStart = hInt - b; if (diaInfo.validStarts.includes(testStart)) { horaInicioReal = testStart; break; } } }
                 document.querySelectorAll("#agenda-agendamento .cell").forEach(c => c.classList.remove('selecionado'));
@@ -2572,44 +2676,75 @@ window.renderTechTabs = function(qtd) {
     let container = document.getElementById("tabs-tecnicos"); container.innerHTML = "";
     let selectBloqueio = document.getElementById("tecnicoBloqueio");
     if(selectBloqueio) selectBloqueio.innerHTML = '<option value="Todos">Todos (Empresa)</option>';
-    // Garantir que o objeto de nomes existe
+    
     if (!window.nomesTecnicosTemp) window.nomesTecnicosTemp = {};
+    if (!window.statusTecnicosTemp) window.statusTecnicosTemp = {};
+
     for(let i=1; i<=qtd; i++) {
         if(!window.agendaCadastroObj[i]) window.agendaCadastroObj[i] = [];
         let nomeAtual = (window.nomesTecnicosTemp[i] || '');
-        
-        // Wrapper para tab + campo de nome
+        let isAtivo = window.statusTecnicosTemp[i] !== false; // Padrão é true
+
         let wrapper = document.createElement("div");
-        wrapper.style.cssText = "display:flex; flex-direction:column; align-items:center; gap:4px;";
+        wrapper.style.cssText = "display:flex; flex-direction:column; align-items:center; gap:4px; padding: 8px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: " + (isAtivo ? "white" : "#fff5f5") + "; opacity: " + (isAtivo ? "1" : "0.7") + "; transition: 0.3s;";
         
         let btn = document.createElement("button"); 
         btn.innerText = nomeAtual ? nomeAtual : `Técnico ${i}`; 
         btn.className = "btn-tech-tab";
         btn.dataset.techId = i;
-        btn.style.cssText = `padding: 8px 15px; border:none; border-radius:var(--radius-sm); cursor:pointer; font-weight:700; transition: 0.3s; font-family:var(--font-main); min-height:auto; background:${i===window.currentTech?'var(--primary)':'var(--border)'}; color:${i===window.currentTech?'white':'var(--text)'};`;
+        
+        let bgAtivo = i === window.currentTech ? 'var(--primary)' : 'var(--bg)';
+        let txtAtivo = i === window.currentTech ? 'white' : 'var(--text)';
+        let bgInativo = i === window.currentTech ? 'var(--cobli-red)' : '#fca5a5';
+        
+        btn.style.cssText = `padding: 8px 15px; border:none; border-radius:var(--radius-sm); cursor:pointer; font-weight:700; transition: 0.3s; font-family:var(--font-main); min-height:auto; background:${isAtivo ? bgAtivo : bgInativo}; color:${isAtivo ? txtAtivo : 'white'}; text-decoration: ${isAtivo ? 'none' : 'line-through'}; width: 100%;`;
         btn.onclick = (e) => { e.preventDefault(); window.saveCurrentTechGrid(); window.loadTechGrid(i); };
         
         let input = document.createElement("input");
         input.type = "text";
-        input.placeholder = `Nome Técnico ${i}`;
+        input.placeholder = `Nome ${i}`;
         input.value = nomeAtual;
-        input.dataset.techId = i;
         input.className = "input-nome-tecnico";
-        input.style.cssText = "width: 130px; padding: 4px 8px; font-size: 0.72rem; border: 1px solid var(--border); border-radius: var(--radius-sm); text-align:center; margin:0; height:auto; font-family:var(--font-main);";
+        input.style.cssText = "width: 130px; padding: 6px 8px; font-size: 0.72rem; border: 1px solid var(--border); border-radius: var(--radius-sm); text-align:center; margin:0; height:auto; font-family:var(--font-main);";
         input.oninput = function() {
             window.nomesTecnicosTemp[i] = this.value;
-            // Atualizar label do botão
-            let tabBtn = document.querySelector(`.btn-tech-tab[data-tech-id="${i}"]`);
-            if(tabBtn) tabBtn.innerText = this.value.trim() || `Técnico ${i}`;
-            // Atualizar select de bloqueio
+            btn.innerText = this.value.trim() || `Técnico ${i}`;
             window.atualizarSelectBloqueioNomes();
         };
         
+        let btnToggle = document.createElement("button");
+        btnToggle.innerText = isAtivo ? "Desativar" : "Reativar";
+        btnToggle.style.cssText = "font-size: 0.65rem; padding: 4px 10px; margin-top: 4px; min-height: auto; border-radius: 20px; font-weight: 800; cursor: pointer; border: none; background: " + (isAtivo ? "#fee2e2" : "#dcfce7") + "; color: " + (isAtivo ? "var(--cobli-red)" : "#15803d") + "; width: 100%; transition: 0.2s;";
+        btnToggle.onclick = (e) => {
+            e.preventDefault();
+            window.statusTecnicosTemp[i] = !isAtivo;
+            window.renderTechTabs(parseInt(document.getElementById('qtdTecnicos').value));
+            window.loadTechGrid(window.currentTech);
+        };
+
         wrapper.appendChild(btn);
         wrapper.appendChild(input);
+        wrapper.appendChild(btnToggle);
         container.appendChild(wrapper);
-        if(selectBloqueio) selectBloqueio.innerHTML += `<option value="${i}">${nomeAtual || 'Técnico ' + i}</option>`;
+        if(selectBloqueio && isAtivo) selectBloqueio.innerHTML += `<option value="${i}">${nomeAtual || 'Técnico ' + i}</option>`;
     }
+
+    // Botão Adicionar Técnico Mágico
+    let btnNovo = document.createElement("button");
+    btnNovo.innerText = "➕ Novo Técnico";
+    btnNovo.style.cssText = "margin-left: 10px; padding: 8px 20px; border: 2px dashed var(--primary); border-radius: var(--radius-sm); cursor: pointer; font-weight: 800; background: transparent; color: var(--primary); min-height: auto; height: fit-content; align-self: center; transition: 0.2s;";
+    btnNovo.onmouseover = () => btnNovo.style.background = "#e8ecff";
+    btnNovo.onmouseout = () => btnNovo.style.background = "transparent";
+    btnNovo.onclick = (e) => {
+        e.preventDefault();
+        let inputQtd = document.getElementById("qtdTecnicos");
+        let novaQtd = parseInt(inputQtd.value) + 1;
+        inputQtd.value = novaQtd;
+        window.statusTecnicosTemp[novaQtd] = true;
+        window.renderTechTabs(novaQtd);
+        setTimeout(() => { window.saveCurrentTechGrid(); window.loadTechGrid(novaQtd); }, 100);
+    };
+    container.appendChild(btnNovo);
 };
 
 window.atualizarSelectBloqueioNomes = function() {
@@ -2637,19 +2772,25 @@ window.abrirCadastro = function(index = -1){
     editingIndex = index; document.getElementById("lista-prestadores-view").style.display="none"; document.getElementById("cadastro-flow").style.display="block"; etapa = 1; 
     document.getElementById("etapa-1").style.display="block"; document.getElementById("etapa-2").style.display="none"; 
     window.criarGridCadastro("agenda-cadastro"); window.agendaCadastroObj = {}; window.currentTech = 1;
-    window.nomesTecnicosTemp = {}; // Resetar nomes
+    window.nomesTecnicosTemp = {}; 
+    window.statusTecnicosTemp = {}; 
+    
     if(index !== -1){ 
         let p = prestadores[index]; 
         ["nomeEmpresa","endereco","cidade","uf","cep","responsavel","contatoResponsavel","usuarioApex","qtdTecnicos","rangeAtendimento","fieldIdField"].forEach(id => { let el = document.getElementById(id); if(el && p[{nomeEmpresa:'nome',endereco:'endereco',cidade:'cidade',uf:'uf',cep:'cep',responsavel:'responsavel',contatoResponsavel:'contato',usuarioApex:'usuario_apex',qtdTecnicos:'qtdtecnicos',rangeAtendimento:'range',fieldIdField:'field_id'}[id]] !== undefined) el.value = p[{nomeEmpresa:'nome',endereco:'endereco',cidade:'cidade',uf:'uf',cep:'cep',responsavel:'responsavel',contatoResponsavel:'contato',usuarioApex:'usuario_apex',qtdTecnicos:'qtdtecnicos',rangeAtendimento:'range',fieldIdField:'field_id'}[id]] || ''; });
         document.getElementById("usuarioApex").value = p.usuario_apex || "";
         document.getElementById("statusPrestador").value = p.status_prestador || "PRODUCAO"; 
         let qtd = parseInt(p.qtdtecnicos) || 1;
-        // Carregar nomes dos técnicos existentes
+        
         if (p.nomes_tecnicos && typeof p.nomes_tecnicos === 'object') {
-            for (let t = 1; t <= qtd; t++) {
-                window.nomesTecnicosTemp[t] = p.nomes_tecnicos[t] || '';
-            }
+            for (let t = 1; t <= qtd; t++) window.nomesTecnicosTemp[t] = p.nomes_tecnicos[t] || '';
         }
+        if (p.status_tecnicos) {
+            for (let t = 1; t <= qtd; t++) window.statusTecnicosTemp[t] = p.status_tecnicos[t] !== false;
+        } else {
+            for (let t = 1; t <= qtd; t++) window.statusTecnicosTemp[t] = true;
+        }
+
         for(let i=1; i<=qtd; i++) window.agendaCadastroObj[i] = [];
         if(p.agenda) { 
             p.agenda.forEach(item => {
@@ -2661,7 +2802,13 @@ window.abrirCadastro = function(index = -1){
             datasBloqueadasTemp = p.agenda.filter(a => a.isAbsence).map(a => ({data: a.data, tipo: a.tipo, inicio: a.inicio, fim: a.fim, tecnico: a.tecnico || 'Todos'})).filter(b => { let parts = b.data.split('/'); let dataB = new Date(parts[2], parts[1] - 1, parts[0]); return dataB >= hoje; });
             window.renderizarDatasBloqueadas();
         } 
-    } else { document.querySelectorAll('#etapa-1 input').forEach(i => i.value = ""); document.getElementById("statusPrestador").value = "PRODUCAO"; datasBloqueadasTemp = []; window.renderizarDatasBloqueadas(); }
+    } else { 
+        document.querySelectorAll('#etapa-1 input').forEach(i => i.value = ""); 
+        document.getElementById("statusPrestador").value = "PRODUCAO"; 
+        document.getElementById("qtdTecnicos").value = "1";
+        window.statusTecnicosTemp[1] = true;
+        datasBloqueadasTemp = []; window.renderizarDatasBloqueadas(); 
+    }
     document.getElementById('dataBloqueio').value = ''; document.getElementById('dataBloqueioFim').value = ''; document.getElementById('tipoBloqueio').value = 'total';
     if(document.getElementById('tecnicoBloqueio')) document.getElementById('tecnicoBloqueio').value = 'Todos';
     document.querySelectorAll('#etapa-1 input').forEach(el => { el.style.borderColor = ''; el.style.backgroundColor = ''; });
@@ -2741,16 +2888,16 @@ window.salvarPrestador = async function(btn) {
         let agenda = []; let maxT = parseInt(document.getElementById("qtdTecnicos").value) || 1;
         for (let t = 1; t <= maxT; t++) { if (window.agendaCadastroObj[t]) { window.agendaCadastroObj[t].forEach(slot => { let [dia, hora] = slot.split('-'); agenda.push({ dia: dia, hora: hora, tecnico: parseInt(t) }); }); } }
         datasBloqueadasTemp.forEach(b => { agenda.push({ isAbsence: true, data: b.data, tipo: b.tipo, inicio: b.inicio, fim: b.fim, tecnico: b.tecnico }); });
-        // Montar objeto de nomes dos técnicos (somente não-vazios)
+        
         let nomesTecnicos = {};
-        if (window.nomesTecnicosTemp) {
-            for (let t = 1; t <= maxT; t++) {
-                let nome = window.nomesTecnicosTemp[t];
-                if (nome && nome.trim()) nomesTecnicos[t] = nome.trim();
-            }
+        let statusTecnicos = {};
+        for (let t = 1; t <= maxT; t++) {
+            if (window.nomesTecnicosTemp && window.nomesTecnicosTemp[t] && window.nomesTecnicosTemp[t].trim()) nomesTecnicos[t] = window.nomesTecnicosTemp[t].trim();
+            statusTecnicos[t] = window.statusTecnicosTemp ? window.statusTecnicosTemp[t] !== false : true;
         }
+
         let usuarioApexRaw = document.getElementById("usuarioApex").value.toLowerCase().replace(/\s/g, '');
-        let p = { nome: document.getElementById("nomeEmpresa").value, endereco: document.getElementById("endereco").value, cidade: document.getElementById("cidade").value, uf: document.getElementById("uf").value, cep: document.getElementById("cep").value, responsavel: document.getElementById("responsavel").value, contato: document.getElementById("contatoResponsavel").value, usuario_apex: usuarioApexRaw, qtdtecnicos: maxT, range: document.getElementById("rangeAtendimento").value, field_id: document.getElementById("fieldIdField").value, status_prestador: document.getElementById("statusPrestador").value, agenda: agenda, nomes_tecnicos: nomesTecnicos }; 
+        let p = { nome: document.getElementById("nomeEmpresa").value, endereco: document.getElementById("endereco").value, cidade: document.getElementById("cidade").value, uf: document.getElementById("uf").value, cep: document.getElementById("cep").value, responsavel: document.getElementById("responsavel").value, contato: document.getElementById("contatoResponsavel").value, usuario_apex: usuarioApexRaw, qtdtecnicos: maxT, range: document.getElementById("rangeAtendimento").value, field_id: document.getElementById("fieldIdField").value, status_prestador: document.getElementById("statusPrestador").value, agenda: agenda, nomes_tecnicos: nomesTecnicos, status_tecnicos: statusTecnicos }; 
         const url = (editingIndex !== -1) ? `${API_URL}/prestadores/${prestadores[editingIndex].id}` : `${API_URL}/prestadores`; 
         await fetch(url, { method: (editingIndex !== -1) ? 'PUT' : 'POST', headers: getHeaders(), body: JSON.stringify(p) }); 
         editingIndex = -1; await window.carregarDadosDoBanco(); 
@@ -2860,12 +3007,15 @@ window.getOcupacaoReal = function(prestador, dataStr, dNome) {
     });
 
     // 2. Capacidade da Base
-    let techHours = [];
+let techHours = [];
     let baseTotalEmpresa = 0;
     for (let t = 1; t <= maxT; t++) {
-        let worksHours = tem_tecnico_especifico
+        // Se o técnico estiver inativo, ele é ignorado da capacidade
+        let isAtivo = prestador.status_tecnicos ? (prestador.status_tecnicos[t] !== false) : true;
+        
+        let worksHours = (tem_tecnico_especifico && isAtivo)
             ? (prestador.agenda ? prestador.agenda.filter(a => a.dia === dNome && a.tecnico == t && !a.isAbsence).map(a => parseInt(a.hora)) : [])
-            : (prestador.agenda ? prestador.agenda.filter(a => a.dia === dNome && !a.isAbsence).map(a => parseInt(a.hora)) : []);
+            : (isAtivo && prestador.agenda ? prestador.agenda.filter(a => a.dia === dNome && !a.isAbsence).map(a => parseInt(a.hora)) : []);
         
         let blk = new Set();
         if (prestador.agenda) {
@@ -3145,13 +3295,50 @@ window.trocarAba = function(id, btn){
     if(id === 'usuarios') window.carregarListaUsuarios();
 };
 
+// Função nova para alimentar o dropdown de técnicos dinamicamente
+window.atualizarFiltroTecnico = function() {
+    let select = document.getElementById('filtroTecnico');
+    if (!select) return;
+    let currentVal = select.value;
+    select.innerHTML = '<option value="">Todos</option>';
+    
+    let nomesTecnicos = new Set();
+    
+    agendamentos.forEach(a => {
+        // Se for prestador logado, ignora os técnicos de outras empresas
+        if (userRole === 'PRESTADOR' && window.meuPrestadorLogado) {
+            if (String(a.prestador || '').trim().toUpperCase() !== String(window.meuPrestadorLogado.nome || '').trim().toUpperCase()) return;
+        }
+        
+        let nomeTec = a.tecnico_alocado || "Não Alocado";
+        if (/^\d+$/.test(nomeTec)) {
+            let pObj = prestadores.find(p => p.nome === a.prestador);
+            if (pObj) nomeTec = window.getNomeTecnico(pObj, nomeTec).trim();
+        }
+        nomesTecnicos.add(nomeTec);
+    });
+    
+    Array.from(nomesTecnicos).sort().forEach(nome => {
+        let opt = document.createElement('option');
+        opt.value = nome.toLowerCase();
+        opt.text = nome;
+        select.appendChild(opt);
+    });
+    select.value = currentVal; // Mantém a seleção se possível
+};
+
+// Função de renderização atualizada
 window.renderPainel = function(){ 
     if (!Array.isArray(agendamentos)) { document.getElementById("painel-conteudo").innerHTML = "Nenhum dado."; return; }
+    
+    window.atualizarFiltroTecnico(); // Atualiza as opções do filtro
     
     let fInicio = document.getElementById("filtroDataInicio").value; 
     let fFim = document.getElementById("filtroDataFim").value; 
     let fTicket = document.getElementById("filtroTicket").value.toLowerCase(); 
     let fSol = document.getElementById("filtroSolicitante").value.toLowerCase();
+    let fTecnico = document.getElementById("filtroTecnico") ? document.getElementById("filtroTecnico").value.toLowerCase() : "";
+    
     let statusMarcados = Array.from(document.querySelectorAll('.cb-status:checked')).map(cb => cb.value);
     let prestadoresMarcados = Array.from(document.querySelectorAll('.cb-prestador:checked')).map(cb => cb.value);
 
@@ -3161,19 +3348,26 @@ window.renderPainel = function(){
         // SE FOR PRESTADOR: Só vê o que está vinculado ao seu e-mail
         if(userRole === 'PRESTADOR') { 
             if (!window.meuPrestadorLogado) return false; 
-            // Comparação robusta (sem espaços e tudo em maiúsculo)
             let nomeAgendamento = String(a.prestador || '').trim().toUpperCase();
             let nomePrestadorLogado = String(window.meuPrestadorLogado.nome || '').trim().toUpperCase();
             if (nomeAgendamento !== nomePrestadorLogado) return false; 
         }
 
-        // Filtros normais (Data, Ticket, etc)
+        // Resolução do nome do técnico para o filtro
+        let nomeTecAlocado = a.tecnico_alocado || "Não Alocado";
+        if (/^\d+$/.test(nomeTecAlocado)) {
+            let pObj = prestadores.find(p => p.nome === a.prestador);
+            if (pObj) nomeTecAlocado = window.getNomeTecnico(pObj, nomeTecAlocado).trim();
+        }
+
+        // Filtros normais
         let [d, m, y] = a.data.split('/'); 
         let dataAgendada = `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
         let matchDate = (!fInicio || dataAgendada >= fInicio) && (!fFim || dataAgendada <= fFim); 
         let matchTicket = (!fTicket || (a.ticket && a.ticket.toLowerCase().includes(fTicket)));
         let matchSol = (!fSol || (a.solicitante && a.solicitante.toLowerCase().includes(fSol)));
         let matchPrest = prestadoresMarcados.length === 0 || prestadoresMarcados.includes(a.prestador);
+        let matchTecnico = (!fTecnico || nomeTecAlocado.toLowerCase() === fTecnico);
         
         let statusOriginal = String(a.status || 'solicitado').trim().toLowerCase(); 
         let statusMapeado = 'solicitado';
@@ -3186,7 +3380,7 @@ window.renderPainel = function(){
         
         let matchStatus = statusMarcados.length === 0 || statusMarcados.includes(statusMapeado);
         
-        return matchDate && matchTicket && matchSol && matchPrest && matchStatus; 
+        return matchDate && matchTicket && matchSol && matchPrest && matchStatus && matchTecnico; 
     }).sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
 
     let counts = { solicitado: 0, negociacao: 0, agendado: 0, andamento: 0, impedido: 0, concluido: 0, cancelado: 0 };
@@ -3206,43 +3400,67 @@ window.renderPainel = function(){
         let primeiroSlot = Array.isArray(a.slots) ? a.slots[0] : (String(a.slots).split(',')[0] || 'N/A');
         let dataRegistro = a.created_at ? new Date(a.created_at).toLocaleString('pt-BR') : 'N/A';
         let nomeClienteFormatado = window.formatarCapitalize(a.cliente) || '-';
+        
+        // Resolução do nome do técnico para a visualização no card
+        let nomeTecAlocadoCard = a.tecnico_alocado || "Não Alocado";
+        if (/^\d+$/.test(nomeTecAlocadoCard)) {
+            let pObj = prestadores.find(p => p.nome === a.prestador);
+            if (pObj) nomeTecAlocadoCard = window.getNomeTecnico(pObj, nomeTecAlocadoCard).trim();
+        }
+
         return `<div class="painel-item" data-ticket="${a.ticket}" onclick="window.abrirDetalhesAgendamento(${i})">
             <div style="flex-grow: 1; font-size: 0.88rem;">
                 <strong style="font-family:var(--font-mono); color:var(--cobli-dark);">#${a.ticket}</strong> &nbsp;|&nbsp; Status: <span style="color: var(--primary); font-weight: 700;">${a.status || 'SOLICITADO'}</span> &nbsp;|&nbsp; <strong>${nomeClienteFormatado}</strong>
                 <div style="margin-top:5px; font-size: 0.82rem; color: var(--muted);">📅 ${a.data} às ${primeiroSlot} &nbsp;|&nbsp; 🛠️ ${a.prestador}</div>
-                <div style="margin-top: 5px; font-size: 0.68rem; color: var(--muted); border-top: 1px dashed var(--border); padding-top: 5px; letter-spacing: 0.3px;">Registrado: ${dataRegistro} &nbsp;|&nbsp; Por: ${a.solicitante}</div>
+                <div style="margin-top: 5px; font-size: 0.68rem; color: var(--muted); border-top: 1px dashed var(--border); padding-top: 5px; letter-spacing: 0.3px; display: flex; justify-content: space-between; align-items: center;">
+                    <span>Registrado: ${dataRegistro} &nbsp;|&nbsp; Por: ${a.solicitante}</span>
+                    <span style="font-weight: 800; color: var(--primary); background: #e8ecff; padding: 3px 8px; border-radius: 6px;">👷 ${nomeTecAlocadoCard}</span>
+                </div>
             </div>
         </div>`;
     }).join('');
 
-// Detalhe por técnico (quando apenas 1 prestador está selecionado)
+// Detalhe por técnico (quando apenas 1 prestador está selecionado - Gestor)
     let painelTecBox = document.getElementById('painel-detalhe-tecnicos');
     let prestadoresMarcadosAgora = Array.from(document.querySelectorAll('.cb-prestador:checked')).map(cb => cb.value);
+    
     if (painelTecBox) {
         if (prestadoresMarcadosAgora.length === 1) {
             let nomePrest = prestadoresMarcadosAgora[0];
             let pObj = prestadores.find(p => p.nome === nomePrest);
             let qtd = pObj ? (parseInt(pObj.qtdtecnicos) || 1) : 1;
+            
             if (pObj && qtd > 1) {
                 let rows = '';
                 for (let t = 1; t <= qtd; t++) {
+                    // AQUI ENTRA A REGRA DO INATIVO
+                    let isAtivo = pObj.status_tecnicos ? (pObj.status_tecnicos[t] !== false) : true;
+                    if (!isAtivo) continue; // Pula os inativos no painel resumido do gestor
+
                     let nomeTec = window.getNomeTecnico(pObj, t);
                     let slotsTec = pObj.agenda ? pObj.agenda.filter(a => !a.isAbsence && a.tecnico == t).length : 0;
-                    // Layout Horizontal (Inline) com formato de "pílula"
+                    
                     rows += `<div style="display:flex; align-items:center; gap:8px; background:var(--bg); padding:6px 14px; border-radius:20px; border:1px solid var(--border);">
                         <span style="font-size:0.75rem; font-weight:700; color:var(--cobli-dark); white-space:nowrap;">👷 ${nomeTec}</span>
                         <span style="font-size:0.65rem; color:var(--muted); border-left:1px solid #cbd5e1; padding-left:8px; white-space:nowrap;">${slotsTec} slots/sem.</span>
                     </div>`;
                 }
+                
                 painelTecBox.innerHTML = `<div class="card" style="margin-bottom:12px; padding:14px 16px;">
                     <div style="font-size:0.82rem; font-weight:800; color:var(--primary); text-transform:uppercase; margin-bottom:10px; letter-spacing:0.5px;">👥 EQUIPE — ${nomePrest}</div>
                     <div style="display:flex; flex-wrap:wrap; gap:8px;">${rows}</div>
                 </div>`;
                 painelTecBox.style.display = 'block';
-            } else { painelTecBox.style.display = 'none'; painelTecBox.innerHTML = ''; }
-        } else { painelTecBox.style.display = 'none'; painelTecBox.innerHTML = ''; }
+            } else { 
+                painelTecBox.style.display = 'none'; 
+                painelTecBox.innerHTML = ''; 
+            }
+        } else { 
+            painelTecBox.style.display = 'none'; 
+            painelTecBox.innerHTML = ''; 
+        }
     }
-};
+}; // <-- Aqui fecha a função renderPainel
 
 window.sincronizarStatusModal = async function(ticket, btn, index) {
     const originalText = btn.innerHTML; btn.innerHTML = `<span class="icone-girando">🔄</span> Atualizando...`; btn.disabled = true;
@@ -3267,6 +3485,7 @@ window.processarAtualizarTodosStatus = async function() {
 };
 
 window.limparFiltros = function(){ 
+    if(document.getElementById('filtroTecnico')) document.getElementById('filtroTecnico').value = "";
     ["filtroDataInicio","filtroDataFim","filtroTicket","filtroSolicitante"].forEach(id => document.getElementById(id).value = "");
     document.querySelectorAll('.cb-status').forEach(cb => cb.checked = false); document.querySelectorAll('.cb-prestador').forEach(cb => cb.checked = false);
     ['dropdown-status'].forEach(id => { let el = document.getElementById(id); if(el) el.removeAttribute('open'); });
@@ -3393,13 +3612,16 @@ let cardProdTec = document.getElementById('card-prod-tecnicos');
         cardProdTec.style.display = 'block';
         let contagemProducaoTecnico = {};
         
-        // 1. INICIALIZA TODOS OS TÉCNICOS ATIVOS
+      // 1. INICIALIZA TODOS OS TÉCNICOS ATIVOS
         let qtdAtivos = parseInt(prestadorAlvo.qtdtecnicos) || 0;
         let nomesAtivos = [];
         for(let i=1; i <= qtdAtivos; i++) {
+            // VERIFICA SE ESTÁ ATIVO
+            let isAtivo = prestadorAlvo.status_tecnicos ? (prestadorAlvo.status_tecnicos[i] !== false) : true;
             let nomeTec = window.getNomeTecnico(prestadorAlvo, i).trim();
-            nomesAtivos.push(nomeTec.toLowerCase());
-            contagemProducaoTecnico[nomeTec] = { nome: nomeTec, count: 0, isAtivo: true };
+            if (isAtivo) nomesAtivos.push(nomeTec.toLowerCase());
+            
+            contagemProducaoTecnico[nomeTec] = { nome: nomeTec, count: 0, isAtivo: isAtivo };
         }
 
         // 2. CONTA OS TICKETS (SOMENTE DO PRESTADOR ALVO)
