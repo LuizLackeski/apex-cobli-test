@@ -1557,11 +1557,20 @@ window.addEventListener('load', () => {
 });
 
 // ==========================================
-// FORMATADOR
+// FORMATADOR & HELPERS
 // ==========================================
 window.formatarCapitalize = function(str) {
     if(!str) return "";
     return str.toLowerCase().replace(/(?:^|\s)\S/g, function(a) { return a.toUpperCase(); });
+};
+
+// NOVO HELPER: Descobre se o técnico tá ativo lendo de dentro do JSON de nomes
+window.isTecnicoAtivo = function(prestador, tId) {
+    if (!prestador || !prestador.nomes_tecnicos) return true;
+    if (prestador.nomes_tecnicos["status_" + tId] !== undefined) {
+        return prestador.nomes_tecnicos["status_" + tId];
+    }
+    return true; // Padrão é ativo se não existir a info
 };
 
 // ==========================================
@@ -1590,7 +1599,6 @@ window.agendaCadastroObj = {};
 window.currentTech = 1;
 window.meuPrestadorLogado = null;
 
-// Período selecionado no modal do resumo Slack
 window.periodoResumoAtual = 'semana';
 
 const serviçosDisponíveis = {
@@ -1622,43 +1630,31 @@ window.validarCampos = function(selector) { let container = document.querySelect
 window.abrirModalResumoSlack = function() {
     document.getElementById('modalResumoSlack').style.display = 'flex';
     window.periodoResumoAtual = 'semana';
-    // Reset botões
     document.querySelectorAll('.periodo-btn').forEach(b => b.classList.remove('ativo-periodo'));
     document.querySelector('.periodo-btn').classList.add('ativo-periodo');
     document.getElementById('periodo-custom').style.display = 'none';
     window.atualizarPreviewResumo();
 };
 
-window.fecharModalResumo = function() {
-    document.getElementById('modalResumoSlack').style.display = 'none';
-};
+window.fecharModalResumo = function() { document.getElementById('modalResumoSlack').style.display = 'none'; };
 
 window.selecionarPeriodoResumo = function(periodo, btn) {
     window.periodoResumoAtual = periodo;
     document.querySelectorAll('.periodo-btn').forEach(b => b.classList.remove('ativo-periodo'));
     btn.classList.add('ativo-periodo');
-    
     let customBox = document.getElementById('periodo-custom');
-    if (periodo === 'personalizado') {
-        customBox.style.display = 'flex';
-    } else {
-        customBox.style.display = 'none';
-        window.atualizarPreviewResumo();
-    }
+    if (periodo === 'personalizado') { customBox.style.display = 'flex'; } 
+    else { customBox.style.display = 'none'; window.atualizarPreviewResumo(); }
 };
 
 function getIntervaloResumo(periodo) {
-    let hoje = new Date();
-    let ini, fim;
-    
+    let hoje = new Date(); let ini, fim;
     if (periodo === 'semana') {
-        let dow = hoje.getDay();
-        let diff = dow === 0 ? -6 : 1 - dow;
+        let dow = hoje.getDay(); let diff = dow === 0 ? -6 : 1 - dow;
         ini = new Date(hoje); ini.setDate(hoje.getDate() + diff); ini.setHours(0,0,0,0);
         fim = new Date(ini); fim.setDate(ini.getDate() + 6); fim.setHours(23,59,59,999);
     } else if (periodo === 'semana_passada') {
-        let dow = hoje.getDay();
-        let diff = dow === 0 ? -13 : -6 - dow;
+        let dow = hoje.getDay(); let diff = dow === 0 ? -13 : -6 - dow;
         ini = new Date(hoje); ini.setDate(hoje.getDate() + diff); ini.setHours(0,0,0,0);
         fim = new Date(ini); fim.setDate(ini.getDate() + 6); fim.setHours(23,59,59,999);
     } else if (periodo === 'mes') {
@@ -1676,14 +1672,10 @@ function getIntervaloResumo(periodo) {
 
 function filtrarAgendamentosPeriodo(ini, fim) {
     return agendamentos.filter(a => {
-        // Usa created_at (data de solicitação) como referência
         let dt;
-        if (a.created_at) {
-            dt = new Date(a.created_at);
-        } else if (a.data) {
-            let [d, m, y] = a.data.split('/');
-            dt = new Date(y, m - 1, d);
-        } else { return false; }
+        if (a.created_at) dt = new Date(a.created_at);
+        else if (a.data) { let [d, m, y] = a.data.split('/'); dt = new Date(y, m - 1, d); } 
+        else return false; 
         return dt >= ini && dt <= fim;
     });
 }
@@ -1691,18 +1683,12 @@ function filtrarAgendamentosPeriodo(ini, fim) {
 window.atualizarPreviewResumo = function() {
     let preview = document.getElementById('preview-resumo-texto');
     let intervalo = getIntervaloResumo(window.periodoResumoAtual);
-    
-    if (!intervalo) {
-        preview.innerHTML = '<span class="pv-title">Selecione as datas para ver a prévia...</span>';
-        return;
-    }
+    if (!intervalo) { preview.innerHTML = '<span class="pv-title">Selecione as datas para ver a prévia...</span>'; return; }
     
     let { ini, fim } = intervalo;
     let lista = filtrarAgendamentosPeriodo(ini, fim);
-    
     let fmtDate = (d) => d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
     
-    // Contagens de todos os status
     let total = lista.length;
     let concluidos = lista.filter(a => String(a.status||'').toLowerCase().match(/conclu|completed|finalizado/)).length;
     let agendados = lista.filter(a => String(a.status||'').toLowerCase().match(/agendado|scheduled/)).length;
@@ -1712,24 +1698,16 @@ window.atualizarPreviewResumo = function() {
     let negociacao = lista.filter(a => String(a.status||'').toLowerCase().match(/negocia|aguardando/)).length;
     let solicitado = lista.filter(a => { let s = String(a.status||'').toLowerCase(); return !s.match(/conclu|completed|finalizado|agendado|scheduled|impedido|reportado|falha|cancelado|canceled|andamento|progress|deslocamento|negocia|aguardando/); }).length;
     
-    // Por prestador
     let distPrest = {};
     lista.forEach(a => { if(a.prestador) distPrest[a.prestador] = (distPrest[a.prestador] || 0) + 1; });
     let prestStr = Object.entries(distPrest).sort((a,b)=>b[1]-a[1]).map(([n,c]) => `  • ${n}: ${c}`).join('\n');
     
-    // Por cidade
     let distCidade = {};
     lista.forEach(a => { if(a.cidade && a.uf) { let k = `${a.cidade}/${a.uf}`; distCidade[k] = (distCidade[k]||0)+1; }});
     let cidadeStr = Object.entries(distCidade).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([n,c]) => `  • ${n}: ${c}`).join('\n');
     
-    let periodoLabel = {
-        'semana': 'Esta Semana',
-        'semana_passada': 'Semana Passada',
-        'mes': 'Este Mês',
-        'personalizado': 'Período Personalizado'
-    }[window.periodoResumoAtual] || 'Período';
+    let periodoLabel = { 'semana': 'Esta Semana', 'semana_passada': 'Semana Passada', 'mes': 'Este Mês', 'personalizado': 'Período Personalizado' }[window.periodoResumoAtual] || 'Período';
     
-    // Montar lista de status — apenas os que têm valor > 0
     let statusLines = [];
     if (solicitado > 0)  statusLines.push(`  • 📋 Solicitados: ${solicitado}`);
     if (negociacao > 0)  statusLines.push(`  • 🤝 Em Negociação: ${negociacao}`);
@@ -1748,10 +1726,7 @@ window.atualizarPreviewResumo = function() {
         (cidadeStr ? `*Principais Cidades:*\n${cidadeStr}\n\n` : '') +
         `_Enviado via APEX · Cobli_`;
     
-    // Salvar para uso no envio
     window._resumoSlackTexto = texto;
-    
-    // Renderizar preview com destaque
     let linhasHtml = texto.split('\n').map(l => {
         if (l.startsWith('📊') || l.startsWith('*') ) return `<span class="pv-title">${l.replace(/\*/g,'')}</span>`;
         if (l.startsWith('  •')) return `<div class="pv-row">${l}</div>`;
@@ -1764,12 +1739,10 @@ window.atualizarPreviewResumo = function() {
 
 window.enviarResumoSlack = async function() {
     if (!window._resumoSlackTexto) return window.showMessage("Gere a prévia antes de enviar.");
-    
     let btn = document.getElementById('btn-enviar-resumo-slack');
     let original = btn.innerHTML;
     btn.innerHTML = '<span class="icone-girando">💬</span> Enviando...';
     btn.disabled = true;
-    
     try {
         await window.enviarNotificacaoSlack(window._resumoSlackTexto);
         window.fecharModalResumo();
@@ -1991,12 +1964,10 @@ window.carregarDadosDoBanco = async function() {
             let emailLogado = currentUser.email.toLowerCase().trim();
             window.meuPrestadorLogado = prestadores.find(p => {
                 if (!p.usuario_apex) return false;
-                // Lógica de múltiplos e-mails separados por ;
                 let emails = p.usuario_apex.toLowerCase().split(';').map(e => e.trim()).filter(Boolean);
                 return emails.includes(emailLogado);
             });
             
-            // Se achou o prestador e ele é um PRESTADOR, renderiza as ausências dele
             if (userRole === 'PRESTADOR' && window.meuPrestadorLogado) {
                 window.renderizarMinhaDisponibilidade();
             }
@@ -2097,7 +2068,7 @@ window.checarDisponibilidadeCore = function(prestador, data, novosSlotsInt, dNom
     });
 
     let absenceMatrix = Array.from({length: maxT + 1}, () => new Set());
-    let absenceNames = Array.from({length: maxT + 1}, () => new Map()); // Guarda o motivo da ausência
+    let absenceNames = Array.from({length: maxT + 1}, () => new Map()); 
     if (prestador.agenda) {
         prestador.agenda.filter(a => a.isAbsence && a.data === data).forEach(a => {
             let start = a.tipo === 'total' ? 0 : parseInt(a.inicio);
@@ -2115,9 +2086,10 @@ window.checarDisponibilidadeCore = function(prestador, data, novosSlotsInt, dNom
 
     let techHours = [];
     for (let t = 1; t <= maxT; t++) {
-        let worksHours = tem_tecnico_especifico
+        let isAtivo = window.isTecnicoAtivo(prestador, t);
+        let worksHours = (tem_tecnico_especifico && isAtivo)
             ? (prestador.agenda ? prestador.agenda.filter(a => a.dia === dNome && a.tecnico == t && !a.isAbsence).map(a => parseInt(a.hora)) : [])
-            : (prestador.agenda ? prestador.agenda.filter(a => a.dia === dNome && !a.isAbsence).map(a => parseInt(a.hora)) : []);
+            : (isAtivo && prestador.agenda ? prestador.agenda.filter(a => a.dia === dNome && !a.isAbsence).map(a => parseInt(a.hora)) : []);
         techHours.push(new Set(worksHours.filter(h => !absenceMatrix[t].has(h))));
     }
 
@@ -2160,7 +2132,7 @@ window.checarDisponibilidadeCore = function(prestador, data, novosSlotsInt, dNom
         for (let h = novoJob.start; h <= novoJob.end; h++) { 
             if (!techHours[t].has(h)) { 
                 temSlots = false; 
-                motivoFaltaSlot = absenceMatrix[t+1] && absenceMatrix[t+1].has(h) ? (absenceNames[t+1].get(h) || "Ausência Bloqueada") : "Fora do turno do técnico";
+                motivoFaltaSlot = absenceMatrix[t+1] && absenceMatrix[t+1].has(h) ? (absenceNames[t+1].get(h) || "Ausência Bloqueada") : "Fora do turno do técnico ou Inativo";
                 break; 
             } 
         }
@@ -2172,7 +2144,6 @@ window.checarDisponibilidadeCore = function(prestador, data, novosSlotsInt, dNom
         let conflito = false;
         let motivoConflito = "";
         
-        // Verifica conflito de hora real ou gordura
         for (let h = novoJob.start; h <= novoJob.end; h++) { 
             if (techOcupadoJobs[t].has(h)) { conflito = true; motivoConflito = `Choca com OS #${techOcupadoJobs[t].get(h)}`; break; }
             if (techOcupadoGordura[t].has(h)) { conflito = true; motivoConflito = `Deslocamento da OS #${techOcupadoGordura[t].get(h)}`; break; } 
@@ -2192,7 +2163,6 @@ window.checarDisponibilidadeCore = function(prestador, data, novosSlotsInt, dNom
         }
     }
     
-    // Resume o motivo para o usuário
     let motivoFinal = "Indisponível";
     if (motivosFalha.length > 0) {
         let conflitosOS = motivosFalha.filter(m => m.includes("OS #"));
@@ -2332,44 +2302,6 @@ window.rdaAgendamento = function() {
     let horasNecessarias = Math.ceil(totalMinutos / 60);
     if (itensSelecionados.length === 0) { container.innerHTML = `<div style="font-weight:600; color:var(--primary); font-size:0.85rem;">Adicione um serviço para ver a agenda.</div>`; return; }
     window.agendaDiasDisponiveis = [];
-    for(let i=2; i<60; i++){ 
-        let data = new Date(); data.setDate(hoje.getDate() + i); let dStr = data.toLocaleDateString('pt-BR'); let dNome = diasSemana[data.getDay()]; 
-        let allSlotsRaw = (p.agenda && Array.isArray(p.agenda)) ? p.agenda.filter(a => !a.isAbsence && a.dia == dNome) : []; 
-        if (allSlotsRaw.length === 0) continue;
-        let horasAgendaSet = new Set(allSlotsRaw.map(item => parseInt(item.hora.split(':')[0])));
-        let horasAgenda = Array.from(horasAgendaSet).sort((a,b)=>a-b);
-        let validStarts = []; 
-        let validStartsTecnico = {}; // hora → nome do tecnico id
-        for (let h of horasAgenda) {
-            let seqOk = true; let testSlots = [];
-            for (let k = 0; k < horasNecessarias; k++) { if (!horasAgenda.includes(h + k)) { seqOk = false; break; } testSlots.push(h + k); }
-            if (seqOk) { 
-                let infoDisponibilidade = window.checarDisponibilidadeCore(p, dStr, testSlots, dNome);
-                if (infoDisponibilidade.pode) {
-                    validStarts.push(h);
-                    if (infoDisponibilidade.nomeTecnico) validStartsTecnico[h] = infoDisponibilidade.nomeTecnico;
-                }
-            }
-        }
-        let enabledCells = new Set();
-        validStarts.forEach(start => { for (let k = 0; k < horasNecessarias; k++) enabledCells.add(start + k); });
-        if(validStarts.length > 0){ 
-            let allSlots = Array.from(horasAgendaSet).sort((a,b)=>a-b).map(h => ({hora: h + ':00'}));
-            window.agendaDiasDisponiveis.push({ dStr, dNome, allSlots, validStarts, validStartsTecnico, enabledCells, horasNecessarias });
-        } 
-    } 
-    window.agendaPaginaAtual = 0;
-    window.renderizarAgendaPaginada();
-};
-
-window.rdaAgendamento = function() { 
-    let p = prestadores[prestadorSelecionadoIndex]; let container = document.getElementById("agenda-agendamento"); 
-    container.innerHTML = `<div style="text-align:center; padding:20px; font-weight:700; color:var(--primary); font-family:var(--font-mono);">Calculando horários...</div>`; 
-    let hoje = new Date(); const diasSemana = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sab"]; 
-    let totalMinutos = itensSelecionados.reduce((a, b) => a + (b.tempo * b.qtd), 0);
-    let horasNecessarias = Math.ceil(totalMinutos / 60);
-    if (itensSelecionados.length === 0) { container.innerHTML = `<div style="font-weight:600; color:var(--primary); font-size:0.85rem;">Adicione um serviço para ver a agenda.</div>`; return; }
-    window.agendaDiasDisponiveis = [];
     
     for(let i=2; i<60; i++){ 
         let data = new Date(); data.setDate(hoje.getDate() + i); let dStr = data.toLocaleDateString('pt-BR'); let dNome = diasSemana[data.getDay()]; 
@@ -2380,7 +2312,7 @@ window.rdaAgendamento = function() {
         
         let validStarts = []; 
         let validStartsTecnico = {}; 
-        let invalidStartsMotivo = {}; // Novo: Armazena o motivo de falha de cada hora
+        let invalidStartsMotivo = {}; 
         
         for (let h of horasAgenda) {
             let seqOk = true; let testSlots = [];
@@ -2412,7 +2344,6 @@ window.rdaAgendamento = function() {
 
 window.renderizarAgendaPaginada = function() {
     let container = document.getElementById("agenda-agendamento"); container.innerHTML = "";
-    // Ajuste para não bugar caso o dia todo esteja indisponível, mas tenha que renderizar a aba
     if (window.agendaDiasDisponiveis.filter(d => d.validStarts.length > 0).length === 0) { 
         container.innerHTML = `<div style="color:var(--cobli-red); font-size:0.85rem; font-weight:700; padding: 12px; background: #fff5f5; border-radius: var(--radius-sm); border: 1px solid #fecaca;">⚠️ Sem horários disponíveis com as horas necessárias seguidas.</div>`; 
         return; 
@@ -2434,7 +2365,6 @@ window.renderizarAgendaPaginada = function() {
     container.appendChild(paginacaoTopo);
 
     diasPagina.forEach(diaInfo => {
-        // Pula os dias que não têm pelo menos 1 slot válido na renderização
         if(diaInfo.validStarts.length === 0) return;
         
         let card = document.createElement("div"); card.className = "agenda-day-card"; card.innerHTML = `<div class="agenda-day-title">${diaInfo.dStr} (${diaInfo.dNome})</div>`; 
@@ -2443,12 +2373,11 @@ window.renderizarAgendaPaginada = function() {
             let hInt = parseInt(item.hora.split(':')[0]);
             let div = document.createElement("div"); div.className = "cell"; div.innerText = item.hora; div.dataset.hora = item.hora; div.dataset.date = diaInfo.dStr; 
             if (!diaInfo.enabledCells.has(hInt)) { 
-                // AQUI ENTRA A MÁGICA DO UX
                 let motivoErro = diaInfo.invalidStartsMotivo ? (diaInfo.invalidStartsMotivo[hInt] || "Indisponível") : "Indisponível";
                 div.style.opacity = "0.3"; 
                 div.style.cursor = "not-allowed"; 
-                div.title = motivoErro; // Aparece ao parar o mouse
-                div.onclick = () => window.showToast(`🔒 ${motivoErro}`); // Mostra no Toast ao clicar
+                div.title = motivoErro; 
+                div.onclick = () => window.showToast(`🔒 ${motivoErro}`);
             }
             else { 
                 div.title = "Disponível para agendamento";
@@ -2662,9 +2591,6 @@ window.mudarAbaModalTecnico = function(tId, total) {
     }
 };
 
-// ==========================================
-// HELPER: nome do técnico (com fallback)
-// ==========================================
 window.getNomeTecnico = function(prestador, tecId) {
     if (!prestador) return `Técnico ${tecId}`;
     let nomes = prestador.nomes_tecnicos;
@@ -2783,10 +2709,10 @@ window.abrirCadastro = function(index = -1){
         let qtd = parseInt(p.qtdtecnicos) || 1;
         
         if (p.nomes_tecnicos && typeof p.nomes_tecnicos === 'object') {
-            for (let t = 1; t <= qtd; t++) window.nomesTecnicosTemp[t] = p.nomes_tecnicos[t] || '';
-        }
-        if (p.status_tecnicos) {
-            for (let t = 1; t <= qtd; t++) window.statusTecnicosTemp[t] = p.status_tecnicos[t] !== false;
+            for (let t = 1; t <= qtd; t++) {
+                window.nomesTecnicosTemp[t] = p.nomes_tecnicos[t] || '';
+                window.statusTecnicosTemp[t] = window.isTecnicoAtivo(p, t);
+            }
         } else {
             for (let t = 1; t <= qtd; t++) window.statusTecnicosTemp[t] = true;
         }
@@ -2890,14 +2816,14 @@ window.salvarPrestador = async function(btn) {
         datasBloqueadasTemp.forEach(b => { agenda.push({ isAbsence: true, data: b.data, tipo: b.tipo, inicio: b.inicio, fim: b.fim, tecnico: b.tecnico }); });
         
         let nomesTecnicos = {};
-        let statusTecnicos = {};
         for (let t = 1; t <= maxT; t++) {
             if (window.nomesTecnicosTemp && window.nomesTecnicosTemp[t] && window.nomesTecnicosTemp[t].trim()) nomesTecnicos[t] = window.nomesTecnicosTemp[t].trim();
-            statusTecnicos[t] = window.statusTecnicosTemp ? window.statusTecnicosTemp[t] !== false : true;
+            // Salva o status DENTRO do jsonb de nomes pra não precisar de coluna nova no banco
+            nomesTecnicos["status_" + t] = window.statusTecnicosTemp ? window.statusTecnicosTemp[t] !== false : true;
         }
 
         let usuarioApexRaw = document.getElementById("usuarioApex").value.toLowerCase().replace(/\s/g, '');
-        let p = { nome: document.getElementById("nomeEmpresa").value, endereco: document.getElementById("endereco").value, cidade: document.getElementById("cidade").value, uf: document.getElementById("uf").value, cep: document.getElementById("cep").value, responsavel: document.getElementById("responsavel").value, contato: document.getElementById("contatoResponsavel").value, usuario_apex: usuarioApexRaw, qtdtecnicos: maxT, range: document.getElementById("rangeAtendimento").value, field_id: document.getElementById("fieldIdField").value, status_prestador: document.getElementById("statusPrestador").value, agenda: agenda, nomes_tecnicos: nomesTecnicos, status_tecnicos: statusTecnicos }; 
+        let p = { nome: document.getElementById("nomeEmpresa").value, endereco: document.getElementById("endereco").value, cidade: document.getElementById("cidade").value, uf: document.getElementById("uf").value, cep: document.getElementById("cep").value, responsavel: document.getElementById("responsavel").value, contato: document.getElementById("contatoResponsavel").value, usuario_apex: usuarioApexRaw, qtdtecnicos: maxT, range: document.getElementById("rangeAtendimento").value, field_id: document.getElementById("fieldIdField").value, status_prestador: document.getElementById("statusPrestador").value, agenda: agenda, nomes_tecnicos: nomesTecnicos }; 
         const url = (editingIndex !== -1) ? `${API_URL}/prestadores/${prestadores[editingIndex].id}` : `${API_URL}/prestadores`; 
         await fetch(url, { method: (editingIndex !== -1) ? 'PUT' : 'POST', headers: getHeaders(), body: JSON.stringify(p) }); 
         editingIndex = -1; await window.carregarDadosDoBanco(); 
@@ -2967,29 +2893,25 @@ window.removerMeuBloqueio = async function(indexVisivel) {
 
 // ==========================================
 // OCUPAÇÃO DIÁRIA E DASHBOARD UNIFICADO
-// NOVO HELPER: Unifica a regra da gordura para o Dashboard (mesma do agendamento)
+// ==========================================
 window.getOcupacaoReal = function(prestador, dataStr, dNome) {
     if (!prestador) return { geral: { total: 0, ocupadas: 0, livres: 0, pct: 0 }, tecnicos: {} };
     
     let maxT = parseInt(prestador.qtdtecnicos) || 1;
     let tem_tecnico_especifico = prestador.agenda && prestador.agenda.some(a => a.tecnico);
 
-    // BLINDAGEM DE DATA: Força 0 no dia e mês para não ter erro de comparação (ex: 18/5 vs 18/05)
     let dataStrPad = dataStr.split('/').map(x => x.padStart(2, '0')).join('/');
 
-    // 1. Mapear Agendamentos
     let jobsExistentes = [];
     agendamentos.filter(a => {
         let nomeAgend = String(a.prestador || '').trim().toUpperCase();
         let nomeMeu = String(prestador.nome || '').trim().toUpperCase();
-        
         let aData = a.data ? String(a.data).split('/').map(x => x.padStart(2, '0')).join('/') : '';
         let aRaw = a.rawdate ? String(a.rawdate).split('/').map(x => x.padStart(2, '0')).join('/') : '';
-        
         return nomeAgend === nomeMeu && (aData === dataStrPad || aRaw === dataStrPad) && !String(a.status).toLowerCase().includes('cancelado');
     }).forEach(a => {
         let slotsArr = Array.isArray(a.slots) ? a.slots : (typeof a.slots === 'string' ? a.slots.split(', ') : []);
-        let slotsCount = 1; // Fallback caso slots venha corrompido
+        let slotsCount = 1; 
         let start = 8;
         let end = 8;
         
@@ -3006,12 +2928,10 @@ window.getOcupacaoReal = function(prestador, dataStr, dNome) {
         jobsExistentes.push({ start: start, end: end, tecnico: tecnicoIdx, slotsCount: slotsCount });
     });
 
-    // 2. Capacidade da Base
-let techHours = [];
+    let techHours = [];
     let baseTotalEmpresa = 0;
     for (let t = 1; t <= maxT; t++) {
-        // Se o técnico estiver inativo, ele é ignorado da capacidade
-        let isAtivo = prestador.status_tecnicos ? (prestador.status_tecnicos[t] !== false) : true;
+        let isAtivo = window.isTecnicoAtivo(prestador, t);
         
         let worksHours = (tem_tecnico_especifico && isAtivo)
             ? (prestador.agenda ? prestador.agenda.filter(a => a.dia === dNome && a.tecnico == t && !a.isAbsence).map(a => parseInt(a.hora)) : [])
@@ -3030,22 +2950,20 @@ let techHours = [];
         baseTotalEmpresa += finalHours.length;
     }
 
-    // 3. Contagem de Ocupação (Adicionando a Categoria 0 para Ex-Técnicos)
     let ocupadasGeral = 0;
     let statsPorTecnico = {};
     for (let i = 1; i <= maxT; i++) statsPorTecnico[i] = { total: techHours[i-1].size, ocupadas: 0 };
-    statsPorTecnico[0] = { total: 0, ocupadas: 0 }; // 0 = Aba dos Ex-Técnicos/Órfãos
+    statsPorTecnico[0] = { total: 0, ocupadas: 0 }; 
 
     jobsExistentes.forEach(job => {
         ocupadasGeral += job.slotsCount; 
         if (job.tecnico !== null && statsPorTecnico[job.tecnico + 1]) {
             statsPorTecnico[job.tecnico + 1].ocupadas += job.slotsCount;
         } else {
-            statsPorTecnico[0].ocupadas += job.slotsCount; // Joga pra conta dos Ex-Técnicos
+            statsPorTecnico[0].ocupadas += job.slotsCount; 
         }
     });
 
-    // 4. Finalizar cálculos
     for (let t in statsPorTecnico) {
         let s = statsPorTecnico[t];
         s.livres = Math.max(0, s.total - s.ocupadas);
@@ -3097,7 +3015,6 @@ window.renderOcupacaoDiaria = function(prestadorNome, tecnicoId) {
                 selectTec += `<button onclick="window.toggleTecOcupacao(${t},'${prestadorNome}')" id="btn-ocup-tec-${t}" data-ativo="${isSelected?'1':'0'}" style="padding:5px 12px;font-size:0.75rem;border-radius:14px;border:1px solid var(--border);background:${isSelected?'var(--primary)':'white'};color:${isSelected?'white':'var(--muted)'};white-space:nowrap;cursor:pointer;font-family:var(--font-main);min-height:auto;font-weight:700;flex-shrink:0;">${nomeTec}</button>`;
             }
             
-            // Verifica se tem OS órfã e cria o botão vermelho
             let hasOrphans = false;
             let dHoje = new Date();
             for(let i=0; i<15; i++) {
@@ -3179,7 +3096,6 @@ window.renderOcupacaoDiaria = function(prestadorNome, tecnicoId) {
                     tabsEl.innerHTML+=`<button onclick="window.renderOcupacaoPorTecnico(${t})" id="tab-tec-ocup-${t}" style="padding:4px 10px;font-size:0.72rem;border-radius:14px;border:1px solid var(--border);background:${t===1?'var(--primary)':'white'};color:${t===1?'white':'var(--muted)'};white-space:nowrap;cursor:pointer;font-family:var(--font-main);min-height:auto;font-weight:700;">${nome}</button>`;
                 }
                 
-                // Exibe a aba Ex-Técnico no painel do Prestador também!
                 let hasOrphans = false;
                 let dHoje = new Date();
                 for(let i=0; i<15; i++) {
@@ -3217,7 +3133,6 @@ window.renderOcupacaoPorTecnico = function(tecId) {
         }
     }
     
-    // Atualiza o visual das abas
     for (let t = 0; t <= qtd; t++) {
         let btn = document.getElementById(`tab-tec-ocup-${t}`);
         if (btn) { 
@@ -3247,7 +3162,7 @@ window.renderOcupacaoPorTecnico = function(tecId) {
 };
 
 // ==========================================
-// PAINEL
+// PAINEL (C/ FILTROS DINÂMICOS E DETALHES DE STATUS)
 // ==========================================
 window.excluirAgendamento = function(id, data) { window.fecharModal(); window.showConfirm(`Excluir o agendamento de <strong>${data}</strong>?`, `window.confirmarExclusaoAgendamento(${id})`); };
 window.confirmarExclusaoAgendamento = async function(id) { await fetch(`${API_URL}/agendamentos/${id}`, { method: 'DELETE', headers: getHeaders() }); await window.carregarDadosDoBanco(); window.showToast("Agendamento excluído!"); window.fecharModal(); };
@@ -3260,6 +3175,7 @@ window.abrirDetalhesAgendamento = function(index) {
     let prodHtml = txtServicos.length > 0 ? txtServicos.split('\n').filter(l => l.trim() !== '').map(l => `<div style="margin-bottom:6px; font-family:var(--font-mono); font-size:0.8rem;">• ${l.replace('•', '').trim().replace(/(\(Placa:.*?\))/ig, '<strong style="color:var(--cobli-dark);">$1</strong>')}</div>`).join('') : '<div style="color:var(--muted); font-style: italic; font-size:0.82rem;">Sem produtos detalhados</div>';
     let btnSincronizarHtml = (userRole === 'GESTOR' || userRole === 'ADMIN' || userRole === 'SMARTOPS') ? `<button onclick="event.stopPropagation(); window.sincronizarStatusModal('${a.ticket}', this, ${index})" style="background:var(--cobli-green); flex:1; padding:10px; min-height:auto;">🔄 Atualizar Status</button>` : '';
     let btnExcluirHtml = (userRole === 'GESTOR') ? `<button onclick="window.excluirAgendamento(${a.id}, '${a.data}')" class="btn-cancelar" style="flex:1; padding:10px; min-height:auto;">Excluir</button>` : '';
+    
     let html = `
         <div style="background: white; padding: 16px; border-radius: var(--radius); border: 1px solid var(--border); margin-bottom: 15px;">
             <div style="display:flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--bg); padding-bottom: 8px; margin-bottom: 10px;">
@@ -3295,19 +3211,41 @@ window.trocarAba = function(id, btn){
     if(id === 'usuarios') window.carregarListaUsuarios();
 };
 
-// Função nova para alimentar o dropdown de técnicos dinamicamente
+window.atualizarFiltrosPrestador = function(){ 
+    let container = document.getElementById("container-prestadores"); if(!container) return;
+    let providersWithAgend = [...new Set(agendamentos.map(a => a.prestador).filter(Boolean))].sort();
+    container.innerHTML = ''; 
+    providersWithAgend.forEach(p => { 
+        container.innerHTML += `<label style="display:flex; align-items:center; gap:8px; margin:0; cursor:pointer; font-size: 0.75rem; font-weight: 700; color: var(--text); white-space: nowrap; text-transform: uppercase; letter-spacing:0.3px; padding: 3px 0;"><input type="checkbox" value="${p}" class="cb-prestador" onchange="window.atualizarLabelPrestadorFiltro()" style="width: auto; margin: 0; padding: 0;"> ${p}</label>`; 
+    });
+    window.atualizarFiltroTecnico(); 
+};
+
+window.atualizarLabelPrestadorFiltro = function() {
+    let marcados = Array.from(document.querySelectorAll('.cb-prestador:checked')).map(cb => cb.value);
+    let label = document.getElementById('label-prestador-filtro');
+    if (label) {
+        if (marcados.length === 0) label.textContent = '👷 Todos...';
+        else if (marcados.length === 1) label.textContent = '👷 ' + marcados[0];
+        else label.textContent = `👷 ${marcados.length} selecionados`;
+    }
+    window.atualizarFiltroTecnico();
+    window.renderPainel();
+};
+
 window.atualizarFiltroTecnico = function() {
-    let select = document.getElementById('filtroTecnico');
-    if (!select) return;
-    let currentVal = select.value;
-    select.innerHTML = '<option value="">Todos</option>';
+    let container = document.getElementById('container-tecnicos');
+    if (!container) return;
     
+    let marcadosAntes = Array.from(document.querySelectorAll('.cb-tecnico:checked')).map(cb => cb.value);
+    let prestadoresMarcados = Array.from(document.querySelectorAll('.cb-prestador:checked')).map(cb => cb.value);
     let nomesTecnicos = new Set();
     
     agendamentos.forEach(a => {
-        // Se for prestador logado, ignora os técnicos de outras empresas
         if (userRole === 'PRESTADOR' && window.meuPrestadorLogado) {
             if (String(a.prestador || '').trim().toUpperCase() !== String(window.meuPrestadorLogado.nome || '').trim().toUpperCase()) return;
+        } else if (prestadoresMarcados.length > 0) {
+            if (!prestadoresMarcados.includes(a.prestador)) return;
         }
         
         let nomeTec = a.tecnico_alocado || "Não Alocado";
@@ -3318,34 +3256,60 @@ window.atualizarFiltroTecnico = function() {
         nomesTecnicos.add(nomeTec);
     });
     
+    container.innerHTML = '';
     Array.from(nomesTecnicos).sort().forEach(nome => {
-        let opt = document.createElement('option');
-        opt.value = nome.toLowerCase();
-        opt.text = nome;
-        select.appendChild(opt);
+        let isChecked = marcadosAntes.includes(nome) ? 'checked' : '';
+        container.innerHTML += `<label style="display:flex; align-items:center; gap:8px; margin:0; cursor:pointer; font-size: 0.75rem; font-weight: 700; color: var(--text); white-space: nowrap; text-transform: uppercase; letter-spacing:0.3px; padding: 3px 0;"><input type="checkbox" value="${nome}" class="cb-tecnico" onchange="window.atualizarLabelTecnicoFiltro()" style="width: auto; margin: 0; padding: 0;" ${isChecked}> ${nome}</label>`;
     });
-    select.value = currentVal; // Mantém a seleção se possível
+    window.atualizarLabelTecnicoFiltro();
 };
 
-// Função de renderização atualizada
-window.renderPainel = function(){ 
-    if (!Array.isArray(agendamentos)) { document.getElementById("painel-conteudo").innerHTML = "Nenhum dado."; return; }
+window.atualizarLabelTecnicoFiltro = function() {
+    let marcados = Array.from(document.querySelectorAll('.cb-tecnico:checked')).map(cb => cb.value);
+    let label = document.getElementById('label-tecnico-filtro');
+    if (label) {
+        if (marcados.length === 0) label.textContent = '👷 Todos...';
+        else if (marcados.length === 1) label.textContent = '👷 ' + marcados[0];
+        else label.textContent = `👷 ${marcados.length} selecionados`;
+    }
+    window.renderPainel();
+};
+
+window.limparFiltroPrestador = function() {
+    document.querySelectorAll('.cb-prestador').forEach(cb => cb.checked = false);
+    window.atualizarLabelPrestadorFiltro();
+};
+
+window.limparFiltroTecnico = function() {
+    document.querySelectorAll('.cb-tecnico').forEach(cb => cb.checked = false);
+    window.atualizarLabelTecnicoFiltro();
+};
+
+window.limparFiltros = function(){ 
+    ["filtroDataInicio","filtroDataFim","filtroTicket","filtroSolicitante"].forEach(id => document.getElementById(id).value = "");
+    document.querySelectorAll('.cb-status').forEach(cb => cb.checked = false); 
+    document.querySelectorAll('.cb-prestador').forEach(cb => cb.checked = false);
+    document.querySelectorAll('.cb-tecnico').forEach(cb => cb.checked = false);
+    ['dropdown-status', 'dropdown-prestador', 'dropdown-tecnico'].forEach(id => { let el = document.getElementById(id); if(el) el.removeAttribute('open'); });
     
-    window.atualizarFiltroTecnico(); // Atualiza as opções do filtro
+    window.atualizarLabelPrestadorFiltro(); 
+};
+
+window.renderPainel = function() {
+    if (!Array.isArray(agendamentos)) { document.getElementById("painel-conteudo").innerHTML = "Nenhum dado."; return; }
     
     let fInicio = document.getElementById("filtroDataInicio").value; 
     let fFim = document.getElementById("filtroDataFim").value; 
     let fTicket = document.getElementById("filtroTicket").value.toLowerCase(); 
     let fSol = document.getElementById("filtroSolicitante").value.toLowerCase();
-    let fTecnico = document.getElementById("filtroTecnico") ? document.getElementById("filtroTecnico").value.toLowerCase() : "";
     
     let statusMarcados = Array.from(document.querySelectorAll('.cb-status:checked')).map(cb => cb.value);
     let prestadoresMarcados = Array.from(document.querySelectorAll('.cb-prestador:checked')).map(cb => cb.value);
+    let tecnicosMarcados = Array.from(document.querySelectorAll('.cb-tecnico:checked')).map(cb => cb.value);
 
     filtradosPainel = agendamentos.filter(a => { 
         if(!a.data || !a.ticket) return false;
 
-        // SE FOR PRESTADOR: Só vê o que está vinculado ao seu e-mail
         if(userRole === 'PRESTADOR') { 
             if (!window.meuPrestadorLogado) return false; 
             let nomeAgendamento = String(a.prestador || '').trim().toUpperCase();
@@ -3353,21 +3317,19 @@ window.renderPainel = function(){
             if (nomeAgendamento !== nomePrestadorLogado) return false; 
         }
 
-        // Resolução do nome do técnico para o filtro
         let nomeTecAlocado = a.tecnico_alocado || "Não Alocado";
         if (/^\d+$/.test(nomeTecAlocado)) {
             let pObj = prestadores.find(p => p.nome === a.prestador);
             if (pObj) nomeTecAlocado = window.getNomeTecnico(pObj, nomeTecAlocado).trim();
         }
 
-        // Filtros normais
         let [d, m, y] = a.data.split('/'); 
         let dataAgendada = `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
         let matchDate = (!fInicio || dataAgendada >= fInicio) && (!fFim || dataAgendada <= fFim); 
         let matchTicket = (!fTicket || (a.ticket && a.ticket.toLowerCase().includes(fTicket)));
         let matchSol = (!fSol || (a.solicitante && a.solicitante.toLowerCase().includes(fSol)));
         let matchPrest = prestadoresMarcados.length === 0 || prestadoresMarcados.includes(a.prestador);
-        let matchTecnico = (!fTecnico || nomeTecAlocado.toLowerCase() === fTecnico);
+        let matchTecnico = tecnicosMarcados.length === 0 || tecnicosMarcados.includes(nomeTecAlocado);
         
         let statusOriginal = String(a.status || 'solicitado').trim().toLowerCase(); 
         let statusMapeado = 'solicitado';
@@ -3380,7 +3342,7 @@ window.renderPainel = function(){
         
         let matchStatus = statusMarcados.length === 0 || statusMarcados.includes(statusMapeado);
         
-        return matchDate && matchTicket && matchSol && matchPrest && matchStatus && matchTecnico; 
+        return matchDate && matchTicket && matchSol && matchPrest && matchTecnico && matchStatus; 
     }).sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
 
     let counts = { solicitado: 0, negociacao: 0, agendado: 0, andamento: 0, impedido: 0, concluido: 0, cancelado: 0 };
@@ -3401,7 +3363,6 @@ window.renderPainel = function(){
         let dataRegistro = a.created_at ? new Date(a.created_at).toLocaleString('pt-BR') : 'N/A';
         let nomeClienteFormatado = window.formatarCapitalize(a.cliente) || '-';
         
-        // Resolução do nome do técnico para a visualização no card
         let nomeTecAlocadoCard = a.tecnico_alocado || "Não Alocado";
         if (/^\d+$/.test(nomeTecAlocadoCard)) {
             let pObj = prestadores.find(p => p.nome === a.prestador);
@@ -3420,22 +3381,18 @@ window.renderPainel = function(){
         </div>`;
     }).join('');
 
-// Detalhe por técnico (quando apenas 1 prestador está selecionado - Gestor)
     let painelTecBox = document.getElementById('painel-detalhe-tecnicos');
-    let prestadoresMarcadosAgora = Array.from(document.querySelectorAll('.cb-prestador:checked')).map(cb => cb.value);
-    
     if (painelTecBox) {
-        if (prestadoresMarcadosAgora.length === 1) {
-            let nomePrest = prestadoresMarcadosAgora[0];
+        if (prestadoresMarcados.length === 1) {
+            let nomePrest = prestadoresMarcados[0];
             let pObj = prestadores.find(p => p.nome === nomePrest);
             let qtd = pObj ? (parseInt(pObj.qtdtecnicos) || 1) : 1;
             
             if (pObj && qtd > 1) {
                 let rows = '';
                 for (let t = 1; t <= qtd; t++) {
-                    // AQUI ENTRA A REGRA DO INATIVO
-                    let isAtivo = pObj.status_tecnicos ? (pObj.status_tecnicos[t] !== false) : true;
-                    if (!isAtivo) continue; // Pula os inativos no painel resumido do gestor
+                    let isAtivo = window.isTecnicoAtivo(pObj, t);
+                    if (!isAtivo) continue;
 
                     let nomeTec = window.getNomeTecnico(pObj, t);
                     let slotsTec = pObj.agenda ? pObj.agenda.filter(a => !a.isAbsence && a.tecnico == t).length : 0;
@@ -3451,16 +3408,10 @@ window.renderPainel = function(){
                     <div style="display:flex; flex-wrap:wrap; gap:8px;">${rows}</div>
                 </div>`;
                 painelTecBox.style.display = 'block';
-            } else { 
-                painelTecBox.style.display = 'none'; 
-                painelTecBox.innerHTML = ''; 
-            }
-        } else { 
-            painelTecBox.style.display = 'none'; 
-            painelTecBox.innerHTML = ''; 
-        }
+            } else { painelTecBox.style.display = 'none'; painelTecBox.innerHTML = ''; }
+        } else { painelTecBox.style.display = 'none'; painelTecBox.innerHTML = ''; }
     }
-}; // <-- Aqui fecha a função renderPainel
+};
 
 window.sincronizarStatusModal = async function(ticket, btn, index) {
     const originalText = btn.innerHTML; btn.innerHTML = `<span class="icone-girando">🔄</span> Atualizando...`; btn.disabled = true;
@@ -3484,70 +3435,8 @@ window.processarAtualizarTodosStatus = async function() {
     window.showToast("✅ Varredura completa!"); await window.carregarDadosDoBanco(); 
 };
 
-window.limparFiltros = function(){ 
-    if(document.getElementById('filtroTecnico')) document.getElementById('filtroTecnico').value = "";
-    ["filtroDataInicio","filtroDataFim","filtroTicket","filtroSolicitante"].forEach(id => document.getElementById(id).value = "");
-    document.querySelectorAll('.cb-status').forEach(cb => cb.checked = false); document.querySelectorAll('.cb-prestador').forEach(cb => cb.checked = false);
-    ['dropdown-status'].forEach(id => { let el = document.getElementById(id); if(el) el.removeAttribute('open'); });
-    window.fecharDropdownPrestador();
-    window.atualizarLabelPrestadorFiltro();
-    window.renderPainel(); 
-};
-
-window.toggleDropdownPrestador = function() {
-    let panel = document.getElementById('dropdown-prestador-panel');
-    if (!panel) return;
-    let isOpen = panel.style.display === 'flex';
-    panel.style.display = isOpen ? 'none' : 'flex';
-    panel.style.flexDirection = 'column';
-    if (!isOpen) {
-        // Fechar ao clicar fora
-        setTimeout(() => {
-            document.addEventListener('click', window._fecharDropdownPrestadorOutside = function(e) {
-                if (!document.getElementById('dropdown-prestador-panel').contains(e.target) && e.target.id !== 'btn-dropdown-prestador') {
-                    window.fecharDropdownPrestador();
-                }
-            }, { once: false });
-        }, 10);
-    } else {
-        document.removeEventListener('click', window._fecharDropdownPrestadorOutside);
-    }
-};
-
-window.fecharDropdownPrestador = function() {
-    let panel = document.getElementById('dropdown-prestador-panel');
-    if (panel) panel.style.display = 'none';
-    document.removeEventListener('click', window._fecharDropdownPrestadorOutside);
-};
-
-window.limparFiltroPrestador = function() {
-    document.querySelectorAll('.cb-prestador').forEach(cb => cb.checked = false);
-    window.atualizarLabelPrestadorFiltro();
-};
-
-window.atualizarLabelPrestadorFiltro = function() {
-    let marcados = Array.from(document.querySelectorAll('.cb-prestador:checked')).map(cb => cb.value);
-    let label = document.getElementById('label-prestador-filtro');
-    if (!label) return;
-    if (marcados.length === 0) label.textContent = '👷 Selecionar...';
-    else if (marcados.length === 1) label.textContent = '👷 ' + marcados[0];
-    else label.textContent = `👷 ${marcados.length} selecionados`;
-};
-
-window.atualizarFiltrosPrestador = function(){ 
-    let container = document.getElementById("container-prestadores"); if(!container) return;
-    let providersWithAgend = [...new Set(agendamentos.map(a => a.prestador).filter(Boolean))].sort();
-    container.innerHTML = ''; 
-    providersWithAgend.forEach(p => { 
-        container.innerHTML += `<label style="display:flex; align-items:center; gap:8px; margin:0; cursor:pointer; font-size: 0.75rem; font-weight: 700; color: var(--text); white-space: nowrap; text-transform: uppercase; letter-spacing:0.3px; padding: 3px 0;"><input type="checkbox" value="${p}" class="cb-prestador" onchange="window.atualizarLabelPrestadorFiltro()" style="width: auto; margin: 0; padding: 0;"> ${p}</label>`; 
-    });
-};
-
 // ==========================================
 // DASHBOARD
-// ==========================================
-// ==========================================
-// DASHBOARD (VERSÃO COM HISTÓRICO DE TÉCNICOS)
 // ==========================================
 window.renderDashboard = function() {
     let isUserDashboard = (userRole === 'SMARTOPS'); 
@@ -3555,7 +3444,6 @@ window.renderDashboard = function() {
     let nomeLogado = currentUser ? extrairNomeDoEmail(currentUser.email).toLowerCase() : '';
     let totalAgend = 0, concluidosCount = 0, programadosCount = 0;
     let distPrest = {}, distServ = {}, distLocais = {}, totalServicosGeral = 0;
-    let contagemProducaoTecnico = {}; 
 
     agendamentos.forEach(a => {
         if (isUserDashboard) { 
@@ -3576,13 +3464,6 @@ window.renderDashboard = function() {
         if (status.includes('agendado') || status.includes('scheduled')) programadosCount++;
         if(a.prestador) distPrest[a.prestador] = (distPrest[a.prestador] || 0) + 1;
         if(a.cidade && a.uf) { let local = `${a.cidade}/${a.uf}`.toUpperCase(); distLocais[local] = (distLocais[local] || 0) + 1; }
-        
-        // Captura o técnico (trata número legado e nome novo)
-        let tecAlocado = a.tecnico_alocado || "Não Alocado";
-        if (/^\d+$/.test(tecAlocado) && window.meuPrestadorLogado) {
-            tecAlocado = window.getNomeTecnico(window.meuPrestadorLogado, tecAlocado);
-        }
-        contagemProducaoTecnico[tecAlocado] = (contagemProducaoTecnico[tecAlocado] || 0) + 1;
 
         let txt = a.produtos_texto || a.produtos || '';
         if (String(txt).trim().length > 0) {
@@ -3600,67 +3481,58 @@ window.renderDashboard = function() {
     document.getElementById("dash-concluidos").innerText = concluidosCount;
     document.getElementById("dash-programados").innerText = programadosCount;
     
-let cardProdTec = document.getElementById('card-prod-tecnicos');
+    let cardProdTec = document.getElementById('card-prod-tecnicos');
     
-    // Libera a visualização da Equipe Técnica APENAS para o Prestador no Dashboard
-    let prestadorAlvo = null;
-    if (isPrestadorDashboard && window.meuPrestadorLogado) {
-        prestadorAlvo = window.meuPrestadorLogado;
-    }
-
-    if (prestadorAlvo) {
-        cardProdTec.style.display = 'block';
-        let contagemProducaoTecnico = {};
+    let contagemProducaoTecnico = {};
+    filtradosPainel.forEach(a => {
+        let tecAlocado = a.tecnico_alocado || "Não Alocado";
+        let prestadorDoTicket = a.prestador;
         
-      // 1. INICIALIZA TODOS OS TÉCNICOS ATIVOS
-        let qtdAtivos = parseInt(prestadorAlvo.qtdtecnicos) || 0;
-        let nomesAtivos = [];
-        for(let i=1; i <= qtdAtivos; i++) {
-            // VERIFICA SE ESTÁ ATIVO
-            let isAtivo = prestadorAlvo.status_tecnicos ? (prestadorAlvo.status_tecnicos[i] !== false) : true;
-            let nomeTec = window.getNomeTecnico(prestadorAlvo, i).trim();
-            if (isAtivo) nomesAtivos.push(nomeTec.toLowerCase());
-            
-            contagemProducaoTecnico[nomeTec] = { nome: nomeTec, count: 0, isAtivo: isAtivo };
+        if (/^\d+$/.test(tecAlocado)) {
+            let pObj = prestadores.find(p => p.nome === prestadorDoTicket);
+            if (pObj) tecAlocado = window.getNomeTecnico(pObj, tecAlocado);
         }
+        
+        let label = `${tecAlocado}___${prestadorDoTicket}`; 
+        if (!contagemProducaoTecnico[label]) {
+            contagemProducaoTecnico[label] = { nome: tecAlocado, prestador: prestadorDoTicket, count: 0 };
+        }
+        contagemProducaoTecnico[label].count++;
+    });
 
-        // 2. CONTA OS TICKETS (SOMENTE DO PRESTADOR ALVO)
-        filtradosPainel.forEach(a => {
-            if (a.prestador !== prestadorAlvo.nome) return;
-            
-            let tecAlocado = a.tecnico_alocado || "Não Alocado";
-            if (/^\d+$/.test(tecAlocado)) {
-                tecAlocado = window.getNomeTecnico(prestadorAlvo, tecAlocado).trim();
-            }
-            
-            if (!contagemProducaoTecnico[tecAlocado]) {
-                contagemProducaoTecnico[tecAlocado] = { nome: tecAlocado, count: 0, isAtivo: false };
-            }
-            contagemProducaoTecnico[tecAlocado].count++;
-        });
-
-        // 3. GERA O HTML NA ORDEM CERTA
+    let chavesTecnicos = Object.keys(contagemProducaoTecnico);
+    if (chavesTecnicos.length > 0) {
+        cardProdTec.style.display = 'block';
         let listaTecHtml = '';
-        let techsOrdenados = Object.values(contagemProducaoTecnico).sort((a,b) => {
-            if (a.isAtivo === b.isAtivo) return b.count - a.count;
-            return a.isAtivo ? -1 : 1; 
-        });
-
+        
+        let techsOrdenados = Object.values(contagemProducaoTecnico).sort((a,b) => b.count - a.count);
+        
         techsOrdenados.forEach(item => {
-            if (!item.isAtivo && item.count === 0 && item.nome !== "Não Alocado") return;
+            let pObj = prestadores.find(p => p.nome === item.prestador);
+            let nomesAtivos = [];
+            if (pObj) {
+                let qtdAtivos = parseInt(pObj.qtdtecnicos) || 0;
+                for(let i=1; i <= qtdAtivos; i++) {
+                    if (window.isTecnicoAtivo(pObj, i)) {
+                        nomesAtivos.push(window.getNomeTecnico(pObj, i).trim().toLowerCase());
+                    }
+                }
+            }
             
-            let estilo = item.isAtivo ? "font-weight:700;" : "text-decoration:line-through; color: var(--cobli-red); opacity:0.8;";
-            let tag = item.isAtivo ? "" : " <span style='font-size:0.6rem; background:#fee2e2; color:var(--cobli-red); padding:2px 5px; border-radius:4px; font-weight:800; margin-left: 5px;'>EX-TÉCNICO</span>";
-            
+            let ehAtivo = nomesAtivos.includes(item.nome.trim().toLowerCase()) || item.nome === "Não Alocado";
+            let estilo = ehAtivo ? "font-weight:700;" : "text-decoration:line-through; color: var(--cobli-red); opacity:0.8;";
+            let tag = ehAtivo ? "" : " <span style='font-size:0.6rem; background:#fee2e2; color:var(--cobli-red); padding:2px 5px; border-radius:4px; font-weight:800; margin-left: 5px;'>EX-TÉCNICO</span>";
+            let prestadorLabel = (userRole === 'GESTOR' || userRole === 'ADMIN' || userRole === 'SMARTOPS') ? ` <span style="font-size:0.65rem; color:var(--muted); font-weight:normal; text-decoration:none !important;">(${item.prestador})</span>` : '';
+
             listaTecHtml += `<div style="display:flex; justify-content:space-between; padding:8px 12px; background:var(--bg); border-radius:6px; margin-bottom:4px; border:1px solid var(--border);">
-                <div style="font-size:0.8rem; ${estilo}">👷 ${item.nome}${tag}</div>
+                <div style="font-size:0.8rem; ${estilo}">👷 ${item.nome}${tag}${prestadorLabel}</div>
                 <div style="font-size:0.85rem; font-weight:800; color:var(--primary);">${item.count} OSs</div>
             </div>`;
         });
         document.getElementById('lista-prod-tecnicos').innerHTML = listaTecHtml;
     } else {
         cardProdTec.style.display = 'none';
-    }   
+    }
     
     if(myChart) myChart.destroy();
     const ctxPrest = document.getElementById('chartPrestadores');
