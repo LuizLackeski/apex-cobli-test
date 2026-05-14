@@ -1430,6 +1430,15 @@
             
             <div id="indicador-filtro" style="display: none; text-align: center; color: var(--cobli-red); font-size: 0.72rem; font-weight: 700; margin-top: -8px; margin-bottom: 14px; letter-spacing: 1px;">⚠️ FILTROS ATIVOS — CLIQUE EM LIMPAR PARA VER TODOS</div>
             <div id="painel-detalhe-tecnicos" style="display:none;"></div>
+            
+            <div id="barra-ordenacao" style="display:flex; align-items:center; gap:15px; margin-bottom:10px; font-size:0.7rem; color:var(--muted); font-weight:700; text-transform:uppercase; letter-spacing:0.5px; border-bottom: 1px dashed var(--border); padding-bottom: 8px;">
+                <span style="opacity:0.6;">↕ Ordenar:</span>
+                <span style="cursor:pointer; user-select:none; color:var(--primary); transition:0.2s;" onclick="window.mudarOrdenacao('criacao')" id="sort-criacao">Registro ▼</span>
+                <span style="cursor:pointer; user-select:none; transition:0.2s;" onclick="window.mudarOrdenacao('data')" id="sort-data" onmouseover="this.style.color='var(--primary)'" onmouseout="if(window.ordenacaoAtual.campo!=='data')this.style.color='var(--muted)'">Agendamento</span>
+                <span style="cursor:pointer; user-select:none; transition:0.2s;" onclick="window.mudarOrdenacao('prestador')" id="sort-prestador" onmouseover="this.style.color='var(--primary)'" onmouseout="if(window.ordenacaoAtual.campo!=='prestador')this.style.color='var(--muted)'">Prestador</span>
+                <span style="cursor:pointer; user-select:none; transition:0.2s;" onclick="window.mudarOrdenacao('tecnico')" id="sort-tecnico" onmouseover="this.style.color='var(--primary)'" onmouseout="if(window.ordenacaoAtual.campo!=='tecnico')this.style.color='var(--muted)'">Técnico</span>
+            </div>
+            
             <div id="painel-conteudo" style="max-height: 520px; overflow-y: auto;"></div>
         </div>
 
