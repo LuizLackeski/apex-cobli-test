@@ -2497,7 +2497,7 @@ window.concluirAgendamentoFinal = async function(btn) {
         executar_field: dispararField, executar_banco: dispararBanco
     };
     const originalText = btn.innerText; btn.innerText = "Processando..."; btn.disabled = true;
-    try {
+   try {
         const response = await fetch(EDGE_URL, { method: 'POST', headers: getHeaders(), body: JSON.stringify(agendamento) });
         const result = await response.json(); 
         if (response.ok) {
@@ -2516,8 +2516,20 @@ window.concluirAgendamentoFinal = async function(btn) {
             window.showMessage(statusMsg);
             await window.carregarDadosDoBanco();
             setTimeout(() => window.location.reload(), 3000); 
-        } else { window.showMessage("❌ Erro: " + (result.error || "Erro na integração")); }
-    } catch (error) { console.error("Erro:", error); window.showMessage("Erro de conexão com a Edge Function."); }
+        } else { 
+            // 👇 AQUI A MÁGICA DA TRADUÇÃO DO ERRO
+            let erroMsg = result.error || "Erro na integração";
+            let erroLower = erroMsg.toLowerCase();
+            if (erroLower.includes("taken") || erroLower.includes("exist") || erroLower.includes("already")) {
+                erroMsg = `Esse número de Ticket já está registrado na Field Control!<br><br><span style="color:var(--cobli-dark); font-size:0.85rem;">💡 <b>Dica:</b> Feche este aviso, clique em "Editar" e use o botão <b>'Checar'</b> ao lado do Nº do Ticket para o sistema corrigir a sequência para você.</span>`;
+            }
+            window.showMessage("❌ " + erroMsg); 
+            // 👆 ======================================
+        }
+    } catch (error) { 
+        console.error("Erro:", error); 
+        window.showMessage("❌ Erro de conexão com a Edge Function."); 
+    }
     finally { btn.innerText = originalText; btn.disabled = false; }
 };
 
