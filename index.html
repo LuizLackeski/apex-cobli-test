@@ -1991,7 +1991,20 @@ window.carregarDadosDoBanco = async function() {
         window.renderDashboard(); 
     } catch(e) { console.error("Erro bd:", e); } 
 };
-
+    
+// NOTIFICAÇÃO SLACK (Voltando para o formato TEXT seguro)
+window.enviarNotificacaoSlack = async function(msg) {
+    const URL = "https://fqaqlofndeihmhkopvan.supabase.co/functions/v1/notificar-slack";
+    try { 
+        await fetch(URL, { 
+            method: 'POST', 
+            headers: getHeaders(), 
+            body: JSON.stringify({ text: msg }) // Voltamos para o formato 'text' que seu servidor aceita!
+        }); 
+    } catch (e) { 
+        console.error("Erro Slack:", e); 
+    }
+};
 // ==========================================
 // MOTOR DE AGENDA E DISTÂNCIA
 // ==========================================
