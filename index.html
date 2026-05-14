@@ -3324,6 +3324,14 @@ window.renderPainel = function() {
     let prestadoresMarcados = Array.from(document.querySelectorAll('.cb-prestador:checked')).map(cb => cb.value);
     let tecnicosMarcados = Array.from(document.querySelectorAll('.cb-tecnico:checked')).map(cb => cb.value);
 
+    // 👇 AQUI ESTÁ A CORREÇÃO: MOSTRA OU ESCONDE A BARRA DE AVISO DE FILTRO ATIVO
+    let indicador = document.getElementById("indicador-filtro");
+    if (indicador) {
+        let temFiltro = fInicio || fFim || fTicket || fSol || statusMarcados.length > 0 || prestadoresMarcados.length > 0 || tecnicosMarcados.length > 0;
+        indicador.style.display = temFiltro ? "block" : "none";
+    }
+    // 👆 =========================================================================
+
     filtradosPainel = agendamentos.filter(a => { 
         if(!a.data || !a.ticket) return false;
 
