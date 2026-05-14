@@ -3462,7 +3462,8 @@ window.renderDashboard = function() {
     let totalAgend = 0, concluidosCount = 0, programadosCount = 0;
     let distPrest = {}, distServ = {}, distLocais = {}, totalServicosGeral = 0;
 
-    agendamentos.forEach(a => {
+    // Lemos de filtradosPainel para que o Dashboard seja DINÂMICO de acordo com os filtros!
+    filtradosPainel.forEach(a => {
         if (isUserDashboard) { 
             let sol = String(a.solicitante || '').toLowerCase(); 
             if (!sol.includes(nomeLogado)) return; 
@@ -3489,7 +3490,8 @@ window.renderDashboard = function() {
                 let limpo = linha.replace('•', '').trim(); if (!limpo || limpo.startsWith('Observações:')) return;
                 let nomeServico = limpo.replace(/\s*\(Placa:.*?\)/i, '').trim();
                 let qtd = 1; let matchQtd = limpo.match(/Qtd:\s*(\d+)/i); if (matchQtd) qtd = parseInt(matchQtd[1]) || 1;
-                distServ[nomeServico] = (distServ[nomeServico] || 0) + qtd; totalServicosGeral += qtd;
+                distServ[nomeServico] = (distServ[nomeServico] || 0) + qtd; 
+                totalServicosGeral += qtd; // Guarda o total para a proporção!
             });
         }
     });
@@ -3500,55 +3502,51 @@ window.renderDashboard = function() {
     
     let cardProdTec = document.getElementById('card-prod-tecnicos');
     
-    let contagemProducaoTecnico = {};
-    filtradosPainel.forEach(a => {
-        let tecAlocado = a.tecnico_alocado || "Não Alocado";
-        let prestadorDoTicket = a.prestador;
-        
-        if (/^\d+$/.test(tecAlocado)) {
-            let pObj = prestadores.find(p => p.nome === prestadorDoTicket);
-            if (pObj) tecAlocado = window.getNomeTecnico(pObj, tecAlocado);
-        }
-        
-        let label = `${tecAlocado}___${prestadorDoTicket}`; 
-        if (!contagemProducaoTecnico[label]) {
-            contagemProducaoTecnico[label] = { nome: tecAlocado, prestador: prestadorDoTicket, count: 0 };
-        }
-        contagemProducaoTecnico[label].count++;
-    });
-
-    let chavesTecnicos = Object.keys(contagemProducaoTecnico);
-    if (chavesTecnicos.length > 0) {
+    // AQUI O CORTE: A Equipe Técnica só aparece se o usuário for o PRESTADOR
+    if (isPrestadorDashboard && window.meuPrestadorLogado) {
         cardProdTec.style.display = 'block';
-        let listaTecHtml = '';
+        let pObj = window.meuPrestadorLogado;
+        let contagemProducaoTecnico = {};
         
-        let techsOrdenados = Object.values(contagemProducaoTecnico).sort((a,b) => b.count - a.count);
-        
-        techsOrdenados.forEach(item => {
-            let pObj = prestadores.find(p => p.nome === item.prestador);
-            let nomesAtivos = [];
-            if (pObj) {
-                let qtdAtivos = parseInt(pObj.qtdtecnicos) || 0;
-                for(let i=1; i <= qtdAtivos; i++) {
-                    if (window.isTecnicoAtivo(pObj, i)) {
-                        nomesAtivos.push(window.getNomeTecnico(pObj, i).trim().toLowerCase());
-                    }
-                }
+        // Inicializa ativos
+        let qtdAtivos = parseInt(pObj.qtdtecnicos) || 0;
+        let nomesAtivos = [];
+        for(let i=1; i <= qtdAtivos; i++) {
+            if (window.isTecnicoAtivo(pObj, i)) {
+                let nomeTec = window.getNomeTecnico(pObj, i).trim();
+                nomesAtivos.push(nomeTec.toLowerCase());
+                contagemProducaoTecnico[nomeTec] = { nome: nomeTec, count: 0, isAtivo: true };
             }
-            
-            let ehAtivo = nomesAtivos.includes(item.nome.trim().toLowerCase()) || item.nome === "Não Alocado";
-            let estilo = ehAtivo ? "font-weight:700;" : "text-decoration:line-through; color: var(--cobli-red); opacity:0.8;";
-            let tag = ehAtivo ? "" : " <span style='font-size:0.6rem; background:#fee2e2; color:var(--cobli-red); padding:2px 5px; border-radius:4px; font-weight:800; margin-left: 5px;'>EX-TÉCNICO</span>";
-            let prestadorLabel = (userRole === 'GESTOR' || userRole === 'ADMIN' || userRole === 'SMARTOPS') ? ` <span style="font-size:0.65rem; color:var(--muted); font-weight:normal; text-decoration:none !important;">(${item.prestador})</span>` : '';
+        }
 
+        // Conta
+        filtradosPainel.forEach(a => {
+            if (a.prestador !== pObj.nome) return;
+            let tecAlocado = a.tecnico_alocado || "Não Alocado";
+            if (/^\d+$/.test(tecAlocado)) tecAlocado = window.getNomeTecnico(pObj, tecAlocado).trim();
+            if (!contagemProducaoTecnico[tecAlocado]) contagemProducaoTecnico[tecAlocado] = { nome: tecAlocado, count: 0, isAtivo: false };
+            contagemProducaoTecnico[tecAlocado].count++;
+        });
+
+        // HTML
+        let listaTecHtml = '';
+        let techsOrdenados = Object.values(contagemProducaoTecnico).sort((a,b) => {
+            if (a.isAtivo === b.isAtivo) return b.count - a.count;
+            return a.isAtivo ? -1 : 1; 
+        });
+
+        techsOrdenados.forEach(item => {
+            if (!item.isAtivo && item.count === 0 && item.nome !== "Não Alocado") return;
+            let estilo = item.isAtivo ? "font-weight:700;" : "text-decoration:line-through; color: var(--cobli-red); opacity:0.8;";
+            let tag = item.isAtivo ? "" : " <span style='font-size:0.6rem; background:#fee2e2; color:var(--cobli-red); padding:2px 5px; border-radius:4px; font-weight:800; margin-left: 5px;'>EX-TÉCNICO</span>";
             listaTecHtml += `<div style="display:flex; justify-content:space-between; padding:8px 12px; background:var(--bg); border-radius:6px; margin-bottom:4px; border:1px solid var(--border);">
-                <div style="font-size:0.8rem; ${estilo}">👷 ${item.nome}${tag}${prestadorLabel}</div>
+                <div style="font-size:0.8rem; ${estilo}">👷 ${item.nome}${tag}</div>
                 <div style="font-size:0.85rem; font-weight:800; color:var(--primary);">${item.count} OSs</div>
             </div>`;
         });
         document.getElementById('lista-prod-tecnicos').innerHTML = listaTecHtml;
     } else {
-        cardProdTec.style.display = 'none';
+        cardProdTec.style.display = 'none'; // Some pro Gestor
     }
     
     if(myChart) myChart.destroy();
@@ -3562,8 +3560,15 @@ window.renderDashboard = function() {
         });
     }
 
+    // AQUI O AJUSTE DAS PROPORÇÕES DOS SERVIÇOS
     let servicosOrdenados = Object.entries(distServ).sort((a,b) => b[1] - a[1]);
-    let listaHtml = servicosOrdenados.map(s => `<div style="display:flex; justify-content:space-between; align-items:center; background:var(--bg); padding:10px 12px; border-radius:var(--radius-sm); border:1px solid var(--border); margin-bottom:4px;"><div style="font-size:0.78rem; font-weight:600; color:var(--cobli-dark); flex:1;">${s[0]}</div><div style="font-size:0.88rem; font-weight:800; color:var(--primary); background:#e8ecff; padding:5px 12px; border-radius:5px;">${s[1]}</div></div>`).join('');
+    let listaHtml = servicosOrdenados.map(s => {
+        let pct = totalServicosGeral > 0 ? Math.round((s[1] / totalServicosGeral) * 100) : 0;
+        return `<div style="display:flex; justify-content:space-between; align-items:center; background: linear-gradient(90deg, #e8ecff ${pct}%, var(--bg) ${pct}%); padding:10px 12px; border-radius:var(--radius-sm); border:1px solid var(--border); margin-bottom:4px;">
+            <div style="font-size:0.78rem; font-weight:600; color:var(--cobli-dark); flex:1; text-shadow: 1px 1px 0px rgba(255,255,255,0.7);">${s[0]}</div>
+            <div style="font-size:0.88rem; font-weight:800; color:var(--primary); background:rgba(255,255,255,0.6); padding:2px 8px; border-radius:5px; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">${s[1]} <span style="font-size:0.6rem; color:var(--muted); font-weight:700;">(${pct}%)</span></div>
+        </div>`;
+    }).join('');
     if (document.getElementById('lista-dashboard-servicos')) document.getElementById('lista-dashboard-servicos').innerHTML = listaHtml || "Sem dados.";
 
     if(chartLocais) chartLocais.destroy();
