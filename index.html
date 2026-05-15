@@ -1715,41 +1715,46 @@ window.atualizarPreviewResumo = function() {
     
     let distPrest = {};
     lista.forEach(a => { if(a.prestador) distPrest[a.prestador] = (distPrest[a.prestador] || 0) + 1; });
-    let prestStr = Object.entries(distPrest).sort((a,b)=>b[1]-a[1]).map(([n,c]) => `  • ${n}: ${c}`).join('\n');
+    let prestStr = Object.entries(distPrest).sort((a,b)=>b[1]-a[1]).map(([n,c]) => `>   • ${n}: ${c}`).join('\n');
     
     let distCidade = {};
     lista.forEach(a => { if(a.cidade && a.uf) { let k = `${a.cidade}/${a.uf}`; distCidade[k] = (distCidade[k]||0)+1; }});
-    let cidadeStr = Object.entries(distCidade).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([n,c]) => `  • ${n}: ${c}`).join('\n');
+    let cidadeStr = Object.entries(distCidade).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([n,c]) => `>   • ${n}: ${c}`).join('\n');
     
     let periodoLabel = { 'semana': 'Esta Semana', 'semana_passada': 'Semana Passada', 'mes': 'Este Mês', 'personalizado': 'Período Personalizado' }[window.periodoResumoAtual] || 'Período';
     
     let statusLines = [];
-    if (solicitado > 0)  statusLines.push(`  • 📋 Solicitados: ${solicitado}`);
-    if (negociacao > 0)  statusLines.push(`  • 🤝 Em Negociação: ${negociacao}`);
-    if (agendados > 0)   statusLines.push(`  • 📅 Agendados: ${agendados}`);
-    if (andamento > 0)   statusLines.push(`  • ⚡ Em Andamento: ${andamento}`);
-    if (concluidos > 0)  statusLines.push(`  • ✅ Concluídos: ${concluidos}`);
-    if (impedidos > 0)   statusLines.push(`  • 🛑 Impedidos: ${impedidos}`);
-    if (cancelados > 0)  statusLines.push(`  • ❌ Cancelados: ${cancelados}`);
+    if (solicitado > 0)  statusLines.push(`>   • 📋 Solicitados: ${solicitado}`);
+    if (negociacao > 0)  statusLines.push(`>   • 🤝 Em Negociação: ${negociacao}`);
+    if (agendados > 0)   statusLines.push(`>   • 📅 Agendados: ${agendados}`);
+    if (andamento > 0)   statusLines.push(`>   • ⚡ Em Andamento: ${andamento}`);
+    if (concluidos > 0)  statusLines.push(`>   • ✅ Concluídos: ${concluidos}`);
+    if (impedidos > 0)   statusLines.push(`>   • 🛑 Impedidos: ${impedidos}`);
+    if (cancelados > 0)  statusLines.push(`>   • ❌ Cancelados: ${cancelados}`);
     
-    let texto = `📊 *Resumo APEX | Cobli — ${periodoLabel}*\n` +
-        `📅 ${fmtDate(ini)} → ${fmtDate(fim)}\n\n` +
-        `*Visão Geral:*\n` +
-        `  • Total de solicitações: ${total}\n` +
-        (statusLines.length > 0 ? statusLines.join('\n') + '\n' : '') + '\n' +
-        (prestStr ? `*Por Prestador:*\n${prestStr}\n\n` : '') +
-        (cidadeStr ? `*Principais Cidades:*\n${cidadeStr}\n\n` : '') +
-        `_Enviado via APEX · Cobli_`;
+    // 👇 Aplicando o "> " em todas as linhas para forçar a barra cinza no Slack
+    let texto = `> 📊 *Resumo APEX | Cobli — ${periodoLabel}*\n` +
+        `> 📅 ${fmtDate(ini)} → ${fmtDate(fim)}\n> \n` +
+        `> *Visão Geral:*\n` +
+        `>   • Total de solicitações: ${total}\n` +
+        (statusLines.length > 0 ? statusLines.join('\n') + '\n> \n' : '> \n') +
+        (prestStr ? `> *Por Prestador:*\n${prestStr}\n> \n` : '') +
+        (cidadeStr ? `> *Principais Cidades:*\n${cidadeStr}\n> \n` : '') +
+        `> _Enviado via APEX · Cobli_`;
     
     window._resumoSlackTexto = texto;
+    
+    // Tratamento para a visualização na tela do APEX ficar bonitinha
     let linhasHtml = texto.split('\n').map(l => {
-        if (l.startsWith('📊') || l.startsWith('*') ) return `<span class="pv-title">${l.replace(/\*/g,'')}</span>`;
-        if (l.startsWith('  •')) return `<div class="pv-row">${l}</div>`;
-        if (l.startsWith('_')) return `<div class="pv-row" style="color:#64748b; font-style:italic;">${l.replace(/_/g,'')}</div>`;
-        return `<div class="pv-row"><span>${l}</span></div>`;
+        let cleanLine = l.replace(/^>\s?/, ''); 
+        if (cleanLine.startsWith('📊') || cleanLine.startsWith('*') ) return `<span class="pv-title">${cleanLine.replace(/\*/g,'')}</span>`;
+        if (cleanLine.trim().startsWith('•')) return `<div class="pv-row" style="padding-left: 10px;">${cleanLine}</div>`;
+        if (cleanLine.startsWith('_')) return `<div class="pv-row" style="color:#64748b; font-style:italic; margin-top: 8px;">${cleanLine.replace(/_/g,'')}</div>`;
+        if (cleanLine.trim() === '') return `<div style="height: 6px;"></div>`;
+        return `<div class="pv-row"><span>${cleanLine}</span></div>`;
     }).join('');
     
-    preview.innerHTML = linhasHtml || '<span class="pv-title" style="color:#64748b;">Nenhum agendamento no período.</span>';
+    preview.innerHTML = `<div style="border-left: 3px solid #64748b; padding-left: 12px; margin-left: 4px;">${linhasHtml}</div>` || '<span class="pv-title" style="color:#64748b;">Nenhum agendamento no período.</span>';
 };
 
 window.enviarResumoSlack = async function() {
