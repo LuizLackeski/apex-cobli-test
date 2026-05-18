@@ -3069,16 +3069,32 @@ window.getOcupacaoReal = function(prestador, dataStr, dNome) {
         }
     });
 
-    // 👇 AQUI A CORREÇÃO: Conta tudo que o cara trabalhou, sem se importar com a agenda base
+    // 👇 AQUI A CORREÇÃO: Corta a contagem dos horários bizarros (tipo 7h da manhã)
     for (let t = 1; t <= maxT; t++) {
         let s = statsPorTecnico[t];
-        s.ocupadas = techOcupadoSets[t].size;
-        ocupadasGeral += s.ocupadas;
+        let count = 0;
+        
+        if (s.total > 0) {
+            // Se tem agenda base, só conta as horas de gordura que caem dentro do turno dele (ex: 8h as 18h)
+            techOcupadoSets[t].forEach(h => { if (techHours[t-1].has(h)) count++; });
+        } else {
+            // Se o dia foi apagado da agenda base, conta os slots, mas limita ao horário normal (8h às 18h)
+            techOcupadoSets[t].forEach(h => { if (h >= 8 && h <= 18) count++; });
+            s.total = count; 
+            baseTotalEmpresa += count; // Adiciona ao total da empresa pra porcentagem não passar de 100%
+        }
+        
+        s.ocupadas = count;
+        ocupadasGeral += count;
     }
 
     // Para "Ex-técnicos" ou técnicos não alocados (índice 0)
-    statsPorTecnico[0].ocupadas = techOcupadoSets[0].size;
-    ocupadasGeral += techOcupadoSets[0].size;
+    let countEx = 0;
+    techOcupadoSets[0].forEach(h => { if (h >= 8 && h <= 18) countEx++; });
+    statsPorTecnico[0].ocupadas = countEx;
+    statsPorTecnico[0].total = countEx;
+    ocupadasGeral += countEx;
+    baseTotalEmpresa += countEx;
     // 👆 FIM DA MÁGICA
 
     for (let t in statsPorTecnico) {
