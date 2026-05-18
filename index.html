@@ -1162,26 +1162,7 @@
             <button id="btn-dashboard" onclick="window.trocarAba('dashboard', this)">Dashboard</button>
             <button id="btn-usuarios" onclick="window.trocarAba('usuarios', this)">Usuários</button>
         </div>
-        <div id="mapa" class="aba">
-            <div class="card" style="display: flex; flex-direction: row; justify-content: space-between; align-items: center; padding: 15px 24px; margin-bottom: 15px;">
-                <h2 style="margin: 0; border: none; padding: 0;">🗺️ Logística e Serviços</h2>
-                <div style="display: flex; gap: 10px; align-items: center;">
-                    <label style="font-size: 0.7rem; font-weight: 700; color: var(--muted); text-transform: uppercase;">Mostrar:</label>
-                    <select id="filtro-status-mapa" onchange="window.plotarAgendamentosNoMapa()" style="margin: 0; min-height: auto; height: 38px; width: auto; font-weight: 700; color: var(--cobli-dark);">
-                        <option value="pendentes">🔴 Apenas Pendentes / Agendados</option>
-                        <option value="concluidos">🟢 Concluídos / Impedidos</option>
-                        <option value="todos">🌍 Todos os Serviços</option>
-                    </select>
-                    <button id="btn-att-mapa" onclick="window.plotarAgendamentosNoMapa()" style="background: var(--cobli-green); height: 38px; min-height: auto;">Atualizar Mapa</button>
-                </div>
-            </div>
-            
-            <div class="card" style="padding: 0; overflow: hidden; height: 65vh; position: relative;">
-                <div id="mapa-canvas" style="width: 100%; height: 100%; background: #e2e8f0; display: flex; align-items: center; justify-content: center; font-weight: 700; color: var(--muted);">
-                    O mapa será carregado aqui...
-                </div>
-            </div>
-        </div>
+
         <div class="menu-right">
             <button class="btn-sair" onclick="handleLogout()" style="background:none; border:none; cursor:pointer; font-family: var(--font-main);">Sair</button>
         </div>
@@ -1571,15 +1552,32 @@
                         </div>
                         <button onclick="window.adicionarMeuBloqueioData()" style="height: 42px; background: var(--cobli-red); min-width: 100px; min-height: auto;">Adicionar</button>
                     </div>
-                    <div id="lista-meus-bloqueios-ui" style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 15px;"></div>
+<div id="lista-meus-bloqueios-ui" style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 15px;"></div>
                 </div>
             </div>
         </div>
         
-    </div>
-</div>
-
-<script>
+        <div id="mapa" class="aba">
+            <div class="card" style="display: flex; flex-direction: row; justify-content: space-between; align-items: center; padding: 15px 24px; margin-bottom: 15px;">
+                <h2 style="margin: 0; border: none; padding: 0;">🗺️ Logística e Serviços</h2>
+                <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                    <label style="font-size: 0.7rem; font-weight: 700; color: var(--muted); text-transform: uppercase;">Mostrar:</label>
+                    <select id="filtro-status-mapa" onchange="window.plotarAgendamentosNoMapa()" style="margin: 0; min-height: auto; height: 38px; width: auto; font-weight: 700; color: var(--cobli-dark);">
+                        <option value="pendentes">🔴 Apenas Pendentes / Agendados</option>
+                        <option value="concluidos">🟢 Concluídos / Impedidos</option>
+                        <option value="todos">🌍 Todos os Serviços</option>
+                    </select>
+                    <button id="btn-att-mapa" onclick="window.plotarAgendamentosNoMapa()" style="background: var(--cobli-green); height: 38px; min-height: auto;">Atualizar Mapa</button>
+                </div>
+            </div>
+            
+            <div class="card" style="padding: 0; overflow: hidden; height: 65vh; position: relative;">
+                <div id="mapa-canvas" style="width: 100%; height: 100%; background: #e2e8f0; display: flex; align-items: center; justify-content: center; font-weight: 700; color: var(--muted);">
+                    O mapa será carregado aqui...
+                </div>
+            </div>
+        </div>
+        </div> </div> <script>
 // ==========================================
 // SPLASH SCREEN
 // ==========================================
