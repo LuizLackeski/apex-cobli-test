@@ -3010,6 +3010,7 @@ window.getOcupacaoReal = function(prestador, dataStr, dNome) {
         return nomeAgend === nomeMeu && (aData === dataStrPad || aRaw === dataStrPad) && !String(a.status).toLowerCase().includes('cancelado');
     }).forEach(a => {
         let slotsArr = Array.isArray(a.slots) ? a.slots : (typeof a.slots === 'string' ? a.slots.split(', ') : []);
+        let slotsCount = 1; 
         let start = 8;
         let end = 8;
         
@@ -3018,11 +3019,12 @@ window.getOcupacaoReal = function(prestador, dataStr, dNome) {
             if (ints.length > 0) {
                 start = ints[0];
                 end = ints[ints.length - 1];
+                slotsCount = ints.length;
             }
         }
         
         let tecnicoIdx = resolverTecnico(a.tecnico_alocado, maxT, prestador, dNome);
-        jobsExistentes.push({ start: start, end: end, tecnico: tecnicoIdx });
+        jobsExistentes.push({ start: start, end: end, tecnico: tecnicoIdx, slotsCount: slotsCount });
     });
 
     let techHours = [];
@@ -3052,7 +3054,6 @@ window.getOcupacaoReal = function(prestador, dataStr, dNome) {
     for (let i = 1; i <= maxT; i++) statsPorTecnico[i] = { total: techHours[i-1].size, ocupadas: 0 };
     statsPorTecnico[0] = { total: 0, ocupadas: 0 }; 
 
-    // 👇 AQUI ESTÁ A MÁGICA: Adicionando os slots e as gorduras de forma inteligente
     let techOcupadoSets = Array.from({length: maxT + 1}, () => new Set());
 
     jobsExistentes.forEach(job => {
@@ -3068,15 +3069,11 @@ window.getOcupacaoReal = function(prestador, dataStr, dNome) {
         }
     });
 
-    // Calcula se essas horas ocupadas caem dentro do turno de trabalho do cara
+    // 👇 AQUI A CORREÇÃO: Conta tudo que o cara trabalhou, sem se importar com a agenda base
     for (let t = 1; t <= maxT; t++) {
         let s = statsPorTecnico[t];
-        let count = 0;
-        techOcupadoSets[t].forEach(h => {
-            if (techHours[t-1].has(h)) count++; // Só conta ocupado se for no horário de trabalho
-        });
-        s.ocupadas = count;
-        ocupadasGeral += count;
+        s.ocupadas = techOcupadoSets[t].size;
+        ocupadasGeral += s.ocupadas;
     }
 
     // Para "Ex-técnicos" ou técnicos não alocados (índice 0)
