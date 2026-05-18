@@ -3010,7 +3010,6 @@ window.getOcupacaoReal = function(prestador, dataStr, dNome) {
         return nomeAgend === nomeMeu && (aData === dataStrPad || aRaw === dataStrPad) && !String(a.status).toLowerCase().includes('cancelado');
     }).forEach(a => {
         let slotsArr = Array.isArray(a.slots) ? a.slots : (typeof a.slots === 'string' ? a.slots.split(', ') : []);
-        let slotsCount = 1; 
         let start = 8;
         let end = 8;
         
@@ -3019,12 +3018,11 @@ window.getOcupacaoReal = function(prestador, dataStr, dNome) {
             if (ints.length > 0) {
                 start = ints[0];
                 end = ints[ints.length - 1];
-                slotsCount = ints.length;
             }
         }
         
         let tecnicoIdx = resolverTecnico(a.tecnico_alocado, maxT, prestador, dNome);
-        jobsExistentes.push({ start: start, end: end, tecnico: tecnicoIdx, slotsCount: slotsCount });
+        jobsExistentes.push({ start: start, end: end, tecnico: tecnicoIdx });
     });
 
     let techHours = [];
@@ -3054,14 +3052,37 @@ window.getOcupacaoReal = function(prestador, dataStr, dNome) {
     for (let i = 1; i <= maxT; i++) statsPorTecnico[i] = { total: techHours[i-1].size, ocupadas: 0 };
     statsPorTecnico[0] = { total: 0, ocupadas: 0 }; 
 
+    // 👇 AQUI ESTÁ A MÁGICA: Adicionando os slots e as gorduras de forma inteligente
+    let techOcupadoSets = Array.from({length: maxT + 1}, () => new Set());
+
     jobsExistentes.forEach(job => {
-        ocupadasGeral += job.slotsCount; 
-        if (job.tecnico !== null && statsPorTecnico[job.tecnico + 1]) {
-            statsPorTecnico[job.tecnico + 1].ocupadas += job.slotsCount;
-        } else {
-            statsPorTecnico[0].ocupadas += job.slotsCount; 
+        let t = (job.tecnico !== null && job.tecnico >= 0 && job.tecnico < maxT) ? job.tecnico + 1 : 0;
+        
+        // Pinta a hora do serviço
+        for(let h = job.start; h <= job.end; h++) techOcupadoSets[t].add(h);
+        
+        // Pinta a hora da gordura
+        for(let g = 1; g <= GORDURA_HORAS; g++) {
+            techOcupadoSets[t].add(job.start - g);
+            techOcupadoSets[t].add(job.end + g);
         }
     });
+
+    // Calcula se essas horas ocupadas caem dentro do turno de trabalho do cara
+    for (let t = 1; t <= maxT; t++) {
+        let s = statsPorTecnico[t];
+        let count = 0;
+        techOcupadoSets[t].forEach(h => {
+            if (techHours[t-1].has(h)) count++; // Só conta ocupado se for no horário de trabalho
+        });
+        s.ocupadas = count;
+        ocupadasGeral += count;
+    }
+
+    // Para "Ex-técnicos" ou técnicos não alocados (índice 0)
+    statsPorTecnico[0].ocupadas = techOcupadoSets[0].size;
+    ocupadasGeral += techOcupadoSets[0].size;
+    // 👆 FIM DA MÁGICA
 
     for (let t in statsPorTecnico) {
         let s = statsPorTecnico[t];
