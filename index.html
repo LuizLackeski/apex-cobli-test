@@ -3105,8 +3105,10 @@ function calcularOcupacao(prestadorNome) {
     for (let i = 0; i < 15; i++) {
         let d = new Date(); d.setDate(hoje.getDate() + i); let dStr = d.toLocaleDateString('pt-BR'); let dNome = diasSemana[d.getDay()];
         let stats = window.getOcupacaoReal(p, dStr, dNome);
+        
+        // Se tem OS agendada no banco ou se faz parte da agenda base do cara, tem que mostrar!
         if (stats.geral.total > 0 || stats.geral.ocupadas > 0) { 
-            resultado.push({ data: dStr, dia: dNome, livres: stats.geral.livres, ocupadas: stats.geral.ocupadas, total: stats.geral.total, pct: stats.geral.pct }); 
+            resultado.push({ data: dStr, dia: dNome, livres: stats.geral.livres, ocupadas: stats.geral.ocupadas, total: Math.max(stats.geral.total, stats.geral.ocupadas), pct: stats.geral.pct }); 
         }
     }
     return resultado;
@@ -3192,7 +3194,7 @@ window.renderOcupacaoDiaria = function(prestadorNome, tecnicoId) {
             let stats = window.getOcupacaoReal(pO, dStr, dNome);
             let tStats = stats.tecnicos[tecnicoId];
             if (tStats && (tStats.total > 0 || tStats.ocupadas > 0)) {
-                resultado.push({data:dStr, dia:dNome, livres:tStats.livres, ocupadas:tStats.ocupadas, total:tStats.total, pct:tStats.pct});
+                resultado.push({data:dStr, dia:dNome, livres:tStats.livres, ocupadas:tStats.ocupadas, total:Math.max(tStats.total, tStats.ocupadas), pct:tStats.pct});
             }
         }
         containerLista.innerHTML = resultado.length===0 ? `<div style="font-size:0.82rem;color:var(--muted);padding:10px;">Sem agenda para este técnico.</div>` : resultado.map(linhaOcupacao).join('');
@@ -3249,7 +3251,7 @@ window.renderOcupacaoPorTecnico = function(tecId) {
         let stats = window.getOcupacaoReal(pObj, dStr, dNome);
         let tStats = stats.tecnicos[tecId];
         if (tStats && (tStats.total > 0 || tStats.ocupadas > 0)) {
-            resultado.push({data:dStr, dia:dNome, livres:tStats.livres, ocupadas:tStats.ocupadas, total:tStats.total, pct:tStats.pct});
+            resultado.push({data:dStr, dia:dNome, livres:tStats.livres, ocupadas:tStats.ocupadas, total:Math.max(tStats.total, tStats.ocupadas), pct:tStats.pct});
         }
     }
     
