@@ -3927,15 +3927,33 @@ window.renderDashboard = function() {
         if(a.prestador) distPrest[a.prestador] = (distPrest[a.prestador] || 0) + 1;
         if(a.cidade && a.uf) { let local = `${a.cidade}/${a.uf}`.toUpperCase(); distLocais[local] = (distLocais[local] || 0) + 1; }
 
-        let txt = a.produtos_texto || a.produtos || '';
-        if (String(txt).trim().length > 0) {
-            let linhas = String(txt).split('\n');
+let txtRaw = a.produtos_texto || a.produtos || '';
+        let txtServicos = txtRaw;
+        
+        // Corta tudo que estiver de "Observações:" para baixo
+        if (txtRaw.toLowerCase().includes('observações:')) { 
+            txtServicos = txtRaw.split(/observações:/i)[0].trim(); 
+        }
+
+        if (txtServicos.length > 0) {
+            let linhas = txtServicos.split('\n');
             linhas.forEach(linha => {
-                let limpo = linha.replace('•', '').trim(); if (!limpo || limpo.startsWith('Observações:')) return;
-                let nomeServico = limpo.replace(/\s*\(Placa:.*?\)/i, '').trim();
-                let qtd = 1; let matchQtd = limpo.match(/Qtd:\s*(\d+)/i); if (matchQtd) qtd = parseInt(matchQtd[1]) || 1;
-                distServ[nomeServico] = (distServ[nomeServico] || 0) + qtd; 
-                totalServicosGeral += qtd; // Guarda o total para a proporção!
+                let limpo = linha.replace('•', '').trim(); 
+                if (!limpo) return; // Pula linha vazia
+                
+                // Descobre a quantidade
+                let qtd = 1; 
+                let matchQtd = linha.match(/Qtd:\s*(\d+)/i); 
+                if (matchQtd) qtd = parseInt(matchQtd[1]) || 1;
+
+                // Remove tudo que estiver entre parênteses para limpar o nome do serviço
+                let nomeServico = limpo.replace(/\s*\([^)]*\)/g, '').trim();
+                
+                // Trava de segurança: só conta se for um serviço oficial (tem a tag [TIPO])
+                if (nomeServico && nomeServico.startsWith('[')) {
+                    distServ[nomeServico] = (distServ[nomeServico] || 0) + qtd; 
+                    totalServicosGeral += qtd; // Guarda o total para a proporção!
+                }
             });
         }
     });
