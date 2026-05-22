@@ -39,6 +39,7 @@
             --shadow-lg: 0 10px 30px rgba(7,7,78,0.15), 0 4px 8px rgba(7,7,78,0.08);
             --radius: 10px;
             --radius-sm: 6px;
+            --sidebar-w: 215px;
         }
         
         *, *::before, *::after { box-sizing: border-box; }
@@ -51,6 +52,43 @@
             padding: 0; 
             display: none;
             -webkit-font-smoothing: antialiased;
+            overflow-x: hidden;
+        }
+
+        /* ============================================================
+           SIDEBAR DESKTOP
+        ============================================================ */
+        #app-content {
+            display: flex;
+            flex-direction: row;
+            min-height: 100vh;
+        }
+
+        .app-main-wrapper {
+            flex: 1;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        .sidebar-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 18px 16px 16px;
+            border-bottom: 1px solid rgba(255,255,255,0.07);
+            flex-shrink: 0;
+        }
+
+        .sidebar-section-label {
+            font-size: 0.6rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: rgba(255,255,255,0.25);
+            padding: 12px 16px 4px;
+            display: block;
         }
         
         /* ============================================================
@@ -182,20 +220,20 @@
         /* ============================================================
            APP LAYOUT
         ============================================================ */
-        #app-content { display: none; padding: 20px; }
+        #app-content { padding: 0; }
 
         /* TOPO */
         .topo { 
             background: var(--cobli-dark); 
             color: white; 
-            padding: 14px 28px; 
+            padding: 12px 24px; 
             display: flex; 
             justify-content: space-between; 
             align-items: center; 
-            margin: -20px -20px 0 -20px;
             position: sticky;
-            top: -20px;
+            top: 0;
             z-index: 1000;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
         }
 
         .header-logo-text { display: flex; align-items: center; gap: 10px; }
@@ -326,63 +364,93 @@
         .toggle-switch:checked::after { transform: translateX(16px); }
 
         /* ============================================================
-           MENU DE NAVEGAÇÃO
+           MENU / SIDEBAR DE NAVEGAÇÃO
         ============================================================ */
         .menu { 
-            background: var(--primary); 
-            padding: 0 28px; 
+            background: var(--cobli-dark); 
+            width: var(--sidebar-w);
+            min-height: 100vh;
             display: flex; 
-            align-items: stretch;
-            justify-content: space-between; 
-            min-height: 44px; 
-            margin: 0 -20px 24px -20px;
+            flex-direction: column;
+            flex-shrink: 0;
             position: sticky;
-            top: calc(53px - 20px);
+            top: 0;
+            height: 100vh;
             z-index: 999;
+            box-shadow: 2px 0 16px rgba(7,7,78,0.18);
+            overflow: hidden;
         }
-        .menu-left, .menu-right { display: flex; align-items: stretch; }
-        .menu-right { justify-content: flex-end; }
+        .menu-left, .menu-right { display: flex; flex-direction: column; }
+        .menu-left {
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding: 10px 0;
+            scrollbar-width: none;
+        }
+        .menu-left::-webkit-scrollbar { display: none; }
+        .menu-right { 
+            padding: 12px 16px;
+            border-top: 1px solid rgba(255,255,255,0.07);
+            flex-shrink: 0;
+        }
 
         .menu button { 
             background: none; 
-            border: none; 
-            color: rgba(255,255,255,0.65); 
-            padding: 0 18px;
+            border: none;
+            border-left: 3px solid transparent;
+            color: var(--cobli-green);
+            opacity: 0.55;
+            padding: 10px 16px;
             cursor: pointer; 
-            font-size: 0.82rem;
+            font-size: 0.84rem;
             font-weight: 600;
             font-family: var(--font-main);
             letter-spacing: 0.3px;
             transition: all 0.2s; 
-            border-bottom: 3px solid transparent;
-            position: relative; 
+            text-align: left;
+            width: 100%;
+            border-bottom: none;
+            border-radius: 0;
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
         .menu button:hover { 
-            color: white; 
-            background: rgba(255,255,255,0.08);
+            opacity: 1;
+            color: var(--cobli-green);
+            background: rgba(0,174,151,0.09);
+            border-left-color: transparent;
             transform: none;
             box-shadow: none;
         }
         .menu button.ativo { 
-            color: white; 
-            font-weight: 700; 
-            border-bottom: 3px solid var(--cobli-green);
-            background: rgba(255,255,255,0.1);
+            color: var(--cobli-green);
+            font-weight: 700;
+            opacity: 1;
+            background: rgba(0,27,184,0.28);
+            border-left: 3px solid var(--cobli-green);
+            border-bottom: none;
         }
         .menu .btn-sair { 
-            color: #ff9999 !important; 
+            color: rgba(255,153,153,0.85) !important; 
             font-weight: 700;
             font-size: 0.78rem;
+            opacity: 1;
+            padding: 8px 16px;
         }
         .menu .btn-sair:hover { 
-            color: white !important; 
-            background: rgba(255,70,51,0.25) !important;
+            color: white !important;
+            background: rgba(255,70,51,0.22) !important;
         }
 
         /* ============================================================
            CONTEÚDO
         ============================================================ */
-        .conteudo { padding: 0; max-width: 1050px; margin: 0 auto; }
+        .conteudo { padding: 20px 24px; max-width: 1100px; margin: 0 auto; }
         .aba { display: none; } 
         .aba.ativa { display: block; animation: fadeIn 0.3s ease; }
         
@@ -865,14 +933,51 @@
         .preview-resumo .pv-row span { color: white; }
 
         /* ============================================================
-           MOBILE
+           MOBILE — sidebar vira bottom-bar
         ============================================================ */
         @media (max-width: 600px) {
+            #app-content { flex-direction: column; }
+            .app-main-wrapper { min-height: auto; }
+
+            /* Sidebar volta a ser menu horizontal fixo no bottom */
+            .menu { 
+                position: fixed; bottom: 0; left: 0; right: 0; z-index: 10000; 
+                width: 100%; height: 60px; min-height: 60px;
+                flex-direction: row;
+                top: auto;
+                border-radius: 14px 14px 0 0;
+                box-shadow: 0 -4px 20px rgba(7,7,78,0.2);
+            }
+            .menu-left {
+                flex: 1; flex-direction: row;
+                min-width: 0;
+                overflow-x: auto; overflow-y: hidden;
+                white-space: nowrap; 
+                padding: 0 0 0 8px;
+                -webkit-overflow-scrolling: touch;
+                scrollbar-width: none;
+            }
+            .menu-left::-webkit-scrollbar { display: none; }
+            .menu-right {
+                flex: 0 0 auto; flex-direction: row; align-items: center;
+                padding: 0 12px 0 5px;
+                border-top: none; border-left: 1px solid rgba(255,255,255,0.1);
+                background: var(--cobli-dark);
+                z-index: 5;
+            }
+            .sidebar-brand { display: none; }
+            .sidebar-section-label { display: none; }
+            .menu button { 
+                font-size: 0.75rem; padding: 0 10px; 
+                height: 60px; border-left: none; border-bottom: 3px solid transparent;
+                opacity: 1; width: auto; white-space: nowrap; gap: 0;
+            }
+            .menu button.ativo { border-left: none; border-bottom: 3px solid var(--cobli-green); background: rgba(255,255,255,0.08); }
             .topo { 
                 flex-direction: column; 
                 align-items: stretch;
                 padding: 10px 15px;
-                top: -20px;
+                top: 0;
             }
             .user-role-mobile { 
                 position: absolute; 
@@ -901,36 +1006,6 @@
             }
             .toggle-switch::after { width: 12px; height: 12px; }
             .toggle-switch:checked::after { transform: translateX(16px); }
-
-            .menu { 
-                position: fixed; bottom: 0; left: 0; right: 0; z-index: 10000; 
-                margin: 0; border-radius: 14px 14px 0 0; padding: 0;
-                height: 60px; align-items: stretch;
-                justify-content: space-between;
-                width: 100%;
-                top: auto;
-                box-shadow: 0 -4px 20px rgba(7,7,78,0.2);
-            }
-            .menu-left {
-                flex: 1;
-                min-width: 0;
-                overflow-x: auto; 
-                white-space: nowrap; 
-                padding-left: 8px;
-                -webkit-overflow-scrolling: touch;
-                scrollbar-width: none; 
-            }
-            .menu-left::-webkit-scrollbar { display: none; }
-            .menu-right {
-                flex: 0 0 auto;
-                padding-left: 5px; 
-                padding-right: 12px;
-                background: var(--primary); 
-                box-shadow: -8px 0 10px var(--primary); 
-                z-index: 5;
-                align-items: center;
-            }
-            .menu button { font-size: 0.75rem; padding: 0 10px; }
 
             html, body { overflow-x: hidden; width: 100%; }      
             .conteudo { 
@@ -1484,6 +1559,10 @@
                     <h2>Volume por Localidade (Top 10)</h2>
                     <div style="position: relative; height: 250px; width: 100%;"><canvas id="chartLocais"></canvas></div>
                 </div>
+                <div class="card" style="flex: 1; min-width: 300px; margin-bottom: 20px; max-height: 334px; display: flex; flex-direction: column;">
+                    <h2 style="flex-shrink: 0;">Volume por Solicitante</h2>
+                    <div id="lista-dashboard-solicitantes" style="display: flex; flex-direction: column; gap: 6px; overflow-y: auto; padding-right: 5px; flex-grow: 1;"></div>
+                </div>
             </div>
         </div>
         
@@ -1509,11 +1588,11 @@
 
                 <div style="max-height:480px; overflow-y:auto; border-radius:var(--radius-sm); border:1px solid var(--border);">
                     <table style="width:100%; border-collapse:collapse;">
-                        <thead style="position:sticky;top:0;z-index:1;background:var(--cobli-dark);">
+                    <thead style="position:sticky;top:0;z-index:1;background:var(--cobli-dark);">
                             <tr>
                                 <th>Usuário / E-mail</th>
                                 <th>Nível de Acesso</th>
-                                <th>Data de Criação</th>
+                                <th>Último Acesso</th> <th>Data de Criação</th>
                                 <th>Ações</th>
                             </tr>
                         </thead>
@@ -1619,7 +1698,7 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-const EDGE_URL = `${SUPABASE_URL}/functions/v1/integracao-v2-interna`;
+const EDGE_URL = `${SUPABASE_URL}/functions/v1/integracao-field`;
 const API_URL = `${SUPABASE_URL}/functions/v1/smart-service`;
 const DB_URL = `${SUPABASE_URL}/rest/v1`;
 
@@ -1744,6 +1823,17 @@ window.atualizarPreviewResumo = function() {
     lista.forEach(a => { if(a.cidade && a.uf) { let k = `${a.cidade}/${a.uf}`; distCidade[k] = (distCidade[k]||0)+1; }});
     let cidadeStr = Object.entries(distCidade).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([n,c]) => `>   • ${n}: ${c}`).join('\n');
     
+    // 👇 ADICIONADO: Contagem de Solicitantes 👇
+    let distSol = {};
+    lista.forEach(a => { 
+        if(a.solicitante) { 
+            let nomeFmt = window.formatarCapitalize(a.solicitante);
+            distSol[nomeFmt] = (distSol[nomeFmt]||0)+1; 
+        }
+    });
+    let solStr = Object.entries(distSol).sort((a,b)=>b[1]-a[1]).map(([n,c]) => `>   • ${n}: ${c}`).join('\n');
+    // 👆 FIM DA ADIÇÃO 👆
+
     let periodoLabel = { 'semana': 'Esta Semana', 'semana_passada': 'Semana Passada', 'mes': 'Este Mês', 'personalizado': 'Período Personalizado' }[window.periodoResumoAtual] || 'Período';
     
     let statusLines = [];
@@ -1755,7 +1845,6 @@ window.atualizarPreviewResumo = function() {
     if (impedidos > 0)   statusLines.push(`>   • 🛑 Impedidos: ${impedidos}`);
     if (cancelados > 0)  statusLines.push(`>   • ❌ Cancelados: ${cancelados}`);
     
-    // 👇 Aplicando o "> " em todas as linhas para forçar a barra cinza no Slack
     let texto = `> 📊 *Resumo APEX | Cobli — ${periodoLabel}*\n` +
         `> 📅 ${fmtDate(ini)} → ${fmtDate(fim)}\n> \n` +
         `> *Visão Geral:*\n` +
@@ -1763,11 +1852,11 @@ window.atualizarPreviewResumo = function() {
         (statusLines.length > 0 ? statusLines.join('\n') + '\n> \n' : '> \n') +
         (prestStr ? `> *Por Prestador:*\n${prestStr}\n> \n` : '') +
         (cidadeStr ? `> *Principais Cidades:*\n${cidadeStr}\n> \n` : '') +
+        (solStr ? `> *Por Solicitante:*\n${solStr}\n> \n` : '') + // 👈 ADICIONADO AQUI NO TEXTO
         `> _Enviado via APEX · Cobli_`;
     
     window._resumoSlackTexto = texto;
     
-    // Tratamento para a visualização na tela do APEX ficar bonitinha
     let linhasHtml = texto.split('\n').map(l => {
         let cleanLine = l.replace(/^>\s?/, ''); 
         if (cleanLine.startsWith('📊') || cleanLine.startsWith('*') ) return `<span class="pv-title">${cleanLine.replace(/\*/g,'')}</span>`;
@@ -1852,12 +1941,55 @@ window.authAction = async function(type) {
             });
         `);
     } else if (type === 'login') {
-        const email = document.getElementById('login-email').value, password = document.getElementById('login-password').value, btn = document.getElementById('btnLogin'), errDiv = document.getElementById('login-error');
-        btn.innerText = "Autenticando..."; errDiv.style.display = 'none';
-        const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
-        if (error) { btn.innerText = "Entrar"; errDiv.style.display = 'block'; } else { window.location.reload(); }
+        const email = document.getElementById('login-email').value;
+        const password = document.getElementById('login-password').value;
+        const btn = document.getElementById('btnLogin');
+        const errDiv = document.getElementById('login-error');
+        
+        btn.innerText = "Autenticando..."; 
+        errDiv.style.display = 'none';
+        
+        const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+        
+        if (error) { 
+            btn.innerText = "Entrar"; 
+            errDiv.style.display = 'block'; 
+} else { 
+            // 👇 MÁGICA DO LOG DE ACESSO AQUI 👇
+            const userId = data.user.id;
+            const agora = new Date().toISOString();
+            
+            // Busca qual foi o último login e o penúltimo
+            const { data: perfil } = await supabaseClient.from('perfis_usuarios')
+                .select('ultimo_login, penultimo_login') // 👈 Agora puxamos o penúltimo também
+                .eq('id', userId)
+                .single();
+            
+            let novoPenultimo = perfil?.penultimo_login || null;
+            
+            if (perfil?.ultimo_login) {
+                // Pega só a data (DD/MM/YYYY) para comparar, ignorando as horas
+                let dataUltimo = new Date(perfil.ultimo_login).toLocaleDateString('pt-BR');
+                let dataHoje = new Date(agora).toLocaleDateString('pt-BR');
+                
+                // Só joga para o "penúltimo" se o login anterior foi num dia diferente
+                if (dataUltimo !== dataHoje) {
+                    novoPenultimo = perfil.ultimo_login;
+                }
+            }
+            
+            // Salva no banco com a lógica corrigida
+            await supabaseClient.from('perfis_usuarios').update({
+                penultimo_login: novoPenultimo,
+                ultimo_login: agora
+            }).eq('id', userId);
+            // 👆 FIM DA MÁGICA 👆
+
+            window.location.reload(); 
+        }
     } else if (type === 'reset') {
-        const email = document.getElementById('reset-email').value, btn = document.getElementById('btnReset');
+        const email = document.getElementById('reset-email').value;
+        const btn = document.getElementById('btnReset');
         if (!email) return window.showMessage("Digite o e-mail cadastrado.");
         if (email.toLowerCase().endsWith('@apex.co')) { showAuthCard('card-login'); return window.showMessage(`🔒 Contas <strong>@apex.co</strong> são gerenciadas pela equipe Cobli. Entre em contato com o responsável.`); }
         btn.innerText = "Enviando..."; btn.disabled = true;
@@ -1866,7 +1998,7 @@ window.authAction = async function(type) {
         if (error) return window.showMessage("Erro: " + error.message);
         window.showToast("✅ Link enviado!"); showAuthCard('card-login');
     }
-}
+};
 
     // ==========================================
 // MÓDULO VISÃO DE MAPA
@@ -1930,15 +2062,25 @@ window.plotarAgendamentosNoMapa = async function() {
         return true;
     });
 
-    const delay = ms => new Promise(res => setTimeout(res, ms));
-    let basesPlotadas = new Set(); // Guarda quem já teve a base desenhada para não repetir
-
+    // 👇 AGRUPAMENTO POR ENDEREÇO (A Mágica acontece aqui)
+    let gruposEndereco = {};
     for (let a of paraPlotar) {
         let enderecoStr = `${a.rua || ''}, ${a.numero || ''} - ${a.cidade || ''} - ${a.uf || ''}`;
         if (!a.rua || !a.cidade) continue;
+        
+        if (!gruposEndereco[enderecoStr]) gruposEndereco[enderecoStr] = [];
+        gruposEndereco[enderecoStr].push(a);
+    }
 
+    const delay = ms => new Promise(res => setTimeout(res, ms));
+    let basesPlotadas = new Set(); // Guarda quem já teve a base desenhada para não repetir
+
+    // Passa por cada endereço único (Grupo)
+    for (let enderecoStr in gruposEndereco) {
+        let grupo = gruposEndereco[enderecoStr];
         let latLng = null;
-        // Pega as coordenadas da OS
+
+        // Pega as coordenadas daquele endereço
         if (window.geocoderCache[enderecoStr]) {
             latLng = window.geocoderCache[enderecoStr];
         } else {
@@ -1957,113 +2099,128 @@ window.plotarAgendamentosNoMapa = async function() {
             }
         }
 
-        let pObj = prestadores.find(p => p.nome === a.prestador);
-
-        // 👇 DESENHA A BASE DO PRESTADOR (PINO AZUL)
-        if (pObj && pObj.endereco && !basesPlotadas.has(pObj.nome)) {
-            let endBase = pObj.endereco;
-            let latLngBase = window.geocoderCache[endBase];
-            if (!latLngBase) {
-                try {
-                    let resBase = await new Promise((resolve, reject) => {
-                        geocoder.geocode({ address: endBase }, (results, status) => {
-                            if (status === 'OK') resolve(results[0].geometry.location);
-                            else reject(status);
+        // Desenha as Bases dos prestadores envolvidos nesse grupo
+        for (let a of grupo) {
+            let pObj = prestadores.find(p => p.nome === a.prestador);
+            if (pObj && pObj.endereco && !basesPlotadas.has(pObj.nome)) {
+                let endBase = pObj.endereco;
+                let latLngBase = window.geocoderCache[endBase];
+                if (!latLngBase) {
+                    try {
+                        let resBase = await new Promise((resolve, reject) => {
+                            geocoder.geocode({ address: endBase }, (results, status) => {
+                                if (status === 'OK') resolve(results[0].geometry.location);
+                                else reject(status);
+                            });
                         });
+                        latLngBase = resBase;
+                        window.geocoderCache[endBase] = latLngBase;
+                        await delay(300);
+                    } catch(e) {}
+                }
+                
+                if (latLngBase) {
+                    let markerBase = new google.maps.Marker({
+                        position: latLngBase,
+                        map: window.mapaInstancia,
+                        icon: {
+                            url: "https://fqaqlofndeihmhkopvan.supabase.co/storage/v1/object/public/icones/prestador.png",
+                            scaledSize: new google.maps.Size(38, 38),
+                            origin: new google.maps.Point(0, 0),
+                            anchor: new google.maps.Point(19, 19)
+                        },
+                        title: `Base: ${pObj.nome}`,
+                        zIndex: 999
                     });
-                    latLngBase = resBase;
-                    window.geocoderCache[endBase] = latLngBase;
-                    await delay(300);
-                } catch(e) {}
-            }
-            
-            if (latLngBase) {
-                 let markerBase = new google.maps.Marker({
-                    position: latLngBase,
-                    map: window.mapaInstancia,
-                    icon: {
-                        url: "https://fqaqlofndeihmhkopvan.supabase.co/storage/v1/object/public/icones/prestador.png", // 👈 Coloque a URL da imagem aqui
-                        scaledSize: new google.maps.Size(38, 38), // Define o tamanho do carinha no mapa
-                        origin: new google.maps.Point(0, 0),
-                        anchor: new google.maps.Point(20, 20) // Centraliza a imagem no ponto exato
-                    },
-                    title: `Base: ${pObj.nome}`,
-                    zIndex: 999
-                });
-                
-                markerBase.addListener('click', () => {
-                    infoWindow.setContent(`<div style="padding: 5px; font-family: var(--font-main);"><strong style="color:var(--primary); font-size:1rem;">🏠 Sede: ${pObj.nome}</strong><br><span style="font-size:0.8rem; color:var(--muted);">${endBase}</span></div>`);
-                    infoWindow.open(window.mapaInstancia, markerBase);
-                });
-                
-                window.marcadoresMapa.push(markerBase);
-                basesPlotadas.add(pObj.nome);
+                    
+                    markerBase.addListener('click', () => {
+                        infoWindow.setContent(`<div style="padding: 5px; font-family: var(--font-main);"><strong style="color:var(--primary); font-size:1rem;">🏠 Sede: ${pObj.nome}</strong><br><span style="font-size:0.8rem; color:var(--muted);">${endBase}</span></div>`);
+                        infoWindow.open(window.mapaInstancia, markerBase);
+                    });
+                    
+                    window.marcadoresMapa.push(markerBase);
+                    basesPlotadas.add(pObj.nome);
+                }
             }
         }
 
-        // 👇 DESENHA O PINO DA OS
+        // 👇 DESENHA O PINO DA OS (Com a numeração se houver > 1)
         if (latLng) {
-            let s = String(a.status || '').toLowerCase();
-            let isConcluidoOuImpedido = s.includes('conclu') || s.includes('impedido') || s.includes('finalizado');
+            // Fica verde SÓ se todos do grupo estiverem concluídos
+            let todosConcluidos = grupo.every(a => {
+                let s = String(a.status || '').toLowerCase();
+                return s.includes('conclu') || s.includes('impedido') || s.includes('finalizado');
+            });
             
-            let iconUrl = isConcluidoOuImpedido ? 'http://maps.google.com/mapfiles/ms/icons/green-dot.png' : 'http://maps.google.com/mapfiles/ms/icons/red-dot.png';
+            // NOVO PINO LIMPO (Sem a bolinha preta e com número centralizado)
+            let corPino = todosConcluidos ? "#00AE97" : "#FF4633"; // Verde da Cobli ou Vermelho
+            let iconUrl = {
+                path: "M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z", 
+                fillColor: corPino, 
+                fillOpacity: 1, 
+                strokeWeight: 1.5, 
+                strokeColor: "#ffffff",
+                scale: 1.5, 
+                anchor: new google.maps.Point(12, 22),
+                labelOrigin: new google.maps.Point(12, 9) // Centraliza o número perfeitamente
+            };
+
+            // Coloca a label se tiver mais de um!
+            let labelMarker = grupo.length > 1 ? { text: String(grupo.length), color: "white", fontSize: "13px", fontWeight: "bold" } : null;
 
             let marker = new google.maps.Marker({
                 position: latLng,
                 map: window.mapaInstancia,
                 icon: iconUrl,
-                title: `#${a.ticket}`
+                label: labelMarker,
+                title: grupo.length > 1 ? `${grupo.length} Serviços neste local` : `#${grupo[0].ticket}`,
+                zIndex: 10
             });
 
-            // CLIQUE NA OS: ABRE A JANELA E CALCULA DISTÂNCIA
+            // CLIQUE NA OS: ABRE A JANELA COM LISTA DOS SERVIÇOS
             marker.addListener('click', async () => {
-                let tecAlocado = a.tecnico_alocado || 'Não alocado';
-                if (/^\d+$/.test(tecAlocado) && pObj) {
-                    tecAlocado = window.getNomeTecnico(pObj, tecAlocado).trim();
-                }
+                let content = `<div style="color: var(--text); font-family: var(--font-main); font-size: 0.85rem; min-width: 270px; max-height: 350px; overflow-y: auto; padding-right: 6px;">`;
+                content += `<div style="font-size: 0.75rem; color: var(--muted); margin-bottom: 12px; font-weight: 700;">📍 ${enderecoStr}</div>`;
+                
+                // Monta o card de cada OS separadamente dentro do balão
+                grupo.forEach((a, i) => {
+                    let isConc = String(a.status || '').toLowerCase().includes('conclu') || String(a.status || '').toLowerCase().includes('impedido');
+                    let pObj = prestadores.find(p => p.nome === a.prestador);
+                    let tecAlocado = a.tecnico_alocado || 'Não alocado';
+                    if (/^\d+$/.test(tecAlocado) && pObj) {
+                        tecAlocado = window.getNomeTecnico(pObj, tecAlocado).trim();
+                    }
 
-                let contentId = "dist-" + a.ticket;
-
-                // Desenha a caixinha inicial enquanto pensa...
-                let content = `<div style="color: var(--text); font-family: var(--font-main); font-size: 0.85rem; min-width: 240px; line-height: 1.5;">
-                    <strong style="color:var(--primary); font-size: 1rem; font-family:var(--font-mono);">🎟️ #${a.ticket}</strong><br>
-                    <strong>Status:</strong> <span style="color: ${isConcluidoOuImpedido ? 'var(--cobli-green)' : 'var(--cobli-red)'}; font-weight:800;">${a.status}</span><br>
-                    <strong>Data:</strong> ${a.data} às ${Array.isArray(a.slots) ? a.slots[0] : (String(a.slots).split(',')[0])}<br>
-                    <strong>Equipe:</strong> ${a.prestador} (${tecAlocado})<br>
-                    <hr style="border:0; border-top:1px solid #ccc; margin: 8px 0;">
-                    <strong>📍 Local OS:</strong> ${enderecoStr}<br>
-                    <div id="${contentId}" style="margin-top:10px; padding:8px; background:#e8ecff; border-radius:6px; text-align:center; font-weight:700; color:var(--primary); border: 1px dashed var(--primary);">
-                        <span style="display:inline-block; animation: girar 1s linear infinite;">🔄</span> Calculando rota...
-                    </div>
-                </div>`;
+                    content += `
+                    <div style="margin-bottom: 10px; padding: 10px; border: 1px solid var(--border); border-radius: 8px; background: ${isConc ? '#f0fdf4' : 'white'};">
+                        <strong style="color:var(--primary); font-size: 1rem; font-family:var(--font-mono);">🎟️ #${a.ticket}</strong><br>
+                        <strong>Status:</strong> <span style="color: ${isConc ? 'var(--cobli-green)' : 'var(--cobli-red)'}; font-weight:800;">${a.status}</span><br>
+                        <strong>Data:</strong> ${a.data} às ${Array.isArray(a.slots) ? a.slots[0] : (String(a.slots).split(',')[0])}<br>
+                        <strong>Equipe:</strong> ${a.prestador} (${tecAlocado})<br>
+                        <div id="dist-${a.ticket}" style="margin-top:8px; padding:6px; background:#e8ecff; border-radius:6px; text-align:center; font-weight:700; color:var(--primary); font-size:0.75rem;">
+                            <span style="display:inline-block; animation: girar 1s linear infinite;">🔄</span> Rota...
+                        </div>
+                    </div>`;
+                });
+                content += `</div>`;
                 
                 infoWindow.setContent(content);
                 infoWindow.open(window.mapaInstancia, marker);
 
-                // Faz o cálculo real batendo no seu banco/API
-                if (pObj && pObj.endereco) {
-                    let dist = await consultarDistancia(pObj.endereco, enderecoStr);
-                    let el = document.getElementById(contentId);
-                    if (el) {
-                        if (dist !== null) {
-                            el.innerHTML = `📏 Distância da Base:<br><span style="font-size:1.3rem; color:var(--cobli-dark); font-family:var(--font-mono); font-weight:800;">${dist.toFixed(1)} km</span>`;
-                            el.style.background = "#dcfce7";
-                            el.style.color = "#15803d";
-                            el.style.borderColor = "#15803d";
-                        } else {
-                            el.innerHTML = `⚠️ Não foi possível calcular a rota`;
-                            el.style.background = "#fee2e2";
-                            el.style.color = "var(--cobli-red)";
-                            el.style.borderColor = "var(--cobli-red)";
+                // Dispara o cálculo de distância um por um e atualiza a tela
+                for (let a of grupo) {
+                    let pObj = prestadores.find(p => p.nome === a.prestador);
+                    if (pObj && pObj.endereco) {
+                        let dist = await consultarDistancia(pObj.endereco, enderecoStr);
+                        let el = document.getElementById("dist-" + a.ticket);
+                        if (el) {
+                            if (dist !== null) {
+                                el.innerHTML = `📏 Da Base: <strong style="font-size:0.9rem; color:var(--cobli-dark);">${dist.toFixed(1)} km</strong>`;
+                                el.style.background = "transparent"; el.style.border = "1px dashed var(--border)"; el.style.color = "var(--muted)";
+                            } else {
+                                el.innerHTML = `⚠️ Falha na rota`;
+                            }
                         }
-                    }
-                } else {
-                    let el = document.getElementById(contentId);
-                    if (el) {
-                        el.innerHTML = `⚠️ Prestador sem endereço base`;
-                        el.style.background = "#fee2e2";
-                        el.style.color = "var(--cobli-red)";
-                        el.style.borderColor = "var(--cobli-red)";
                     }
                 }
             });
@@ -2082,7 +2239,33 @@ window.plotarAgendamentosNoMapa = async function() {
 
     if(btn) { btn.innerText = "Atualizar Mapa"; btn.disabled = false; }
 };
+            
+// ==========================================
+// RASTREADOR DE INATIVIDADE (AUTO-LOGOUT)
+// ==========================================
+window.inactivityTimer = null;
+const TEMPO_LIMITE_INATIVIDADE = 3 * 60 * 60 * 1000; // 4 horas (em milissegundos)
 
+window.resetInactivityTimer = function() {
+    clearTimeout(window.inactivityTimer);
+    window.inactivityTimer = setTimeout(() => {
+        // Quando o tempo acabar, avisa e desloga
+        window.showToast("Sessão expirada por inatividade. Deslogando...");
+        setTimeout(() => {
+            if (window.handleLogout) window.handleLogout();
+        }, 2000);
+    }, TEMPO_LIMITE_INATIVIDADE);
+};
+
+window.startInactivityTracker = function() {
+    // Escuta qualquer interação do usuário para zerar o cronômetro
+    ['mousemove', 'mousedown', 'keypress', 'scroll', 'touchstart'].forEach(evt => {
+        document.addEventListener(evt, window.resetInactivityTimer, { passive: true });
+    });
+    // Inicia a primeira contagem
+    window.resetInactivityTimer();
+};
+            
 async function checkSession() {
     const { data: { session } } = await supabaseClient.auth.getSession();
     if (session) {
@@ -2099,6 +2282,10 @@ async function checkSession() {
         window.carregarDadosDoBanco();
         console.log("📡 Conectando ao Realtime...");
         supabaseClient.channel('mudancas-agendamentos').on('postgres_changes', { event: '*', schema: 'public', table: 'agendamentos' }, (payload) => { console.log('🚨 BD mudou! Atualizando...', payload); window.carregarDadosDoBanco(); }).subscribe((status) => { console.log("🔌 Realtime:", status); });
+        
+        // 👇 INICIA O VIGIA DE INATIVIDADE 👇
+        window.startInactivityTracker();
+        
     } else {
         document.getElementById('auth-overlay').style.display = 'flex';
         document.body.style.display = 'block'; 
@@ -2174,17 +2361,41 @@ window.filtrarTabelaUsuarios = function() {
     const tbody = document.getElementById('tabela-usuarios-body');
     if (!tbody) return;
     if (data.length === 0) { tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:16px;">Nenhum usuário encontrado.</td></tr>'; return; }
-    tbody.innerHTML = data.map(u => {
+tbody.innerHTML = data.map(u => {
         let badgeClass = 'badge-prest';
         if(u.nivel === 'GESTOR') badgeClass = 'badge-gestor';
         if(u.nivel === 'ADMIN') badgeClass = 'badge-admin';
         if(u.nivel === 'SMARTOPS') badgeClass = 'badge-smart';
+        
         let d = new Date(u.created_at).toLocaleDateString('pt-BR');
         let podeEditar = false;
         if (userRole === 'GESTOR') podeEditar = true;
         else if (userRole === 'ADMIN' && (u.nivel === 'SMARTOPS' || u.nivel === 'ADMIN')) podeEditar = true;
+        
         let blockDelete = podeEditar ? `<button onclick="window.excluirUsuarioPerfil('${u.id}', '${u.email}', '${u.nivel}')" style="background: transparent; border: none; cursor: pointer; font-size: 1.1rem; padding: 0; min-height:auto;" title="Remover Perfil">❌</button>` : '';
         let optionGestorHtml = (userRole === 'GESTOR' || u.nivel === 'GESTOR') ? `<option value="GESTOR" ${u.nivel==='GESTOR'?'selected':''}>GESTOR</option>` : '';
+
+        // 👇 CÁLCULO DO LOG DE ACESSO 👇
+        let txtAcesso = '<span style="color:var(--muted); font-size:0.75rem; font-style:italic;">Nunca acessou</span>';
+        if (u.ultimo_login) {
+            let dataUlt = new Date(u.ultimo_login);
+            let strUltimo = dataUlt.toLocaleDateString('pt-BR') + ' às ' + dataUlt.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
+            
+            if (u.penultimo_login) {
+                let dataPen = new Date(u.penultimo_login);
+                let strPen = dataPen.toLocaleDateString('pt-BR');
+                let diffDias = Math.floor(Math.abs(dataUlt - dataPen) / (1000 * 60 * 60 * 24));
+                
+                let infoDias = diffDias === 0 ? 'No mesmo dia' : `Ficou ${diffDias} dia(s) off`;
+                txtAcesso = `<div style="font-weight:700; color:var(--primary); font-size:0.75rem;">${strUltimo}</div>
+                             <div style="font-size:0.65rem; color:var(--muted);" title="${strPen}">Anterior: ${infoDias}</div>`;
+            } else {
+                txtAcesso = `<div style="font-weight:700; color:var(--cobli-green); font-size:0.75rem;">${strUltimo}</div>
+                             <div style="font-size:0.65rem; color:var(--muted);">Primeiro acesso</div>`;
+            }
+        }
+        // 👆 FIM DO CÁLCULO 👆
+
         return `<tr>
             <td style="font-weight:600; color:var(--cobli-dark);">${u.email}</td>
             <td><select onchange="window.mudarNivelUsuario('${u.id}', this.value, '${u.nivel}')" style="width: auto; padding: 4px 8px; font-weight: 700; border: none; outline: none; border-radius: 4px; font-size: 0.75rem; min-height:auto;" class="${badgeClass}" ${!podeEditar ? 'disabled' : ''}>
@@ -2193,7 +2404,7 @@ window.filtrarTabelaUsuarios = function() {
                 <option value="ADMIN" ${u.nivel==='ADMIN'?'selected':''}>ADMIN</option>
                 ${optionGestorHtml}
             </select></td>
-            <td style="color:var(--muted); font-size:0.82rem;">${d}</td>
+            <td>${txtAcesso}</td> <td style="color:var(--muted); font-size:0.82rem;">${d}</td>
             <td>${blockDelete}</td>
         </tr>`;
     }).join('');
@@ -2296,11 +2507,7 @@ window.buscarEnderecoPorCep = async function() {
             document.getElementById('camposEndereco').style.display = 'block'; 
         } 
         else { 
-            // =======================================================
-            // CHECAGEM OCULTA DE COBERTURA
-            // =======================================================
             btn.innerText = "Validando Raio...";
-            // Monta um endereço base só com rua e cidade para testar a distância
             let enderecoBase = `${data.logradouro || ""}, ${data.localidade || ""} - ${data.uf || ""} - CEP: ${cep}`;
             let temPrestadorNoRaio = false;
             
@@ -2308,26 +2515,22 @@ window.buscarEnderecoPorCep = async function() {
                 if (!p.endereco) continue; 
                 if (p.status_prestador === 'TESTE' && userRole === 'SMARTOPS') continue;
                 
-                // Checa a distância
                 const dist = await consultarDistancia(enderecoBase, p.endereco); 
                 if(dist !== null && dist <= parseFloat(p.range)) { 
-                    // Checa se tem alguma data futura
+                    // 👇 A CORREÇÃO ESTÁ AQUI 👇
                     let available = window.getNextDates(p); 
                     if(available.length > 0) { 
                         temPrestadorNoRaio = true; 
-                        break; // Achou o 1º! Pode parar o loop pra não gastar tempo/API
+                        break; 
                     } 
                 } 
             }
 
-            // Se não encontrou ninguém, dá o aviso e não mostra a div do número
             if (!temPrestadorNoRaio) {
                 document.getElementById('camposEndereco').style.display = 'none';
                 return window.showMessage("⚠️ <strong>Região sem cobertura!</strong><br><br>Não há prestadores no raio de distância deste CEP ou com agenda disponível no momento.");
             }
-            // =======================================================
 
-            // Se encontrou, preenche e mostra os campos normalmente
             document.getElementById('inputRua').value = data.logradouro || ""; 
             document.getElementById('inputBairro').value = data.bairro || ""; 
             document.getElementById('inputCidade').value = data.localidade || ""; 
@@ -2530,14 +2733,25 @@ window.getNextDates = function(prestador) {
     let dates = []; let today = new Date(); const daysMap = {"Dom":0, "Seg":1, "Ter":2, "Qua":3, "Qui":4, "Sex":5, "Sab":6}; 
     let agendaNormal = (prestador.agenda && Array.isArray(prestador.agenda)) ? prestador.agenda.filter(a => !a.isAbsence) : [];
     let agendaDays = [...new Set(agendaNormal.map(a => a.dia))].map(d => daysMap[d]); 
-    for (let i = 2; i < 60; i++) { 
+    
+    // 👇 O GESTOR fura a fila das 48h
+    let startDay = (userRole === 'GESTOR') ? 0 : 2; 
+    let horaAtual = today.getHours();
+
+    for (let i = startDay; i < 60; i++) { 
         if(dates.length >= 10) break;
         let d = new Date(); d.setDate(today.getDate() + i); let dStr = d.toLocaleDateString('pt-BR'); let dNome = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sab"][d.getDay()]; 
         if (!agendaDays.includes(d.getDay())) continue;
         let slotsDoDia = agendaNormal.filter(a => a.dia == dNome); 
         let uniqueHoras = [...new Set(slotsDoDia.map(s => parseInt(s.hora.split(':')[0])))];
         let temLivre = false;
-        for(let hInt of uniqueHoras) { if (window.podeAgendar(prestador, dStr, [hInt], dNome)) { temLivre = true; break; } }
+        
+        for(let hInt of uniqueHoras) { 
+            // Se for hoje e a hora já bateu ou passou, pula!
+            if (i === 0 && hInt <= horaAtual) continue;
+            
+            if (window.podeAgendar(prestador, dStr, [hInt], dNome)) { temLivre = true; break; } 
+        }
         if (temLivre) dates.push(dStr.slice(0,5)); 
     } 
     return dates; 
@@ -2648,22 +2862,43 @@ window.rdaAgendamento = function() {
     if (itensSelecionados.length === 0) { container.innerHTML = `<div style="font-weight:600; color:var(--primary); font-size:0.85rem;">Adicione um serviço para ver a agenda.</div>`; return; }
     window.agendaDiasDisponiveis = [];
     
-    for(let i=2; i<60; i++){ 
+    // O GESTOR fura a fila das 48h aqui também
+    let startDay = (userRole === 'GESTOR') ? 0 : 2;
+
+    for(let i=startDay; i<60; i++){ 
         let data = new Date(); data.setDate(hoje.getDate() + i); let dStr = data.toLocaleDateString('pt-BR'); let dNome = diasSemana[data.getDay()]; 
         let allSlotsRaw = (p.agenda && Array.isArray(p.agenda)) ? p.agenda.filter(a => !a.isAbsence && a.dia == dNome) : []; 
         if (allSlotsRaw.length === 0) continue;
+        
         let horasAgendaSet = new Set(allSlotsRaw.map(item => parseInt(item.hora.split(':')[0])));
         let horasAgenda = Array.from(horasAgendaSet).sort((a,b)=>a-b);
-        
+        let horaAtual = hoje.getHours();
+
         let validStarts = []; 
         let validStartsTecnico = {}; 
         let invalidStartsMotivo = {}; 
         
         for (let h of horasAgenda) {
+            // 👇 Regra 1: Mantém o botão na tela, mas marca como "Passado" e não deixa clicar
+            if (i === 0 && h <= horaAtual) {
+                invalidStartsMotivo[h] = "Horário já passou";
+                continue;
+            }
+
             let seqOk = true; let testSlots = [];
             for (let k = 0; k < horasNecessarias; k++) { 
-                if (!horasAgenda.includes(h + k)) { seqOk = false; invalidStartsMotivo[h] = `Faltam slots para completar ${horasNecessarias}h`; break; } 
-                testSlots.push(h + k); 
+                let hTeste = h + k;
+                if (!horasAgenda.includes(hTeste)) { 
+                    seqOk = false; 
+                    invalidStartsMotivo[h] = `Faltam slots para completar ${horasNecessarias}h`; 
+                    break; 
+                } 
+                if (i === 0 && hTeste <= horaAtual) { 
+                    seqOk = false; 
+                    invalidStartsMotivo[h] = "Parte do serviço cai no passado"; 
+                    break; 
+                }
+                testSlots.push(hTeste); 
             }
             if (seqOk) { 
                 let info = window.checarDisponibilidadeCore(p, dStr, testSlots, dNome);
@@ -2679,7 +2914,8 @@ window.rdaAgendamento = function() {
         validStarts.forEach(start => { for (let k = 0; k < horasNecessarias; k++) enabledCells.add(start + k); });
         
         if(validStarts.length > 0 || Object.keys(invalidStartsMotivo).length > 0){ 
-            let allSlots = Array.from(horasAgendaSet).sort((a,b)=>a-b).map(h => ({hora: h + ':00'}));
+            // Agora sim! Monta a linha com TODOS os botões originais da agenda base
+            let allSlots = horasAgenda.map(h => ({hora: h + ':00'}));
             window.agendaDiasDisponiveis.push({ dStr, dNome, allSlots, validStarts, validStartsTecnico, enabledCells, horasNecessarias, invalidStartsMotivo });
         } 
     } 
@@ -3909,7 +4145,9 @@ window.renderDashboard = function() {
     let isPrestadorDashboard = (userRole === 'PRESTADOR');
     let nomeLogado = currentUser ? extrairNomeDoEmail(currentUser.email).toLowerCase() : '';
     let totalAgend = 0, concluidosCount = 0, programadosCount = 0;
-    let distPrest = {}, distServ = {}, distLocais = {}, totalServicosGeral = 0;
+    
+    // 👇 ADICIONADO A VARIÁVEL distSolicitante AQUI 👇
+    let distPrest = {}, distServ = {}, distLocais = {}, distSolicitante = {}, totalServicosGeral = 0;
 
     // Lemos de filtradosPainel para que o Dashboard seja DINÂMICO de acordo com os filtros!
     filtradosPainel.forEach(a => {
@@ -3929,10 +4167,15 @@ window.renderDashboard = function() {
         let status = a.status ? String(a.status).toLowerCase() : '';
         if (status.includes('conclu') || status.includes('completed') || status.includes('finalizado') || status.includes('impedido')) concluidosCount++;
         if (status.includes('agendado') || status.includes('scheduled')) programadosCount++;
+        
         if(a.prestador) distPrest[a.prestador] = (distPrest[a.prestador] || 0) + 1;
         if(a.cidade && a.uf) { let local = `${a.cidade}/${a.uf}`.toUpperCase(); distLocais[local] = (distLocais[local] || 0) + 1; }
 
-let txtRaw = a.produtos_texto || a.produtos || '';
+        // 👇 CONTAGEM DOS SOLICITANTES AQUI 👇
+        let nomeSol = a.solicitante ? window.formatarCapitalize(a.solicitante) : 'Desconhecido';
+        distSolicitante[nomeSol] = (distSolicitante[nomeSol] || 0) + 1;
+
+        let txtRaw = a.produtos_texto || a.produtos || '';
         let txtServicos = txtRaw;
         
         // Corta tudo que estiver de "Observações:" para baixo
@@ -3944,20 +4187,17 @@ let txtRaw = a.produtos_texto || a.produtos || '';
             let linhas = txtServicos.split('\n');
             linhas.forEach(linha => {
                 let limpo = linha.replace('•', '').trim(); 
-                if (!limpo) return; // Pula linha vazia
+                if (!limpo) return; 
                 
-                // Descobre a quantidade
                 let qtd = 1; 
                 let matchQtd = linha.match(/Qtd:\s*(\d+)/i); 
                 if (matchQtd) qtd = parseInt(matchQtd[1]) || 1;
 
-                // Remove tudo que estiver entre parênteses para limpar o nome do serviço
                 let nomeServico = limpo.replace(/\s*\([^)]*\)/g, '').trim();
                 
-                // Trava de segurança: só conta se for um serviço oficial (tem a tag [TIPO])
                 if (nomeServico && nomeServico.startsWith('[')) {
                     distServ[nomeServico] = (distServ[nomeServico] || 0) + qtd; 
-                    totalServicosGeral += qtd; // Guarda o total para a proporção!
+                    totalServicosGeral += qtd; 
                 }
             });
         }
@@ -3969,13 +4209,11 @@ let txtRaw = a.produtos_texto || a.produtos || '';
     
     let cardProdTec = document.getElementById('card-prod-tecnicos');
     
-    // AQUI O CORTE: A Equipe Técnica só aparece se o usuário for o PRESTADOR
     if (isPrestadorDashboard && window.meuPrestadorLogado) {
         cardProdTec.style.display = 'block';
         let pObj = window.meuPrestadorLogado;
         let contagemProducaoTecnico = {};
         
-        // Inicializa ativos
         let qtdAtivos = parseInt(pObj.qtdtecnicos) || 0;
         let nomesAtivos = [];
         for(let i=1; i <= qtdAtivos; i++) {
@@ -3986,7 +4224,6 @@ let txtRaw = a.produtos_texto || a.produtos || '';
             }
         }
 
-        // Conta
         filtradosPainel.forEach(a => {
             if (a.prestador !== pObj.nome) return;
             let tecAlocado = a.tecnico_alocado || "Não Alocado";
@@ -3995,7 +4232,6 @@ let txtRaw = a.produtos_texto || a.produtos || '';
             contagemProducaoTecnico[tecAlocado].count++;
         });
 
-        // HTML
         let listaTecHtml = '';
         let techsOrdenados = Object.values(contagemProducaoTecnico).sort((a,b) => {
             if (a.isAtivo === b.isAtivo) return b.count - a.count;
@@ -4013,7 +4249,7 @@ let txtRaw = a.produtos_texto || a.produtos || '';
         });
         document.getElementById('lista-prod-tecnicos').innerHTML = listaTecHtml;
     } else {
-        cardProdTec.style.display = 'none'; // Some pro Gestor
+        cardProdTec.style.display = 'none';
     }
     
     if(myChart) myChart.destroy();
@@ -4027,7 +4263,6 @@ let txtRaw = a.produtos_texto || a.produtos || '';
         });
     }
 
-    // AQUI O AJUSTE DAS PROPORÇÕES DOS SERVIÇOS
     let servicosOrdenados = Object.entries(distServ).sort((a,b) => b[1] - a[1]);
     let listaHtml = servicosOrdenados.map(s => {
         let pct = totalServicosGeral > 0 ? Math.round((s[1] / totalServicosGeral) * 100) : 0;
@@ -4037,6 +4272,18 @@ let txtRaw = a.produtos_texto || a.produtos || '';
         </div>`;
     }).join('');
     if (document.getElementById('lista-dashboard-servicos')) document.getElementById('lista-dashboard-servicos').innerHTML = listaHtml || "Sem dados.";
+
+    // 👇 RENDERIZAÇÃO DO NOVO CARD DE SOLICITANTES 👇
+    let solOrdenados = Object.entries(distSolicitante).sort((a,b) => b[1] - a[1]);
+    let listaSolHtml = solOrdenados.map(s => {
+        let pct = totalAgend > 0 ? Math.round((s[1] / totalAgend) * 100) : 0;
+        return `<div style="display:flex; justify-content:space-between; align-items:center; background: linear-gradient(90deg, #e8ecff ${pct}%, var(--bg) ${pct}%); padding:10px 12px; border-radius:var(--radius-sm); border:1px solid var(--border); margin-bottom:4px;">
+            <div style="font-size:0.78rem; font-weight:600; color:var(--cobli-dark); flex:1; text-shadow: 1px 1px 0px rgba(255,255,255,0.7);">${s[0]}</div>
+            <div style="font-size:0.88rem; font-weight:800; color:var(--primary); background:rgba(255,255,255,0.6); padding:2px 8px; border-radius:5px; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">${s[1]} <span style="font-size:0.6rem; color:var(--muted); font-weight:700;">(${pct}%)</span></div>
+        </div>`;
+    }).join('');
+    if (document.getElementById('lista-dashboard-solicitantes')) document.getElementById('lista-dashboard-solicitantes').innerHTML = listaSolHtml || `<div style="font-size:0.85rem; color:var(--muted);">Nenhum dado encontrado.</div>`;
+    // 👆 FIM DA RENDERIZAÇÃO DE SOLICITANTES 👆
 
     if(chartLocais) chartLocais.destroy();
     const ctxLocais = document.getElementById('chartLocais');
