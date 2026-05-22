@@ -19,37 +19,44 @@
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,600;0,9..40,700;0,9..40,800;1,9..40,400&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
     
     <style>
-        /* ============================================================
-           PALETA DE CORES OFICIAL COBLI
+/* ============================================================
+           PALETA DE CORES E SOMBRAS (ATUALIZADO)
         ============================================================ */
         :root { 
             --primary: #001BB8;        
             --cobli-dark: #07074E;    
             --cobli-green: #00AE97;   
             --cobli-red: #FF4633;     
-            --bg: #f0f2f8; 
+            --bg: #F4F7FC; /* Fundo mais moderno e azulado */
             --text: #1e2240;
             --card-bg: #ffffff;
-            --border: #dde1f0;
+            --border: #e2e8f0;
             --muted: #64748b;
             --font-main: 'DM Sans', -apple-system, sans-serif;
             --font-mono: 'Space Mono', monospace;
-            --shadow-sm: 0 1px 3px rgba(7,7,78,0.07), 0 1px 2px rgba(7,7,78,0.05);
-            --shadow-md: 0 4px 12px rgba(7,7,78,0.1), 0 2px 4px rgba(7,7,78,0.06);
-            --shadow-lg: 0 10px 30px rgba(7,7,78,0.15), 0 4px 8px rgba(7,7,78,0.08);
-            --radius: 10px;
-            --radius-sm: 6px;
+            
+            /* NOVAS SOMBRAS "DE CAIR O QUEIXO" */
+            --shadow-sm: 0 2px 4px rgba(7,7,78,0.04);
+            --shadow-md: 0 8px 16px rgba(7,7,78,0.06);
+            --shadow-lg: 0 16px 32px rgba(7,7,78,0.12);
+            --radius: 16px;
+            --radius-sm: 8px;
         }
         
         *, *::before, *::after { box-sizing: border-box; }
 
         body { 
             font-family: var(--font-main); 
-            background: var(--bg); 
+            background-color: var(--bg); 
+            /* Gradiente de fundo super sutil */
+            background-image: 
+                radial-gradient(circle at 100% 0%, rgba(0, 27, 184, 0.03) 0%, transparent 25%), 
+                radial-gradient(circle at 0% 100%, rgba(0, 174, 151, 0.04) 0%, transparent 25%);
+            background-attachment: fixed;
             color: var(--text); 
             margin: 0; 
             padding: 0; 
-            display: none;
+            display: none; /* Mantido por causa da sua lógica de carregamento */
             -webkit-font-smoothing: antialiased;
         }
         
@@ -214,8 +221,22 @@
 
         /* ÁREA PRINCIPAL E TOPBAR */
         .main-wrapper { margin-left: 260px; flex-grow: 1; display: flex; flex-direction: column; min-height: 100vh; }
-        .topbar { background: rgba(240, 242, 248, 0.85); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); position: sticky; top: 0; z-index: 990; padding: 16px 32px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(221, 225, 240, 0.5); min-height: 70px; }
-        .mobile-brand { display: none; }
+.topbar {
+            background: rgba(255, 255, 255, 0.65);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            position: sticky;
+            top: 20px; /* Descola do topo para dar efeito flutuante */
+            margin: 0 32px 24px 32px; /* Espaço nas laterais */
+            z-index: 990;
+            padding: 12px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            box-shadow: 0 8px 32px rgba(7, 7, 78, 0.06), inset 0 1px 0 rgba(255, 255, 255, 1);
+        }        .mobile-brand { display: none; }
         .topo-right { display: flex; align-items: center; gap: 16px; margin-left: auto; }
         .divider-vertical { width: 1px; height: 30px; background: var(--border); }
         .user-role-info { text-align: right; line-height: 1.3; }
@@ -245,8 +266,52 @@
         .aba { display: none; } 
         .aba.ativa { display: block; animation: fadeIn 0.3s ease; }
         
-        .card { background: var(--card-bg); padding: 28px; border-radius: 16px; margin-bottom: 24px; border: none; box-shadow: 0 4px 24px rgba(7,7,78,0.06); display: flex; flex-direction: column; justify-content: space-between; transition: transform 0.2s, box-shadow 0.2s; }
-        .card:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(7,7,78,0.1); }
+       .card { 
+            background: var(--card-bg); 
+            padding: 32px; 
+            border-radius: var(--radius); 
+            margin-bottom: 28px; 
+            border: 1px solid rgba(226, 232, 240, 0.7); 
+            box-shadow: var(--shadow-md);
+            display: flex; 
+            flex-direction: column; 
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Linha sutil no topo do card ao passar o mouse */
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; height: 4px;
+            background: linear-gradient(90deg, var(--primary), var(--cobli-green));
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .card:hover { 
+            transform: translateY(-5px); /* O card "levanta" */
+            box-shadow: var(--shadow-lg); 
+            border-color: rgba(0, 27, 184, 0.15);
+        }
+
+        .card:hover::before {
+            opacity: 1;
+        }
+
+        /* Estilizando os títulos dentro dos cards */
+        h2 { 
+            font-size: 1.15rem; 
+            font-weight: 800; 
+            margin-top: 0; 
+            color: var(--cobli-dark); 
+            border-bottom: 2px solid var(--bg); 
+            padding-bottom: 16px;
+            margin-bottom: 24px;
+            letter-spacing: -0.5px;
+            text-transform: none; /* Tira o tudo maiúsculo para ficar mais moderno */
+        }
         
         h2 { 
             font-size: 0.95rem; 
