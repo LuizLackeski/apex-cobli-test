@@ -39,7 +39,6 @@
             --shadow-lg: 0 10px 30px rgba(7,7,78,0.15), 0 4px 8px rgba(7,7,78,0.08);
             --radius: 10px;
             --radius-sm: 6px;
-            --sidebar-w: 215px;
         }
         
         *, *::before, *::after { box-sizing: border-box; }
@@ -52,43 +51,6 @@
             padding: 0; 
             display: none;
             -webkit-font-smoothing: antialiased;
-            overflow-x: hidden;
-        }
-
-        /* ============================================================
-           SIDEBAR DESKTOP
-        ============================================================ */
-        #app-content {
-            display: flex;
-            flex-direction: row;
-            min-height: 100vh;
-        }
-
-        .app-main-wrapper {
-            flex: 1;
-            min-width: 0;
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
-        }
-
-        .sidebar-brand {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 18px 16px 16px;
-            border-bottom: 1px solid rgba(255,255,255,0.07);
-            flex-shrink: 0;
-        }
-
-        .sidebar-section-label {
-            font-size: 0.6rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 1.5px;
-            color: rgba(255,255,255,0.25);
-            padding: 12px 16px 4px;
-            display: block;
         }
         
         /* ============================================================
@@ -217,262 +179,74 @@
         .auth-links a:hover { color: var(--cobli-dark); }
         .auth-links a span { color: var(--primary); font-weight: 700; }
         
-        /* ============================================================
-           APP LAYOUT
+/* ============================================================
+           APP LAYOUT (NOVO VISUAL COM SIDEBAR)
         ============================================================ */
-        #app-content { padding: 0; }
+        .layout-app { display: flex; min-height: 100vh; background: var(--bg); }
+        #app-content { display: none; }
 
-        /* TOPO */
-        .topo { 
-            background: var(--cobli-dark); 
-            color: white; 
-            padding: 12px 24px; 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-            border-bottom: 1px solid rgba(255,255,255,0.06);
+        /* SIDEBAR (MENU LATERAL) */
+        .sidebar {
+            width: 260px;
+            background: linear-gradient(180deg, var(--cobli-dark) 0%, #030320 100%);
+            height: 100vh;
+            position: fixed; left: 0; top: 0;
+            display: flex; flex-direction: column;
+            padding: 24px 20px; z-index: 1000;
+            box-shadow: 4px 0 24px rgba(7,7,78,0.15);
+            transition: all 0.3s ease;
         }
+        .header-logo-text { display: flex; align-items: center; gap: 10px; margin-bottom: 40px; }
+        .apex-badge { background: var(--primary); color: white; font-family: var(--font-mono); font-size: 1.1rem; font-weight: 700; letter-spacing: 1px; padding: 5px 12px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0, 27, 184, 0.3); border: 1px solid rgba(255,255,255,0.15); }
+        .cobli-brand { display: flex; flex-direction: column; }
+        .txt-cobli { font-size: 1.2rem; font-weight: 800; letter-spacing: 1px; line-height: 1; color: white;}
+        .txt-agenda { font-size: 0.6rem; opacity: 0.6; text-transform: uppercase; letter-spacing: 2px; margin-top: 2px; color: white;}
 
-        .header-logo-text { display: flex; align-items: center; gap: 10px; }
-        
-        .apex-badge {
-            background: var(--primary);
-            color: white;
-            font-family: var(--font-mono);
-            font-size: 1.1rem;
-            font-weight: 700;
-            letter-spacing: 1px;
-            padding: 5px 12px;
-            border-radius: 6px;
-            border: 1px solid rgba(255,255,255,0.15);
-        }
-        
-        .cobli-brand {
-            display: flex;
-            flex-direction: column;
-        }
-        .txt-cobli { 
-            font-size: 1rem; 
-            font-weight: 700; 
-            letter-spacing: 1px;
-            line-height: 1;
-        }
-        .txt-agenda { 
-            font-size: 0.58rem; 
-            opacity: 0.5; 
-            text-transform: uppercase; 
-            letter-spacing: 2px; 
-            margin-top: 2px;
-        }
-        
-        .topo-right { display: flex; align-items: center; gap: 12px; }
-        
-        .user-role-mobile { 
-            font-size: 0.8rem; 
-            font-weight: 600; 
-            opacity: 0.9; 
-            text-align: right;
-            line-height: 1.3;
-        }
+        /* NAVEGAÇÃO LATERAL */
+        .menu-left { display: flex; flex-direction: column; gap: 10px; flex-grow: 1; }
+        .menu-left button { background: transparent; border: none; color: rgba(255,255,255,0.6); text-align: left; padding: 14px 20px; border-radius: 12px; font-size: 0.95rem; font-weight: 600; font-family: var(--font-main); cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); display: flex; align-items: center; gap: 12px; }
+        .menu-left button:hover { background: rgba(255,255,255,0.05); color: white; transform: translateX(6px); }
+        .menu-left button.ativo { background: var(--primary); color: white; font-weight: 700; transform: translateX(6px); box-shadow: 0 4px 15px rgba(0, 27, 184, 0.4); }
+
+        .menu-footer { margin-top: auto; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1); }
+        .btn-sair { width: 100%; background: rgba(255, 70, 51, 0.1); color: #ff9999; border: none; padding: 14px; border-radius: 12px; font-weight: 700; cursor: pointer; transition: all 0.2s; font-family: var(--font-main); }
+        .btn-sair:hover { background: var(--cobli-red); color: white; box-shadow: 0 4px 12px rgba(255, 70, 51, 0.3); }
+
+        /* ÁREA PRINCIPAL E TOPBAR */
+        .main-wrapper { margin-left: 260px; flex-grow: 1; display: flex; flex-direction: column; min-height: 100vh; }
+        .topbar { background: rgba(240, 242, 248, 0.85); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); position: sticky; top: 0; z-index: 990; padding: 16px 32px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(221, 225, 240, 0.5); min-height: 70px; }
+        .mobile-brand { display: none; }
+        .topo-right { display: flex; align-items: center; gap: 16px; margin-left: auto; }
+        .divider-vertical { width: 1px; height: 30px; background: var(--border); }
+        .user-role-info { text-align: right; line-height: 1.3; }
+        .user-role-info div:first-child { font-weight: 800; color: var(--cobli-dark); font-size: 0.85rem; }
+        .user-role-info div:last-child { font-size: 0.65rem; color: var(--cobli-green); font-weight: 700; letter-spacing: 1px; text-transform: uppercase;}
 
         /* CONTROLES DE INTEGRAÇÃO */
-        .integracoes-topo { 
-            display: none; 
-            align-items: center; 
-            gap: 12px; 
-            background: rgba(255,255,255,0.08); 
-            padding: 7px 14px; 
-            border-radius: 20px; 
-            border: 1px solid rgba(255,255,255,0.12); 
-        }
-        .integracoes-topo > .integ-label {
-            font-size: 0.6rem; 
-            opacity: 0.6; 
-            font-weight: 700; 
-            text-transform: uppercase; 
-            letter-spacing: 1px;
-            color: white;
-        }
-        .integracoes-topo label { 
-            display: flex; 
-            align-items: center; 
-            gap: 6px; 
-            color: white; 
-            font-size: 0.65rem; 
-            font-weight: 700; 
-            cursor: pointer; 
-            margin: 0;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        
+        .integracoes-topo { display: none; align-items: center; gap: 12px; background: white; padding: 7px 14px; border-radius: 20px; border: 1px solid var(--border); box-shadow: var(--shadow-sm); }
+        .integracoes-topo > .integ-label { font-size: 0.6rem; opacity: 0.6; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--cobli-dark); }
+        .integracoes-topo label { display: flex; align-items: center; gap: 6px; color: var(--cobli-dark); font-size: 0.65rem; font-weight: 700; cursor: pointer; margin: 0; text-transform: uppercase; letter-spacing: 0.5px; }
+
         /* BOTÃO RESUMO SLACK */
-        #btn-resumo-slack {
-            display: none;
-            align-items: center;
-            gap: 6px;
-            background: rgba(255,255,255,0.1);
-            border: 1px solid rgba(255,255,255,0.2);
-            color: white;
-            padding: 7px 13px;
-            border-radius: 20px;
-            font-size: 0.7rem;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.2s;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            font-family: var(--font-main);
-        }
-        #btn-resumo-slack:hover {
-            background: var(--cobli-green);
-            border-color: var(--cobli-green);
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(0,174,151,0.3);
-        }
+        #btn-resumo-slack { display: none; align-items: center; gap: 6px; background: white; border: 1px solid var(--border); color: var(--cobli-dark); padding: 7px 13px; border-radius: 20px; font-size: 0.7rem; font-weight: 700; cursor: pointer; transition: all 0.2s; text-transform: uppercase; letter-spacing: 0.5px; font-family: var(--font-main); box-shadow: var(--shadow-sm); }
+        #btn-resumo-slack:hover { background: var(--cobli-green); border-color: var(--cobli-green); color: white; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,174,151,0.3); }
         #btn-resumo-slack .slack-icon { font-size: 0.9rem; }
 
         /* TOGGLE SWITCH */
-        .toggle-switch { 
-            position: relative; 
-            width: 34px; 
-            height: 18px; 
-            appearance: none; 
-            background: rgba(255,255,255,0.2); 
-            border-radius: 20px; 
-            outline: none; 
-            cursor: pointer; 
-            transition: 0.3s; 
-            margin: 0 !important; 
-            padding: 0 !important;
-        }
-        .toggle-switch::after { 
-            content: ''; 
-            position: absolute; 
-            top: 2px; 
-            left: 2px; 
-            width: 14px; 
-            height: 14px; 
-            background: white; 
-            border-radius: 50%; 
-            transition: 0.3s; 
-        }
+        .toggle-switch { position: relative; width: 34px; height: 18px; appearance: none; background: var(--border); border-radius: 20px; outline: none; cursor: pointer; transition: 0.3s; margin: 0 !important; padding: 0 !important; }
+        .toggle-switch::after { content: ''; position: absolute; top: 2px; left: 2px; width: 14px; height: 14px; background: white; border-radius: 50%; transition: 0.3s; }
         .toggle-switch:checked { background: var(--cobli-green); }
         .toggle-switch:checked::after { transform: translateX(16px); }
 
         /* ============================================================
-           MENU / SIDEBAR DE NAVEGAÇÃO
+           CONTEÚDO & CARDS
         ============================================================ */
-        .menu { 
-            background: var(--cobli-dark); 
-            width: var(--sidebar-w);
-            min-height: 100vh;
-            display: flex; 
-            flex-direction: column;
-            flex-shrink: 0;
-            position: sticky;
-            top: 0;
-            height: 100vh;
-            z-index: 999;
-            box-shadow: 2px 0 16px rgba(7,7,78,0.18);
-            overflow: hidden;
-        }
-        .menu-left, .menu-right { display: flex; flex-direction: column; }
-        .menu-left {
-            flex: 1;
-            overflow-y: auto;
-            overflow-x: hidden;
-            padding: 10px 0;
-            scrollbar-width: none;
-        }
-        .menu-left::-webkit-scrollbar { display: none; }
-        .menu-right { 
-            padding: 12px 16px;
-            border-top: 1px solid rgba(255,255,255,0.07);
-            flex-shrink: 0;
-        }
-
-        .menu button { 
-            background: none; 
-            border: none;
-            border-left: 3px solid transparent;
-            color: var(--cobli-green);
-            opacity: 0.55;
-            padding: 10px 16px;
-            cursor: pointer; 
-            font-size: 0.84rem;
-            font-weight: 600;
-            font-family: var(--font-main);
-            letter-spacing: 0.3px;
-            transition: all 0.2s; 
-            text-align: left;
-            width: 100%;
-            border-bottom: none;
-            border-radius: 0;
-            display: flex;
-            align-items: center;
-            gap: 9px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        .menu button:hover { 
-            opacity: 1;
-            color: var(--cobli-green);
-            background: rgba(0,174,151,0.09);
-            border-left-color: transparent;
-            transform: none;
-            box-shadow: none;
-        }
-        .menu button.ativo { 
-            color: var(--cobli-green);
-            font-weight: 700;
-            opacity: 1;
-            background: rgba(0,27,184,0.28);
-            border-left: 3px solid var(--cobli-green);
-            border-bottom: none;
-        }
-        .menu .btn-sair { 
-            color: rgba(255,153,153,0.85) !important; 
-            font-weight: 700;
-            font-size: 0.78rem;
-            opacity: 1;
-            padding: 8px 16px;
-        }
-        .menu .btn-sair:hover { 
-            color: white !important;
-            background: rgba(255,70,51,0.22) !important;
-        }
-
-        /* ============================================================
-           CONTEÚDO
-        ============================================================ */
-        .conteudo { padding: 20px 24px; max-width: 1100px; margin: 0 auto; }
+        .conteudo { padding: 32px; max-width: 1100px; margin: 0 auto; width: 100%; }
         .aba { display: none; } 
         .aba.ativa { display: block; animation: fadeIn 0.3s ease; }
         
-        /* ============================================================
-           CARDS
-        ============================================================ */
-        .card { 
-            background: var(--card-bg); 
-            padding: 22px 24px; 
-            border-radius: var(--radius); 
-            margin-bottom: 20px; 
-            border: 1px solid var(--border); 
-            box-shadow: var(--shadow-sm);
-            display: flex; 
-            flex-direction: column; 
-            justify-content: space-between; 
-            transition: border-color 0.2s, box-shadow 0.2s;
-        }
-        .card:hover { 
-            border-color: rgba(0,27,184,0.2); 
-            box-shadow: var(--shadow-md);
-        }
+        .card { background: var(--card-bg); padding: 28px; border-radius: 16px; margin-bottom: 24px; border: none; box-shadow: 0 4px 24px rgba(7,7,78,0.06); display: flex; flex-direction: column; justify-content: space-between; transition: transform 0.2s, box-shadow 0.2s; }
+        .card:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(7,7,78,0.1); }
         
         h2 { 
             font-size: 0.95rem; 
@@ -933,145 +707,46 @@
         .preview-resumo .pv-row span { color: white; }
 
         /* ============================================================
-           MOBILE — sidebar vira bottom-bar
+              MOBILE
         ============================================================ */
-        @media (max-width: 600px) {
-            #app-content { flex-direction: column; }
-            .app-main-wrapper { min-height: auto; }
-
-            /* Sidebar volta a ser menu horizontal fixo no bottom */
-            .menu { 
-                position: fixed; bottom: 0; left: 0; right: 0; z-index: 10000; 
-                width: 100%; height: 60px; min-height: 60px;
-                flex-direction: row;
-                top: auto;
-                border-radius: 14px 14px 0 0;
-                box-shadow: 0 -4px 20px rgba(7,7,78,0.2);
-            }
-            .menu-left {
-                flex: 1; flex-direction: row;
-                min-width: 0;
-                overflow-x: auto; overflow-y: hidden;
-                white-space: nowrap; 
-                padding: 0 0 0 8px;
-                -webkit-overflow-scrolling: touch;
-                scrollbar-width: none;
-            }
+        @media (max-width: 800px) {
+            .layout-app { flex-direction: column; }
+            .main-wrapper { margin-left: 0; padding-bottom: 90px; } 
+            
+            /* Sidebar vira menu inferior */
+            .sidebar { position: fixed; bottom: 0; left: 0; top: auto; width: 100%; height: 75px; flex-direction: row; padding: 0; border-radius: 24px 24px 0 0; box-shadow: 0 -8px 24px rgba(7,7,78,0.15); z-index: 10000; }
+            .header-logo-text, .menu-footer { display: none; }
+            .menu-left { flex-direction: row; margin-top: 0; width: 100%; overflow-x: auto; align-items: center; padding: 0 10px; gap: 5px; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
             .menu-left::-webkit-scrollbar { display: none; }
-            .menu-right {
-                flex: 0 0 auto; flex-direction: row; align-items: center;
-                padding: 0 12px 0 5px;
-                border-top: none; border-left: 1px solid rgba(255,255,255,0.1);
-                background: var(--cobli-dark);
-                z-index: 5;
-            }
-            .sidebar-brand { display: none; }
-            .sidebar-section-label { display: none; }
-            .menu button { 
-                font-size: 0.75rem; padding: 0 10px; 
-                height: 60px; border-left: none; border-bottom: 3px solid transparent;
-                opacity: 1; width: auto; white-space: nowrap; gap: 0;
-            }
-            .menu button.ativo { border-left: none; border-bottom: 3px solid var(--cobli-green); background: rgba(255,255,255,0.08); }
-            .topo { 
-                flex-direction: column; 
-                align-items: stretch;
-                padding: 10px 15px;
-                top: 0;
-            }
-            .user-role-mobile { 
-                position: absolute; 
-                top: 14px; 
-                right: 15px; 
-                font-size: 0.68rem !important;
-            }
-            .integracoes-topo { 
-                margin-top: 8px; 
-                width: 100%; 
-                justify-content: space-between; 
-                padding: 5px 12px; 
-            }
-            .integracoes-topo .integ-label { display: none; } 
-            .integracoes-topo label { 
-                flex-direction: column; 
-                gap: 2px; 
-                font-size: 0.6rem;
-            }
-            #btn-resumo-slack { margin-top: 6px; width: 100%; justify-content: center; border-radius: 8px; padding: 8px; }
-            .toggle-switch { 
-                width: 32px !important; 
-                height: 16px !important; 
-                min-height: 16px !important; 
-                margin: 0 auto !important;
-            }
-            .toggle-switch::after { width: 12px; height: 12px; }
-            .toggle-switch:checked::after { transform: translateX(16px); }
-
-            html, body { overflow-x: hidden; width: 100%; }      
-            .conteudo { 
-                padding-bottom: 85px;
-                overflow-y: auto;
-                overflow-x: hidden;
-                width: 100%;
-                -webkit-overflow-scrolling: touch;
-            }       
-            .auth-card { 
-                width: 95%; 
-                padding: 20px 18px; 
-                max-height: 80vh;
-                overflow-y: auto;
-                overflow-x: hidden;
-            }      
-            table, .table-container { 
-                max-width: 100%; 
-                overflow-x: auto;
-            }
-            button, input { min-height: 46px; font-size: 14px !important; } 
-            select { min-height: 46px; font-size: 13px !important; } 
+            .menu-left button { flex-direction: column; padding: 8px 12px; font-size: 0.7rem; border-radius: 12px; gap: 4px; white-space: nowrap; flex: 0 0 auto; justify-content: center; }
+            .menu-left button:hover, .menu-left button.ativo { transform: translateY(-4px); }
+            
+            /* Topbar Mobile */
+            .topbar { padding: 12px 15px; flex-direction: column; align-items: stretch; gap: 10px; }
+            .mobile-brand { display: flex; align-items: center; justify-content: space-between; }
+            .topo-right { margin-left: 0; flex-direction: column; align-items: stretch; gap: 10px; width: 100%; }
+            .integracoes-topo { display: flex; width: 100%; justify-content: space-between; padding: 8px 12px; }
+            .integracoes-topo .integ-label { display: none; }
+            .integracoes-topo label { flex-direction: column; gap: 4px; font-size: 0.6rem; }
+            #btn-resumo-slack { width: 100%; justify-content: center; border-radius: 8px; padding: 10px; }
+            .divider-vertical, .user-role-info { display: none; } 
+            
+            .conteudo { padding: 20px 15px; }
+            .card { padding: 20px 15px; border-radius: 14px; }
+            
+            /* Resto dos ajustes originais mobile */
+            table, .table-container { max-width: 100%; overflow-x: auto; display: block !important; white-space: nowrap !important; -webkit-overflow-scrolling: touch !important; }
+            table th, table td { padding: 10px 12px !important; font-size: 0.78rem !important; }
+            button, input, select { min-height: 46px; font-size: 14px !important; }
             .botoes-acao { flex-direction: column; }
             .botoes-acao button { width: 100%; margin-bottom: 5px; flex: none !important; }
-            .item-lista, 
-            .auth-card div[style*="flex"] { 
-                display: flex !important;
-                flex-direction: column !important;
-                align-items: flex-start !important;
-                width: 100% !important;
-                max-width: 100% !important;
-                box-sizing: border-box !important;
-                padding: 10px 0 !important;
-            }      
-            .item-lista > div, 
-            .auth-card div[style*="flex"] > div {
-                width: 100% !important;
-                white-space: normal !important;
-                word-break: break-word !important;
-                margin-bottom: 10px !important;
-            }
-            .item-lista button, 
-            .auth-card div[style*="flex"] button { 
-                width: 100% !important; 
-                margin-left: 0 !important; 
-                margin-top: 5px !important;
-                padding: 12px !important;
-            }
-            .apex-badge { font-size: 0.9rem; padding: 4px 9px; }
-            .header-logo-text { flex-direction: row; align-items: center; }
-            .txt-cobli { font-size: 1.1rem !important; font-weight: 800 !important; margin: 0 !important; }
-            
-            table {
-                display: block !important;
-                width: 100% !important;
-                overflow-x: auto !important;
-                -webkit-overflow-scrolling: touch !important;
-                white-space: nowrap !important;
-            }
-            table th, table td {
-                padding: 10px 12px !important;
-                font-size: 0.78rem !important; 
-            }
+            .item-lista, .auth-card div[style*="flex"] { display: flex !important; flex-direction: column !important; align-items: flex-start !important; width: 100% !important; max-width: 100% !important; box-sizing: border-box !important; padding: 10px 0 !important; }
+            .item-lista > div, .auth-card div[style*="flex"] > div { width: 100% !important; white-space: normal !important; word-break: break-word !important; margin-bottom: 10px !important; }
+            .item-lista button, .auth-card div[style*="flex"] button { width: 100% !important; margin-left: 0 !important; margin-top: 5px !important; padding: 12px !important; }
             .flex-cards { flex-direction: column; }
             .status-bar { min-width: 650px; }
             .status-bar-wrapper { overflow-x: auto; }
+            .auth-card { width: 95%; padding: 20px 18px; max-height: 80vh; overflow-y: auto; overflow-x: hidden; }
         }
     </style>
 </head>
@@ -1202,8 +877,8 @@
     </div>
 </div>
 
-<div id="app-content">
-    <div class="topo">
+<div id="app-content" class="layout-app">
+    <aside class="sidebar">
         <div class="header-logo-text">
             <div class="apex-badge">APEX</div>
             <div class="cobli-brand" style="color:white; margin-left: 4px;">
@@ -1212,36 +887,45 @@
             </div>
         </div>
         
-        <div class="topo-right">
-            <button id="btn-resumo-slack" onclick="window.abrirModalResumoSlack()" title="Enviar resumo do período para o Slack">
-                <span class="slack-icon">💬</span>
-                <span>Resumo Slack</span>
-            </button>
-
-            <div id="integrations-control" class="integracoes-topo">
-                <span class="integ-label">Integrações</span>
-                <label title="Avisos no Slack">SLACK <input type="checkbox" id="slackSwitch" class="toggle-switch"></label>
-                <label title="Lançar OS no Field">FIELD <input type="checkbox" id="fieldSwitch" class="toggle-switch"></label>
-                <label title="Salvar no BD">BANCO <input type="checkbox" id="dbSwitch" class="toggle-switch"></label>
-            </div>
-            <div id="user-role-display" class="user-role-mobile"></div>
-        </div>
-    </div>
-
-    <div class="menu">
         <div class="menu-left" id="main-menu">
-            <button id="btn-consulta" class="ativo" onclick="window.trocarAba('consulta', this)">Agendamento</button>
-            <button id="btn-cadastro" onclick="window.trocarAba('cadastro', this)">Prestadores</button>
-            <button id="btn-painel" onclick="window.trocarAba('painel', this)">Painel</button>
-            <button id="btn-mapa" onclick="window.trocarAba('mapa', this)">Mapa</button>
-            <button id="btn-dashboard" onclick="window.trocarAba('dashboard', this)">Dashboard</button>
-            <button id="btn-usuarios" onclick="window.trocarAba('usuarios', this)">Usuários</button>
+            <button id="btn-consulta" class="ativo" onclick="window.trocarAba('consulta', this)">📅 Agendamento</button>
+            <button id="btn-cadastro" onclick="window.trocarAba('cadastro', this)">👷 Prestadores</button>
+            <button id="btn-painel" onclick="window.trocarAba('painel', this)">📊 Painel</button>
+            <button id="btn-mapa" onclick="window.trocarAba('mapa', this)">🗺️ Mapa</button>
+            <button id="btn-dashboard" onclick="window.trocarAba('dashboard', this)">📈 Dashboard</button>
+            <button id="btn-usuarios" onclick="window.trocarAba('usuarios', this)">👥 Usuários</button>
         </div>
 
-        <div class="menu-right">
-            <button class="btn-sair" onclick="handleLogout()" style="background:none; border:none; cursor:pointer; font-family: var(--font-main);">Sair</button>
+        <div class="menu-footer">
+            <button class="btn-sair" onclick="handleLogout()">Sair da Conta</button>
         </div>
-    </div>
+    </aside>
+
+    <main class="main-wrapper">
+        <header class="topbar">
+            <div class="mobile-brand">
+                <div class="apex-badge" style="font-size:0.8rem; padding: 2px 6px;">APEX</div>
+            </div>
+
+            <div class="topo-right">
+                <button id="btn-resumo-slack" onclick="window.abrirModalResumoSlack()" title="Enviar resumo do período para o Slack">
+                    <span class="slack-icon">💬</span>
+                    <span>Resumo Slack</span>
+                </button>
+
+                <div id="integrations-control" class="integracoes-topo">
+                    <span class="integ-label">Integrações:</span>
+                    <label title="Avisos no Slack">SLACK <input type="checkbox" id="slackSwitch" class="toggle-switch"></label>
+                    <label title="Lançar OS no Field">FIELD <input type="checkbox" id="fieldSwitch" class="toggle-switch"></label>
+                    <label title="Salvar no BD">BANCO <input type="checkbox" id="dbSwitch" class="toggle-switch"></label>
+                </div>
+                
+                <div class="divider-vertical"></div>
+                <div id="user-role-display" class="user-role-info"></div>
+            </div>
+        </header>
+
+        <div class="conteudo">
 
     <div class="conteudo">
         
@@ -1660,7 +1344,7 @@
                 </div>
             </div>
         </div>
-        </div> </div> <script>
+        </div> </main> </div> <script>
 // ==========================================
 // SPLASH SCREEN
 // ==========================================
