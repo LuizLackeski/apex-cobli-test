@@ -1106,79 +1106,97 @@
         .preview-resumo .pv-row { margin-bottom: 4px; }
         .preview-resumo .pv-row span { color: white; }
 
-        /* ============================================================
-           MOBILE — sidebar vira bottom bar
+/* ============================================================
+           MOBILE — MODO APP (Menu Inferior)
         ============================================================ */
         @media (max-width: 700px) {
             :root { --sidebar-w: 0px; }
 
+            /* 1. Mata as luzes de fundo e trava a rolagem horizontal */
+            html, body { overflow-x: hidden !important; width: 100vw !important; max-width: 100vw !important; }
+            .main-wrapper::before, .main-wrapper::after { display: none !important; }
+
+            /* 2. Sidebar vira barra de navegação inferior (Bottom Navigation) */
             .sidebar {
                 width: 100% !important;
                 min-width: 100% !important;
-                height: 58px;
-                top: auto;
-                bottom: 0;
-                left: 0;
-                right: 0;
-                flex-direction: row;
-                align-items: stretch;
-                overflow: hidden;
-                border-radius: 14px 14px 0 0;
-                box-shadow: 0 -4px 20px rgba(7,7,78,0.25);
+                height: 65px !important;
+                top: auto !important;
+                bottom: 0 !important;
+                left: 0 !important;
+                right: 0 !important;
+                flex-direction: row !important;
+                align-items: stretch !important;
+                border-radius: 18px 18px 0 0 !important;
+                box-shadow: 0 -4px 24px rgba(7,7,78,0.3) !important;
+                border: none !important;
+                z-index: 9999 !important;
             }
 
-            .sidebar-logo, .sidebar-nav-section, .menu-divider, .sidebar-bottom { display: none; }
+            /* Esconde itens da sidebar que não cabem no celular */
+            .sidebar-logo, .sidebar-nav-section, .menu-divider, .sidebar-bottom, #integrations-control-wrapper { 
+                display: none !important; 
+            }
 
+            /* 3. Ajusta o Menu e os Botões */
             .menu {
-                flex-direction: row;
-                flex: 1;
-                padding: 0;
-                overflow-x: auto;
-                overflow-y: hidden;
-                align-items: stretch;
-                scrollbar-width: none;
+                flex-direction: row !important;
+                flex: 1 !important;
+                padding: 0 10px !important;
+                overflow-x: auto !important;
+                overflow-y: hidden !important;
+                align-items: center !important;
+                justify-content: space-between !important;
+                scrollbar-width: none !important;
+                margin: 0 !important;
             }
-            .menu::-webkit-scrollbar { display: none; }
+            .menu::-webkit-scrollbar { display: none !important; }
 
             .menu button {
-                flex-direction: column;
-                gap: 2px;
-                padding: 5px 8px;
-                font-size: 0.56rem;
-                border-left: none;
-                border-top: 3px solid transparent;
-                align-items: center;
-                justify-content: center;
-                min-width: 54px;
-                border-radius: 0;
+                flex-direction: column !important;
+                gap: 4px !important;
+                padding: 6px !important;
+                font-size: 0.6rem !important;
+                border-left: none !important;
+                border-top: 3px solid transparent !important;
+                align-items: center !important;
+                justify-content: center !important;
+                min-width: 60px !important;
+                border-radius: 0 !important;
+                white-space: nowrap !important;
+                flex: 1;
             }
-            .menu button::before { width: 18px; height: 18px; }
-            .menu button.ativo { border-left: none; border-top: 3px solid var(--cobli-green); background: rgba(0,27,184,0.22); }
+            .menu button::before { width: 22px !important; height: 22px !important; margin: 0 !important; }
+            .menu button.ativo { 
+                border-left: none !important; 
+                border-top: 3px solid var(--cobli-green) !important; 
+                background: rgba(0,27,184,0.15) !important; 
+                color: #00ffda !important;
+            }
 
-            .main-wrapper { margin-left: 0; padding-bottom: 68px; }
+            .main-wrapper { margin-left: 0 !important; padding-bottom: 75px !important; }
 
-            .topo { height: 46px; padding: 0 14px; justify-content: space-between; }
-            .topo .header-logo-text { display: flex; }
+            /* 4. Topo volta a exibir o logo da APEX | Cobli */
+            .topo { height: 55px !important; padding: 0 16px !important; justify-content: space-between !important; }
+            .topo .header-logo-text { display: flex !important; }
 
+            /* 5. Ajustes de Conteúdo */
             .conteudo {
-                padding: 12px 14px 80px;
-                overflow-y: auto;
-                overflow-x: hidden;
-                width: 100%;
-                -webkit-overflow-scrolling: touch;
+                padding: 16px 14px 90px !important;
+                width: 100% !important;
+                box-sizing: border-box !important;
             }
 
-            html, body { overflow-x: hidden; width: 100%; }
-            .auth-card { width: 95%; padding: 20px 18px; max-height: 80vh; overflow-y: auto; overflow-x: hidden; }
-            table { display: block !important; width: 100% !important; overflow-x: auto !important; -webkit-overflow-scrolling: touch !important; white-space: nowrap !important; }
-            table th, table td { padding: 10px 12px !important; font-size: 0.78rem !important; }
-            .flex-cards { flex-direction: column; }
-            .status-bar { min-width: 650px; }
-            .status-bar-wrapper { overflow-x: auto; }
-            button, input { min-height: 46px; font-size: 14px !important; }
-            select { min-height: 46px; font-size: 13px !important; }
-            .botoes-acao { flex-direction: column; }
-            .botoes-acao button { width: 100%; margin-bottom: 5px; flex: none !important; }
+            /* 6. Comportamentos de Cards e Tabelas */
+            .auth-card { width: 95% !important; padding: 20px 18px !important; }
+            table { display: block !important; width: 100% !important; overflow-x: auto !important; white-space: nowrap !important; }
+            .flex-cards { flex-direction: column !important; }
+            .status-bar { min-width: 100% !important; width: max-content; }
+            .status-bar-wrapper { overflow-x: auto !important; padding-bottom: 5px; }
+            
+            /* Filtros em 2 colunas para economizar tela */
+            .grid-filtros { grid-template-columns: 1fr 1fr !important; }
+            .campo-filtro:last-child { grid-column: 1 / -1; }
         }
     </style>
 
