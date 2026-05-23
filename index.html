@@ -1324,12 +1324,12 @@
 
             <div id="integrations-control-wrapper" style="display: none;">
                 <div class="sidebar-nav-section" style="padding-top:15px; border-top: 1px solid rgba(255,255,255,0.06); margin-top: 10px;">Integrações</div>
-                <div class="integracoes-topo" style="display: flex;">
-                    <label title="Avisos no Slack">SLACK <input type="checkbox" id="slackSwitch" class="toggle-switch" checked></label>
-                    <label title="Lançar OS no Field">FIELD <input type="checkbox" id="fieldSwitch" class="toggle-switch" checked></label>
-                    <label title="Salvar no BD">BANCO <input type="checkbox" id="dbSwitch" class="toggle-switch" checked></label>
+                <div class="integracoes-topo" style="display: flex; flex-direction: column; gap: 12px; padding: 10px 22px;">
+                    <label title="Avisos no Slack" style="display: flex; justify-content: space-between; width: 100%;">SLACK <input type="checkbox" id="slackSwitch" class="toggle-switch"></label>
+                    <label title="Lançar OS no Field" style="display: flex; justify-content: space-between; width: 100%;">FIELD <input type="checkbox" id="fieldSwitch" class="toggle-switch"></label>
+                    <label title="Salvar no BD" style="display: flex; justify-content: space-between; width: 100%;">BANCO <input type="checkbox" id="dbSwitch" class="toggle-switch"></label>
                 </div>
-                <button id="btn-resumo-slack-sidebar" onclick="window.abrirModalResumoSlack()" title="Enviar resumo para o Slack" style="display: flex; margin: 10px 18px; width: calc(100% - 36px); justify-content: center; background: rgba(74,21,75,0.7); border-radius: 8px;">
+                <button id="btn-resumo-slack-sidebar" onclick="window.abrirModalResumoSlack()" title="Enviar resumo para o Slack" style="display: flex; margin: 12px 18px 10px; width: calc(100% - 36px); justify-content: center; background: rgba(74,21,75,0.7); border-radius: 8px;">
                     <span class="slack-icon">💬</span> <span style="color: white; font-weight: bold; font-size: 11px;">RESUMO SLACK</span>
                 </button>
             </div>
@@ -1340,7 +1340,7 @@
 
         <div class="sidebar-bottom">
             <div class="sidebar-user">
-                <div class="sidebar-user-avatar">◈</div>
+                <div class="sidebar-user-avatar" id="user-avatar">◈</div>
                 <div id="user-role-display"></div>
             </div>
         </div>
@@ -2437,7 +2437,19 @@ async function definirPermissoes(email, uid) {
     const { data, error } = await supabaseClient.from('perfis_usuarios').select('nivel').eq('id', uid).maybeSingle();
     if (data) { userRole = data.nivel; } 
     else { const isCobli = email.endsWith('@cobli.co'); const isGestor = GESTOR_EMAILS.includes(email.toLowerCase()); userRole = isGestor ? 'GESTOR' : (isCobli ? 'SMARTOPS' : 'PRESTADOR'); }
-    document.getElementById('user-role-display').innerHTML = `<div style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 180px;">${email}</div><div style="font-size: 0.7em; opacity: 0.7; margin-top: 1px; text-transform: uppercase; letter-spacing: 1px; color: var(--cobli-green);">${userRole}</div>`;
+    
+    document.getElementById('user-role-display').innerHTML = `<div style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 140px;">${email}</div><div style="font-size: 0.7em; opacity: 0.7; margin-top: 1px; text-transform: uppercase; letter-spacing: 1px; color: var(--cobli-green);">${userRole}</div>`;
+    
+    // 👇 GERAR AS INICIAIS DA BOLA AZUL 👇
+    let iniciais = "U";
+    if (email) {
+        let partes = email.split('@')[0].split('.');
+        iniciais = partes.length > 1 ? (partes[0][0] + partes[1][0]).toUpperCase() : partes[0].substring(0, 2).toUpperCase();
+    }
+    let avatarEl = document.getElementById('user-avatar');
+    if (avatarEl) avatarEl.innerText = iniciais;
+    // 👆 FIM INICIAIS 👆
+
     const campoSol = document.getElementById('solicitante');
     if(campoSol) campoSol.value = email.endsWith('@cobli.co') ? window.formatarCapitalize(extrairNomeDoEmail(email)) : email;
     if (userRole !== 'GESTOR' && userRole !== 'ADMIN') document.getElementById('btn-usuarios').style.display = 'none';
@@ -3260,16 +3272,16 @@ window.renderizarListaPrestadores = function(){
 window.abrirOpcoesPrestador = function(i) {
     if(userRole !== 'GESTOR') return window.abrirDetalhesPrestador(i); 
     const p = prestadores[i];
-    let html = `<div style="text-align: center;">
-        <div style="font-weight: 700; color: var(--primary); margin-bottom: 20px; font-size: 1rem;">O que deseja fazer com:<br><strong style="color:var(--cobli-dark); font-size: 1.15rem;">${p.nome}</strong></div>            
-        <div style="display: flex; flex-direction: column; gap: 10px;">
-            <button onclick="window.fecharModal(); window.abrirDetalhesPrestador(${i})" style="background:var(--cobli-green); padding: 12px; font-size: 0.95rem; font-weight:700; min-height:auto;">👁️ Ver Agenda e Detalhes</button>            
-            <button onclick="window.fecharModal(); window.abrirCadastro(${i})" style="background:var(--primary); padding: 12px; font-size: 0.95rem; font-weight:700; min-height:auto;">📝 Editar Cadastro</button>            
-            <button onclick="window.fecharModal(); window.excluirPrestador(${i})" style="background: transparent; color: var(--cobli-red); border: none; padding: 12px; font-size: 0.95rem; font-weight: 700; cursor: pointer; min-height:auto;">❌ Excluir</button>         
-            <button onclick="window.fecharModal()" style="background:var(--muted); padding: 12px; font-size: 0.95rem; min-height:auto;">Cancelar</button>
+    let html = `<div style="text-align: center; padding: 10px;">
+        <div style="font-weight: 700; color: var(--primary); margin-bottom: 24px; font-size: 0.95rem;">Opções do Prestador:<br><strong style="color:var(--cobli-dark); font-size: 1.15rem; margin-top: 4px; display: block;">${p.nome}</strong></div>            
+        <div style="display: flex; flex-direction: column; gap: 10px; align-items: center;">
+            <button onclick="window.fecharModal(); window.abrirDetalhesPrestador(${i})" style="background:var(--cobli-green); padding: 10px; font-size: 0.85rem; font-weight:700; width: 100%; max-width: 220px; border-radius: 8px; min-height: auto;">Ver Detalhes e Agenda</button>            
+            <button onclick="window.fecharModal(); window.abrirCadastro(${i})" style="background:var(--primary); padding: 10px; font-size: 0.85rem; font-weight:700; width: 100%; max-width: 220px; border-radius: 8px; min-height: auto;">Editar Cadastro</button>            
+            <button onclick="window.fecharModal(); window.excluirPrestador(${i})" style="background: #fff5f5; color: var(--cobli-red); border: 1px solid #fecaca; padding: 10px; font-size: 0.85rem; font-weight: 700; cursor: pointer; width: 100%; max-width: 220px; border-radius: 8px; min-height: auto;">Excluir Prestador</button>         
+            <button onclick="window.fecharModal()" style="background:var(--bg); color: var(--muted); padding: 10px; font-size: 0.85rem; font-weight: 700; width: 100%; max-width: 220px; border-radius: 8px; margin-top: 8px; min-height: auto;">Cancelar</button>
         </div>
     </div>`;
-    window.exibirModal("Ações do Prestador", html);
+    window.exibirModal("Ações", html);
 };
 
 window.abrirDetalhesPrestador = function(index) { 
