@@ -114,7 +114,7 @@
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 1.8px;
-            color: rgba(255,255,255,0.22);
+            color: rgba(255,255,255,0.55); /* 👈 Aqui o cinza fica bem mais claro e legível */
             padding: 14px 18px 4px;
         }
 
@@ -1316,6 +1316,9 @@ card {
                     <label title="Lançar OS no Field">FIELD <input type="checkbox" id="fieldSwitch" class="toggle-switch" checked></label>
                     <label title="Salvar no BD">BANCO <input type="checkbox" id="dbSwitch" class="toggle-switch" checked></label>
                 </div>
+                <button id="btn-resumo-slack" onclick="window.abrirModalResumoSlack()" title="Enviar resumo para o Slack" style="display: flex; margin: 10px 18px; width: calc(100% - 36px); justify-content: center; background: rgba(74,21,75,0.7); border-radius: 8px;">
+                    <span class="slack-icon">💬</span> <span>Resumo Slack</span>
+                </button>
             </div>
 
             <div class="menu-divider" style="margin-top:auto;"></div>
@@ -1323,11 +1326,6 @@ card {
         </nav>
 
         <div class="sidebar-bottom">
-            <button id="btn-resumo-slack" onclick="window.abrirModalResumoSlack()" title="Enviar resumo do período para o Slack">
-                <span class="slack-icon">💬</span>
-                <span>Resumo Slack</span>
-            </button>
-
             <div class="sidebar-user">
                 <div class="sidebar-user-avatar">◈</div>
                 <div id="user-role-display"></div>
@@ -4178,7 +4176,7 @@ window.renderPainel = function() {
     });
     ['solicitado','negociacao','agendado','andamento','impedido','concluido','cancelado'].forEach(k => { let el = document.getElementById('st-'+k); if(el) el.innerText = counts[k]; });
 
-    document.getElementById("painel-conteudo").innerHTML = filtradosPainel.map((a, i) => {
+document.getElementById("painel-conteudo").innerHTML = filtradosPainel.map((a, i) => {
         let primeiroSlot = Array.isArray(a.slots) ? a.slots[0] : (String(a.slots).split(',')[0] || 'N/A');
         let dataRegistro = a.created_at ? new Date(a.created_at).toLocaleString('pt-BR') : 'N/A';
         let nomeClienteFormatado = window.formatarCapitalize(a.cliente) || '-';
@@ -4188,6 +4186,16 @@ window.renderPainel = function() {
             let pObj = prestadores.find(p => p.nome === a.prestador);
             if (pObj) nomeTecAlocadoCard = window.getNomeTecnico(pObj, nomeTecAlocadoCard).trim();
         }
+
+        // 👇 RECRIANDO O STATUS AQUI DENTRO PARA CORRIGIR O ERRO 👇
+        let statusOriginal = String(a.status || 'solicitado').trim().toLowerCase(); 
+        let statusMapeado = 'solicitado';
+        if (statusOriginal.includes('negocia') || statusOriginal.includes('aguardando')) statusMapeado = 'negociacao';
+        else if (statusOriginal.includes('agendado') || statusOriginal.includes('scheduled')) statusMapeado = 'agendado';
+        else if (statusOriginal.includes('andamento') || statusOriginal.includes('progress') || statusOriginal.includes('deslocamento')) statusMapeado = 'andamento';
+        else if (statusOriginal.includes('impedido') || statusOriginal.includes('reportado') || status.includes('falha')) statusMapeado = 'impedido';
+        else if (statusOriginal.includes('conclu') || statusOriginal.includes('completed') || status.includes('finalizado')) statusMapeado = 'concluido';
+        else if (statusOriginal.includes('cancelado') || statusOriginal.includes('canceled')) statusMapeado = 'cancelado';
 
         return `<div class="painel-item" data-ticket="${a.ticket}" data-status="${statusMapeado}" onclick="window.abrirDetalhesAgendamento(${i})">
             <div style="flex-grow: 1; font-size: 0.88rem;">
