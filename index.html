@@ -310,7 +310,7 @@
             max-width: 140px;
         }
 
-        /* ── MAIN AREA ── */
+/* ── MAIN AREA ── */
         .main-wrapper {
             margin-left: var(--sidebar-w);
             flex: 1;
@@ -318,9 +318,33 @@
             flex-direction: column;
             min-height: 100vh;
             background: var(--bg);
+            position: relative;
         }
 
-        /* ── TOP BAR (substituindo .topo) ── */
+        /* 👇 EFEITO DE LUZES NO FUNDO (Ambient Glow Cobli) 👇 */
+        .main-wrapper::before,
+        .main-wrapper::after {
+            content: '';
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(120px); /* Deixa a cor bem suave e espalhada */
+            z-index: 0;
+            pointer-events: none;
+        }
+        .main-wrapper::before { 
+            /* Luz Verde no canto superior direito */
+            width: 500px; height: 500px;
+            background: rgba(0, 174, 151, 0.18);
+            top: -150px; right: -150px;
+        }
+        .main-wrapper::after { 
+            /* Luz Azul no canto inferior esquerdo, colada na sidebar */
+            width: 600px; height: 600px;
+            background: rgba(0, 27, 184, 0.12);
+            bottom: -200px; left: calc(var(--sidebar-w) - 200px);
+        }
+
+        /* ── TOP BAR ── */
         .topo {
             background: var(--cobli-dark);
             color: white;
@@ -351,28 +375,13 @@
            TOGGLE SWITCH
         ============================================================ */
         .toggle-switch { 
-            position: relative; 
-            width: 34px; 
-            height: 18px; 
-            appearance: none; 
-            background: rgba(255,255,255,0.15); 
-            border-radius: 20px; 
-            outline: none; 
-            cursor: pointer; 
-            transition: 0.3s; 
-            margin: 0 !important; 
-            padding: 0 !important;
+            position: relative; width: 34px; height: 18px; appearance: none; 
+            background: rgba(255,255,255,0.15); border-radius: 20px; outline: none; 
+            cursor: pointer; transition: 0.3s; margin: 0 !important; padding: 0 !important;
         }
         .toggle-switch::after { 
-            content: ''; 
-            position: absolute; 
-            top: 2px; 
-            left: 2px; 
-            width: 14px; 
-            height: 14px; 
-            background: white; 
-            border-radius: 50%; 
-            transition: 0.3s; 
+            content: ''; position: absolute; top: 2px; left: 2px; width: 14px; height: 14px; 
+            background: white; border-radius: 50%; transition: 0.3s; 
         }
         .toggle-switch:checked { background: var(--cobli-green); }
         .toggle-switch:checked::after { transform: translateX(16px); }
@@ -386,6 +395,9 @@
             margin: 0 auto; 
             width: 100%;
             box-sizing: border-box;
+            /* 👇 Adicionado para o conteúdo ficar acima das luzes 👇 */
+            position: relative; 
+            z-index: 1;         
         }
         .aba { display: none; } 
         .aba.ativa { display: block; animation: fadeIn 0.3s ease; }
@@ -2410,7 +2422,7 @@ function injetarTopbarIntegrations() {
                     <input id="ticket" placeholder="Ex: 123654789" required style="flex: 1;">
                     <button type="button" id="btnChecarSequencia" onclick="window.verificarSequenciaEFOP()" style="background:var(--cobli-dark); color:white; padding:0 15px; border-radius:var(--radius-sm); font-size:12px; cursor:pointer; border:none; height: 42px; min-height: auto;">Checar</button>
                 </div>
-                <label class="req">Nome do Cliente</label><input id="clienteNome" onblur="this.value = window.formatarCapitalize(this.value)" required>
+                <label class="req">Nome Razão Social cliente</label><input id="clienteNome" onblur="this.value = window.formatarCapitalize(this.value)" required>
                 <label class="req">CNPJ / CPF</label><input id="clienteCnpj" placeholder="00.000.000/0000-00" oninput="window.maskCPFCNPJ(this)" required>
                 <label class="req">Responsável pela solicitação (APEX)</label><input id="solicitante" required readonly style="background: var(--bg); cursor:not-allowed; color: var(--muted);">
                 <label class="req">Responsável pelo acompanhamento (Local)</label><input id="respAcompanhamento" onblur="this.value = window.formatarCapitalize(this.value)" required>
