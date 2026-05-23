@@ -46,15 +46,21 @@
         
         *, *::before, *::after { box-sizing: border-box; }
 
+/* ============================================================
+           BACKGROUND & SCROLLBARS CORPORATIVAS
+        ============================================================ */
         body { 
             font-family: var(--font-main); 
-            background: var(--bg); 
+            background-color: #eaecf6;
+            background-image: radial-gradient(circle at 1px 1px, rgba(0,27,184,0.07) 1px, transparent 0);
+            background-size: 28px 28px;
             color: var(--text); 
-            margin: 0; 
-            padding: 0; 
-            display: none;
-            -webkit-font-smoothing: antialiased;
+            margin: 0; padding: 0; display: none; -webkit-font-smoothing: antialiased; 
         }
+
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #eef1f8; border-radius: 6px; }
+        ::-webkit-scrollbar-thumb { background: linear-gradient(135deg, #001BB8, #00AE97); border-radius: 6px; }
         
         /* ============================================================
            LAYOUT RAIZ — SIDEBAR
@@ -108,7 +114,7 @@
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 1.8px;
-            color: rgba(0,212,184,0.45);
+            color: rgba(255,255,255,0.55); /* 👈 Aqui o cinza fica bem mais claro e legível */
             padding: 14px 18px 4px;
         }
 
@@ -127,25 +133,18 @@
         /* Esconde o antigo menu-left/right wrapper — o JS usa os botões pelos IDs */
         .menu-left, .menu-right { display: contents; }
 
-        .menu button {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            width: 100%;
-            padding: 10px 18px;
-            background: none;
-            border: none;
-            border-left: 3px solid transparent;
-            border-radius: 0;
-            color: #00d4b8;   /* cobli-green vivo */
-            font-size: 0.83rem;
-            font-weight: 600;
-            font-family: var(--font-main);
-            letter-spacing: 0.2px;
-            cursor: pointer;
-            transition: all 0.18s;
-            text-align: left;
-            white-space: nowrap;
+        /* ============================================================
+           MENU DE NAVEGAÇÃO REFINADO
+        ============================================================ */
+        .menu button { 
+            display: flex; align-items: center; gap: 10px; width: 100%; 
+            padding: 10px 18px; background: none; border: none; 
+            border-left: 4px solid transparent; border-radius: 0; 
+            color: #00d2b5; /* 👈 Verde mais claro e vibrante */
+            opacity: 0.75;
+            font-size: 0.83rem; font-weight: 600; font-family: var(--font-main); 
+            letter-spacing: 0.2px; cursor: pointer; transition: all 0.2s ease; 
+            text-align: left; white-space: nowrap; 
         }
 
         .menu button::before {
@@ -172,21 +171,23 @@
         #btn-mapa::before       { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'%3E%3Cpolygon points='1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6'/%3E%3Cline x1='8' y1='2' x2='8' y2='18'/%3E%3Cline x1='16' y1='6' x2='16' y2='22'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'%3E%3Cpolygon points='1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6'/%3E%3Cline x1='8' y1='2' x2='8' y2='18'/%3E%3Cline x1='16' y1='6' x2='16' y2='22'/%3E%3C/svg%3E"); }
         #btn-usuarios::before   { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'%3E%3Cpath d='M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2'/%3E%3Ccircle cx='12' cy='7' r='4'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'%3E%3Cpath d='M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2'/%3E%3Ccircle cx='12' cy='7' r='4'/%3E%3C/svg%3E"); }
         #btn-disponibilidade::before { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cpolyline points='12 6 12 12 16 14'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cpolyline points='12 6 12 12 16 14'/%3E%3C/svg%3E"); }
-
-        .menu button:hover {
-            background: rgba(0,212,184,0.12);
-            color: #00e8cc;
-            border-left-color: rgba(0,212,184,0.6);
-            transform: none;
-            box-shadow: none;
+        #btn-resumo-slack-sidebar::before { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'%3E%3Crect x='3' y='4' width='18' height='18' rx='2' ry='2'/%3E%3Cline x1='16' y1='2' x2='16' y2='6'/%3E%3Cline x1='8' y1='2' x2='8' y2='6'/%3E%3Cline x1='3' y1='10' x2='21' y2='10'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'%3E%3Crect x='3' y='4' width='18' height='18' rx='2' ry='2'/%3E%3Cline x1='16' y1='2' x2='16' y2='6'/%3E%3Cline x1='8' y1='2' x2='8' y2='6'/%3E%3Cline x1='3' y1='10' x2='21' y2='10'/%3E%3C/svg%3E"); background: white; width: 14px; height: 14px; opacity: 1; }
+      
+        .menu button:hover { 
+            background: rgba(0,174,151,0.12); 
+            color: #1affda; 
+            opacity: 1;
+            border-left-color: rgba(0,174,151,0.4); 
+            transform: none; box-shadow: none; 
         }
         .menu button:hover::before { opacity: 1; }
 
-        .menu button.ativo {
-            background: rgba(0,100,255,0.18);
-            color: #00e8cc;
-            font-weight: 700;
-            border-left: 3px solid #00d4b8;
+        .menu button.ativo { 
+            background: rgba(30, 60, 255, 0.35); /* 👈 Azul mais claro e evidente */
+            color: #00ffda; 
+            font-weight: 700; opacity: 1;
+            text-shadow: 0 0 10px rgba(0, 255, 218, 0.4);
+            border-left: 4px solid #00ffda; 
         }
         .menu button.ativo::before { opacity: 1; }
 
@@ -212,65 +213,66 @@
             margin: 8px 18px;
         }
 
-        /* Integrações — dentro do menu agora */
+        /* ── INTEGRATIONS (sidebar footer block) ── */
+        .sidebar-bottom {
+            flex-shrink: 0;
+            border-top: 1px solid rgba(255,255,255,0.07);
+            padding: 10px 0 4px;
+        }
+
+        /* Integrations toggle — reposicionado para sidebar */
         .integracoes-topo {
             display: none;
             flex-direction: column;
-            gap: 7px;
-            padding: 10px 18px 12px;
-            border-top: 1px solid rgba(255,255,255,0.06);
+            gap: 8px;
+            padding: 10px 18px;
             border-bottom: 1px solid rgba(255,255,255,0.06);
-            margin: 0;
         }
         .integracoes-topo > .integ-label {
             font-size: 0.55rem;
+            opacity: 0.4;
             font-weight: 700;
             text-transform: uppercase;
-            letter-spacing: 1.8px;
-            color: rgba(0,225,195,0.5);
-            margin-bottom: 4px;
+            letter-spacing: 1.5px;
+            color: var(--cobli-green);
+            margin-bottom: 2px;
         }
         .integracoes-topo label {
             display: flex;
             align-items: center;
-            justify-content: space-between;
-            color: #00d4b8;
-            font-size: 0.7rem;
+            gap: 8px;
+            color: rgba(0,174,151,0.75);
+            font-size: 0.68rem;
             font-weight: 700;
             cursor: pointer;
             margin: 0;
             text-transform: uppercase;
-            letter-spacing: 0.8px;
-            opacity: 0.88;
+            letter-spacing: 0.5px;
         }
-        .integracoes-topo label:hover { opacity: 1; }
 
-        /* Botão Resumo Slack — dentro do menu */
+        /* Botão Resumo Slack — na sidebar */
         #btn-resumo-slack {
             display: none;
             align-items: center;
-            gap: 9px;
-            background: rgba(74,21,75,0.35);
-            border: none;
-            border-left: 3px solid rgba(74,21,75,0.0);
-            color: rgba(230,180,230,0.8);
-            padding: 10px 18px;
+            gap: 8px;
+            background: rgba(74,21,75,0.4);
+            border: 1px solid rgba(74,21,75,0.6);
+            color: rgba(255,255,255,0.75);
+            padding: 8px 18px;
             border-radius: 0;
-            font-size: 0.8rem;
+            font-size: 0.72rem;
             font-weight: 700;
             cursor: pointer;
-            transition: all 0.18s;
-            text-transform: none;
-            letter-spacing: 0.3px;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
             font-family: var(--font-main);
             width: 100%;
-            white-space: nowrap;
-            min-height: auto;
+            margin-top: 2px;
         }
         #btn-resumo-slack:hover {
-            background: rgba(74,21,75,0.6);
-            color: #f0c0f0;
-            border-left-color: rgba(180,80,180,0.5);
+            background: #4A154B;
+            color: white;
             transform: none;
             box-shadow: none;
         }
@@ -534,22 +536,32 @@
         /* ============================================================
            CARDS
         ============================================================ */
-        .card { 
-            background: var(--card-bg); 
-            padding: 22px 24px; 
-            border-radius: var(--radius); 
-            margin-bottom: 20px; 
-            border: 1px solid var(--border); 
-            box-shadow: var(--shadow-sm);
-            display: flex; 
-            flex-direction: column; 
-            justify-content: space-between; 
-            transition: border-color 0.2s, box-shadow 0.2s;
+/* nav section label */
+        .sidebar-nav-section {
+            font-size: 0.62rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1.8px;
+            color: rgba(255,255,255,0.85); /* 👈 Cinza bem mais claro e brilhante! */
+            padding: 14px 18px 4px;
         }
-        .card:hover { 
-            border-color: rgba(0,27,184,0.2); 
-            box-shadow: var(--shadow-md);
+
+        /* ============================================================
+           CARDS
+        ============================================================ */
+        .card { /* 👈 O PONTO VITAL AQUI! */
+            background: var(--card-bg); padding: 22px 24px; border-radius: var(--radius); 
+            margin-bottom: 20px; border: 1px solid rgba(205,212,232,0.9); box-shadow: var(--shadow-sm); 
+            display: flex; flex-direction: column; justify-content: space-between; 
+            transition: border-color 0.25s, box-shadow 0.25s, transform 0.22s cubic-bezier(0.34,1.4,0.64,1);
+            position: relative; overflow: hidden;
         }
+        .card::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 100%; height: 2px;
+            background: linear-gradient(90deg, #001BB8, #00AE97); transition: right 0.38s ease; z-index: 1;
+        }
+        .card:hover::before { right: 0; }
+        .card:hover { border-color: rgba(0,27,184,0.18); box-shadow: var(--shadow-md); transform: translateY(-2px); }
         
         h2 { 
             font-size: 0.95rem; 
@@ -698,26 +710,23 @@
         /* ============================================================
            PAINEL ITEMS
         ============================================================ */
-        .painel-item { 
-            background: var(--card-bg); 
-            margin-bottom: 8px; 
-            padding: 14px 16px; 
-            border-radius: var(--radius); 
-            border: 1px solid var(--border); 
-            border-left: 4px solid var(--primary); 
-            box-shadow: var(--shadow-sm); 
-            display: flex; 
-            align-items: center; 
-            justify-content: space-between; 
-            cursor: pointer; 
-            transition: all 0.2s ease;
+.painel-item { 
+            background: var(--card-bg); margin-bottom: 8px; padding: 14px 16px; 
+            border-radius: var(--radius); border: 1px solid var(--border); 
+            border-left-width: 5px; border-left-style: solid; border-left-color: var(--primary);
+            box-shadow: var(--shadow-sm); display: flex; align-items: center; 
+            justify-content: space-between; cursor: pointer; transition: all 0.22s ease; 
         }
-        .painel-item:hover { 
-            transform: translateY(-2px); 
-            box-shadow: var(--shadow-md); 
-            background-color: #f0faf9; 
-            border-left-color: var(--cobli-green); 
-        }
+        .painel-item:hover { transform: translateX(5px) translateY(-2px); box-shadow: var(--shadow-md); }
+
+        /* Color Coding Automático via JS para a Aba do Painel */
+        .painel-item[data-status="concluido"]  { border-left-color: #00AE97; background: #f7fffd; }
+        .painel-item[data-status="agendado"]   { border-left-color: #001BB8; background: #f7f9ff; }
+        .painel-item[data-status="andamento"]  { border-left-color: #f59e0b; background: #fffdf0; }
+        .painel-item[data-status="impedido"]   { border-left-color: #FF4633; background: #fff7f6; }
+        .painel-item[data-status="cancelado"]  { border-left-color: #94a3b8; background: #f8f9fb; opacity: 0.7; }
+        .painel-item[data-status="negociacao"] { border-left-color: #8b5cf6; background: #faf7ff; }
+        .painel-item[data-status="solicitado"] { border-left-color: var(--muted); }
 
         /* ============================================================
            MODAIS — redesign
@@ -1293,7 +1302,7 @@
     <!-- ═══════════════════════════════════════════════
          SIDEBAR — navegação lateral
     ════════════════════════════════════════════════ -->
-    <aside class="sidebar">
+<aside class="sidebar">
         <div class="sidebar-logo">
             <div class="apex-badge">APEX</div>
             <div class="cobli-brand" style="color:white; margin-left:2px;">
@@ -1302,37 +1311,37 @@
             </div>
         </div>
 
+        <div class="sidebar-nav-section">Operações</div>
         <nav class="menu" id="main-menu">
-            <div class="sidebar-nav-section">Operações</div>
             <button id="btn-consulta" class="ativo" onclick="window.trocarAba('consulta', this)">Agendamento</button>
             <button id="btn-painel"   onclick="window.trocarAba('painel', this)">Painel</button>
             <button id="btn-dashboard" onclick="window.trocarAba('dashboard', this)">Dashboard</button>
             <button id="btn-mapa"     onclick="window.trocarAba('mapa', this)">Mapa</button>
             <div class="menu-divider"></div>
-            <div class="sidebar-nav-section">Gestão</div>
+            
+            <div class="sidebar-nav-section" id="label-gestao" style="padding-top:4px;">Gestão</div>
             <button id="btn-cadastro" onclick="window.trocarAba('cadastro', this)">Prestadores</button>
             <button id="btn-usuarios" onclick="window.trocarAba('usuarios', this)">Usuários</button>
-            <div class="menu-divider"></div>
-            <!-- Integrações — visível só para GESTOR via JS -->
-            <div id="integrations-control" class="integracoes-topo">
-                <span class="integ-label">Integrações</span>
-                <label title="Avisos no Slack">SLACK <input type="checkbox" id="slackSwitch" class="toggle-switch"></label>
-                <label title="Lançar OS no Field">FIELD <input type="checkbox" id="fieldSwitch" class="toggle-switch"></label>
-                <label title="Salvar no BD">BANCO <input type="checkbox" id="dbSwitch" class="toggle-switch"></label>
+
+            <div id="integrations-control-wrapper" style="display: none;">
+                <div class="sidebar-nav-section" style="padding-top:15px; border-top: 1px solid rgba(255,255,255,0.06); margin-top: 10px;">Integrações</div>
+                <div class="integracoes-topo" style="display: flex; flex-direction: column; gap: 12px; padding: 10px 22px;">
+                    <label title="Avisos no Slack" style="display: flex; justify-content: space-between; width: 100%;">SLACK <input type="checkbox" id="slackSwitch" class="toggle-switch"></label>
+                    <label title="Lançar OS no Field" style="display: flex; justify-content: space-between; width: 100%;">FIELD <input type="checkbox" id="fieldSwitch" class="toggle-switch"></label>
+                    <label title="Salvar no BD" style="display: flex; justify-content: space-between; width: 100%;">BANCO <input type="checkbox" id="dbSwitch" class="toggle-switch"></label>
+                </div>
+                <button id="btn-resumo-slack-sidebar" onclick="window.abrirModalResumoSlack()" title="Enviar resumo para o Slack" style="display: flex; align-items: center; margin: 10px 18px; width: calc(100% - 36px); justify-content: center; background: rgba(74,21,75,0.7); border-radius: 8px; border: none; padding: 10px; cursor: pointer; transition: 0.2s;">
+                    <span style="color: white; font-weight: bold; font-size: 11px; letter-spacing: 0.5px;">RESUMO SLACK</span>
+                </button>
             </div>
-            <!-- Resumo Slack — visível só para GESTOR via JS -->
-            <button id="btn-resumo-slack" onclick="window.abrirModalResumoSlack()" title="Enviar resumo do período para o Slack">
-                <span class="slack-icon">💬</span>
-                <span>Resumo Slack</span>
-            </button>
-            <div style="flex:1;"></div>
+
+            <div class="menu-divider" style="margin-top:auto;"></div>
             <button class="btn-sair" onclick="handleLogout()">Sair</button>
         </nav>
 
         <div class="sidebar-bottom">
-            <!-- Usuário logado -->
             <div class="sidebar-user">
-                <div class="sidebar-user-avatar">◈</div>
+                <div class="sidebar-user-avatar" id="user-avatar">◈</div>
                 <div id="user-role-display"></div>
             </div>
         </div>
@@ -1341,8 +1350,7 @@
     <!-- ═══════════════════════════════════════════════
          ÁREA PRINCIPAL
     ════════════════════════════════════════════════ -->
-    <div class="main-wrapper">
-        <!-- Top bar mínima — só aparece em mobile com logo -->
+   <div class="main-wrapper">
         <div class="topo">
             <div class="header-logo-text">
                 <div class="apex-badge" style="font-size:0.85rem;">APEX</div>
@@ -2389,18 +2397,19 @@ async function checkSession() {
         document.getElementById('app-content').style.display = 'flex';
         document.body.style.display = 'block'; 
         await definirPermissoes(currentUser.email, currentUser.id);
+        
+        // Exibe bloco de integrações do menu lateral se for GESTOR
         if (userRole === 'GESTOR') {
-            document.getElementById('integrations-control').style.display = 'flex';
-            document.getElementById('btn-resumo-slack').style.display = 'flex';
+            let intWrap = document.getElementById('integrations-control-wrapper');
+            if(intWrap) intWrap.style.display = 'block';
         }
+        
         window.carregarProdutos();
         window.carregarDadosDoBanco();
         console.log("📡 Conectando ao Realtime...");
-        supabaseClient.channel('mudancas-agendamentos').on('postgres_changes', { event: '*', schema: 'public', table: 'agendamentos' }, (payload) => { console.log('🚨 BD mudou! Atualizando...', payload); window.carregarDadosDoBanco(); }).subscribe((status) => { console.log("🔌 Realtime:", status); });
+        supabaseClient.channel('mudancas-agendamentos').on('postgres_changes', { event: '*', schema: 'public', table: 'agendamentos' }, (payload) => { console.log('🚨 BD mudou! Atualizando...', payload); window.carregarDadosDoBanco(); }).subscribe();
         
-        // 👇 INICIA O VIGIA DE INATIVIDADE 👇
         window.startInactivityTracker();
-        
     } else {
         document.getElementById('auth-overlay').style.display = 'flex';
         document.body.style.display = 'block'; 
@@ -2429,11 +2438,26 @@ async function definirPermissoes(email, uid) {
     const { data, error } = await supabaseClient.from('perfis_usuarios').select('nivel').eq('id', uid).maybeSingle();
     if (data) { userRole = data.nivel; } 
     else { const isCobli = email.endsWith('@cobli.co'); const isGestor = GESTOR_EMAILS.includes(email.toLowerCase()); userRole = isGestor ? 'GESTOR' : (isCobli ? 'SMARTOPS' : 'PRESTADOR'); }
-    document.getElementById('user-role-display').innerHTML = `<div style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 180px;">${email}</div><div style="font-size: 0.7em; opacity: 0.7; margin-top: 1px; text-transform: uppercase; letter-spacing: 1px; color: var(--cobli-green);">${userRole}</div>`;
+    
+    document.getElementById('user-role-display').innerHTML = `<div style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 140px;">${email}</div><div style="font-size: 0.7em; opacity: 0.7; margin-top: 1px; text-transform: uppercase; letter-spacing: 1px; color: var(--cobli-green);">${userRole}</div>`;
+    
+    // 👇 GERAR AS INICIAIS DA BOLA AZUL 👇
+    let iniciais = "U";
+    if (email) {
+        let partes = email.split('@')[0].split('.');
+        iniciais = partes.length > 1 ? (partes[0][0] + partes[1][0]).toUpperCase() : partes[0].substring(0, 2).toUpperCase();
+    }
+    let avatarEl = document.getElementById('user-avatar');
+    if (avatarEl) avatarEl.innerText = iniciais;
+    // 👆 FIM INICIAIS 👆
+
     const campoSol = document.getElementById('solicitante');
     if(campoSol) campoSol.value = email.endsWith('@cobli.co') ? window.formatarCapitalize(extrairNomeDoEmail(email)) : email;
-    if (userRole !== 'GESTOR' && userRole !== 'ADMIN') document.getElementById('btn-usuarios').style.display = 'none';
-    if (userRole !== 'GESTOR' && userRole !== 'ADMIN') document.getElementById('btn-cadastro').style.display = 'none';
+    if (userRole !== 'GESTOR' && userRole !== 'ADMIN') {
+        document.getElementById('btn-usuarios').style.display = 'none';
+        document.getElementById('btn-cadastro').style.display = 'none';
+        if (document.getElementById('label-gestao')) document.getElementById('label-gestao').style.display = 'none';
+    }
     if (userRole === 'PRESTADOR') {
         document.getElementById('btn-consulta').style.display = 'none';
         const filtroP = document.getElementById('filtro-box-prestador'); if(filtroP) filtroP.style.display = 'none';
@@ -2496,7 +2520,7 @@ tbody.innerHTML = data.map(u => {
         let blockDelete = podeEditar ? `<button onclick="window.excluirUsuarioPerfil('${u.id}', '${u.email}', '${u.nivel}')" style="background: transparent; border: none; cursor: pointer; font-size: 1.1rem; padding: 0; min-height:auto;" title="Remover Perfil">❌</button>` : '';
         let optionGestorHtml = (userRole === 'GESTOR' || u.nivel === 'GESTOR') ? `<option value="GESTOR" ${u.nivel==='GESTOR'?'selected':''}>GESTOR</option>` : '';
 
-        // 👇 CÁLCULO DO LOG DE ACESSO 👇
+// 👇 CÁLCULO DO LOG DE ACESSO 👇
         let txtAcesso = '<span style="color:var(--muted); font-size:0.75rem; font-style:italic;">Nunca acessou</span>';
         if (u.ultimo_login) {
             let dataUlt = new Date(u.ultimo_login);
@@ -2505,7 +2529,11 @@ tbody.innerHTML = data.map(u => {
             if (u.penultimo_login) {
                 let dataPen = new Date(u.penultimo_login);
                 let strPen = dataPen.toLocaleDateString('pt-BR');
-                let diffDias = Math.floor(Math.abs(dataUlt - dataPen) / (1000 * 60 * 60 * 24));
+                
+                // Zera as horas para comparar só o calendário e não dar falso "mesmo dia"
+                let dUltimoLimpo = new Date(dataUlt.getFullYear(), dataUlt.getMonth(), dataUlt.getDate());
+                let dPenultimoLimpo = new Date(dataPen.getFullYear(), dataPen.getMonth(), dataPen.getDate());
+                let diffDias = Math.round(Math.abs(dUltimoLimpo - dPenultimoLimpo) / (1000 * 60 * 60 * 24));
                 
                 let infoDias = diffDias === 0 ? 'No mesmo dia' : `Ficou ${diffDias} dia(s) off`;
                 txtAcesso = `<div style="font-weight:700; color:var(--primary); font-size:0.75rem;">${strUltimo}</div>
@@ -2515,7 +2543,7 @@ tbody.innerHTML = data.map(u => {
                              <div style="font-size:0.65rem; color:var(--muted);">Primeiro acesso</div>`;
             }
         }
-        // 👆 FIM DO CÁLCULO 👆
+            // 👆 FIM DO CÁLCULO 👆
 
         return `<tr>
             <td style="font-weight:600; color:var(--cobli-dark);">${u.email}</td>
@@ -3248,29 +3276,32 @@ window.renderizarListaPrestadores = function(){
 window.abrirOpcoesPrestador = function(i) {
     if(userRole !== 'GESTOR') return window.abrirDetalhesPrestador(i); 
     const p = prestadores[i];
+    
     let html = `
-        <div style="margin-bottom:18px;">
-            <div style="font-size:0.68rem; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:var(--muted); margin-bottom:4px;">Prestador selecionado</div>
-            <div style="font-size:1.05rem; font-weight:800; color:var(--cobli-dark); letter-spacing:-0.3px;">${p.nome}</div>
+    <div style="padding-bottom: 5px;">
+        <div style="font-size: 1.2rem; font-weight: 800; color: var(--cobli-dark); margin-bottom: 20px;">
+            ${p.nome}
         </div>
-        <div style="display:flex; flex-direction:column; gap:8px;">
-            <button onclick="window.fecharModal(); window.abrirDetalhesPrestador(${i})" style="background:var(--cobli-green); padding:11px 16px; font-size:0.88rem; font-weight:700; min-height:auto; text-align:left; display:flex; align-items:center; gap:10px; border-radius:8px;">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="flex-shrink:0;"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
-                Ver Agenda e Detalhes
+        
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+            <button onclick="window.fecharModal(); window.abrirDetalhesPrestador(${i})" style="display: flex; align-items: center; justify-content: flex-start; gap: 12px; width: 100%; padding: 16px 20px; background: var(--bg); color: var(--cobli-dark); border: 1px solid var(--border); border-radius: 12px; font-size: 0.95rem; font-weight: 700; box-shadow: none; min-height: auto;">
+                <span style="font-size: 1.2rem;">👁️</span> Ver Detalhes e Agenda
             </button>
-            <button onclick="window.fecharModal(); window.abrirCadastro(${i})" style="background:var(--primary); padding:11px 16px; font-size:0.88rem; font-weight:700; min-height:auto; text-align:left; display:flex; align-items:center; gap:10px; border-radius:8px;">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="flex-shrink:0;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                Editar Cadastro
+            
+            <button onclick="window.fecharModal(); window.abrirCadastro(${i})" style="display: flex; align-items: center; justify-content: flex-start; gap: 12px; width: 100%; padding: 16px 20px; background: var(--bg); color: var(--cobli-dark); border: 1px solid var(--border); border-radius: 12px; font-size: 0.95rem; font-weight: 700; box-shadow: none; min-height: auto;">
+                <span style="font-size: 1.2rem;">📝</span> Editar Cadastro
             </button>
-            <div style="height:1px; background:var(--border); margin:2px 0;"></div>
-            <button onclick="window.fecharModal(); window.excluirPrestador(${i})" style="background:transparent; color:var(--cobli-red); border:1.5px solid rgba(255,70,51,0.25); padding:9px 16px; font-size:0.85rem; font-weight:700; cursor:pointer; min-height:auto; text-align:left; display:flex; align-items:center; gap:10px; border-radius:8px; transition:all 0.2s;">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="flex-shrink:0;"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
-                Excluir Prestador
+            
+            <button onclick="window.fecharModal(); window.excluirPrestador(${i})" style="display: flex; align-items: center; justify-content: flex-start; gap: 12px; width: 100%; padding: 16px 20px; background: #fff5f5; color: var(--cobli-red); border: 1px solid #fecaca; border-radius: 12px; font-size: 0.95rem; font-weight: 700; box-shadow: none; min-height: auto;">
+                <span style="font-size: 1.2rem;">❌</span> Excluir Prestador
             </button>
-            <button onclick="window.fecharModal()" style="background:var(--bg); color:var(--muted); border:1px solid var(--border); padding:9px 16px; font-size:0.82rem; font-weight:600; min-height:auto; border-radius:8px; margin-top:2px;">
-                Cancelar
-            </button>
-        </div>`;
+        </div>
+        
+        <div style="margin-top: 24px; display: flex; justify-content: flex-end; border-top: 1px solid var(--bg); padding-top: 16px;">
+            <button onclick="window.fecharModal()" style="background: transparent; color: var(--muted); border: none; font-size: 0.9rem; font-weight: 700; box-shadow: none; padding: 10px 20px; min-height: auto;">Cancelar</button>
+        </div>
+    </div>`;
+    
     window.exibirModal("Ações do Prestador", html);
 };
 
@@ -4195,7 +4226,7 @@ window.renderPainel = function() {
     });
     ['solicitado','negociacao','agendado','andamento','impedido','concluido','cancelado'].forEach(k => { let el = document.getElementById('st-'+k); if(el) el.innerText = counts[k]; });
 
-    document.getElementById("painel-conteudo").innerHTML = filtradosPainel.map((a, i) => {
+document.getElementById("painel-conteudo").innerHTML = filtradosPainel.map((a, i) => {
         let primeiroSlot = Array.isArray(a.slots) ? a.slots[0] : (String(a.slots).split(',')[0] || 'N/A');
         let dataRegistro = a.created_at ? new Date(a.created_at).toLocaleString('pt-BR') : 'N/A';
         let nomeClienteFormatado = window.formatarCapitalize(a.cliente) || '-';
@@ -4206,7 +4237,17 @@ window.renderPainel = function() {
             if (pObj) nomeTecAlocadoCard = window.getNomeTecnico(pObj, nomeTecAlocadoCard).trim();
         }
 
-        return `<div class="painel-item" data-ticket="${a.ticket}" onclick="window.abrirDetalhesAgendamento(${i})">
+        // 👇 RECRIANDO O STATUS AQUI DENTRO PARA CORRIGIR O ERRO 👇
+        let statusOriginal = String(a.status || 'solicitado').trim().toLowerCase(); 
+        let statusMapeado = 'solicitado';
+        if (statusOriginal.includes('negocia') || statusOriginal.includes('aguardando')) statusMapeado = 'negociacao';
+        else if (statusOriginal.includes('agendado') || statusOriginal.includes('scheduled')) statusMapeado = 'agendado';
+        else if (statusOriginal.includes('andamento') || statusOriginal.includes('progress') || statusOriginal.includes('deslocamento')) statusMapeado = 'andamento';
+        else if (statusOriginal.includes('impedido') || statusOriginal.includes('reportado') || status.includes('falha')) statusMapeado = 'impedido';
+        else if (statusOriginal.includes('conclu') || statusOriginal.includes('completed') || status.includes('finalizado')) statusMapeado = 'concluido';
+        else if (statusOriginal.includes('cancelado') || statusOriginal.includes('canceled')) statusMapeado = 'cancelado';
+
+        return `<div class="painel-item" data-ticket="${a.ticket}" data-status="${statusMapeado}" onclick="window.abrirDetalhesAgendamento(${i})">
             <div style="flex-grow: 1; font-size: 0.88rem;">
                 <strong style="font-family:var(--font-mono); color:var(--cobli-dark);">#${a.ticket}</strong> &nbsp;|&nbsp; Status: <span style="color: var(--primary); font-weight: 700;">${a.status || 'SOLICITADO'}</span> &nbsp;|&nbsp; <strong>${nomeClienteFormatado}</strong>
                 <div style="margin-top:5px; font-size: 0.82rem; color: var(--muted);">📅 ${a.data} às ${primeiroSlot} &nbsp;|&nbsp; 🛠️ ${a.prestador}</div>
