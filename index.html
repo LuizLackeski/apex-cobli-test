@@ -1173,15 +1173,17 @@
 /* ============================================================
            AJUSTES FINAIS: LOGO EM LINHA E DOTS MAIORES
         ============================================================ */
-        .sidebar-logo .cobli-brand { 
+        .cobli-brand { 
             flex-direction: row !important; 
             align-items: center !important; 
             gap: 6px !important; 
         }
-        .sidebar-logo .txt-agenda { 
+        .txt-agenda { 
             margin-top: 0 !important; 
             display: inline-block !important; 
-            font-size: 0.6rem !important; 
+            font-size: 0.55rem !important; 
+            letter-spacing: 1.5px !important; 
+            white-space: nowrap !important; /* 👈 A mágica que impede quebrar a linha */
         }
         
         .topo-integrations { gap: 16px !important; }
