@@ -46,15 +46,21 @@
         
         *, *::before, *::after { box-sizing: border-box; }
 
+/* ============================================================
+           BACKGROUND & SCROLLBARS CORPORATIVAS
+        ============================================================ */
         body { 
             font-family: var(--font-main); 
-            background: var(--bg); 
+            background-color: #eaecf6;
+            background-image: radial-gradient(circle at 1px 1px, rgba(0,27,184,0.07) 1px, transparent 0);
+            background-size: 28px 28px;
             color: var(--text); 
-            margin: 0; 
-            padding: 0; 
-            display: none;
-            -webkit-font-smoothing: antialiased;
+            margin: 0; padding: 0; display: none; -webkit-font-smoothing: antialiased; 
         }
+
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #eef1f8; border-radius: 6px; }
+        ::-webkit-scrollbar-thumb { background: linear-gradient(135deg, #001BB8, #00AE97); border-radius: 6px; }
         
         /* ============================================================
            LAYOUT RAIZ — SIDEBAR
@@ -127,25 +133,18 @@
         /* Esconde o antigo menu-left/right wrapper — o JS usa os botões pelos IDs */
         .menu-left, .menu-right { display: contents; }
 
-        .menu button {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            width: 100%;
-            padding: 10px 18px;
-            background: none;
-            border: none;
-            border-left: 3px solid transparent;
-            border-radius: 0;
-            color: rgba(0,174,151,0.65);   /* cobli-green dim */
-            font-size: 0.83rem;
-            font-weight: 600;
-            font-family: var(--font-main);
-            letter-spacing: 0.2px;
-            cursor: pointer;
-            transition: all 0.18s;
-            text-align: left;
-            white-space: nowrap;
+        /* ============================================================
+           MENU DE NAVEGAÇÃO REFINADO
+        ============================================================ */
+        .menu button { 
+            display: flex; align-items: center; gap: 10px; width: 100%; 
+            padding: 10px 18px; background: none; border: none; 
+            border-left: 4px solid transparent; border-radius: 0; 
+            color: #00d2b5; /* 👈 Verde mais claro e vibrante */
+            opacity: 0.75;
+            font-size: 0.83rem; font-weight: 600; font-family: var(--font-main); 
+            letter-spacing: 0.2px; cursor: pointer; transition: all 0.2s ease; 
+            text-align: left; white-space: nowrap; 
         }
 
         .menu button::before {
@@ -173,20 +172,21 @@
         #btn-usuarios::before   { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'%3E%3Cpath d='M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2'/%3E%3Ccircle cx='12' cy='7' r='4'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'%3E%3Cpath d='M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2'/%3E%3Ccircle cx='12' cy='7' r='4'/%3E%3C/svg%3E"); }
         #btn-disponibilidade::before { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cpolyline points='12 6 12 12 16 14'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cpolyline points='12 6 12 12 16 14'/%3E%3C/svg%3E"); }
 
-        .menu button:hover {
-            background: rgba(0,174,151,0.1);
-            color: var(--cobli-green);
-            border-left-color: rgba(0,174,151,0.4);
-            transform: none;
-            box-shadow: none;
+        .menu button:hover { 
+            background: rgba(0,174,151,0.12); 
+            color: #1affda; 
+            opacity: 1;
+            border-left-color: rgba(0,174,151,0.4); 
+            transform: none; box-shadow: none; 
         }
         .menu button:hover::before { opacity: 1; }
 
-        .menu button.ativo {
-            background: rgba(0,27,184,0.22);
-            color: var(--cobli-green);
-            font-weight: 700;
-            border-left: 3px solid var(--cobli-green);
+        .menu button.ativo { 
+            background: rgba(30, 60, 255, 0.35); /* 👈 Azul mais claro e evidente */
+            color: #00ffda; 
+            font-weight: 700; opacity: 1;
+            text-shadow: 0 0 10px rgba(0, 255, 218, 0.4);
+            border-left: 4px solid #00ffda; 
         }
         .menu button.ativo::before { opacity: 1; }
 
@@ -535,22 +535,19 @@
         /* ============================================================
            CARDS
         ============================================================ */
-        .card { 
-            background: var(--card-bg); 
-            padding: 22px 24px; 
-            border-radius: var(--radius); 
-            margin-bottom: 20px; 
-            border: 1px solid var(--border); 
-            box-shadow: var(--shadow-sm);
-            display: flex; 
-            flex-direction: column; 
-            justify-content: space-between; 
-            transition: border-color 0.2s, box-shadow 0.2s;
+card { 
+            background: var(--card-bg); padding: 22px 24px; border-radius: var(--radius); 
+            margin-bottom: 20px; border: 1px solid rgba(205,212,232,0.9); box-shadow: var(--shadow-sm); 
+            display: flex; flex-direction: column; justify-content: space-between; 
+            transition: border-color 0.25s, box-shadow 0.25s, transform 0.22s cubic-bezier(0.34,1.4,0.64,1);
+            position: relative; overflow: hidden;
         }
-        .card:hover { 
-            border-color: rgba(0,27,184,0.2); 
-            box-shadow: var(--shadow-md);
+        .card::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 100%; height: 2px;
+            background: linear-gradient(90deg, #001BB8, #00AE97); transition: right 0.38s ease; z-index: 1;
         }
+        .card:hover::before { right: 0; }
+        .card:hover { border-color: rgba(0,27,184,0.18); box-shadow: var(--shadow-md); transform: translateY(-2px); }
         
         h2 { 
             font-size: 0.95rem; 
@@ -699,26 +696,23 @@
         /* ============================================================
            PAINEL ITEMS
         ============================================================ */
-        .painel-item { 
-            background: var(--card-bg); 
-            margin-bottom: 8px; 
-            padding: 14px 16px; 
-            border-radius: var(--radius); 
-            border: 1px solid var(--border); 
-            border-left: 4px solid var(--primary); 
-            box-shadow: var(--shadow-sm); 
-            display: flex; 
-            align-items: center; 
-            justify-content: space-between; 
-            cursor: pointer; 
-            transition: all 0.2s ease;
+.painel-item { 
+            background: var(--card-bg); margin-bottom: 8px; padding: 14px 16px; 
+            border-radius: var(--radius); border: 1px solid var(--border); 
+            border-left-width: 5px; border-left-style: solid; border-left-color: var(--primary);
+            box-shadow: var(--shadow-sm); display: flex; align-items: center; 
+            justify-content: space-between; cursor: pointer; transition: all 0.22s ease; 
         }
-        .painel-item:hover { 
-            transform: translateY(-2px); 
-            box-shadow: var(--shadow-md); 
-            background-color: #f0faf9; 
-            border-left-color: var(--cobli-green); 
-        }
+        .painel-item:hover { transform: translateX(5px) translateY(-2px); box-shadow: var(--shadow-md); }
+
+        /* Color Coding Automático via JS para a Aba do Painel */
+        .painel-item[data-status="concluido"]  { border-left-color: #00AE97; background: #f7fffd; }
+        .painel-item[data-status="agendado"]   { border-left-color: #001BB8; background: #f7f9ff; }
+        .painel-item[data-status="andamento"]  { border-left-color: #f59e0b; background: #fffdf0; }
+        .painel-item[data-status="impedido"]   { border-left-color: #FF4633; background: #fff7f6; }
+        .painel-item[data-status="cancelado"]  { border-left-color: #94a3b8; background: #f8f9fb; opacity: 0.7; }
+        .painel-item[data-status="negociacao"] { border-left-color: #8b5cf6; background: #faf7ff; }
+        .painel-item[data-status="solicitado"] { border-left-color: var(--muted); }
 
         /* ============================================================
            MODAIS — redesign
@@ -1294,7 +1288,7 @@
     <!-- ═══════════════════════════════════════════════
          SIDEBAR — navegação lateral
     ════════════════════════════════════════════════ -->
-    <aside class="sidebar">
+<aside class="sidebar">
         <div class="sidebar-logo">
             <div class="apex-badge">APEX</div>
             <div class="cobli-brand" style="color:white; margin-left:2px;">
@@ -1310,29 +1304,30 @@
             <button id="btn-dashboard" onclick="window.trocarAba('dashboard', this)">Dashboard</button>
             <button id="btn-mapa"     onclick="window.trocarAba('mapa', this)">Mapa</button>
             <div class="menu-divider"></div>
+            
             <div class="sidebar-nav-section" style="padding-top:4px;">Gestão</div>
             <button id="btn-cadastro" onclick="window.trocarAba('cadastro', this)">Prestadores</button>
             <button id="btn-usuarios" onclick="window.trocarAba('usuarios', this)">Usuários</button>
-            <div class="menu-divider"></div>
-            <button class="btn-sair" onclick="handleLogout()" style="margin-top:auto;">Sair</button>
+
+            <div id="integrations-control-wrapper" style="display: none;">
+                <div class="sidebar-nav-section" style="padding-top:15px; border-top: 1px solid rgba(255,255,255,0.06); margin-top: 10px;">Integrações</div>
+                <div class="integracoes-topo" style="display: flex;">
+                    <label title="Avisos no Slack">SLACK <input type="checkbox" id="slackSwitch" class="toggle-switch" checked></label>
+                    <label title="Lançar OS no Field">FIELD <input type="checkbox" id="fieldSwitch" class="toggle-switch" checked></label>
+                    <label title="Salvar no BD">BANCO <input type="checkbox" id="dbSwitch" class="toggle-switch" checked></label>
+                </div>
+            </div>
+
+            <div class="menu-divider" style="margin-top:auto;"></div>
+            <button class="btn-sair" onclick="handleLogout()">Sair</button>
         </nav>
 
         <div class="sidebar-bottom">
-            <!-- Integrações — visível só para GESTOR via JS -->
-            <div id="integrations-control" class="integracoes-topo">
-                <span class="integ-label">Integrações</span>
-                <label title="Avisos no Slack">SLACK <input type="checkbox" id="slackSwitch" class="toggle-switch"></label>
-                <label title="Lançar OS no Field">FIELD <input type="checkbox" id="fieldSwitch" class="toggle-switch"></label>
-                <label title="Salvar no BD">BANCO <input type="checkbox" id="dbSwitch" class="toggle-switch"></label>
-            </div>
-
-            <!-- Resumo Slack — visível só para GESTOR via JS -->
             <button id="btn-resumo-slack" onclick="window.abrirModalResumoSlack()" title="Enviar resumo do período para o Slack">
                 <span class="slack-icon">💬</span>
                 <span>Resumo Slack</span>
             </button>
 
-            <!-- Usuário logado -->
             <div class="sidebar-user">
                 <div class="sidebar-user-avatar">◈</div>
                 <div id="user-role-display"></div>
@@ -2392,7 +2387,7 @@ async function checkSession() {
         document.body.style.display = 'block'; 
         await definirPermissoes(currentUser.email, currentUser.id);
         if (userRole === 'GESTOR') {
-            document.getElementById('integrations-control').style.display = 'flex';
+            document.getElementById('integrations-control-wrapper').style.display = 'block';
             document.getElementById('btn-resumo-slack').style.display = 'flex';
         }
         window.carregarProdutos();
@@ -4194,7 +4189,7 @@ window.renderPainel = function() {
             if (pObj) nomeTecAlocadoCard = window.getNomeTecnico(pObj, nomeTecAlocadoCard).trim();
         }
 
-        return `<div class="painel-item" data-ticket="${a.ticket}" onclick="window.abrirDetalhesAgendamento(${i})">
+        return `<div class="painel-item" data-ticket="${a.ticket}" data-status="${statusMapeado}" onclick="window.abrirDetalhesAgendamento(${i})">
             <div style="flex-grow: 1; font-size: 0.88rem;">
                 <strong style="font-family:var(--font-mono); color:var(--cobli-dark);">#${a.ticket}</strong> &nbsp;|&nbsp; Status: <span style="color: var(--primary); font-weight: 700;">${a.status || 'SOLICITADO'}</span> &nbsp;|&nbsp; <strong>${nomeClienteFormatado}</strong>
                 <div style="margin-top:5px; font-size: 0.82rem; color: var(--muted);">📅 ${a.data} às ${primeiroSlot} &nbsp;|&nbsp; 🛠️ ${a.prestador}</div>
