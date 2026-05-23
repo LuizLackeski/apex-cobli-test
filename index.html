@@ -535,7 +535,20 @@
         /* ============================================================
            CARDS
         ============================================================ */
-card { 
+/* nav section label */
+        .sidebar-nav-section {
+            font-size: 0.62rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1.8px;
+            color: rgba(255,255,255,0.85); /* 👈 Cinza bem mais claro e brilhante! */
+            padding: 14px 18px 4px;
+        }
+
+        /* ============================================================
+           CARDS
+        ============================================================ */
+        .card { /* 👈 O PONTO VITAL AQUI! */
             background: var(--card-bg); padding: 22px 24px; border-radius: var(--radius); 
             margin-bottom: 20px; border: 1px solid rgba(205,212,232,0.9); box-shadow: var(--shadow-sm); 
             display: flex; flex-direction: column; justify-content: space-between; 
@@ -1316,8 +1329,8 @@ card {
                     <label title="Lançar OS no Field">FIELD <input type="checkbox" id="fieldSwitch" class="toggle-switch" checked></label>
                     <label title="Salvar no BD">BANCO <input type="checkbox" id="dbSwitch" class="toggle-switch" checked></label>
                 </div>
-                <button id="btn-resumo-slack" onclick="window.abrirModalResumoSlack()" title="Enviar resumo para o Slack" style="display: flex; margin: 10px 18px; width: calc(100% - 36px); justify-content: center; background: rgba(74,21,75,0.7); border-radius: 8px;">
-                    <span class="slack-icon">💬</span> <span>Resumo Slack</span>
+                <button id="btn-resumo-slack-sidebar" onclick="window.abrirModalResumoSlack()" title="Enviar resumo para o Slack" style="display: flex; margin: 10px 18px; width: calc(100% - 36px); justify-content: center; background: rgba(74,21,75,0.7); border-radius: 8px;">
+                    <span class="slack-icon">💬</span> <span style="color: white; font-weight: bold; font-size: 11px;">RESUMO SLACK</span>
                 </button>
             </div>
 
@@ -1336,8 +1349,7 @@ card {
     <!-- ═══════════════════════════════════════════════
          ÁREA PRINCIPAL
     ════════════════════════════════════════════════ -->
-    <div class="main-wrapper">
-        <!-- Top bar mínima — só aparece em mobile com logo -->
+   <div class="main-wrapper">
         <div class="topo">
             <div class="header-logo-text">
                 <div class="apex-badge" style="font-size:0.85rem;">APEX</div>
@@ -2384,18 +2396,19 @@ async function checkSession() {
         document.getElementById('app-content').style.display = 'flex';
         document.body.style.display = 'block'; 
         await definirPermissoes(currentUser.email, currentUser.id);
+        
+        // Exibe bloco de integrações do menu lateral se for GESTOR
         if (userRole === 'GESTOR') {
-            document.getElementById('integrations-control-wrapper').style.display = 'block';
-            document.getElementById('btn-resumo-slack').style.display = 'flex';
+            let intWrap = document.getElementById('integrations-control-wrapper');
+            if(intWrap) intWrap.style.display = 'block';
         }
+        
         window.carregarProdutos();
         window.carregarDadosDoBanco();
         console.log("📡 Conectando ao Realtime...");
-        supabaseClient.channel('mudancas-agendamentos').on('postgres_changes', { event: '*', schema: 'public', table: 'agendamentos' }, (payload) => { console.log('🚨 BD mudou! Atualizando...', payload); window.carregarDadosDoBanco(); }).subscribe((status) => { console.log("🔌 Realtime:", status); });
+        supabaseClient.channel('mudancas-agendamentos').on('postgres_changes', { event: '*', schema: 'public', table: 'agendamentos' }, (payload) => { console.log('🚨 BD mudou! Atualizando...', payload); window.carregarDadosDoBanco(); }).subscribe();
         
-        // 👇 INICIA O VIGIA DE INATIVIDADE 👇
         window.startInactivityTracker();
-        
     } else {
         document.getElementById('auth-overlay').style.display = 'flex';
         document.body.style.display = 'block'; 
@@ -2491,7 +2504,7 @@ tbody.innerHTML = data.map(u => {
         let blockDelete = podeEditar ? `<button onclick="window.excluirUsuarioPerfil('${u.id}', '${u.email}', '${u.nivel}')" style="background: transparent; border: none; cursor: pointer; font-size: 1.1rem; padding: 0; min-height:auto;" title="Remover Perfil">❌</button>` : '';
         let optionGestorHtml = (userRole === 'GESTOR' || u.nivel === 'GESTOR') ? `<option value="GESTOR" ${u.nivel==='GESTOR'?'selected':''}>GESTOR</option>` : '';
 
-        // 👇 CÁLCULO DO LOG DE ACESSO 👇
+// 👇 CÁLCULO DO LOG DE ACESSO 👇
         let txtAcesso = '<span style="color:var(--muted); font-size:0.75rem; font-style:italic;">Nunca acessou</span>';
         if (u.ultimo_login) {
             let dataUlt = new Date(u.ultimo_login);
@@ -2500,7 +2513,11 @@ tbody.innerHTML = data.map(u => {
             if (u.penultimo_login) {
                 let dataPen = new Date(u.penultimo_login);
                 let strPen = dataPen.toLocaleDateString('pt-BR');
-                let diffDias = Math.floor(Math.abs(dataUlt - dataPen) / (1000 * 60 * 60 * 24));
+                
+                // Zera as horas para comparar só o calendário e não dar falso "mesmo dia"
+                let dUltimoLimpo = new Date(dataUlt.getFullYear(), dataUlt.getMonth(), dataUlt.getDate());
+                let dPenultimoLimpo = new Date(dataPen.getFullYear(), dataPen.getMonth(), dataPen.getDate());
+                let diffDias = Math.round(Math.abs(dUltimoLimpo - dPenultimoLimpo) / (1000 * 60 * 60 * 24));
                 
                 let infoDias = diffDias === 0 ? 'No mesmo dia' : `Ficou ${diffDias} dia(s) off`;
                 txtAcesso = `<div style="font-weight:700; color:var(--primary); font-size:0.75rem;">${strUltimo}</div>
@@ -2510,7 +2527,7 @@ tbody.innerHTML = data.map(u => {
                              <div style="font-size:0.65rem; color:var(--muted);">Primeiro acesso</div>`;
             }
         }
-        // 👆 FIM DO CÁLCULO 👆
+            // 👆 FIM DO CÁLCULO 👆
 
         return `<tr>
             <td style="font-weight:600; color:var(--cobli-dark);">${u.email}</td>
