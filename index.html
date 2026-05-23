@@ -1169,6 +1169,920 @@
             .botoes-acao button { width: 100%; margin-bottom: 5px; flex: none !important; }
         }
     </style>
+
+    <!-- 
+  APEX COBLI — LAYOUT PATCH
+  Aplique este bloco ANTES do </head> do arquivo original
+  Contém apenas mudanças de layout/CSS/JS visual — zero alterações de lógica de negócio
+-->
+
+<!-- ============================================================
+     PATCH 1 — TOPBAR: remove a linha azul estranha, adiciona
+     indicador de status de integrações no topo
+============================================================ -->
+<style>
+/* Remove a linha/borda estranha que aparecia no topo */
+.topo {
+    border-bottom: none !important;
+    box-shadow: 0 1px 0 rgba(255,255,255,0.06) !important;
+}
+
+/* Indicador de integração no topo (dots de status) */
+.topo-integrations {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0 16px;
+    border-right: 1px solid rgba(255,255,255,0.1);
+    margin-right: 4px;
+}
+.topo-integration-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.2);
+    position: relative;
+    transition: background 0.3s;
+}
+.topo-integration-dot.ativo {
+    background: var(--cobli-green);
+    box-shadow: 0 0 6px rgba(0,174,151,0.6);
+}
+.topo-integration-dot.inativo {
+    background: rgba(255,70,51,0.5);
+}
+.topo-integration-label {
+    font-size: 0.52rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: rgba(255,255,255,0.35);
+    margin-top: 2px;
+    text-align: center;
+    line-height: 1;
+}
+.topo-integ-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    cursor: default;
+}
+
+/* ============================================================
+   PATCH 2 — HOME SCREEN: nova aba "Início" com resumo visual
+============================================================ */
+#home-screen {
+    padding-top: 4px;
+}
+
+.home-welcome-bar {
+    background: linear-gradient(135deg, var(--cobli-dark) 0%, #0d1660 100%);
+    border-radius: var(--radius);
+    padding: 22px 28px;
+    margin-bottom: 20px;
+    position: relative;
+    overflow: hidden;
+    border: 1px solid rgba(0,27,184,0.3);
+}
+.home-welcome-bar::after {
+    content: 'APEX';
+    position: absolute;
+    right: 24px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-family: var(--font-mono);
+    font-size: 5rem;
+    font-weight: 700;
+    color: rgba(255,255,255,0.04);
+    letter-spacing: 8px;
+    pointer-events: none;
+    user-select: none;
+}
+.home-welcome-bar h1 {
+    margin: 0 0 4px;
+    font-size: 1.3rem;
+    font-weight: 800;
+    color: white;
+    letter-spacing: -0.5px;
+}
+.home-welcome-bar p {
+    margin: 0;
+    font-size: 0.82rem;
+    color: rgba(255,255,255,0.5);
+    font-weight: 500;
+}
+.home-welcome-bar .welcome-date {
+    margin-top: 10px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(0,174,151,0.15);
+    border: 1px solid rgba(0,174,151,0.3);
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--cobli-green);
+    letter-spacing: 0.3px;
+    font-family: var(--font-mono);
+}
+
+/* KPI cards da home */
+.home-kpis {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 16px;
+}
+.home-kpi-card {
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    padding: 16px 20px;
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-sm);
+    position: relative;
+    overflow: hidden;
+    cursor: default;
+    transition: box-shadow 0.2s, transform 0.2s;
+}
+.home-kpi-card:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-1px);
+}
+.home-kpi-card::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 4px;
+    border-radius: 0 2px 2px 0;
+}
+.home-kpi-card.kpi-total::before { background: var(--primary); }
+.home-kpi-card.kpi-green::before { background: var(--cobli-green); }
+.home-kpi-card.kpi-amber::before { background: #f59e0b; }
+.home-kpi-card.kpi-red::before { background: var(--cobli-red); }
+
+.home-kpi-label {
+    font-size: 0.62rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--muted);
+    margin-bottom: 8px;
+}
+.home-kpi-value {
+    font-size: 2.2rem;
+    font-weight: 800;
+    font-family: var(--font-mono);
+    letter-spacing: -1px;
+    line-height: 1;
+    color: var(--cobli-dark);
+}
+.home-kpi-card.kpi-total .home-kpi-value { color: var(--primary); }
+.home-kpi-card.kpi-green .home-kpi-value { color: var(--cobli-green); }
+.home-kpi-card.kpi-amber .home-kpi-value { color: #f59e0b; }
+.home-kpi-card.kpi-red .home-kpi-value { color: var(--cobli-red); }
+
+.home-kpi-sub {
+    font-size: 0.68rem;
+    color: var(--muted);
+    margin-top: 6px;
+    font-weight: 600;
+}
+
+/* Quick actions na home */
+.home-actions-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    margin-bottom: 20px;
+}
+.home-action-btn {
+    background: var(--card-bg);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px 20px;
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.22s cubic-bezier(0.34,1.4,0.64,1);
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    box-shadow: var(--shadow-sm);
+}
+.home-action-btn:hover {
+    border-color: var(--primary);
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+}
+.home-action-btn.primary-action {
+    background: var(--primary);
+    border-color: var(--primary);
+    grid-column: 1 / -1;
+}
+.home-action-btn.primary-action:hover {
+    background: #0017a0;
+    border-color: #0017a0;
+}
+.home-action-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.3rem;
+    flex-shrink: 0;
+    background: rgba(0,27,184,0.08);
+}
+.primary-action .home-action-icon {
+    background: rgba(255,255,255,0.15);
+    font-size: 1.5rem;
+}
+.home-action-title {
+    font-size: 0.9rem;
+    font-weight: 800;
+    color: var(--cobli-dark);
+    letter-spacing: -0.2px;
+}
+.primary-action .home-action-title {
+    color: white;
+    font-size: 1rem;
+}
+.home-action-sub {
+    font-size: 0.72rem;
+    color: var(--muted);
+    margin-top: 3px;
+    font-weight: 500;
+}
+.primary-action .home-action-sub {
+    color: rgba(255,255,255,0.65);
+}
+
+/* Últimos agendamentos na home (mini lista) */
+.home-recentes-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+.home-recentes-titulo {
+    font-size: 0.72rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--muted);
+}
+.home-recente-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--bg);
+    font-size: 0.82rem;
+    cursor: pointer;
+    transition: background 0.15s;
+    border-radius: var(--radius-sm);
+    gap: 10px;
+}
+.home-recente-item:hover { background: var(--bg); }
+.home-recente-ticket {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--primary);
+    min-width: 80px;
+}
+.home-recente-cliente {
+    flex: 1;
+    font-weight: 600;
+    color: var(--cobli-dark);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.home-recente-status {
+    font-size: 0.65rem;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+}
+
+/* ============================================================
+   PATCH 3 — MODAL PRESTADOR: redesign com brand Cobli
+============================================================ */
+.modal-prestador-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 22px 24px 18px;
+    border-bottom: 1px solid var(--bg);
+}
+.modal-prestador-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, var(--primary), #3a5af0);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-mono);
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: white;
+    flex-shrink: 0;
+    box-shadow: 0 4px 12px rgba(0,27,184,0.3);
+}
+.modal-prestador-nome {
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: var(--cobli-dark);
+    letter-spacing: -0.3px;
+}
+.modal-prestador-meta {
+    font-size: 0.72rem;
+    color: var(--muted);
+    margin-top: 2px;
+    font-weight: 600;
+}
+
+.modal-prestador-acoes {
+    padding: 12px 20px 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.modal-acao-btn {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    width: 100%;
+    padding: 14px 16px;
+    border-radius: 10px;
+    border: 1.5px solid var(--border);
+    background: white;
+    cursor: pointer;
+    font-family: var(--font-main);
+    font-weight: 700;
+    font-size: 0.88rem;
+    transition: all 0.2s;
+    text-align: left;
+}
+.modal-acao-btn:hover {
+    transform: translateX(4px);
+    box-shadow: var(--shadow-sm);
+}
+.modal-acao-btn.acao-ver {
+    color: var(--primary);
+    border-color: rgba(0,27,184,0.2);
+    background: rgba(0,27,184,0.03);
+}
+.modal-acao-btn.acao-ver:hover {
+    background: rgba(0,27,184,0.07);
+    border-color: rgba(0,27,184,0.35);
+}
+.modal-acao-btn.acao-editar {
+    color: #0d7058;
+    border-color: rgba(0,174,151,0.25);
+    background: rgba(0,174,151,0.04);
+}
+.modal-acao-btn.acao-editar:hover {
+    background: rgba(0,174,151,0.1);
+    border-color: rgba(0,174,151,0.4);
+}
+.modal-acao-btn.acao-excluir {
+    color: var(--cobli-red);
+    border-color: rgba(255,70,51,0.2);
+    background: rgba(255,70,51,0.03);
+}
+.modal-acao-btn.acao-excluir:hover {
+    background: rgba(255,70,51,0.08);
+    border-color: rgba(255,70,51,0.35);
+}
+.modal-acao-icone {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    flex-shrink: 0;
+}
+.acao-ver .modal-acao-icone { background: rgba(0,27,184,0.1); }
+.acao-editar .modal-acao-icone { background: rgba(0,174,151,0.12); }
+.acao-excluir .modal-acao-icone { background: rgba(255,70,51,0.1); }
+.modal-acao-texto strong {
+    display: block;
+    font-size: 0.88rem;
+    font-weight: 800;
+}
+.modal-acao-texto span {
+    font-size: 0.68rem;
+    font-weight: 500;
+    opacity: 0.6;
+    display: block;
+    margin-top: 1px;
+}
+.modal-prestador-footer {
+    padding: 12px 20px 18px;
+    display: flex;
+    justify-content: flex-end;
+    border-top: 1px solid var(--bg);
+}
+.modal-btn-cancelar {
+    background: transparent;
+    border: 1.5px solid var(--border);
+    color: var(--muted);
+    padding: 8px 20px;
+    border-radius: var(--radius-sm);
+    font-size: 0.82rem;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: var(--font-main);
+    transition: all 0.18s;
+    min-height: auto;
+}
+.modal-btn-cancelar:hover {
+    border-color: var(--cobli-dark);
+    color: var(--cobli-dark);
+    background: var(--bg);
+    transform: none;
+    box-shadow: none;
+}
+
+/* ============================================================
+   PATCH 4 — DASHBOARD: visual mais refinado
+============================================================ */
+
+/* Stat cards do dashboard — mais impactantes */
+.stats-card {
+    background: var(--card-bg) !important;
+    padding: 20px 18px !important;
+    border-radius: var(--radius) !important;
+    flex: 1;
+    border: 1px solid var(--border) !important;
+    box-shadow: var(--shadow-sm) !important;
+    position: relative;
+    overflow: hidden;
+    transition: box-shadow 0.2s, transform 0.2s;
+}
+.stats-card:hover {
+    box-shadow: var(--shadow-md) !important;
+    transform: translateY(-2px);
+}
+.stats-card::after {
+    content: '';
+    position: absolute;
+    top: 0; right: 0;
+    width: 60px; height: 60px;
+    border-radius: 0 var(--radius) 0 60px;
+    opacity: 0.06;
+}
+.stats-card:nth-child(1)::after { background: var(--primary); }
+.stats-card:nth-child(2)::after { background: var(--cobli-green); }
+.stats-card:nth-child(3)::after { background: #f59e0b; }
+.stats-card .stats-label {
+    font-size: 0.62rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--muted);
+    margin-bottom: 10px;
+}
+.stats-card strong {
+    font-size: 2.6rem !important;
+    margin-top: 2px !important;
+    line-height: 1 !important;
+}
+
+/* linha de ocupação da agenda — mais visual */
+#ocupacao-lista > div,
+#ocupacao-tecnicos-lista > div {
+    transition: all 0.2s;
+}
+#ocupacao-lista > div:hover,
+#ocupacao-tecnicos-lista > div:hover {
+    transform: translateX(3px);
+}
+
+/* serviços lista — mais clean */
+#lista-dashboard-servicos > div,
+#lista-dashboard-solicitantes > div {
+    transition: all 0.2s;
+}
+#lista-dashboard-servicos > div:hover,
+#lista-dashboard-solicitantes > div:hover {
+    transform: translateX(3px);
+}
+
+/* ============================================================
+   MOBILE patches
+============================================================ */
+@media (max-width: 700px) {
+    .home-kpis { grid-template-columns: repeat(2, 1fr); }
+    .home-actions-grid { grid-template-columns: 1fr; }
+    .home-welcome-bar { padding: 16px 18px; }
+    .home-kpi-value { font-size: 1.8rem; }
+}
+</style>
+
+<script>
+// ============================================================
+// PATCH JS — Ajustes visuais sem alterar lógica de negócio
+// Injete este script ANTES do script principal do APEX
+// ============================================================
+
+// ── PATCH 2: Substituir abrirOpcoesPrestador por versão com novo visual ──
+(function() {
+    // Sobrescreve após o DOMContentLoaded para garantir que o original já foi definido
+    document.addEventListener('DOMContentLoaded', function() {
+
+        // ── PATCH: nova função de modal do prestador com brand Cobli ──
+        window.abrirOpcoesPrestador = function(i) {
+            if (typeof userRole !== 'undefined' && userRole !== 'GESTOR') {
+                return window.abrirDetalhesPrestador(i);
+            }
+            const p = (typeof prestadores !== 'undefined') ? prestadores[i] : { nome: 'Prestador', cidade: '-', uf: '-', status_prestador: 'PRODUCAO' };
+            const iniciais = p.nome ? p.nome.split(' ').slice(0,2).map(w => w[0]).join('').toUpperCase() : '??';
+            const statusTag = p.status_prestador === 'TESTE'
+                ? '<span style="font-size:0.65rem; background:#fef3c7; color:#b45309; padding:2px 7px; border-radius:4px; font-weight:800; margin-left:6px;">TESTE</span>'
+                : '<span style="font-size:0.65rem; background:#dcfce7; color:#15803d; padding:2px 7px; border-radius:4px; font-weight:800; margin-left:6px;">PRODUÇÃO</span>';
+
+            const html = `
+            <div class="modal-prestador-header">
+                <div class="modal-prestador-avatar">${iniciais}</div>
+                <div>
+                    <div class="modal-prestador-nome">${p.nome} ${statusTag}</div>
+                    <div class="modal-prestador-meta">📍 ${p.cidade || '-'}/${p.uf || '-'} &nbsp;·&nbsp; 📏 Raio: ${p.range || '-'} km &nbsp;·&nbsp; 👥 ${p.qtdtecnicos || 1} técnico(s)</div>
+                </div>
+            </div>
+            <div class="modal-prestador-acoes">
+                <button class="modal-acao-btn acao-ver" onclick="window.fecharModal(); window.abrirDetalhesPrestador(${i})">
+                    <div class="modal-acao-icone">👁️</div>
+                    <div class="modal-acao-texto">
+                        <strong>Ver Detalhes e Agenda</strong>
+                        <span>Horários, bloqueios e configurações</span>
+                    </div>
+                    <span style="margin-left:auto; opacity:0.35; font-size:1rem;">→</span>
+                </button>
+                <button class="modal-acao-btn acao-editar" onclick="window.fecharModal(); window.abrirCadastro(${i})">
+                    <div class="modal-acao-icone">📝</div>
+                    <div class="modal-acao-texto">
+                        <strong>Editar Cadastro</strong>
+                        <span>Dados, agenda base e técnicos</span>
+                    </div>
+                    <span style="margin-left:auto; opacity:0.35; font-size:1rem;">→</span>
+                </button>
+                <button class="modal-acao-btn acao-excluir" onclick="window.fecharModal(); window.excluirPrestador(${i})">
+                    <div class="modal-acao-icone">🗑️</div>
+                    <div class="modal-acao-texto">
+                        <strong>Excluir Prestador</strong>
+                        <span>Ação permanente e irreversível</span>
+                    </div>
+                </button>
+            </div>
+            <div class="modal-prestador-footer">
+                <button class="modal-btn-cancelar" onclick="window.fecharModal()">Cancelar</button>
+            </div>`;
+
+            // Usa o modal existente mas limpa os wrappers padrão
+            const overlay = document.getElementById('modalAviso');
+            const header = document.getElementById('modalHeader');
+            const body = document.getElementById('modalBody');
+            const footer = document.getElementById('modalFooter');
+
+            if (header) header.innerHTML = '';
+            if (header) header.style.display = 'none';
+            if (body) { body.innerHTML = html; body.style.marginBottom = '0'; }
+            if (footer) { footer.innerHTML = ''; footer.style.display = 'none'; }
+            if (overlay) overlay.style.display = 'flex';
+        };
+
+        // ── PATCH: restaurar modal normal para outros usos ──
+        const origExibirModal = window.exibirModal;
+        window.exibirModal = function(t, b) {
+            const header = document.getElementById('modalHeader');
+            const footer = document.getElementById('modalFooter');
+            if (header) header.style.display = '';
+            if (footer) footer.style.display = '';
+            origExibirModal(t, b);
+        };
+
+        // ── PATCH: Criar aba HOME e injetar no menu ──
+        criarAbaHome();
+
+        // ── PATCH: Adicionar dots de integração no topo ──
+        injetarTopbarIntegrations();
+
+        // ── PATCH: Melhorar visual dos stats-cards do Dashboard ──
+        melhorarStatCards();
+    });
+
+    function criarAbaHome() {
+        // Só cria se ainda não existe
+        if (document.getElementById('home')) return;
+
+        // Cria a div da aba home
+        const homeDiv = document.createElement('div');
+        homeDiv.id = 'home';
+        homeDiv.className = 'aba ativa'; // começa ativa
+
+        homeDiv.innerHTML = `
+        <div id="home-screen">
+            <!-- Welcome bar -->
+            <div class="home-welcome-bar">
+                <h1 id="home-greeting">Bom dia! 👋</h1>
+                <p id="home-subtitle">Visão geral do sistema de agendamento Cobli</p>
+                <div class="welcome-date" id="home-date">Carregando...</div>
+            </div>
+
+            <!-- KPI cards -->
+            <div class="home-kpis">
+                <div class="home-kpi-card kpi-total">
+                    <div class="home-kpi-label">Total de Solicitações</div>
+                    <div class="home-kpi-value" id="home-kpi-total">—</div>
+                    <div class="home-kpi-sub">Todos os status</div>
+                </div>
+                <div class="home-kpi-card kpi-green">
+                    <div class="home-kpi-label">Concluídos</div>
+                    <div class="home-kpi-value" id="home-kpi-conc">—</div>
+                    <div class="home-kpi-sub">Inc. impedidos</div>
+                </div>
+                <div class="home-kpi-card kpi-amber">
+                    <div class="home-kpi-label">Agendados</div>
+                    <div class="home-kpi-value" id="home-kpi-agend">—</div>
+                    <div class="home-kpi-sub">Programados</div>
+                </div>
+            </div>
+
+            <!-- Quick actions -->
+            <div class="home-actions-grid">
+                <button class="home-action-btn primary-action" onclick="window.irParaAgendamento()">
+                    <div class="home-action-icon">📅</div>
+                    <div>
+                        <div class="home-action-title">Novo Agendamento</div>
+                        <div class="home-action-sub">Buscar prestador por CEP e agendar serviços</div>
+                    </div>
+                </button>
+                <button class="home-action-btn" onclick="window.trocarAba('painel', document.getElementById('btn-painel'))">
+                    <div class="home-action-icon" style="background:rgba(0,174,151,0.1);">📋</div>
+                    <div>
+                        <div class="home-action-title">Painel</div>
+                        <div class="home-action-sub">Filtros e status detalhado</div>
+                    </div>
+                </button>
+                <button class="home-action-btn" onclick="window.trocarAba('dashboard', document.getElementById('btn-dashboard'))">
+                    <div class="home-action-icon" style="background:rgba(245,158,11,0.1);">📊</div>
+                    <div>
+                        <div class="home-action-title">Dashboard</div>
+                        <div class="home-action-sub">Métricas e ocupação da agenda</div>
+                    </div>
+                </button>
+            </div>
+
+            <!-- Últimos agendamentos -->
+            <div class="card" style="padding: 16px 20px;">
+                <div class="home-recentes-header">
+                    <div class="home-recentes-titulo">Últimas Solicitações</div>
+                    <button onclick="window.trocarAba('painel', document.getElementById('btn-painel'))" style="background:transparent; border:none; color:var(--primary); font-size:0.72rem; font-weight:700; cursor:pointer; padding:0; min-height:auto; text-transform:uppercase; letter-spacing:0.5px;">Ver Todos →</button>
+                </div>
+                <div id="home-lista-recentes">
+                    <div style="color:var(--muted); font-size:0.82rem; padding:8px 0;">Carregando...</div>
+                </div>
+            </div>
+        </div>`;
+
+        // Insere antes da aba consulta
+        const consultaDiv = document.getElementById('consulta');
+        if (consultaDiv) {
+            consultaDiv.parentNode.insertBefore(homeDiv, consultaDiv);
+            // Desativa consulta para não aparecer junto
+            consultaDiv.classList.remove('ativa');
+        }
+
+        // Atualiza o greeting com hora do dia
+        const hora = new Date().getHours();
+        const greeting = hora < 12 ? 'Bom dia' : hora < 18 ? 'Boa tarde' : 'Boa noite';
+        const greetEl = document.getElementById('home-greeting');
+        if (greetEl) greetEl.textContent = `${greeting}! 👋`;
+
+        // Data atual
+        const dateEl = document.getElementById('home-date');
+        if (dateEl) {
+            const agora = new Date();
+            dateEl.textContent = agora.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' });
+        }
+
+        // Adiciona botão HOME ao menu
+        const mainMenu = document.getElementById('main-menu');
+        if (mainMenu) {
+            const btnHome = document.createElement('button');
+            btnHome.id = 'btn-home';
+            btnHome.style.cssText = 'border-top: 4px solid var(--cobli-green) !important;';
+            btnHome.innerHTML = 'Início';
+            btnHome.onclick = function() { window.trocarAba('home', this); };
+
+            // Adiciona ANTES de todos os outros botões
+            const firstBtn = mainMenu.querySelector('button');
+            if (firstBtn) mainMenu.insertBefore(btnHome, firstBtn);
+        }
+
+        // Patch na função trocarAba para suportar aba home
+        const origTrocarAba = window.trocarAba;
+        window.trocarAba = function(id, btn) {
+            origTrocarAba(id, btn);
+            if (id === 'home') {
+                window.atualizarHomeScreen();
+            }
+        };
+
+        // Patch: se era a aba consulta que ficava ativa, agora é o home
+        const btnConsulta = document.getElementById('btn-consulta');
+        if (btnConsulta) {
+            btnConsulta.classList.remove('ativo');
+            // Não remove, apenas redireciona o click para ir ao form direto
+            btnConsulta.onclick = function() {
+                window.irParaAgendamento();
+            };
+        }
+
+        // Ativa o botão home no menu
+        const btnHomeEl = document.getElementById('btn-home');
+        if (btnHomeEl) btnHomeEl.classList.add('ativo');
+    }
+
+    window.irParaAgendamento = function() {
+        // Vai para a aba consulta (agendamento)
+        document.querySelectorAll('.aba').forEach(a => a.classList.remove('ativa'));
+        document.querySelectorAll('.menu button').forEach(b => b.classList.remove('ativo'));
+        const consultaEl = document.getElementById('consulta');
+        if (consultaEl) consultaEl.classList.add('ativa');
+        const btnConsulta = document.getElementById('btn-consulta');
+        if (btnConsulta) btnConsulta.classList.add('ativo');
+    };
+
+    window.atualizarHomeScreen = function() {
+        if (typeof agendamentos === 'undefined') return;
+
+        // KPIs
+        const total = agendamentos.length;
+        let conc = 0, agend = 0;
+        agendamentos.forEach(a => {
+            const s = String(a.status || '').toLowerCase();
+            if (s.includes('conclu') || s.includes('impedido') || s.includes('finalizado')) conc++;
+            if (s.includes('agendado') || s.includes('scheduled')) agend++;
+        });
+
+        const elTotal = document.getElementById('home-kpi-total');
+        const elConc = document.getElementById('home-kpi-conc');
+        const elAgend = document.getElementById('home-kpi-agend');
+        if (elTotal) elTotal.textContent = total;
+        if (elConc) elConc.textContent = conc;
+        if (elAgend) elAgend.textContent = agend;
+
+        // Lista recentes (últimos 5)
+        const lista = document.getElementById('home-lista-recentes');
+        if (!lista) return;
+
+        const statusColors = {
+            concluido: { bg: '#dcfce7', color: '#15803d', label: 'Concluído' },
+            agendado:  { bg: '#e8ecff', color: '#001BB8', label: 'Agendado' },
+            andamento: { bg: '#fef3c7', color: '#b45309', label: 'Andamento' },
+            impedido:  { bg: '#fee2e2', color: '#dc2626', label: 'Impedido' },
+            cancelado: { bg: '#f1f5f9', color: '#64748b', label: 'Cancelado' },
+            negociacao:{ bg: '#ede9fe', color: '#6d28d9', label: 'Negociação' },
+            solicitado:{ bg: '#f0f9ff', color: '#0369a1', label: 'Solicitado' },
+        };
+
+        const recentes = [...agendamentos].slice(0, 8);
+        if (recentes.length === 0) {
+            lista.innerHTML = '<div style="color:var(--muted); font-size:0.82rem; padding:8px 0; font-style:italic;">Nenhum agendamento encontrado.</div>';
+            return;
+        }
+
+        lista.innerHTML = recentes.map(a => {
+            const s = String(a.status || 'solicitado').toLowerCase();
+            let tipo = 'solicitado';
+            if (s.includes('conclu') || s.includes('finalizado')) tipo = 'concluido';
+            else if (s.includes('agendado')) tipo = 'agendado';
+            else if (s.includes('andamento') || s.includes('deslocamento')) tipo = 'andamento';
+            else if (s.includes('impedido')) tipo = 'impedido';
+            else if (s.includes('cancelado')) tipo = 'cancelado';
+            else if (s.includes('negocia') || s.includes('aguardando')) tipo = 'negociacao';
+
+            const sc = statusColors[tipo];
+            const nomeCliente = (typeof window.formatarCapitalize === 'function')
+                ? window.formatarCapitalize(a.cliente || '-')
+                : (a.cliente || '-');
+
+            return `<div class="home-recente-item" onclick="window.trocarAba('painel', document.getElementById('btn-painel'))">
+                <div class="home-recente-ticket">#${a.ticket || '-'}</div>
+                <div class="home-recente-cliente">${nomeCliente}</div>
+                <div style="font-size:0.72rem; color:var(--muted); min-width:80px; text-align:center;">${a.data || '-'}</div>
+                <div class="home-recente-status" style="background:${sc.bg}; color:${sc.color};">${sc.label}</div>
+            </div>`;
+        }).join('');
+    };
+
+    // Sobrescrever carregarDadosDoBanco para atualizar home depois
+    document.addEventListener('DOMContentLoaded', function() {
+        setTimeout(() => {
+            const origCarregarDados = window.carregarDadosDoBanco;
+            if (typeof origCarregarDados === 'function') {
+                window.carregarDadosDoBanco = async function() {
+                    await origCarregarDados();
+                    // Se a aba home está ativa, atualiza
+                    const homeEl = document.getElementById('home');
+                    if (homeEl && homeEl.classList.contains('ativa')) {
+                        window.atualizarHomeScreen();
+                    }
+                };
+            }
+        }, 500);
+    });
+
+    function injetarTopbarIntegrations() {
+        const topoRight = document.querySelector('.topo-right');
+        if (!topoRight || document.getElementById('topo-integ')) return;
+
+        const wrapper = document.createElement('div');
+        wrapper.id = 'topo-integ';
+        wrapper.className = 'topo-integrations';
+        wrapper.title = 'Status das integrações';
+        wrapper.innerHTML = `
+            <div class="topo-integ-wrapper" title="Slack">
+                <div class="topo-integration-dot" id="dot-slack"></div>
+                <div class="topo-integration-label">SLK</div>
+            </div>
+            <div class="topo-integ-wrapper" title="Field Control">
+                <div class="topo-integration-dot" id="dot-field"></div>
+                <div class="topo-integration-label">FLD</div>
+            </div>
+            <div class="topo-integ-wrapper" title="Banco de Dados">
+                <div class="topo-integration-dot" id="dot-banco"></div>
+                <div class="topo-integration-label">BD</div>
+            </div>`;
+
+        topoRight.insertBefore(wrapper, topoRight.firstChild);
+
+        // Sincroniza os dots com os toggles da sidebar
+        function syncDots() {
+            const slk = document.getElementById('slackSwitch');
+            const fld = document.getElementById('fieldSwitch');
+            const bd = document.getElementById('dbSwitch');
+            const dSlk = document.getElementById('dot-slack');
+            const dFld = document.getElementById('dot-field');
+            const dBd = document.getElementById('dot-banco');
+            if (dSlk) dSlk.className = 'topo-integration-dot ' + (slk && slk.checked ? 'ativo' : 'inativo');
+            if (dFld) dFld.className = 'topo-integration-dot ' + (fld && fld.checked ? 'ativo' : 'inativo');
+            if (dBd)  dBd.className  = 'topo-integration-dot ' + (bd  && bd.checked  ? 'ativo' : 'inativo');
+        }
+
+        // Escuta mudanças nos switches
+        ['slackSwitch','fieldSwitch','dbSwitch'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.addEventListener('change', syncDots);
+        });
+
+        // Sync inicial + poll
+        setTimeout(syncDots, 800);
+        setInterval(syncDots, 3000);
+
+        // Oculta para PRESTADOR (não tem integrações)
+        setTimeout(() => {
+            if (typeof userRole !== 'undefined' && userRole === 'PRESTADOR') {
+                wrapper.style.display = 'none';
+            }
+        }, 1200);
+    }
+
+    function melhorarStatCards() {
+        // Transforma os stats-cards do Dashboard para ter label acima do número
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => {
+                document.querySelectorAll('.stats-card').forEach(card => {
+                    // Adiciona classe de label ao text node antes do strong
+                    const nodes = [...card.childNodes];
+                    nodes.forEach(n => {
+                        if (n.nodeType === 3 && n.textContent.trim()) {
+                            const span = document.createElement('div');
+                            span.className = 'stats-label';
+                            span.textContent = n.textContent.trim();
+                            card.insertBefore(span, n);
+                            card.removeChild(n);
+                        }
+                    });
+                });
+            }, 2000);
+        });
+    }
+
+})();
+</script>
 </head>
 <body>
 
