@@ -1171,19 +1171,25 @@
             }
         }
 /* ============================================================
-           AJUSTES FINAIS: LOGO EM LINHA E DOTS MAIORES
+           AJUSTES FINAIS: LOGO EM LINHA (SÓ DESKTOP) E DOTS MAIORES
         ============================================================ */
-        .cobli-brand { 
-            flex-direction: row !important; 
-            align-items: center !important; 
-            gap: 6px !important; 
+        :root {
+            --sidebar-w: 245px; /* 👈 Aumentamos a barra para a frase caber inteira */
         }
-        .txt-agenda { 
-            margin-top: 0 !important; 
-            display: inline-block !important; 
-            font-size: 0.55rem !important; 
-            letter-spacing: 1.5px !important; 
-            white-space: nowrap !important; /* 👈 A mágica que impede quebrar a linha */
+
+        @media (min-width: 701px) {
+            .sidebar-logo .cobli-brand { 
+                flex-direction: row !important; 
+                align-items: baseline !important; /* 👈 Alinha a base das letras por baixo */
+                gap: 6px !important; 
+            }
+            .sidebar-logo .txt-agenda { 
+                margin-top: 0 !important; 
+                display: inline-block !important; 
+                font-size: 0.55rem !important; 
+                letter-spacing: 1px !important; 
+                white-space: nowrap !important; 
+            }
         }
         
         .topo-integrations { gap: 16px !important; }
