@@ -321,29 +321,6 @@
             position: relative;
         }
 
-        /* 👇 EFEITO DE LUZES NO FUNDO (Ambient Glow Cobli) 👇 */
-        .main-wrapper::before,
-        .main-wrapper::after {
-            content: '';
-            position: fixed;
-            border-radius: 50%;
-            filter: blur(120px); /* Deixa a cor bem suave e espalhada */
-            z-index: 0;
-            pointer-events: none;
-        }
-        .main-wrapper::before { 
-            /* Luz Verde no canto superior direito */
-            width: 500px; height: 500px;
-            background: rgba(0, 174, 151, 0.18);
-            top: -150px; right: -150px;
-        }
-        .main-wrapper::after { 
-            /* Luz Azul no canto inferior esquerdo, colada na sidebar */
-            width: 600px; height: 600px;
-            background: rgba(0, 27, 184, 0.12);
-            bottom: -200px; left: calc(var(--sidebar-w) - 200px);
-        }
-
         /* ── TOP BAR ── */
         .topo {
             background: var(--cobli-dark);
@@ -1107,96 +1084,91 @@
         .preview-resumo .pv-row span { color: white; }
 
 /* ============================================================
-           MOBILE — MODO APP (Menu Inferior)
+           MOBILE — MODO APP (Menu Inferior + Correções de Vazamento)
         ============================================================ */
         @media (max-width: 700px) {
             :root { --sidebar-w: 0px; }
 
-            /* 1. Mata as luzes de fundo e trava a rolagem horizontal */
-            html, body { overflow-x: hidden !important; width: 100vw !important; max-width: 100vw !important; }
-            .main-wrapper::before, .main-wrapper::after { display: none !important; }
+            /* 1. Trava total de rolagem horizontal na raiz */
+            html, body { overflow-x: hidden !important; width: 100vw !important; max-width: 100vw !important; margin: 0; padding: 0; }
+            .main-wrapper { max-width: 100vw; overflow-x: hidden; margin-left: 0 !important; padding-bottom: 120px !important; }
+            
+            /* 2. Ajuste de margens do conteúdo */
+            .conteudo { width: 100% !important; max-width: 100vw !important; box-sizing: border-box; padding: 12px 10px !important; overflow-x: hidden; }
 
-            /* 2. Sidebar vira barra de navegação inferior (Bottom Navigation) */
+            /* 3. Evita que os cartões e textos largos quebrem a tela */
+            .card { width: 100% !important; max-width: 100% !important; box-sizing: border-box; padding: 16px 14px !important; overflow-x: auto; }
+            .home-recente-cliente { min-width: 0; overflow: hidden; text-overflow: ellipsis; } /* 👈 Essa é a mágica que evita o texto empurrar a tela */
+
+            /* 4. Tabela de Usuários com rolagem interna */
+            .card > div[style*="overflow-y:auto"] { overflow-x: auto !important; max-width: 100%; }
+            table { min-width: 600px; display: table !important; } 
+
+            /* 5. Menu Lateral vira Bottom Nav */
             .sidebar {
-                width: 100% !important;
-                min-width: 100% !important;
-                height: 65px !important;
-                top: auto !important;
-                bottom: 0 !important;
-                left: 0 !important;
-                right: 0 !important;
-                flex-direction: row !important;
-                align-items: stretch !important;
-                border-radius: 18px 18px 0 0 !important;
-                box-shadow: 0 -4px 24px rgba(7,7,78,0.3) !important;
-                border: none !important;
-                z-index: 9999 !important;
+                width: 100% !important; min-width: 100% !important; height: 65px !important;
+                top: auto !important; bottom: 0 !important; left: 0 !important; right: 0 !important;
+                flex-direction: row !important; align-items: stretch !important;
+                border-radius: 18px 18px 0 0 !important; box-shadow: 0 -4px 24px rgba(7,7,78,0.3) !important;
+                z-index: 9999 !important; border: none !important;
             }
 
-            /* Esconde itens da sidebar que não cabem no celular */
-            .sidebar-logo, .sidebar-nav-section, .menu-divider, .sidebar-bottom, #integrations-control-wrapper { 
-                display: none !important; 
-            }
+            .sidebar-logo, .sidebar-nav-section, .menu-divider, .sidebar-bottom { display: none !important; }
 
-            /* 3. Ajusta o Menu e os Botões */
             .menu {
-                flex-direction: row !important;
-                flex: 1 !important;
-                padding: 0 10px !important;
-                overflow-x: auto !important;
-                overflow-y: hidden !important;
-                align-items: center !important;
-                justify-content: space-between !important;
-                scrollbar-width: none !important;
-                margin: 0 !important;
+                flex-direction: row !important; flex: 1 !important; padding: 0 10px !important;
+                overflow-x: auto !important; overflow-y: hidden !important;
+                align-items: center !important; justify-content: space-between !important; margin: 0 !important;
             }
-            .menu::-webkit-scrollbar { display: none !important; }
 
             .menu button {
-                flex-direction: column !important;
-                gap: 4px !important;
-                padding: 6px !important;
-                font-size: 0.6rem !important;
-                border-left: none !important;
-                border-top: 3px solid transparent !important;
-                align-items: center !important;
-                justify-content: center !important;
-                min-width: 60px !important;
-                border-radius: 0 !important;
-                white-space: nowrap !important;
-                flex: 1;
+                flex-direction: column !important; gap: 4px !important; padding: 6px !important;
+                font-size: 0.6rem !important; border-left: none !important; border-top: 3px solid transparent !important;
+                align-items: center !important; justify-content: center !important;
+                min-width: 60px !important; border-radius: 0 !important; flex: 1; white-space: nowrap !important;
             }
             .menu button::before { width: 22px !important; height: 22px !important; margin: 0 !important; }
-            .menu button.ativo { 
-                border-left: none !important; 
-                border-top: 3px solid var(--cobli-green) !important; 
-                background: rgba(0,27,184,0.15) !important; 
-                color: #00ffda !important;
-            }
+            .menu button.ativo { border-top: 3px solid var(--cobli-green) !important; background: rgba(0,27,184,0.15) !important; color: #00ffda !important; }
 
-            .main-wrapper { margin-left: 0 !important; padding-bottom: 75px !important; }
-
-            /* 4. Topo volta a exibir o logo da APEX | Cobli */
             .topo { height: 55px !important; padding: 0 16px !important; justify-content: space-between !important; }
             .topo .header-logo-text { display: flex !important; }
 
-            /* 5. Ajustes de Conteúdo */
-            .conteudo {
-                padding: 16px 14px 90px !important;
-                width: 100% !important;
-                box-sizing: border-box !important;
-            }
-
-            /* 6. Comportamentos de Cards e Tabelas */
             .auth-card { width: 95% !important; padding: 20px 18px !important; }
-            table { display: block !important; width: 100% !important; overflow-x: auto !important; white-space: nowrap !important; }
             .flex-cards { flex-direction: column !important; }
-            .status-bar { min-width: 100% !important; width: max-content; }
-            .status-bar-wrapper { overflow-x: auto !important; padding-bottom: 5px; }
+            .home-kpis { grid-template-columns: repeat(2, 1fr); }
+            .home-actions-grid { grid-template-columns: 1fr; }
+            .home-kpi-value { font-size: 1.8rem; }
+
+            /* 👇 INTEGRAÇÕES NO MOBILE - BARRA FLUTUANTE ACIMA DO MENU 👇 */
+            #integrations-control-wrapper {
+                display: flex !important;
+                position: fixed;
+                bottom: 65px; /* Altura exata do menu inferior */
+                left: 0; right: 0; width: 100vw;
+                background: #090954; /* Fundo escuro destacado */
+                border-top: 1px solid rgba(255,255,255,0.1);
+                z-index: 9998 !important;
+                flex-direction: row !important;
+                align-items: center !important;
+                justify-content: space-between !important;
+                padding: 8px 14px !important;
+                box-sizing: border-box;
+                box-shadow: 0 -4px 15px rgba(0,0,0,0.2);
+            }
+            #integrations-control-wrapper .sidebar-nav-section { display: none !important; }
+            #integrations-control-wrapper .integracoes-topo { 
+                display: flex !important; flex-direction: row !important; gap: 10px !important; padding: 0 !important; border: none !important; margin: 0 !important; 
+            }
+            #integrations-control-wrapper .integracoes-topo label { 
+                flex-direction: column !important; font-size: 0.5rem !important; gap: 3px !important; 
+            }
+            #integrations-control-wrapper .toggle-switch { width: 28px !important; height: 14px !important; }
+            #integrations-control-wrapper .toggle-switch::after { width: 10px; height: 10px; }
+            #integrations-control-wrapper .toggle-switch:checked::after { transform: translateX(14px); }
             
-            /* Filtros em 2 colunas para economizar tela */
-            .grid-filtros { grid-template-columns: 1fr 1fr !important; }
-            .campo-filtro:last-child { grid-column: 1 / -1; }
+            #btn-resumo-slack-sidebar { 
+                margin: 0 !important; width: auto !important; padding: 6px 12px !important; border-radius: 6px !important; 
+            }
         }
     </style>
 
