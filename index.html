@@ -1988,24 +1988,30 @@
         }).join('');
     };
 
-    // Sobrescrever carregarDadosDoBanco para atualizar home depois
-    document.addEventListener('DOMContentLoaded', function() {
-        setTimeout(() => {
-            const origCarregarDados = window.carregarDadosDoBanco;
-            if (typeof origCarregarDados === 'function') {
-                window.carregarDadosDoBanco = async function() {
-                    await origCarregarDados();
-                    // Se a aba home está ativa, atualiza
-                    const homeEl = document.getElementById('home');
-                    if (homeEl && homeEl.classList.contains('ativa')) {
-                        window.atualizarHomeScreen();
-                    }
-                };
-            }
-        }, 500);
-    });
+ // 👇 Hook robusto para atualizar a Home Screen instantaneamente
+    let watchRenderInterval = setInterval(() => {
+        if (typeof window.renderPainel === 'function') {
+            clearInterval(watchRenderInterval); // Achou a função! Para de procurar.
+            
+            const origRenderPainel = window.renderPainel;
+            window.renderPainel = function() {
+                origRenderPainel(); // Executa a função original do sistema
+                
+                // Força a atualização da Home silenciosamente todas as vezes que o painel renderiza
+                if (typeof window.atualizarHomeScreen === 'function') {
+                    window.atualizarHomeScreen();
+                }
+            };
 
-    function injetarTopbarIntegrations() {
+            // Tiro de segurança: se a internet foi tão rápida que os dados já chegaram
+            // antes desse hook ser feito, forçamos uma atualização manual imediata:
+            if (typeof agendamentos !== 'undefined' && agendamentos.length > 0 && typeof window.atualizarHomeScreen === 'function') {
+                window.atualizarHomeScreen();
+            }
+        }
+    }, 50); // Checa a cada 50ms
+
+function injetarTopbarIntegrations() {
         const topoRight = document.querySelector('.topo-right');
         if (!topoRight || document.getElementById('topo-integ')) return;
 
@@ -2029,20 +2035,30 @@
 
         topoRight.insertBefore(wrapper, topoRight.firstChild);
 
-        // Sincroniza os dots com os toggles da sidebar
+        // Sincroniza os dots
         function syncDots() {
-            const slk = document.getElementById('slackSwitch');
-            const fld = document.getElementById('fieldSwitch');
-            const bd = document.getElementById('dbSwitch');
             const dSlk = document.getElementById('dot-slack');
             const dFld = document.getElementById('dot-field');
             const dBd = document.getElementById('dot-banco');
+            
+            // 👇 CORREÇÃO: Se não for gestor, é sempre TRUE (Verde)
+            if (typeof userRole !== 'undefined' && userRole !== 'GESTOR') {
+                if (dSlk) dSlk.className = 'topo-integration-dot ativo';
+                if (dFld) dFld.className = 'topo-integration-dot ativo';
+                if (dBd)  dBd.className  = 'topo-integration-dot ativo';
+                return;
+            }
+
+            // Lógica original para GESTOR
+            const slk = document.getElementById('slackSwitch');
+            const fld = document.getElementById('fieldSwitch');
+            const bd = document.getElementById('dbSwitch');
             if (dSlk) dSlk.className = 'topo-integration-dot ' + (slk && slk.checked ? 'ativo' : 'inativo');
             if (dFld) dFld.className = 'topo-integration-dot ' + (fld && fld.checked ? 'ativo' : 'inativo');
             if (dBd)  dBd.className  = 'topo-integration-dot ' + (bd  && bd.checked  ? 'ativo' : 'inativo');
         }
 
-        // Escuta mudanças nos switches
+        // Escuta mudanças nos switches se eles existirem
         ['slackSwitch','fieldSwitch','dbSwitch'].forEach(id => {
             const el = document.getElementById(id);
             if (el) el.addEventListener('change', syncDots);
@@ -2052,7 +2068,7 @@
         setTimeout(syncDots, 800);
         setInterval(syncDots, 3000);
 
-        // Oculta para PRESTADOR (não tem integrações)
+        // Oculta para PRESTADOR
         setTimeout(() => {
             if (typeof userRole !== 'undefined' && userRole === 'PRESTADOR') {
                 wrapper.style.display = 'none';
@@ -2080,6 +2096,26 @@
             }, 2000);
         });
     }
+
+    // 👇 CORREÇÃO: Forçar a atualização da Home no momento certo
+    // Intercepta a função renderPainel (que é chamada logo após o carregamento do banco) 
+    // para atualizar a Home Screen silenciosamente.
+    document.addEventListener('DOMContentLoaded', function() {
+        setTimeout(() => {
+            if (typeof window.renderPainel === 'function') {
+                const origRenderPainel = window.renderPainel;
+                window.renderPainel = function() {
+                    origRenderPainel(); // Executa a função original
+                    
+                    // Se a aba Home estiver visível, atualiza os dados nela
+                    const homeEl = document.getElementById('home');
+                    if (homeEl && homeEl.classList.contains('ativa') && typeof window.atualizarHomeScreen === 'function') {
+                        window.atualizarHomeScreen();
+                    }
+                };
+            }
+        }, 1000);
+    });
 
 })();
 </script>
