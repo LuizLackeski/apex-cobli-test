@@ -2460,30 +2460,36 @@ function injetarTopbarIntegrations() {
             <div id="cadastro-flow" class="card" style="display:none;">
          
 <div id="etapa-1">
-                    <h2 style="color: var(--primary);">Dados do Prestador</h2>
-                    <label class="req">Nome / Empresa</label><input id="nomeEmpresa" required style="margin-bottom: 12px;" onblur="this.value = window.formatarCapitalize(this.value)">
-                    <label class="req">Endereço Completo</label><input id="endereco" required style="margin-bottom: 12px;" onblur="this.value = window.formatarCapitalize(this.value)">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                        <h2 style="color: var(--primary); margin: 0; border: none; padding: 0;">Dados do Prestador</h2>
+                        <button type="button" id="btn-toggle-dados" onclick="window.toggleDadosPrestador()" style="display: none; background: var(--bg); color: var(--cobli-dark); border: 1px solid var(--border); font-size: 0.75rem; padding: 6px 12px; min-height: auto; border-radius: 20px;">Ocultar Dados 🔼</button>
+                    </div>
                     
-                    <div style="display: flex; gap: 10px; margin-bottom: 12px;">
-                        <div style="flex: 2;"><label class="req">Cidade</label><input id="cidade" required onblur="this.value = window.formatarCapitalize(this.value)"></div>
-                        <div style="flex: 1;"><label class="req">UF</label><input id="uf" required maxlength="2" placeholder="SP" style="text-transform: uppercase;" oninput="this.value = this.value.toUpperCase()"></div>
-                        <div style="flex: 1.5;"><label class="req">CEP</label><input id="cep" required oninput="window.maskCEP(this)" placeholder="00000-000"></div>
-                    </div>
+                    <div id="campos-basicos-prestador">
+                        <label class="req">Nome / Empresa</label><input id="nomeEmpresa" required style="margin-bottom: 12px;" onblur="this.value = window.formatarCapitalize(this.value)">
+                        <label class="req">Endereço Completo</label><input id="endereco" required style="margin-bottom: 12px;" onblur="this.value = window.formatarCapitalize(this.value)">
+                        
+                        <div style="display: flex; gap: 10px; margin-bottom: 12px;">
+                            <div style="flex: 2;"><label class="req">Cidade</label><input id="cidade" required onblur="this.value = window.formatarCapitalize(this.value)"></div>
+                            <div style="flex: 1;"><label class="req">UF</label><input id="uf" required maxlength="2" placeholder="SP" style="text-transform: uppercase;" oninput="this.value = this.value.toUpperCase()"></div>
+                            <div style="flex: 1.5;"><label class="req">CEP</label><input id="cep" required oninput="window.maskCEP(this)" placeholder="00000-000"></div>
+                        </div>
 
-                    <div style="display: flex; gap: 10px; margin-bottom: 12px;">
-                        <div style="flex: 1;"><label class="req">Responsável</label><input id="responsavel" required onblur="this.value = window.formatarCapitalize(this.value)"></div>
-                        <div style="flex: 1;"><label class="req">Telefone</label><input id="contatoResponsavel" required oninput="window.maskPhone(this)" placeholder="(00) 00000-0000"></div>
-                    </div>
+                        <div style="display: flex; gap: 10px; margin-bottom: 12px;">
+                            <div style="flex: 1;"><label class="req">Responsável</label><input id="responsavel" required onblur="this.value = window.formatarCapitalize(this.value)"></div>
+                            <div style="flex: 1;"><label class="req">Telefone</label><input id="contatoResponsavel" required oninput="window.maskPhone(this)" placeholder="(00) 00000-0000"></div>
+                        </div>
 
-                    <div style="display: flex; gap: 10px; margin-bottom: 15px;">
-                        <input id="qtdTecnicos" type="hidden" value="1"> 
-                        <div style="flex: 1.5;"><label class="req" title="Obrigatório para integração Field">ID Field Control</label><input id="fieldIdField" placeholder="Chave Única Field" required></div>
-                        <div style="flex: 1.5;"><label class="req" title="Obrigatório para login no portal. Separe múltiplos e-mails com ponto-e-vírgula ( ; )">E-mail(s) @apex.co</label><input type="text" id="usuarioApex" placeholder="tecnico1@apex.co; tecnico2@apex.co" required onblur="this.value = this.value.toLowerCase().replace(/\s/g,'')"></div>
-                        <div style="flex: 1;"><label>Ambiente</label>
-                            <select id="statusPrestador">
-                                <option value="PRODUCAO">Produção</option>
-                                <option value="TESTE">Teste (Oculto)</option>
-                            </select>
+                        <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                            <input id="qtdTecnicos" type="hidden" value="1"> 
+                            <div style="flex: 1.5;"><label class="req" title="Obrigatório para integração Field">ID Field Control</label><input id="fieldIdField" placeholder="Chave Única Field" required></div>
+                            <div style="flex: 1.5;"><label class="req" title="Obrigatório para login no portal. Separe múltiplos e-mails com ponto-e-vírgula ( ; )">E-mail(s) @apex.co</label><input type="text" id="usuarioApex" placeholder="tecnico1@apex.co; tecnico2@apex.co" required onblur="this.value = this.value.toLowerCase().replace(/\s/g,'')"></div>
+                            <div style="flex: 1;"><label>Ambiente</label>
+                                <select id="statusPrestador">
+                                    <option value="PRODUCAO">Produção</option>
+                                    <option value="TESTE">Teste (Oculto)</option>
+                                </select>
+                            </div>
                         </div>
                     </div>
 
@@ -2501,7 +2507,7 @@ function injetarTopbarIntegrations() {
 
                         <div id="blocoCoberturaPoligono" style="display: none; flex-direction: column;">
                             <label class="req">Desenhe a área no mapa clicando nos vértices (clique no primeiro ponto para fechar)</label>
-                            <div id="mapa-desenho-area" style="width: 100%; height: 350px; background: #e2e8f0; border-radius: var(--radius-sm); border: 1px solid var(--border); margin-top: 5px; position:relative; overflow:hidden;"></div>
+                            <div id="mapa-desenho-area" style="width: 100%; height: 350px; background: #e2e8f0; border-radius: var(--radius-sm); border: 1px solid var(--border); margin-top: 5px; position:relative; overflow:hidden; transition: height 0.3s ease;"></div>
                             <button type="button" onclick="window.limparDesenhoPoligono()" style="margin-top: 8px; background: var(--muted); padding: 5px 10px; font-size: 0.75rem; min-height: auto; width: max-content;">🗑️ Apagar Desenho</button>
                         </div>
                     </div>
@@ -3174,6 +3180,26 @@ window.iniciarMapa = function() {
     window.garantirGoogleMaps();
 };
 
+window.toggleDadosPrestador = function(forceState = null) {
+    let box = document.getElementById('campos-basicos-prestador');
+    let btn = document.getElementById('btn-toggle-dados');
+    let mapa = document.getElementById('mapa-desenho-area');
+    
+    let isHidden = forceState !== null ? forceState : box.style.display === 'none';
+    
+    if (isHidden) {
+        // Volta a mostrar o formulário
+        box.style.display = 'block';
+        if (btn) btn.innerHTML = 'Ocultar Dados 🔼';
+        if (mapa) mapa.style.height = '350px'; // Retrai o mapa
+    } else {
+        // Esconde o formulário
+        box.style.display = 'none';
+        if (btn) btn.innerHTML = 'Mostrar Dados 🔽';
+        if (mapa) mapa.style.height = '60vh'; // Expande o mapa!
+    }
+};
+
 window.toggleModoCobertura = async function() {
     let modoOpcoes = document.querySelector('input[name="modoCobertura"]:checked');
     if (!modoOpcoes) return;
@@ -3182,14 +3208,22 @@ window.toggleModoCobertura = async function() {
     document.getElementById('blocoCoberturaRaio').style.display = modo === 'RAIO' ? 'flex' : 'none';
     document.getElementById('blocoCoberturaPoligono').style.display = modo === 'POLIGONO' ? 'flex' : 'none';
     
-    // Ajusta obrigatoriedade do Raio
+    // Mostra ou oculta o botão de recolher
+    let btnToggle = document.getElementById('btn-toggle-dados');
+    if (btnToggle) {
+        btnToggle.style.display = modo === 'POLIGONO' ? 'inline-block' : 'none';
+    }
+
+    // Ajusta obrigatoriedade do Raio e recolhe/expande
     let inputRaio = document.getElementById('rangeAtendimento');
     if (inputRaio) {
         if (modo === 'RAIO') {
             inputRaio.setAttribute('required', 'true');
+            window.toggleDadosPrestador(true); // Força expandir os dados
         } else {
             inputRaio.removeAttribute('required');
             inputRaio.style.borderColor = ''; 
+            window.toggleDadosPrestador(false); // Força recolher os dados pro mapa crescer
         }
     }
 
@@ -3219,7 +3253,7 @@ window.toggleModoCobertura = async function() {
             });
         }
 
-        // 👇 A MÁGICA DO RADAR COMEÇA AQUI 👇
+        // Radar: Pega o endereço
         let rua = document.getElementById("endereco").value;
         let cidade = document.getElementById("cidade").value;
         let uf = document.getElementById("uf").value;
@@ -3234,44 +3268,30 @@ window.toggleModoCobertura = async function() {
                     window.mapaDesenhoInstancia.setCenter(loc);
                     window.mapaDesenhoInstancia.setZoom(10);
                     
-                    // Limpa radar antigo
                     if (window.marcadorBaseRadar) window.marcadorBaseRadar.setMap(null);
                     if (window.circulosRadar && window.circulosRadar.length > 0) {
                         window.circulosRadar.forEach(c => c.setMap(null));
                     }
                     window.circulosRadar = [];
 
-                    // 1. Plota o pino da Base
                     window.marcadorBaseRadar = new google.maps.Marker({
-                        position: loc,
-                        map: window.mapaDesenhoInstancia,
+                        position: loc, map: window.mapaDesenhoInstancia,
                         icon: { url: "https://fqaqlofndeihmhkopvan.supabase.co/storage/v1/object/public/icones/prestador.png", scaledSize: new google.maps.Size(32, 32) },
-                        title: "Base do Prestador",
-                        zIndex: 1
+                        title: "Base do Prestador", zIndex: 1
                     });
 
-                    // 2. Desenha os 3 anéis (10km, 20km, 30km)
-                    const raios = [10000, 20000, 30000]; // Metros
+                    const raios = [10000, 20000, 30000];
                     raios.forEach((raioMts, idx) => {
-                        let opacity = 0.15 - (idx * 0.04); // Círculos externos ficam mais transparentes
                         let circle = new google.maps.Circle({
-                            strokeColor: "#001BB8",
-                            strokeOpacity: 0.35,
-                            strokeWeight: 1,
-                            fillColor: "#001BB8",
-                            fillOpacity: opacity,
-                            map: window.mapaDesenhoInstancia,
-                            center: loc,
-                            radius: raioMts,
-                            clickable: false, // Evita bugar a ferramenta de desenho
-                            zIndex: 0
+                            strokeColor: "#001BB8", strokeOpacity: 0.35, strokeWeight: 1,
+                            fillColor: "#001BB8", fillOpacity: 0.15 - (idx * 0.04),
+                            map: window.mapaDesenhoInstancia, center: loc, radius: raioMts, clickable: false, zIndex: 0
                         });
                         window.circulosRadar.push(circle);
                     });
                 }
             });
         }
-        // 👆 FIM DA MÁGICA DO RADAR 👆
     }
 };
 
