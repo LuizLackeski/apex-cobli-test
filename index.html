@@ -3836,14 +3836,29 @@ window.buscarEnderecoPorCep = async function() {
                 let atende = false;
                 const distLinear = await consultarDistancia(enderecoBase, p.endereco); 
                 
-                // Limpa e analisa a regra do banco
-                let modoCob = p.modo_cobertura ? String(p.modo_cobertura).replace(/'/g, "").trim().toUpperCase() : 'RAIO';
-                let polyArr = typeof p.area_poligono === 'string' ? JSON.parse(p.area_poligono) : p.area_poligono;
+                // 👇 BLINDAGEM MÁXIMA DO POLÍGONO 👇
+                let modoCob = p.modo_cobertura ? String(p.modo_cobertura).replace(/['"]/g, "").trim().toUpperCase() : 'RAIO';
+                let polyArr = null;
 
-                if (modoCob === 'POLIGONO' && polyArr && polyArr.length >= 3) {
+                if (modoCob === 'POLIGONO' && p.area_poligono) {
+                    try {
+                        // Se for string, tentamos dar JSON.parse até virar um Array de verdade
+                        let tempPoly = p.area_poligono;
+                        while (typeof tempPoly === 'string') {
+                            tempPoly = JSON.parse(tempPoly);
+                        }
+                        if (Array.isArray(tempPoly) && tempPoly.length >= 3) {
+                            polyArr = tempPoly;
+                        }
+                    } catch (e) {
+                        console.error(`Erro ao ler polígono do prestador ${p.nome}:`, e);
+                    }
+                }
+
+                if (modoCob === 'POLIGONO' && polyArr) {
                     if (latLngCliente) {
-                        // Converte os pontos para o formato oficial do Google
-                        let mapPaths = polyArr.map(coord => new google.maps.LatLng(coord.lat, coord.lng));
+                        // Converte os pontos limpos para o formato oficial do Google
+                        let mapPaths = polyArr.map(coord => new google.maps.LatLng(Number(coord.lat), Number(coord.lng)));
                         let poly = new google.maps.Polygon({ paths: mapPaths });
                         
                         // A TRAVA DE FOGO: Caiu dentro do desenho?
@@ -3857,6 +3872,7 @@ window.buscarEnderecoPorCep = async function() {
                         atende = true; 
                     }
                 }
+                // 👆 FIM DA BLINDAGEM 👆
                 
                 if(atende) { 
                     let available = window.getNextDates(p); 
