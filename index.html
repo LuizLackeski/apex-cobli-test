@@ -3743,7 +3743,38 @@ window.excluirUsuarioPerfil = function(id, email, nivelAlvo) {
 // ==========================================
 // BANCO DE DADOS
 // ==========================================
-window.carregarDadosDoBanc
+window.carregarDadosDoBanco = async function() { 
+    try { 
+        // 👇 VOLTANDO PARA A SUA API ORIGINAL (que formata a agenda perfeitamente!)
+        const resP = await fetch(`${API_URL}/prestadores`, { headers: getHeaders() }); 
+        prestadores = await resP.json(); 
+        
+        // 2. Identifica o Vínculo do Usuário Logado
+        if (currentUser) {
+            let emailLogado = currentUser.email.toLowerCase().trim();
+            window.meuPrestadorLogado = prestadores.find(p => {
+                if (!p.usuario_apex) return false;
+                let emails = p.usuario_apex.toLowerCase().split(';').map(e => e.trim()).filter(Boolean);
+                return emails.includes(emailLogado);
+            });
+            
+            if (userRole === 'PRESTADOR' && window.meuPrestadorLogado) {
+                window.renderizarMinhaDisponibilidade();
+            }
+        }
+
+        if (userRole === 'GESTOR' || userRole === 'ADMIN') window.renderizarListaPrestadores(); 
+        
+        // 3. Busca Agendamentos
+        const resA = await fetch(`${DB_URL}/agendamentos?select=*&order=created_at.desc`, { method: 'GET', headers: getHeaders() }); 
+        const dataAgend = await resA.json(); 
+        agendamentos = Array.isArray(dataAgend) ? dataAgend : [];
+
+        // 4. Renderiza as telas
+        window.renderPainel(); 
+        window.renderDashboard(); 
+    } catch(e) { console.error("Erro bd:", e); } 
+};
     
 // NOTIFICAÇÃO SLACK (Voltando para o formato TEXT seguro)
 window.enviarNotificacaoSlack = async function(msg) {
