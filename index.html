@@ -3745,11 +3745,22 @@ window.excluirUsuarioPerfil = function(id, email, nivelAlvo) {
 // ==========================================
 window.carregarDadosDoBanco = async function() { 
     try { 
-        // 👇 VOLTANDO PARA A SUA API ORIGINAL (que formata a agenda perfeitamente!)
-        const resP = await fetch(`${API_URL}/prestadores`, { headers: getHeaders() }); 
-        prestadores = await resP.json(); 
+        // 1. Puxamos direto do banco para GARANTIR que as colunas 'area_poligono' e 'modo_cobertura' venham!
+        const { data: pData, error: pErr } = await supabaseClient.from('prestadores').select('*');
+        if (pErr) console.error("Erro ao puxar prestadores:", pErr);
         
-        // 2. Identifica o Vínculo do Usuário Logado
+        // 2. A MÁGICA ANTIFALHAS: Converter a agenda de texto para Lista (Array) na mão, 
+        // para o sistema não dar aquele erro de "forEach is not a function"
+        prestadores = (pData || []).map(p => {
+            if (typeof p.agenda === 'string') {
+                try { p.agenda = JSON.parse(p.agenda); } 
+                catch(e) { p.agenda = []; }
+            }
+            if (!Array.isArray(p.agenda)) p.agenda = [];
+            return p;
+        });
+        
+        // 3. Identifica o Vínculo do Usuário Logado
         if (currentUser) {
             let emailLogado = currentUser.email.toLowerCase().trim();
             window.meuPrestadorLogado = prestadores.find(p => {
@@ -3765,12 +3776,12 @@ window.carregarDadosDoBanco = async function() {
 
         if (userRole === 'GESTOR' || userRole === 'ADMIN') window.renderizarListaPrestadores(); 
         
-        // 3. Busca Agendamentos
+        // 4. Busca Agendamentos
         const resA = await fetch(`${DB_URL}/agendamentos?select=*&order=created_at.desc`, { method: 'GET', headers: getHeaders() }); 
         const dataAgend = await resA.json(); 
         agendamentos = Array.isArray(dataAgend) ? dataAgend : [];
 
-        // 4. Renderiza as telas
+        // 5. Renderiza as telas
         window.renderPainel(); 
         window.renderDashboard(); 
     } catch(e) { console.error("Erro bd:", e); } 
