@@ -2458,8 +2458,9 @@ function injetarTopbarIntegrations() {
                 <div id="lista-prestadores"></div>
             </div>
             <div id="cadastro-flow" class="card" style="display:none;">
-                
-<div style="display: flex; gap: 10px; margin-bottom: 15px;">
+         
+                <div id="etapa-1">       
+                    <div style="display: flex; gap: 10px; margin-bottom: 15px;">
                         <div style="flex: 0.8; display: none;"><label class="req">Qtd Técnicos</label><input id="qtdTecnicos" type="number" required min="1"></div>
                         <div style="flex: 1.5;"><label class="req" title="Obrigatório para integração Field">ID Field Control</label><input id="fieldIdField" placeholder="Chave Única Field" required></div>
                         <div style="flex: 1.5;"><label class="req" title="Obrigatório para login no portal. Separe múltiplos e-mails com ponto-e-vírgula ( ; )">E-mail(s) @apex.co</label><input type="text" id="usuarioApex" placeholder="tecnico1@apex.co; tecnico2@apex.co" required onblur="this.value = this.value.toLowerCase().replace(/\s/g,'')"></div>
