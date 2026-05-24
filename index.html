@@ -2459,9 +2459,24 @@ function injetarTopbarIntegrations() {
             </div>
             <div id="cadastro-flow" class="card" style="display:none;">
          
-                <div id="etapa-1">       
+<div id="etapa-1">
+                    <h2 style="color: var(--primary);">Dados do Prestador</h2>
+                    <label class="req">Nome / Empresa</label><input id="nomeEmpresa" required style="margin-bottom: 12px;" onblur="this.value = window.formatarCapitalize(this.value)">
+                    <label class="req">Endereço Completo</label><input id="endereco" required style="margin-bottom: 12px;" onblur="this.value = window.formatarCapitalize(this.value)">
+                    
+                    <div style="display: flex; gap: 10px; margin-bottom: 12px;">
+                        <div style="flex: 2;"><label class="req">Cidade</label><input id="cidade" required onblur="this.value = window.formatarCapitalize(this.value)"></div>
+                        <div style="flex: 1;"><label class="req">UF</label><input id="uf" required maxlength="2" placeholder="SP" style="text-transform: uppercase;" oninput="this.value = this.value.toUpperCase()"></div>
+                        <div style="flex: 1.5;"><label class="req">CEP</label><input id="cep" required oninput="window.maskCEP(this)" placeholder="00000-000"></div>
+                    </div>
+
+                    <div style="display: flex; gap: 10px; margin-bottom: 12px;">
+                        <div style="flex: 1;"><label class="req">Responsável</label><input id="responsavel" required onblur="this.value = window.formatarCapitalize(this.value)"></div>
+                        <div style="flex: 1;"><label class="req">Telefone</label><input id="contatoResponsavel" required oninput="window.maskPhone(this)" placeholder="(00) 00000-0000"></div>
+                    </div>
+
                     <div style="display: flex; gap: 10px; margin-bottom: 15px;">
-                        <div style="flex: 0.8; display: none;"><label class="req">Qtd Técnicos</label><input id="qtdTecnicos" type="number" required min="1"></div>
+                        <input id="qtdTecnicos" type="hidden" value="1"> 
                         <div style="flex: 1.5;"><label class="req" title="Obrigatório para integração Field">ID Field Control</label><input id="fieldIdField" placeholder="Chave Única Field" required></div>
                         <div style="flex: 1.5;"><label class="req" title="Obrigatório para login no portal. Separe múltiplos e-mails com ponto-e-vírgula ( ; )">E-mail(s) @apex.co</label><input type="text" id="usuarioApex" placeholder="tecnico1@apex.co; tecnico2@apex.co" required onblur="this.value = this.value.toLowerCase().replace(/\s/g,'')"></div>
                         <div style="flex: 1;"><label>Ambiente</label>
@@ -2481,7 +2496,7 @@ function injetarTopbarIntegrations() {
                         
                         <div id="blocoCoberturaRaio" style="display: flex; flex-direction: column;">
                             <label class="req">Raio de Atendimento (Km)</label>
-                            <input id="rangeAtendimento" type="number" required style="max-width: 200px;">
+                            <input id="rangeAtendimento" type="number" style="max-width: 200px;" placeholder="Ex: 30">
                         </div>
 
                         <div id="blocoCoberturaPoligono" style="display: none; flex-direction: column;">
@@ -3159,13 +3174,33 @@ window.iniciarMapa = function() {
 };
 
 window.toggleModoCobertura = async function() {
-    let modo = document.querySelector('input[name="modoCobertura"]:checked').value;
-    document.getElementById('blocoCoberturaRaio').style.display = modo === 'RAIO' ? 'flex' : 'none';
-    document.getElementById('blocoCoberturaPoligono').style.display = modo === 'POLIGONO' ? 'flex' : 'none';
+    let modoOpcoes = document.querySelector('input[name="modoCobertura"]:checked');
+    if (!modoOpcoes) return;
+    let modo = modoOpcoes.value;
+
+    let blocoRaio = document.getElementById('blocoCoberturaRaio');
+    let blocoPoligono = document.getElementById('blocoCoberturaPoligono');
+
+    if (blocoRaio) blocoRaio.style.display = modo === 'RAIO' ? 'flex' : 'none';
+    if (blocoPoligono) blocoPoligono.style.display = modo === 'POLIGONO' ? 'flex' : 'none';
     
+    // Ajusta obrigatoriedade
+    let inputRaio = document.getElementById('rangeAtendimento');
+    if (inputRaio) {
+        if (modo === 'RAIO') {
+            inputRaio.setAttribute('required', 'true');
+        } else {
+            inputRaio.removeAttribute('required');
+            inputRaio.style.borderColor = ''; // Remove marca de erro se houver
+        }
+    }
+
     if (modo === 'POLIGONO' && !window.mapaDesenhoInstancia) {
         await window.garantirGoogleMaps();
-        window.mapaDesenhoInstancia = new google.maps.Map(document.getElementById("mapa-desenho-area"), {
+        let mapDiv = document.getElementById("mapa-desenho-area");
+        if (!mapDiv) return;
+        
+        window.mapaDesenhoInstancia = new google.maps.Map(mapDiv, {
             center: { lat: -23.55052, lng: -46.633308 }, zoom: 10,
             mapTypeControl: false, streetViewControl: false
         });
