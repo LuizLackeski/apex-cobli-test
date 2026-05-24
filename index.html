@@ -3806,7 +3806,7 @@ window.buscarEnderecoPorCep = async function() {
             let enderecoBase = `${data.logradouro || ""}, ${data.localidade || ""} - ${data.uf || ""} - CEP: ${cep}`;
             let temPrestadorNoRaio = false;
             
-            // Lógica Geométrica (Via Geocoder)
+            // 👇 LÓGICA GEOMÉTRICA (MAPA) E RAIO 👇
             await window.garantirGoogleMaps();
             const geocoder = new google.maps.Geocoder();
             let latLngCliente = null;
@@ -3828,20 +3828,26 @@ window.buscarEnderecoPorCep = async function() {
                 let atende = false;
                 const distLinear = await consultarDistancia(enderecoBase, p.endereco); 
                 
-                if (p.modo_cobertura === 'POLIGONO' && p.area_poligono && p.area_poligono.length >= 3) {
+                // Limpa possíveis aspas que vieram do banco de dados
+                let modoCob = p.modo_cobertura ? p.modo_cobertura.replace(/'/g, "") : 'RAIO';
+                let polyArr = typeof p.area_poligono === 'string' ? JSON.parse(p.area_poligono) : p.area_poligono;
+
+                if (modoCob === 'POLIGONO' && polyArr && polyArr.length >= 3) {
+                    // Modo Área Delimitada: Checa se o pino do cliente cai dentro do desenho
                     if (latLngCliente) {
-                        let poly = new google.maps.Polygon({ paths: p.area_poligono });
+                        let poly = new google.maps.Polygon({ paths: polyArr });
                         if (google.maps.geometry.poly.containsLocation(latLngCliente, poly)) {
                             atende = true;
                         }
                     }
                 } else {
-                    // Modo Raio Fixo (Tradicional)
+                    // Modo Raio Fixo (Tradicional): Checa a distância em km
                     if (distLinear !== null && distLinear <= parseFloat(p.range)) { 
                         atende = true; 
                     }
                 }
                 
+                // Se atende pela localização, checa se tem agenda livre
                 if(atende) { 
                     let available = window.getNextDates(p); 
                     if(available.length > 0) { 
@@ -4439,13 +4445,14 @@ window.renderizarListaPrestadores = function(){
     document.getElementById("btn-novo-container").innerHTML = (userRole === 'GESTOR' || userRole === 'ADMIN') ? `<button onclick="window.abrirCadastro()" style="margin-bottom: 20px; background: var(--cobli-dark); min-height:auto;">+ Novo Prestador</button>` : '';
     document.getElementById("lista-prestadores").innerHTML = prestadores.map((p, i) => {
         const acaoClique = (userRole === 'GESTOR') ? `window.abrirOpcoesPrestador(${i})` : `window.abrirDetalhesPrestador(${i})`;
+        let coberturaDisplay = p.modo_cobertura === 'POLIGONO' ? '🗺️ Área Delimitada' : `📏 Raio: ${p.range}km`;
         return `<div class="painel-item" onclick="${acaoClique}" style="cursor: pointer; flex-direction: column; align-items: flex-start; margin-bottom: 12px;">
             <div style="width: 100%; display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
                 <div style="font-weight: 800; color: var(--primary); font-size: 1rem;">👷 ${p.nome} ${p.status_prestador === 'TESTE' ? '<span style="color:var(--cobli-red); font-size:0.7rem;">[TESTE]</span>' : ''}</div>
                 <div style="font-size: 0.7rem; color: var(--muted); font-weight: 700; background: var(--bg); padding: 4px 10px; border-radius: 5px; border: 1px solid var(--border);">📍 ${p.cidade}/${p.uf}</div>
             </div>
             <div style="font-size: 0.84rem; color: var(--text); margin-bottom: 4px; width: 100%;">👤 <strong>Contato:</strong> ${p.responsavel || '-'} | 📞 ${p.contato || '-'}</div>
-            <div style="font-size: 0.7rem; color: var(--muted); border-top: 1px dashed var(--border); padding-top: 6px; margin-top: 6px; width: 100%; font-family: var(--font-mono);">👥 ${p.qtdtecnicos} técnico(s) | 📏 Raio: ${p.range}km</div>
+            <div style="font-size: 0.7rem; color: var(--muted); border-top: 1px dashed var(--border); padding-top: 6px; margin-top: 6px; width: 100%; font-family: var(--font-mono);">👥 ${p.qtdtecnicos} técnico(s) | ${coberturaDisplay}</div>
         </div>`; 
     }).join(''); 
     if(userRole === 'ADMIN') document.getElementById("btn-novo-container").innerHTML = '';
@@ -4454,32 +4461,20 @@ window.renderizarListaPrestadores = function(){
 window.abrirOpcoesPrestador = function(i) {
     if(userRole !== 'GESTOR') return window.abrirDetalhesPrestador(i); 
     const p = prestadores[i];
+    let coberturaDisplay = p.modo_cobertura === 'POLIGONO' ? '🗺️ Área Delimitada' : `📏 Raio: ${p.range || '-'} km`;
     
     let html = `
     <div style="padding-bottom: 5px;">
-        <div style="font-size: 1.2rem; font-weight: 800; color: var(--cobli-dark); margin-bottom: 20px;">
-            ${p.nome}
-        </div>
-        
+        <div style="font-size: 1.2rem; font-weight: 800; color: var(--cobli-dark); margin-bottom: 20px;">${p.nome}</div>
         <div style="display: flex; flex-direction: column; gap: 10px;">
-            <button onclick="window.fecharModal(); window.abrirDetalhesPrestador(${i})" style="display: flex; align-items: center; justify-content: flex-start; gap: 12px; width: 100%; padding: 16px 20px; background: var(--bg); color: var(--cobli-dark); border: 1px solid var(--border); border-radius: 12px; font-size: 0.95rem; font-weight: 700; box-shadow: none; min-height: auto;">
-                <span style="font-size: 1.2rem;">👁️</span> Ver Detalhes e Agenda
-            </button>
-            
-            <button onclick="window.fecharModal(); window.abrirCadastro(${i})" style="display: flex; align-items: center; justify-content: flex-start; gap: 12px; width: 100%; padding: 16px 20px; background: var(--bg); color: var(--cobli-dark); border: 1px solid var(--border); border-radius: 12px; font-size: 0.95rem; font-weight: 700; box-shadow: none; min-height: auto;">
-                <span style="font-size: 1.2rem;">📝</span> Editar Cadastro
-            </button>
-            
-            <button onclick="window.fecharModal(); window.excluirPrestador(${i})" style="display: flex; align-items: center; justify-content: flex-start; gap: 12px; width: 100%; padding: 16px 20px; background: #fff5f5; color: var(--cobli-red); border: 1px solid #fecaca; border-radius: 12px; font-size: 0.95rem; font-weight: 700; box-shadow: none; min-height: auto;">
-                <span style="font-size: 1.2rem;">❌</span> Excluir Prestador
-            </button>
+            <button onclick="window.fecharModal(); window.abrirDetalhesPrestador(${i})" style="display: flex; align-items: center; justify-content: flex-start; gap: 12px; width: 100%; padding: 16px 20px; background: var(--bg); color: var(--cobli-dark); border: 1px solid var(--border); border-radius: 12px; font-size: 0.95rem; font-weight: 700; box-shadow: none; min-height: auto;"><span style="font-size: 1.2rem;">👁️</span> Ver Detalhes e Agenda</button>
+            <button onclick="window.fecharModal(); window.abrirCadastro(${i})" style="display: flex; align-items: center; justify-content: flex-start; gap: 12px; width: 100%; padding: 16px 20px; background: var(--bg); color: var(--cobli-dark); border: 1px solid var(--border); border-radius: 12px; font-size: 0.95rem; font-weight: 700; box-shadow: none; min-height: auto;"><span style="font-size: 1.2rem;">📝</span> Editar Cadastro</button>
+            <button onclick="window.fecharModal(); window.excluirPrestador(${i})" style="display: flex; align-items: center; justify-content: flex-start; gap: 12px; width: 100%; padding: 16px 20px; background: #fff5f5; color: var(--cobli-red); border: 1px solid #fecaca; border-radius: 12px; font-size: 0.95rem; font-weight: 700; box-shadow: none; min-height: auto;"><span style="font-size: 1.2rem;">❌</span> Excluir Prestador</button>
         </div>
-        
         <div style="margin-top: 24px; display: flex; justify-content: flex-end; border-top: 1px solid var(--bg); padding-top: 16px;">
             <button onclick="window.fecharModal()" style="background: transparent; color: var(--muted); border: none; font-size: 0.9rem; font-weight: 700; box-shadow: none; padding: 10px 20px; min-height: auto;">Cancelar</button>
         </div>
     </div>`;
-    
     window.exibirModal("Ações do Prestador", html);
 };
 
@@ -4515,7 +4510,8 @@ window.abrirDetalhesPrestador = function(index) {
             ausenciasHtml += `</div></div>`;
         }
     }
-    let htmlHeader = `<div style="margin-bottom:15px; border-bottom: 1px solid var(--border); padding-bottom: 10px;"><div style="font-weight:800; font-size:1.05rem; color:var(--primary); margin-bottom: 4px;">${p.nome} ${p.status_prestador === 'TESTE' ? '<span style="color:var(--cobli-red); font-size:0.75rem;">[TESTE]</span>' : ''}</div><div style="font-size:0.82rem; color:var(--muted);">👤 <strong>Resp:</strong> ${p.responsavel} | 📞 ${p.contato} | 📏 Raio: ${p.range} km</div></div>`;
+    let coberturaDisplay = p.modo_cobertura === 'POLIGONO' ? '🗺️ Área Delimitada' : `📏 Raio: ${p.range} km`;
+    let htmlHeader = `<div style="margin-bottom:15px; border-bottom: 1px solid var(--border); padding-bottom: 10px;"><div style="font-weight:800; font-size:1.05rem; color:var(--primary); margin-bottom: 4px;">${p.nome} ${p.status_prestador === 'TESTE' ? '<span style="color:var(--cobli-red); font-size:0.75rem;">[TESTE]</span>' : ''}</div><div style="font-size:0.82rem; color:var(--muted);">👤 <strong>Resp:</strong> ${p.responsavel} | 📞 ${p.contato} | ${coberturaDisplay}</div></div>`;
     let htmlBotaoFechar = `<div style="display: flex; justify-content: space-between; align-items: center; margin-top: 15px;">${userRole === 'GESTOR' ? `<button onclick="window.fecharModal(); window.abrirCadastro(${index}); setTimeout(()=>window.mudarEtapa(1), 100);" style="background:var(--cobli-red); padding: 10px 20px; min-height:auto;">➕ Bloqueio</button>` : '<div></div>'}<button onclick="window.fecharModal()" style="background:var(--primary); padding: 10px 20px; min-height:auto;">Fechar</button></div>`;
     window.exibirModal("Detalhes do Prestador", htmlHeader + agendaHtml + ausenciasHtml + htmlBotaoFechar); 
 };
