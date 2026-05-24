@@ -4492,7 +4492,8 @@ window.abrirOpcoesPrestador = function(i) {
 window.abrirDetalhesPrestador = function(index) { 
     let p = prestadores[index]; let agendaHtml = '';  
     let qtd = parseInt(p.qtdtecnicos) || 1;
-    let temTecnicos = p.agenda && p.agenda.some(a => a.tecnico);
+    if (!Array.isArray(p.agenda)) p.agenda = [];
+    let temTecnicos = p.agenda.some(a => a.tecnico);
     if (temTecnicos || qtd > 1) {
         agendaHtml += '<div style="display:flex; gap:5px; margin-bottom:15px; border-bottom:1px solid var(--border); padding-bottom:10px; overflow-x:auto;">';
         for (let t = 1; t <= qtd; t++) { let nomeTab = window.getNomeTecnico(p, t); agendaHtml += `<button onclick="window.mudarAbaModalTecnico(${t}, ${qtd})" id="btn-mod-tec-${t}" style="padding:6px 12px; border:none; border-radius:4px; font-weight:700; cursor:pointer; background:${t===1?'var(--primary)':'var(--border)'}; color:${t===1?'white':'var(--text)'}; transition:0.2s; min-height:auto;">${nomeTab}</button>`; }
@@ -4674,8 +4675,9 @@ window.abrirCadastro = function(index = -1){
             for (let t = 1; t <= qtd; t++) { window.nomesTecnicosTemp[t] = p.nomes_tecnicos[t] || ''; window.statusTecnicosTemp[t] = window.isTecnicoAtivo(p, t); }
         } else { for (let t = 1; t <= qtd; t++) window.statusTecnicosTemp[t] = true; }
 
-        for(let i=1; i<=qtd; i++) window.agendaCadastroObj[i] = [];
-        if(p.agenda) { 
+      for(let i=1; i<=qtd; i++) window.agendaCadastroObj[i] = [];
+        if (!Array.isArray(p.agenda)) p.agenda = []; // 👈 Trava de segurança
+        if(p.agenda.length > 0) { 
             p.agenda.forEach(item => {
                 if (item.isAbsence) return;
                 if (item.tecnico) { if (!window.agendaCadastroObj[item.tecnico]) window.agendaCadastroObj[item.tecnico] = []; window.agendaCadastroObj[item.tecnico].push(`${item.dia}-${item.hora}`); }
@@ -4877,7 +4879,8 @@ window.getOcupacaoReal = function(prestador, dataStr, dNome) {
     if (!prestador) return { geral: { total: 0, ocupadas: 0, livres: 0, pct: 0 }, tecnicos: {} };
     
     let maxT = parseInt(prestador.qtdtecnicos) || 1;
-    let tem_tecnico_especifico = prestador.agenda && prestador.agenda.some(a => a.tecnico);
+    if (!Array.isArray(prestador.agenda)) prestador.agenda = [];
+    let tem_tecnico_especifico = prestador.agenda.some(a => a.tecnico);
 
     let dataStrPad = dataStr.split('/').map(x => x.padStart(2, '0')).join('/');
 
