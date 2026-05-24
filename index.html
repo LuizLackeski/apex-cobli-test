@@ -3743,39 +3743,7 @@ window.excluirUsuarioPerfil = function(id, email, nivelAlvo) {
 // ==========================================
 // BANCO DE DADOS
 // ==========================================
-window.carregarDadosDoBanco = async function() { 
-    try { 
-        // 👇 A MÁGICA AQUI: Puxando direto do Supabase para não perder as colunas novas!
-        const { data: pData, error: pErr } = await supabaseClient.from('prestadores').select('*');
-        if (pErr) console.error("Erro ao puxar prestadores:", pErr);
-        prestadores = pData || [];
-        
-        // 2. Identifica o Vínculo do Usuário Logado
-        if (currentUser) {
-            let emailLogado = currentUser.email.toLowerCase().trim();
-            window.meuPrestadorLogado = prestadores.find(p => {
-                if (!p.usuario_apex) return false;
-                let emails = p.usuario_apex.toLowerCase().split(';').map(e => e.trim()).filter(Boolean);
-                return emails.includes(emailLogado);
-            });
-            
-            if (userRole === 'PRESTADOR' && window.meuPrestadorLogado) {
-                window.renderizarMinhaDisponibilidade();
-            }
-        }
-
-        if (userRole === 'GESTOR' || userRole === 'ADMIN') window.renderizarListaPrestadores(); 
-        
-        // 3. Busca Agendamentos
-        const resA = await fetch(`${DB_URL}/agendamentos?select=*&order=created_at.desc`, { method: 'GET', headers: getHeaders() }); 
-        const dataAgend = await resA.json(); 
-        agendamentos = Array.isArray(dataAgend) ? dataAgend : [];
-
-        // 4. Renderiza as telas
-        window.renderPainel(); 
-        window.renderDashboard(); 
-    } catch(e) { console.error("Erro bd:", e); } 
-};
+window.carregarDadosDoBanc
     
 // NOTIFICAÇÃO SLACK (Voltando para o formato TEXT seguro)
 window.enviarNotificacaoSlack = async function(msg) {
