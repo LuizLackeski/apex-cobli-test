@@ -3205,25 +3205,21 @@ window.toggleModoCobertura = async function() {
     if (!modoOpcoes) return;
     let modo = modoOpcoes.value;
 
+    let btnToggle = document.getElementById('btn-toggle-dados');
+    if (btnToggle) btnToggle.style.display = modo === 'POLIGONO' ? 'inline-block' : 'none';
+
     document.getElementById('blocoCoberturaRaio').style.display = modo === 'RAIO' ? 'flex' : 'none';
     document.getElementById('blocoCoberturaPoligono').style.display = modo === 'POLIGONO' ? 'flex' : 'none';
     
-    // Mostra ou oculta o botão de recolher
-    let btnToggle = document.getElementById('btn-toggle-dados');
-    if (btnToggle) {
-        btnToggle.style.display = modo === 'POLIGONO' ? 'inline-block' : 'none';
-    }
-
-    // Ajusta obrigatoriedade do Raio e recolhe/expande
     let inputRaio = document.getElementById('rangeAtendimento');
     if (inputRaio) {
         if (modo === 'RAIO') {
             inputRaio.setAttribute('required', 'true');
-            window.toggleDadosPrestador(true); // Força expandir os dados
+            window.toggleDadosPrestador(true); 
         } else {
             inputRaio.removeAttribute('required');
             inputRaio.style.borderColor = ''; 
-            window.toggleDadosPrestador(false); // Força recolher os dados pro mapa crescer
+            window.toggleDadosPrestador(false); 
         }
     }
 
@@ -3249,11 +3245,25 @@ window.toggleModoCobertura = async function() {
             google.maps.event.addListener(window.drawingManager, 'polygoncomplete', function(polygon) {
                 if (window.poligonoAtual) window.poligonoAtual.setMap(null);
                 window.poligonoAtual = polygon;
-                window.drawingManager.setDrawingMode(null); // Trava o lápis após desenhar
+                window.drawingManager.setDrawingMode(null);
             });
+
+            // 👇 CRIA O BALÃO DE DISTÂNCIA 👇
+            let tooltip = document.createElement('div');
+            tooltip.id = 'tooltip-distancia-live';
+            tooltip.style.cssText = 'position:absolute; top:10px; right:10px; background:white; padding:8px 12px; border-radius:6px; box-shadow:0 4px 12px rgba(0,0,0,0.3); font-size:0.85rem; font-weight:800; color:var(--primary); z-index:999; display:none; pointer-events:none; border:2px solid var(--primary); font-family:var(--font-mono);';
+            mapDiv.appendChild(tooltip);
+
+            window.mapaDesenhoInstancia.addListener('mousemove', function(e) {
+                if (window.marcadorBaseRadar) {
+                    let dist = google.maps.geometry.spherical.computeDistanceBetween(window.marcadorBaseRadar.getPosition(), e.latLng);
+                    tooltip.innerHTML = `📏 Distância: ${(dist / 1000).toFixed(1)} km`;
+                    tooltip.style.display = 'block';
+                }
+            });
+            window.mapaDesenhoInstancia.addListener('mouseout', function() { tooltip.style.display = 'none'; });
         }
 
-        // Radar: Pega o endereço
         let rua = document.getElementById("endereco").value;
         let cidade = document.getElementById("cidade").value;
         let uf = document.getElementById("uf").value;
@@ -3269,9 +3279,7 @@ window.toggleModoCobertura = async function() {
                     window.mapaDesenhoInstancia.setZoom(10);
                     
                     if (window.marcadorBaseRadar) window.marcadorBaseRadar.setMap(null);
-                    if (window.circulosRadar && window.circulosRadar.length > 0) {
-                        window.circulosRadar.forEach(c => c.setMap(null));
-                    }
+                    if (window.circulosRadar && window.circulosRadar.length > 0) window.circulosRadar.forEach(c => c.setMap(null));
                     window.circulosRadar = [];
 
                     window.marcadorBaseRadar = new google.maps.Marker({
@@ -3737,9 +3745,10 @@ window.excluirUsuarioPerfil = function(id, email, nivelAlvo) {
 // ==========================================
 window.carregarDadosDoBanco = async function() { 
     try { 
-        // 1. Busca Prestadores
-        const resP = await fetch(`${API_URL}/prestadores`, { headers: getHeaders() }); 
-        prestadores = await resP.json(); 
+        // 👇 A MÁGICA AQUI: Puxando direto do Supabase para não perder as colunas novas!
+        const { data: pData, error: pErr } = await supabaseClient.from('prestadores').select('*');
+        if (pErr) console.error("Erro ao puxar prestadores:", pErr);
+        prestadores = pData || [];
         
         // 2. Identifica o Vínculo do Usuário Logado
         if (currentUser) {
@@ -3806,7 +3815,7 @@ window.buscarEnderecoPorCep = async function() {
             let enderecoBase = `${data.logradouro || ""}, ${data.localidade || ""} - ${data.uf || ""} - CEP: ${cep}`;
             let temPrestadorNoRaio = false;
             
-            // 👇 LÓGICA GEOMÉTRICA (MAPA) E RAIO 👇
+            // LÓGICA GEOMÉTRICA (MAPA) E RAIO
             await window.garantirGoogleMaps();
             const geocoder = new google.maps.Geocoder();
             let latLngCliente = null;
@@ -3828,26 +3837,28 @@ window.buscarEnderecoPorCep = async function() {
                 let atende = false;
                 const distLinear = await consultarDistancia(enderecoBase, p.endereco); 
                 
-                // Limpa possíveis aspas que vieram do banco de dados
-                let modoCob = p.modo_cobertura ? p.modo_cobertura.replace(/'/g, "") : 'RAIO';
+                // Limpa e analisa a regra do banco
+                let modoCob = p.modo_cobertura ? String(p.modo_cobertura).replace(/'/g, "").trim().toUpperCase() : 'RAIO';
                 let polyArr = typeof p.area_poligono === 'string' ? JSON.parse(p.area_poligono) : p.area_poligono;
 
                 if (modoCob === 'POLIGONO' && polyArr && polyArr.length >= 3) {
-                    // Modo Área Delimitada: Checa se o pino do cliente cai dentro do desenho
                     if (latLngCliente) {
-                        let poly = new google.maps.Polygon({ paths: polyArr });
+                        // Converte os pontos para o formato oficial do Google
+                        let mapPaths = polyArr.map(coord => new google.maps.LatLng(coord.lat, coord.lng));
+                        let poly = new google.maps.Polygon({ paths: mapPaths });
+                        
+                        // A TRAVA DE FOGO: Caiu dentro do desenho?
                         if (google.maps.geometry.poly.containsLocation(latLngCliente, poly)) {
                             atende = true;
                         }
                     }
                 } else {
-                    // Modo Raio Fixo (Tradicional): Checa a distância em km
-                    if (distLinear !== null && distLinear <= parseFloat(p.range)) { 
+                    // Modo Raio Fixo (Tradicional)
+                    if (distLinear !== null && distLinear <= parseFloat(p.range || 0)) { 
                         atende = true; 
                     }
                 }
                 
-                // Se atende pela localização, checa se tem agenda livre
                 if(atende) { 
                     let available = window.getNextDates(p); 
                     if(available.length > 0) { 
