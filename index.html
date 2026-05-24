@@ -3140,6 +3140,7 @@ window.mapaDesenhoInstancia = null;
 window.drawingManager = null;
 window.poligonoAtual = null;
 window.marcadorBaseRadar = null;
+window.circulosRadar = []; // 👈 Variável para guardar os círculos
 
 // Garante que o Google Maps (com ferramentas) carregue de forma centralizada
 window.garantirGoogleMaps = function() {
@@ -3178,46 +3179,99 @@ window.toggleModoCobertura = async function() {
     if (!modoOpcoes) return;
     let modo = modoOpcoes.value;
 
-    let blocoRaio = document.getElementById('blocoCoberturaRaio');
-    let blocoPoligono = document.getElementById('blocoCoberturaPoligono');
-
-    if (blocoRaio) blocoRaio.style.display = modo === 'RAIO' ? 'flex' : 'none';
-    if (blocoPoligono) blocoPoligono.style.display = modo === 'POLIGONO' ? 'flex' : 'none';
+    document.getElementById('blocoCoberturaRaio').style.display = modo === 'RAIO' ? 'flex' : 'none';
+    document.getElementById('blocoCoberturaPoligono').style.display = modo === 'POLIGONO' ? 'flex' : 'none';
     
-    // Ajusta obrigatoriedade
+    // Ajusta obrigatoriedade do Raio
     let inputRaio = document.getElementById('rangeAtendimento');
     if (inputRaio) {
         if (modo === 'RAIO') {
             inputRaio.setAttribute('required', 'true');
         } else {
             inputRaio.removeAttribute('required');
-            inputRaio.style.borderColor = ''; // Remove marca de erro se houver
+            inputRaio.style.borderColor = ''; 
         }
     }
 
-    if (modo === 'POLIGONO' && !window.mapaDesenhoInstancia) {
+    if (modo === 'POLIGONO') {
         await window.garantirGoogleMaps();
         let mapDiv = document.getElementById("mapa-desenho-area");
         if (!mapDiv) return;
         
-        window.mapaDesenhoInstancia = new google.maps.Map(mapDiv, {
-            center: { lat: -23.55052, lng: -46.633308 }, zoom: 10,
-            mapTypeControl: false, streetViewControl: false
-        });
+        if (!window.mapaDesenhoInstancia) {
+            window.mapaDesenhoInstancia = new google.maps.Map(mapDiv, {
+                center: { lat: -23.55052, lng: -46.633308 }, zoom: 10,
+                mapTypeControl: false, streetViewControl: false
+            });
 
-        window.drawingManager = new google.maps.drawing.DrawingManager({
-            drawingMode: google.maps.drawing.OverlayType.POLYGON,
-            drawingControl: true,
-            drawingControlOptions: { position: google.maps.ControlPosition.TOP_CENTER, drawingModes: [google.maps.drawing.OverlayType.POLYGON] },
-            polygonOptions: { fillColor: '#001BB8', fillOpacity: 0.25, strokeWeight: 2, strokeColor: '#001BB8', editable: true, zIndex: 1 }
-        });
-        window.drawingManager.setMap(window.mapaDesenhoInstancia);
+            window.drawingManager = new google.maps.drawing.DrawingManager({
+                drawingMode: google.maps.drawing.OverlayType.POLYGON,
+                drawingControl: true,
+                drawingControlOptions: { position: google.maps.ControlPosition.TOP_CENTER, drawingModes: [google.maps.drawing.OverlayType.POLYGON] },
+                polygonOptions: { fillColor: '#001BB8', fillOpacity: 0.25, strokeWeight: 2, strokeColor: '#001BB8', editable: true, zIndex: 2 }
+            });
+            window.drawingManager.setMap(window.mapaDesenhoInstancia);
 
-        google.maps.event.addListener(window.drawingManager, 'polygoncomplete', function(polygon) {
-            if (window.poligonoAtual) window.poligonoAtual.setMap(null);
-            window.poligonoAtual = polygon;
-            window.drawingManager.setDrawingMode(null); // Trava o lápis após desenhar
-        });
+            google.maps.event.addListener(window.drawingManager, 'polygoncomplete', function(polygon) {
+                if (window.poligonoAtual) window.poligonoAtual.setMap(null);
+                window.poligonoAtual = polygon;
+                window.drawingManager.setDrawingMode(null); // Trava o lápis após desenhar
+            });
+        }
+
+        // 👇 A MÁGICA DO RADAR COMEÇA AQUI 👇
+        let rua = document.getElementById("endereco").value;
+        let cidade = document.getElementById("cidade").value;
+        let uf = document.getElementById("uf").value;
+        
+        if (rua && cidade) {
+            let enderecoCompleto = `${rua}, ${cidade} - ${uf}`;
+            const geocoder = new google.maps.Geocoder();
+            
+            geocoder.geocode({ address: enderecoCompleto }, (results, status) => {
+                if (status === 'OK') {
+                    let loc = results[0].geometry.location;
+                    window.mapaDesenhoInstancia.setCenter(loc);
+                    window.mapaDesenhoInstancia.setZoom(10);
+                    
+                    // Limpa radar antigo
+                    if (window.marcadorBaseRadar) window.marcadorBaseRadar.setMap(null);
+                    if (window.circulosRadar && window.circulosRadar.length > 0) {
+                        window.circulosRadar.forEach(c => c.setMap(null));
+                    }
+                    window.circulosRadar = [];
+
+                    // 1. Plota o pino da Base
+                    window.marcadorBaseRadar = new google.maps.Marker({
+                        position: loc,
+                        map: window.mapaDesenhoInstancia,
+                        icon: { url: "https://fqaqlofndeihmhkopvan.supabase.co/storage/v1/object/public/icones/prestador.png", scaledSize: new google.maps.Size(32, 32) },
+                        title: "Base do Prestador",
+                        zIndex: 1
+                    });
+
+                    // 2. Desenha os 3 anéis (10km, 20km, 30km)
+                    const raios = [10000, 20000, 30000]; // Metros
+                    raios.forEach((raioMts, idx) => {
+                        let opacity = 0.15 - (idx * 0.04); // Círculos externos ficam mais transparentes
+                        let circle = new google.maps.Circle({
+                            strokeColor: "#001BB8",
+                            strokeOpacity: 0.35,
+                            strokeWeight: 1,
+                            fillColor: "#001BB8",
+                            fillOpacity: opacity,
+                            map: window.mapaDesenhoInstancia,
+                            center: loc,
+                            radius: raioMts,
+                            clickable: false, // Evita bugar a ferramenta de desenho
+                            zIndex: 0
+                        });
+                        window.circulosRadar.push(circle);
+                    });
+                }
+            });
+        }
+        // 👆 FIM DA MÁGICA DO RADAR 👆
     }
 };
 
