@@ -4220,7 +4220,8 @@ if (atendePasso2 && available.length > 0) {
     p.distanciaFinal = dist !== null ? dist.toFixed(1) : '?';
     p.nextDates = available.join(', ');
     prestadoresFiltrados.push(p);
-}
+        }
+    }
         btn.disabled = false; btn.innerText = "Buscar Prestadores →"; 
         if(prestadoresFiltrados.length === 0) return window.showMessage("Nenhum prestador encontrado no raio de atendimento."); 
         prestadoresFiltrados.sort((a, b) => parseFloat(a.distanciaFinal) - parseFloat(b.distanciaFinal));
