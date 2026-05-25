@@ -1706,7 +1706,48 @@
 #lista-dashboard-solicitantes > div:hover {
     transform: translateX(3px);
 }
+/* ============================================================
+   DASHBOARD RICH UI (ESTILO CENTRAL DE COMANDO)
+============================================================ */
+.dash-top-card {
+    background: var(--cobli-dark);
+    color: white;
+    padding: 20px 24px;
+    border-radius: var(--radius);
+    flex: 1;
+    box-shadow: var(--shadow-md);
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    border: 1px solid rgba(255,255,255,0.08);
+}
+.dash-top-card.blue { background: linear-gradient(135deg, #0f172a, #1e3a8a); }
+.dash-top-card.green { background: linear-gradient(135deg, #064e3b, #047857); }
+.dash-top-card.red { background: linear-gradient(135deg, #450a0a, #991b1b); }
 
+.dash-top-title { font-size: 0.65rem; font-weight: 800; opacity: 0.6; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 12px; }
+.dash-top-value { font-size: 3.5rem; font-weight: 800; font-family: var(--font-mono); line-height: 1; margin-bottom: 15px; }
+.dash-pill { display: inline-block; font-size: 0.65rem; font-weight: 800; padding: 5px 12px; border-radius: 20px; background: rgba(255,255,255,0.15); width: fit-content; text-transform: uppercase; letter-spacing: 0.5px; }
+
+/* Barras de Ocupação */
+.progress-row { display: flex; align-items: center; justify-content: space-between; background: var(--bg); padding: 12px 16px; border-radius: var(--radius-sm); border: 1px solid var(--border); margin-bottom: 8px; }
+.progress-info { width: 140px; }
+.progress-date { font-size: 0.8rem; font-weight: 800; color: var(--cobli-dark); font-family: var(--font-mono); }
+.progress-sub { font-size: 0.65rem; color: var(--muted); font-weight: 600; margin-top: 2px;}
+.progress-bar-container { flex: 1; margin: 0 15px; height: 6px; background: #dde1f0; border-radius: 4px; overflow: hidden; }
+.progress-bar-fill { height: 100%; border-radius: 4px; transition: width 0.8s ease; }
+.progress-pct { font-size: 0.75rem; font-weight: 800; font-family: var(--font-mono); min-width: 45px; text-align: right; background: white; padding: 4px; border-radius: 4px; border: 1px solid var(--border); }
+
+/* Listas Rankeadas */
+.list-row-rich { display: flex; align-items: center; background: var(--bg); padding: 10px 14px; border-radius: var(--radius-sm); border: 1px solid var(--border); margin-bottom: 8px; transition: transform 0.2s; }
+.list-row-rich:hover { transform: translateX(4px); border-color: var(--primary); }
+.rank-badge { width: 24px; height: 24px; border-radius: 6px; background: white; color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 800; margin-right: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); flex-shrink: 0;}
+.list-name { flex: 1; font-size: 0.8rem; font-weight: 700; color: var(--cobli-dark); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.list-count { font-size: 0.85rem; font-weight: 800; color: var(--primary); margin: 0 10px; }
+.list-pct { font-size: 0.7rem; color: var(--muted); font-weight: 700; width: 35px; text-align: right; }
+.initials-avatar { width: 24px; height: 24px; border-radius: 50%; background: var(--primary); color: white; display: flex; align-items: center; justify-content: center; font-size: 0.6rem; font-weight: 800; margin-right: 10px; flex-shrink: 0;}
 /* ============================================================
    MOBILE patches
 ============================================================ */
@@ -2642,15 +2683,28 @@ function injetarTopbarIntegrations() {
             <div id="painel-conteudo" style="max-height: 520px; overflow-y: auto;"></div>
         </div>
 
-        <div id="dashboard" class="aba">
-            <div class="flex-cards">
-                <div class="stats-card">Solicitações (Total)<strong id="dash-agend" style="color: var(--primary);">0</strong></div>
-                <div class="stats-card">Concluídos <span style="font-size:0.6rem; color:var(--muted); font-weight:400;">(inc. impedidos)</span><strong id="dash-concluidos" style="color: var(--cobli-green);">0</strong></div>
-                <div class="stats-card">Agendados <span style="font-size:0.6rem; color:var(--muted); font-weight:400;">(programados)</span><strong id="dash-programados" style="color: #f59e0b;">0</strong></div>
-            </div>
+<div id="dashboard" class="aba">
+    <div class="flex-cards" style="gap: 16px;">
+        <div class="dash-top-card blue">
+            <div class="dash-top-title">Solicitações (total)</div>
+            <div class="dash-top-value" id="dash-agend">0</div>
+            <div class="dash-pill">↑ período ativo</div>
+        </div>
+        <div class="dash-top-card green">
+            <div class="dash-top-title">Concluídos (inc. impedidos)</div>
+            <div class="dash-top-value" id="dash-concluidos">0</div>
+            <div class="dash-pill" id="dash-pct-concluidos">0% taxa de conclusão</div>
+        </div>
+        <div class="dash-top-card red">
+            <div class="dash-top-title">Agendados (programados)</div>
+            <div class="dash-top-value" id="dash-programados">0</div>
+            <div class="dash-pill" style="color: #fca5a5; background: rgba(255,70,51,0.2);">aguardando execução</div>
+        </div>
+    </div>
+    
+    <div class="card" id="card-prod-tecnicos" style="display:none; margin-bottom:20px;">
             
-            <div class="card" id="card-prod-tecnicos" style="display:none; margin-bottom:20px;">
-                <h2>👷 Equipe Técnica</h2>
+                    <h2>👷 Equipe Técnica</h2>
                 <div id="lista-prod-tecnicos" style="display:flex; flex-direction:column; gap:8px;"></div>
             </div>
             
@@ -5145,13 +5199,21 @@ window.renderOcupacaoDiaria = function(prestadorNome, tecnicoId) {
         else { containerLista.innerHTML = `<div style="font-size:0.85rem;color:var(--muted);">Conta não vinculada.</div>`; return; }
     }
 
-    function linhaOcupacao(o) {
-        let bgPill='#e8ecff'; let colorPill='var(--primary)';
-        if(o.pct>=80){bgPill='#fee2e2';colorPill='var(--cobli-red)';}else if(o.pct>=50){bgPill='#fef3c7';colorPill='#d97706';}
-        return `<div style="display:flex;justify-content:space-between;align-items:center;background:var(--bg);padding:10px 12px;border-radius:var(--radius-sm);border:1px solid var(--border);">
-            <div style="font-size:0.78rem;font-weight:700;color:var(--cobli-dark);width:85px;font-family:var(--font-mono);">${o.data.substring(0,5)} <span style="color:var(--muted);font-weight:400;">(${o.dia})</span></div>
-            <div style="font-size:0.72rem;color:var(--muted);flex:1;text-align:center;"><span style="color:var(--cobli-green);font-weight:700;">${o.livres}h livres</span> <span style="opacity:0.4;">|</span> <span style="color:var(--cobli-red);font-weight:700;">${o.ocupadas}h ocup.</span></div>
-            <div style="font-size:0.82rem;font-weight:800;color:${colorPill};background:${bgPill};padding:4px 10px;border-radius:5px;min-width:42px;text-align:center;font-family:var(--font-mono);">${o.pct}%</div>
+function linhaOcupacao(o) {
+        let corBarra = 'var(--primary)';
+        let bgPct = '#e8ecff';
+        if (o.pct >= 80) { corBarra = 'var(--cobli-red)'; bgPct = '#fee2e2'; }
+        else if (o.pct >= 50) { corBarra = '#f59e0b'; bgPct = '#fef3c7'; }
+        
+        return `<div class="progress-row">
+            <div class="progress-info">
+                <div class="progress-date">${o.data.substring(0,5)} <span style="color:var(--muted); font-size:0.65rem; font-weight:500;">(${o.dia})</span></div>
+                <div class="progress-sub">${o.livres}h livres - ${o.ocupadas}h ocup.</div>
+            </div>
+            <div class="progress-bar-container">
+                <div class="progress-bar-fill" style="width: ${o.pct}%; background-color: ${corBarra};"></div>
+            </div>
+            <div class="progress-pct" style="color: ${corBarra}; background: ${bgPct}; border-color: ${bgPct};">${o.pct}%</div>
         </div>`;
     }
 
@@ -5632,13 +5694,15 @@ window.processarAtualizarTodosStatus = async function() {
 // ==========================================
 // DASHBOARD
 // ==========================================
+// ==========================================
+// DASHBOARD
+// ==========================================
 window.renderDashboard = function() {
     let isUserDashboard = (userRole === 'SMARTOPS'); 
     let isPrestadorDashboard = (userRole === 'PRESTADOR');
     let nomeLogado = currentUser ? extrairNomeDoEmail(currentUser.email).toLowerCase() : '';
     let totalAgend = 0, concluidosCount = 0, programadosCount = 0;
     
-    // 👇 ADICIONADO A VARIÁVEL distSolicitante AQUI 👇
     let distPrest = {}, distServ = {}, distLocais = {}, distSolicitante = {}, totalServicosGeral = 0;
 
     // Lemos de filtradosPainel para que o Dashboard seja DINÂMICO de acordo com os filtros!
@@ -5663,14 +5727,12 @@ window.renderDashboard = function() {
         if(a.prestador) distPrest[a.prestador] = (distPrest[a.prestador] || 0) + 1;
         if(a.cidade && a.uf) { let local = `${a.cidade}/${a.uf}`.toUpperCase(); distLocais[local] = (distLocais[local] || 0) + 1; }
 
-        // 👇 CONTAGEM DOS SOLICITANTES AQUI 👇
         let nomeSol = a.solicitante ? window.formatarCapitalize(a.solicitante) : 'Desconhecido';
         distSolicitante[nomeSol] = (distSolicitante[nomeSol] || 0) + 1;
 
         let txtRaw = a.produtos_texto || a.produtos || '';
         let txtServicos = txtRaw;
         
-        // Corta tudo que estiver de "Observações:" para baixo
         if (txtRaw.toLowerCase().includes('observações:')) { 
             txtServicos = txtRaw.split(/observações:/i)[0].trim(); 
         }
@@ -5698,6 +5760,11 @@ window.renderDashboard = function() {
     document.getElementById("dash-agend").innerText = totalAgend;
     document.getElementById("dash-concluidos").innerText = concluidosCount;
     document.getElementById("dash-programados").innerText = programadosCount;
+
+    // 👇 NOVO: Atualiza a pílula de porcentagem do card verde do topo
+    let taxaConc = totalAgend > 0 ? Math.round((concluidosCount / totalAgend) * 100) : 0;
+    let elPct = document.getElementById("dash-pct-concluidos");
+    if(elPct) elPct.innerText = `${taxaConc}% taxa de conclusão`;
     
     let cardProdTec = document.getElementById('card-prod-tecnicos');
     
@@ -5755,27 +5822,33 @@ window.renderDashboard = function() {
         });
     }
 
+    // 👇 NOVO: RENDERIZAÇÃO DA LISTA DE SERVIÇOS RANKEADA 👇
     let servicosOrdenados = Object.entries(distServ).sort((a,b) => b[1] - a[1]);
-    let listaHtml = servicosOrdenados.map(s => {
+    let listaHtml = servicosOrdenados.map((s, idx) => {
         let pct = totalServicosGeral > 0 ? Math.round((s[1] / totalServicosGeral) * 100) : 0;
-        return `<div style="display:flex; justify-content:space-between; align-items:center; background: linear-gradient(90deg, #e8ecff ${pct}%, var(--bg) ${pct}%); padding:10px 12px; border-radius:var(--radius-sm); border:1px solid var(--border); margin-bottom:4px;">
-            <div style="font-size:0.78rem; font-weight:600; color:var(--cobli-dark); flex:1; text-shadow: 1px 1px 0px rgba(255,255,255,0.7);">${s[0]}</div>
-            <div style="font-size:0.88rem; font-weight:800; color:var(--primary); background:rgba(255,255,255,0.6); padding:2px 8px; border-radius:5px; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">${s[1]} <span style="font-size:0.6rem; color:var(--muted); font-weight:700;">(${pct}%)</span></div>
+        return `<div class="list-row-rich">
+            <div class="rank-badge">${idx + 1}</div>
+            <div class="list-name">${s[0]}</div>
+            <div class="list-count">${s[1]}</div>
+            <div class="list-pct">${pct}%</div>
         </div>`;
     }).join('');
-    if (document.getElementById('lista-dashboard-servicos')) document.getElementById('lista-dashboard-servicos').innerHTML = listaHtml || "Sem dados.";
+    if (document.getElementById('lista-dashboard-servicos')) document.getElementById('lista-dashboard-servicos').innerHTML = listaHtml || "<div style='font-size:0.85rem; color:var(--muted); padding:10px;'>Sem dados.</div>";
 
-    // 👇 RENDERIZAÇÃO DO NOVO CARD DE SOLICITANTES 👇
+    // 👇 NOVO: RENDERIZAÇÃO DA LISTA DE SOLICITANTES RANKEADA COM AVATAR 👇
     let solOrdenados = Object.entries(distSolicitante).sort((a,b) => b[1] - a[1]);
-    let listaSolHtml = solOrdenados.map(s => {
+    let listaSolHtml = solOrdenados.map((s, idx) => {
         let pct = totalAgend > 0 ? Math.round((s[1] / totalAgend) * 100) : 0;
-        return `<div style="display:flex; justify-content:space-between; align-items:center; background: linear-gradient(90deg, #e8ecff ${pct}%, var(--bg) ${pct}%); padding:10px 12px; border-radius:var(--radius-sm); border:1px solid var(--border); margin-bottom:4px;">
-            <div style="font-size:0.78rem; font-weight:600; color:var(--cobli-dark); flex:1; text-shadow: 1px 1px 0px rgba(255,255,255,0.7);">${s[0]}</div>
-            <div style="font-size:0.88rem; font-weight:800; color:var(--primary); background:rgba(255,255,255,0.6); padding:2px 8px; border-radius:5px; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">${s[1]} <span style="font-size:0.6rem; color:var(--muted); font-weight:700;">(${pct}%)</span></div>
+        let iniciais = s[0].split(' ').map(n=>n[0]).join('').substring(0,2).toUpperCase();
+        return `<div class="list-row-rich">
+            <div class="rank-badge">${idx + 1}</div>
+            <div class="initials-avatar">${iniciais}</div>
+            <div class="list-name">${s[0]}</div>
+            <div class="list-count">${s[1]}</div>
+            <div class="list-pct">${pct}%</div>
         </div>`;
     }).join('');
-    if (document.getElementById('lista-dashboard-solicitantes')) document.getElementById('lista-dashboard-solicitantes').innerHTML = listaSolHtml || `<div style="font-size:0.85rem; color:var(--muted);">Nenhum dado encontrado.</div>`;
-    // 👆 FIM DA RENDERIZAÇÃO DE SOLICITANTES 👆
+    if (document.getElementById('lista-dashboard-solicitantes')) document.getElementById('lista-dashboard-solicitantes').innerHTML = listaSolHtml || `<div style="font-size:0.85rem; color:var(--muted); padding:10px;">Nenhum dado encontrado.</div>`;
 
     if(chartLocais) chartLocais.destroy();
     const ctxLocais = document.getElementById('chartLocais');
