@@ -3848,41 +3848,47 @@ window.buscarEnderecoPorCep = async function() {
                 const distLinear = await consultarDistancia(enderecoBase, p.endereco); 
                 
                 // 👇 BLINDAGEM MÁXIMA DO POLÍGONO 👇
-                let modoCob = p.modo_cobertura ? String(p.modo_cobertura).replace(/['"]/g, "").trim().toUpperCase() : 'RAIO';
-                let polyArr = null;
+let modoCob = p.modo_cobertura ? String(p.modo_cobertura).replace(/['"]/g, "").trim().toUpperCase() : 'RAIO';
+let polyArr = null;
 
-                if (modoCob === 'POLIGONO' && p.area_poligono) {
-                    try {
-                        // Se for string, tentamos dar JSON.parse até virar um Array de verdade
-                        let tempPoly = p.area_poligono;
-                        while (typeof tempPoly === 'string') {
-                            tempPoly = JSON.parse(tempPoly);
-                        }
-                        if (Array.isArray(tempPoly) && tempPoly.length >= 3) {
-                            polyArr = tempPoly;
-                        }
-                    } catch (e) {
-                        console.error(`Erro ao ler polígono do prestador ${p.nome}:`, e);
-                    }
-                }
+if (modoCob === 'POLIGONO' && p.area_poligono) {
+    try {
+        let tempPoly = p.area_poligono;
+        // Desempacota strings aninhadas até virar array
+        let tentativas = 0;
+        while (typeof tempPoly === 'string' && tentativas < 5) {
+            tempPoly = JSON.parse(tempPoly);
+            tentativas++;
+        }
+        // Aceita tanto [{lat,lng}] quanto [[lat,lng]]
+        if (Array.isArray(tempPoly) && tempPoly.length >= 3) {
+            polyArr = tempPoly.map(coord => {
+                if (typeof coord === 'object' && 'lat' in coord) return coord;
+                if (Array.isArray(coord) && coord.length >= 2) return { lat: Number(coord[0]), lng: Number(coord[1]) };
+                return null;
+            }).filter(Boolean);
+            if (polyArr.length < 3) polyArr = null;
+        }
+    } catch (e) {
+        console.error(`Erro ao ler polígono do prestador ${p.nome}:`, e);
+        polyArr = null;
+    }
+}
 
-                if (modoCob === 'POLIGONO' && polyArr) {
-                    if (latLngCliente) {
-                        // Converte os pontos limpos para o formato oficial do Google
-                        let mapPaths = polyArr.map(coord => new google.maps.LatLng(Number(coord.lat), Number(coord.lng)));
-                        let poly = new google.maps.Polygon({ paths: mapPaths });
-                        
-                        // A TRAVA DE FOGO: Caiu dentro do desenho?
-                        if (google.maps.geometry.poly.containsLocation(latLngCliente, poly)) {
-                            atende = true;
-                        }
-                    }
-                } else {
-                    // Modo Raio Fixo (Tradicional)
-                    if (distLinear !== null && distLinear <= parseFloat(p.range || 0)) { 
-                        atende = true; 
-                    }
-                }
+if (modoCob === 'POLIGONO' && polyArr) {
+    if (latLngCliente) {
+        let mapPaths = polyArr.map(coord => new google.maps.LatLng(Number(coord.lat), Number(coord.lng)));
+        let poly = new google.maps.Polygon({ paths: mapPaths });
+        if (google.maps.geometry.poly.containsLocation(latLngCliente, poly)) {
+            atende = true;
+        }
+    }
+} else if (modoCob !== 'POLIGONO') {
+    // Modo Raio Fixo (só entra aqui se NÃO for polígono)
+    if (distLinear !== null && distLinear <= parseFloat(p.range || 0)) {
+        atende = true;
+    }
+}
                 // 👆 FIM DA BLINDAGEM 👆
                 
                 if(atende) { 
@@ -4154,9 +4160,67 @@ window.proximoPasso = async function(n) {
         let prestadoresFiltrados = []; 
         for(let p of prestadores) { 
             if (!p.endereco) continue; if (p.status_prestador === 'TESTE' && userRole === 'SMARTOPS') continue;
-            const dist = await consultarDistancia(enderecoBusca, p.endereco); let available = window.getNextDates(p); 
-            if(dist !== null && dist <= parseFloat(p.range) && available.length > 0) { p.distanciaFinal = dist.toFixed(1); p.nextDates = available.join(', '); prestadoresFiltrados.push(p); } 
-        } 
+            const dist = await consultarDistancia(enderecoBusca, p.endereco);
+let available = window.getNextDates(p);
+let atendePasso2 = false;
+
+let modoCobP2 = p.modo_cobertura ? String(p.modo_cobertura).replace(/['"]/g, "").trim().toUpperCase() : 'RAIO';
+let polyArrP2 = null;
+
+if (modoCobP2 === 'POLIGONO' && p.area_poligono) {
+    try {
+        let tempPoly = p.area_poligono;
+        let tentativas = 0;
+        while (typeof tempPoly === 'string' && tentativas < 5) {
+            tempPoly = JSON.parse(tempPoly);
+            tentativas++;
+        }
+        if (Array.isArray(tempPoly) && tempPoly.length >= 3) {
+            polyArrP2 = tempPoly.map(coord => {
+                if (typeof coord === 'object' && 'lat' in coord) return coord;
+                if (Array.isArray(coord) && coord.length >= 2) return { lat: Number(coord[0]), lng: Number(coord[1]) };
+                return null;
+            }).filter(Boolean);
+            if (polyArrP2.length < 3) polyArrP2 = null;
+        }
+    } catch (e) {
+        console.error(`Erro polígono (passo 2) ${p.nome}:`, e);
+        polyArrP2 = null;
+    }
+}
+
+if (modoCobP2 === 'POLIGONO' && polyArrP2) {
+    // Precisa das coordenadas do cliente — reutiliza o geocoder que já foi chamado antes
+    await window.garantirGoogleMaps();
+    const geocoderP2 = new google.maps.Geocoder();
+    let latLngClienteP2 = null;
+    try {
+        latLngClienteP2 = await new Promise((resolve, reject) => {
+            geocoderP2.geocode({ address: enderecoBusca }, (results, status) => {
+                if (status === 'OK') resolve(results[0].geometry.location);
+                else reject(status);
+            });
+        });
+    } catch(e) {}
+
+    if (latLngClienteP2) {
+        let mapPaths = polyArrP2.map(c => new google.maps.LatLng(Number(c.lat), Number(c.lng)));
+        let poly = new google.maps.Polygon({ paths: mapPaths });
+        if (google.maps.geometry.poly.containsLocation(latLngClienteP2, poly)) {
+            atendePasso2 = true;
+        }
+    }
+} else if (modoCobP2 !== 'POLIGONO') {
+    if (dist !== null && dist <= parseFloat(p.range || 0)) {
+        atendePasso2 = true;
+    }
+}
+
+if (atendePasso2 && available.length > 0) {
+    p.distanciaFinal = dist !== null ? dist.toFixed(1) : '?';
+    p.nextDates = available.join(', ');
+    prestadoresFiltrados.push(p);
+}
         btn.disabled = false; btn.innerText = "Buscar Prestadores →"; 
         if(prestadoresFiltrados.length === 0) return window.showMessage("Nenhum prestador encontrado no raio de atendimento."); 
         prestadoresFiltrados.sort((a, b) => parseFloat(a.distanciaFinal) - parseFloat(b.distanciaFinal));
