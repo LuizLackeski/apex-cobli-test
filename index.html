@@ -3518,55 +3518,71 @@ window.plotarAgendamentosNoMapa = async function() {
 };
             
 // ==========================================
-// RASTREADOR DE INATIVIDADE (AUTO-LOGOUT) BLINDADO
+// RASTREADOR DE INATIVIDADE (AUTO-LOGOUT) — CORRIGIDO
 // ==========================================
-const TEMPO_LIMITE_INATIVIDADE = 10000; // 10 segundos para TESTE
+window.inactivityTimer = null;
+window._inactivityWarningTimer = null;
+const TEMPO_LIMITE_INATIVIDADE = 2 * 60 * 60 * 1000; // 2 horas
+const TEMPO_AVISO_ANTES       = 60 * 1000;            // avisa 1 min antes
 
-window.atualizarTempoAtividade = function() {
-    // Grava o milissegundo exato da última ação
-    localStorage.setItem('apex_last_activity', Date.now().toString());
-};
+window.resetInactivityTimer = function() {
+    clearTimeout(window.inactivityTimer);
+    clearTimeout(window._inactivityWarningTimer);
 
-window.verificarInatividade = function() {
-    const lastActivity = localStorage.getItem('apex_last_activity');
-    if (lastActivity) {
-        const tempoPassado = Date.now() - parseInt(lastActivity, 10);
-        
-        // Se o tempo passado for maior que o limite, desloga sumariamente
-        if (tempoPassado >= TEMPO_LIMITE_INATIVIDADE) {
-            localStorage.removeItem('apex_last_activity'); // Limpa para não dar loop
-            window.showToast("Sessão expirada por inatividade. Deslogando...");
-            setTimeout(() => {
-                if (window.handleLogout) window.handleLogout();
-            }, 2000);
+    // Aviso 1 minuto antes
+    window._inactivityWarningTimer = setTimeout(() => {
+        window.showToast("⚠️ Sessão expira em 1 minuto por inatividade...");
+    }, TEMPO_LIMITE_INATIVIDADE - TEMPO_AVISO_ANTES);
+
+    // Logout ao atingir o limite
+    window.inactivityTimer = setTimeout(async () => {
+        // Garante que handleLogout existe antes de chamar
+        if (typeof window.handleLogout === 'function') {
+            // Mostra aviso na tela (não usa toast pois página vai recarregar)
+            const aviso = document.createElement('div');
+            aviso.style.cssText = `
+                position: fixed; top: 50%; left: 50%;
+                transform: translate(-50%, -50%);
+                background: #07074E; color: #00AE97;
+                padding: 18px 32px; border-radius: 12px;
+                font-weight: 700; font-size: 1rem;
+                border-left: 4px solid #00AE97;
+                box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+                z-index: 999999; font-family: 'DM Sans', sans-serif;
+                letter-spacing: 0.3px;
+            `;
+            aviso.textContent = '⏱️ Sessão expirada por inatividade. Saindo...';
+            document.body.appendChild(aviso);
+
+            setTimeout(() => window.handleLogout(), 2500);
+        } else {
+            // Fallback: signOut direto + reload
+            await supabaseClient.auth.signOut();
+            window.location.reload();
         }
-    }
+    }, TEMPO_LIMITE_INATIVIDADE);
 };
 
 window.startInactivityTracker = function() {
-    window.atualizarTempoAtividade(); 
-    
-    let throttleTimer = false;
-    ['mousemove', 'mousedown', 'keypress', 'scroll', 'touchstart', 'click'].forEach(evt => {
-        document.addEventListener(evt, () => {
-            if (!throttleTimer) {
-                throttleTimer = true;
-                window.atualizarTempoAtividade();
-                // Respiro do mouse em 1 segundo (para não bugar o teste rápido)
-                setTimeout(() => { throttleTimer = false; }, 1000); 
-            }
-        }, { passive: true });
+    if (window._inactivityTrackerAtivo) return; // evita múltiplos listeners
+    window._inactivityTrackerAtivo = true;
+
+    const eventos = ['mousemove', 'mousedown', 'keydown', 'scroll', 'touchstart', 'click'];
+    eventos.forEach(evt => {
+        document.addEventListener(evt, window.resetInactivityTimer, { passive: true });
     });
 
-    // 👇 O CULPADO ESTAVA AQUI! Agora ele checa o relógio a cada 1 segundo (1000ms)
-    setInterval(window.verificarInatividade, 1000); 
-    
-    // Checa também quando a pessoa volta pra aba
+    // Pausa o timer quando a aba fica em background, retoma quando volta
     document.addEventListener('visibilitychange', () => {
         if (document.visibilityState === 'visible') {
-            window.verificarInatividade();
+            window.resetInactivityTimer();
+        } else {
+            // Aba em background: cancela o timer de aviso mas mantém o de logout
+            clearTimeout(window._inactivityWarningTimer);
         }
     });
+
+    window.resetInactivityTimer(); // inicia a contagem
 };
             
 async function checkSession() {
