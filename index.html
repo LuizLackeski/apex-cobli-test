@@ -3518,29 +3518,55 @@ window.plotarAgendamentosNoMapa = async function() {
 };
             
 // ==========================================
-// RASTREADOR DE INATIVIDADE (AUTO-LOGOUT)
+// RASTREADOR DE INATIVIDADE (AUTO-LOGOUT) BLINDADO
 // ==========================================
-window.inactivityTimer = null;
-const TEMPO_LIMITE_INATIVIDADE = 2 * 60 * 60 * 1000; //2 horas (em milissegundos)
+const TEMPO_LIMITE_INATIVIDADE = 10000; // 10 segundos para TESTE
 
-window.resetInactivityTimer = function() {
-    clearTimeout(window.inactivityTimer);
-    window.inactivityTimer = setTimeout(() => {
-        // Quando o tempo acabar, avisa e desloga
-        window.showToast("Sessão expirada por inatividade. Deslogando...");
-        setTimeout(() => {
-            if (window.handleLogout) window.handleLogout();
-        }, 2000);
-    }, TEMPO_LIMITE_INATIVIDADE);
+window.atualizarTempoAtividade = function() {
+    // Grava o milissegundo exato da última ação
+    localStorage.setItem('apex_last_activity', Date.now().toString());
+};
+
+window.verificarInatividade = function() {
+    const lastActivity = localStorage.getItem('apex_last_activity');
+    if (lastActivity) {
+        const tempoPassado = Date.now() - parseInt(lastActivity, 10);
+        
+        // Se o tempo passado for maior que o limite, desloga sumariamente
+        if (tempoPassado >= TEMPO_LIMITE_INATIVIDADE) {
+            localStorage.removeItem('apex_last_activity'); // Limpa para não dar loop
+            window.showToast("Sessão expirada por inatividade. Deslogando...");
+            setTimeout(() => {
+                if (window.handleLogout) window.handleLogout();
+            }, 2000);
+        }
+    }
 };
 
 window.startInactivityTracker = function() {
-    // Escuta qualquer interação do usuário para zerar o cronômetro
-    ['mousemove', 'mousedown', 'keypress', 'scroll', 'touchstart'].forEach(evt => {
-        document.addEventListener(evt, window.resetInactivityTimer, { passive: true });
+    window.atualizarTempoAtividade(); 
+    
+    let throttleTimer = false;
+    ['mousemove', 'mousedown', 'keypress', 'scroll', 'touchstart', 'click'].forEach(evt => {
+        document.addEventListener(evt, () => {
+            if (!throttleTimer) {
+                throttleTimer = true;
+                window.atualizarTempoAtividade();
+                // Respiro do mouse em 1 segundo (para não bugar o teste rápido)
+                setTimeout(() => { throttleTimer = false; }, 1000); 
+            }
+        }, { passive: true });
     });
-    // Inicia a primeira contagem
-    window.resetInactivityTimer();
+
+    // 👇 O CULPADO ESTAVA AQUI! Agora ele checa o relógio a cada 1 segundo (1000ms)
+    setInterval(window.verificarInatividade, 1000); 
+    
+    // Checa também quando a pessoa volta pra aba
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') {
+            window.verificarInatividade();
+        }
+    });
 };
             
 async function checkSession() {
