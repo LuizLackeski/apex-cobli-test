@@ -2216,40 +2216,6 @@ function injetarTopbarIntegrations() {
         filter: brightness(1.1) !important;
     }
 
-    /* 4. ÍCONES E MARCAS D'ÁGUA NOS KPIS */
-    .home-kpi-card {
-        position: relative !important;
-        overflow: hidden !important;
-    }
-    .home-kpi-card::after {
-        content: '';
-        position: absolute;
-        right: -15px;
-        bottom: -20px;
-        width: 80px;
-        height: 80px;
-        background: radial-gradient(circle, rgba(0, 27, 184, 0.05) 0%, transparent 70%);
-        border-radius: 50%;
-        pointer-events: none;
-    }
-
-    /* 5. EFEITO DE MAGNIFICAÇÃO NAS LISTAS (Tickets, Painel, Home) */
-    .home-recente-item, .painel-item {
-        background: #ffffff !important;
-        border: 1px solid #f1f5f9 !important;
-        border-radius: 12px !important;
-        transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
-        margin-bottom: 12px !important;
-    }
-    .home-recente-item:hover, .painel-item:hover {
-        background: #ffffff !important;
-        border-color: #cbd5e1 !important;
-        /* Em vez de só pular para o lado, o card cresce em sua direção */
-        transform: scale(1.015) translateY(-2px) !important; 
-        box-shadow: 0 12px 30px rgba(7, 7, 78, 0.08) !important;
-        z-index: 10;
-        position: relative;
-    }
 </style>
     
 </head>
