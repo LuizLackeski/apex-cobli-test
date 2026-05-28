@@ -2215,6 +2215,177 @@ function injetarTopbarIntegrations() {
         transform: translateY(-2px) scale(1.01) !important;
         filter: brightness(1.1) !important;
     }
+/* ================================================================
+   STEP-1 CEP — HERO ESCURO COMPLETO
+================================================================ */
+#step-1.card {
+  padding: 0 !important;
+  overflow: hidden !important;
+}
+
+/* Hero dark block: injetado pelo JS abaixo */
+.cep-hero {
+  background: linear-gradient(130deg, #04043a 0%, #060f6a 50%, #05185e 100%);
+  padding: 30px 26px 26px;
+  position: relative;
+  overflow: hidden;
+}
+.cep-hero::before {
+  content: 'CEP';
+  position: absolute;
+  right: 18px; bottom: 6px;
+  font-family: var(--mono);
+  font-size: 5rem;
+  font-weight: 700;
+  color: rgba(255,255,255,0.03);
+  letter-spacing: 10px;
+  pointer-events: none;
+  user-select: none;
+}
+.cep-hero::after {
+  content: '';
+  position: absolute;
+  top: -60px; right: -60px;
+  width: 220px; height: 220px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(0,174,151,0.1) 0%, transparent 70%);
+  border: 1px solid rgba(0,174,151,0.12);
+  pointer-events: none;
+}
+.cep-hero-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(0,174,151,0.15);
+  border: 1px solid rgba(0,174,151,0.3);
+  color: var(--teal);
+  font-size: 0.58rem;
+  font-weight: 800;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  border-radius: 20px;
+  margin-bottom: 12px;
+  font-family: var(--sans);
+}
+.cep-hero-title {
+  font-size: 1.55rem;
+  font-weight: 800;
+  color: white;
+  letter-spacing: -0.5px;
+  line-height: 1.15;
+  margin: 0 0 6px;
+  font-family: var(--sans);
+}
+.cep-hero-sub {
+  font-size: 0.78rem;
+  color: rgba(255,255,255,0.35);
+  font-weight: 500;
+  margin: 0;
+  font-family: var(--sans);
+}
+.cep-form-body {
+  padding: 24px 26px 28px;
+  background: white;
+}
+
+/* Input CEP monospaced grande */
+#inputCep {
+  font-family: var(--mono) !important;
+  font-size: 1.15rem !important;
+  font-weight: 700 !important;
+  letter-spacing: 4px !important;
+  text-align: center !important;
+  background: #f6f8ff !important;
+  border: 2px solid var(--border) !important;
+  border-radius: var(--r2) !important;
+  padding: 13px 18px !important;
+  transition: all 0.2s !important;
+}
+#inputCep:focus {
+  background: white !important;
+  border-color: var(--blue) !important;
+  box-shadow: 0 0 0 4px rgba(0,27,184,0.1) !important;
+  outline: none !important;
+}
+
+/* Botão validar CEP */
+#btnValidarCep {
+  background: var(--teal) !important;
+  color: white !important;
+  font-weight: 800 !important;
+  font-size: 0.85rem !important;
+  padding: 0 26px !important;
+  min-height: 48px !important;
+  border-radius: var(--r2) !important;
+  box-shadow: 0 4px 14px rgba(0,174,151,0.28) !important;
+  white-space: nowrap !important;
+  letter-spacing: 0.3px !important;
+}
+#btnValidarCep:hover {
+  background: #009985 !important;
+  box-shadow: 0 6px 20px rgba(0,174,151,0.4) !important;
+  transform: translateY(-1px) !important;
+  filter: none !important;
+}
+
+/* Campos de endereço após validar CEP */
+#camposEndereco {
+  border-top: 2px dashed #eef1f8 !important;
+  padding-top: 20px !important;
+  margin-top: 20px !important;
+}
+
+/* Botão Buscar Prestadores */
+#btnBuscar {
+  background: linear-gradient(135deg, var(--teal), #009985) !important;
+  width: 100% !important;
+  padding: 14px !important;
+  font-size: 0.92rem !important;
+  font-weight: 800 !important;
+  border-radius: var(--r2) !important;
+  box-shadow: 0 5px 16px rgba(0,174,151,0.3) !important;
+  letter-spacing: 0.4px !important;
+  margin-top: 10px !important;
+}
+#btnBuscar:hover {
+  box-shadow: 0 8px 24px rgba(0,174,151,0.45) !important;
+  transform: translateY(-2px) !important;
+  filter: none !important;
+}
+
+/* ================================================================
+   INPUTS GLOBAIS
+================================================================ */
+input:not([type=checkbox]):not([type=radio]):not(#inputCep),
+select,
+textarea {
+  border: 1.5px solid var(--border) !important;
+  border-radius: var(--r2) !important;
+  background: #f7f9fe !important;
+  font-family: var(--sans) !important;
+  font-size: 0.88rem !important;
+  color: var(--text) !important;
+  padding: 10px 13px !important;
+  transition: border-color 0.2s, box-shadow 0.2s, background 0.2s !important;
+}
+input:not([type=checkbox]):not([type=radio]):not(#inputCep):focus,
+select:focus, textarea:focus {
+  border-color: var(--blue) !important;
+  background: white !important;
+  box-shadow: 0 0 0 3px rgba(0,27,184,0.09) !important;
+  outline: none !important;
+}
+label {
+  font-size: 0.64rem !important;
+  font-weight: 800 !important;
+  letter-spacing: 1px !important;
+  color: var(--muted) !important;
+  text-transform: uppercase !important;
+  display: block !important;
+  margin-bottom: 5px !important;
+}
+
 
 </style>
     
