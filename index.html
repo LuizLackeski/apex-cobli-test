@@ -108,15 +108,7 @@
         .sidebar-logo .txt-cobli { font-size: 0.92rem; font-weight: 700; letter-spacing: 1px; line-height: 1; }
         .sidebar-logo .txt-agenda { font-size: 0.5rem; opacity: 0.35; text-transform: uppercase; letter-spacing: 2px; margin-top: 3px; display: block; }
 
-        /* nav section label */
-        .sidebar-nav-section {
-            font-size: 0.58rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 1.8px;
-            color: rgba(255,255,255,0.55); /* 👈 Aqui o cinza fica bem mais claro e legível */
-            padding: 14px 18px 4px;
-        }
+        
 
         /* nav buttons — mantém IDs iguais para o JS funcionar */
         .menu {
@@ -674,27 +666,7 @@
         .item-lista:hover { background: var(--bg); border-radius: var(--radius-sm); }
 
         .flex-cards { display: flex; gap: 16px; margin-bottom: 20px; }
-        .stats-card { 
-            background: var(--card-bg); 
-            padding: 18px 16px; 
-            border-radius: var(--radius); 
-            flex: 1; 
-            border: 1px solid var(--border); 
-            text-align: center; 
-            font-weight: 700;
-            box-shadow: var(--shadow-sm);
-            font-size: 0.78rem;
-            color: var(--muted);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        .stats-card strong {
-            display: block;
-            font-size: 2rem;
-            margin-top: 4px;
-            font-weight: 800;
-            letter-spacing: -1px;
-        }
+        
 
         /* ============================================================
            PAINEL ITEMS
@@ -709,12 +681,12 @@
         .painel-item:hover { transform: translateX(5px) translateY(-2px); box-shadow: var(--shadow-md); }
 
         /* Color Coding Automático via JS para a Aba do Painel */
-        .painel-item[data-status="concluido"]  { border-left-color: #00AE97; background: #f7fffd; }
-        .painel-item[data-status="agendado"]   { border-left-color: #001BB8; background: #f7f9ff; }
-        .painel-item[data-status="andamento"]  { border-left-color: #f59e0b; background: #fffdf0; }
-        .painel-item[data-status="impedido"]   { border-left-color: #FF4633; background: #fff7f6; }
-        .painel-item[data-status="cancelado"]  { border-left-color: #94a3b8; background: #f8f9fb; opacity: 0.7; }
-        .painel-item[data-status="negociacao"] { border-left-color: #8b5cf6; background: #faf7ff; }
+        .painel-item[data-status="concluido"]  { border-left-color: #00AE97; }
+        .painel-item[data-status="agendado"]   { border-left-color: #001BB8; }
+        .painel-item[data-status="andamento"]  { border-left-color: #f59e0b; }
+        .painel-item[data-status="impedido"]   { border-left-color: #FF4633; }
+        .painel-item[data-status="cancelado"]  { border-left-color: #94a3b8; opacity: 0.7; }
+        .painel-item[data-status="negociacao"] { border-left-color: #8b5cf6; }
         .painel-item[data-status="solicitado"] { border-left-color: var(--muted); }
 
         /* ============================================================
@@ -968,10 +940,7 @@
         /* ============================================================
            SCROLLBAR
         ============================================================ */
-        ::-webkit-scrollbar { width: 5px; height: 5px; }
-        ::-webkit-scrollbar-track { background: var(--bg); border-radius: 4px; }
-        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        
 
         /* ============================================================
            INDICADORES DO PAINEL — BARRA DE STATUS
@@ -1196,19 +1165,11 @@
         .topo-integration-dot { width: 10px !important; height: 10px !important; }
         .topo-integration-label { font-size: 0.65rem !important; margin-top: 4px !important; }
         
-    </style>
+    
 
-    <!-- 
-  APEX COBLI — LAYOUT PATCH
-  Aplique este bloco ANTES do </head> do arquivo original
-  Contém apenas mudanças de layout/CSS/JS visual — zero alterações de lógica de negócio
--->
-
-<!-- ============================================================
-     PATCH 1 — TOPBAR: remove a linha azul estranha, adiciona
-     indicador de status de integrações no topo
-============================================================ -->
-<style>
+/* ================================================================
+   HOME SCREEN, TOPO INTEGRATIONS, MOBILE PATCHES
+================================================================ */
 /* Remove a linha/borda estranha que aparecia no topo */
 .topo {
     border-bottom: none !important;
@@ -1716,439 +1677,11 @@
     .home-welcome-bar { padding: 16px 18px; }
     .home-kpi-value { font-size: 1.8rem; }
 }
-</style>
 
-<script>
-// ============================================================
-// PATCH JS — Ajustes visuais sem alterar lógica de negócio
-// Injete este script ANTES do script principal do APEX
-// ============================================================
 
-// ── PATCH 2: Substituir abrirOpcoesPrestador por versão com novo visual ──
-(function() {
-    // Sobrescreve após o DOMContentLoaded para garantir que o original já foi definido
-    document.addEventListener('DOMContentLoaded', function() {
-
-        // ── PATCH: nova função de modal do prestador com brand Cobli ──
-        window.abrirOpcoesPrestador = function(i) {
-            if (typeof userRole !== 'undefined' && userRole !== 'GESTOR') {
-                return window.abrirDetalhesPrestador(i);
-            }
-            const p = (typeof prestadores !== 'undefined') ? prestadores[i] : { nome: 'Prestador', cidade: '-', uf: '-', status_prestador: 'PRODUCAO' };
-            const iniciais = p.nome ? p.nome.split(' ').slice(0,2).map(w => w[0]).join('').toUpperCase() : '??';
-            const statusTag = p.status_prestador === 'TESTE'
-                ? '<span style="font-size:0.65rem; background:#fef3c7; color:#b45309; padding:2px 7px; border-radius:4px; font-weight:800; margin-left:6px;">TESTE</span>'
-                : '<span style="font-size:0.65rem; background:#dcfce7; color:#15803d; padding:2px 7px; border-radius:4px; font-weight:800; margin-left:6px;">PRODUÇÃO</span>';
-
-            const html = `
-            <div class="modal-prestador-header">
-                <div class="modal-prestador-avatar">${iniciais}</div>
-                <div>
-                    <div class="modal-prestador-nome">${p.nome} ${statusTag}</div>
-                    <div class="modal-prestador-meta">📍 ${p.cidade || '-'}/${p.uf || '-'} &nbsp;·&nbsp; 📏 Raio: ${p.range || '-'} km &nbsp;·&nbsp; 👥 ${p.qtdtecnicos || 1} técnico(s)</div>
-                </div>
-            </div>
-            <div class="modal-prestador-acoes">
-                <button class="modal-acao-btn acao-ver" onclick="window.fecharModal(); window.abrirDetalhesPrestador(${i})">
-                    <div class="modal-acao-icone">👁️</div>
-                    <div class="modal-acao-texto">
-                        <strong>Ver Detalhes e Agenda</strong>
-                        <span>Horários, bloqueios e configurações</span>
-                    </div>
-                    <span style="margin-left:auto; opacity:0.35; font-size:1rem;">→</span>
-                </button>
-                <button class="modal-acao-btn acao-editar" onclick="window.fecharModal(); window.abrirCadastro(${i})">
-                    <div class="modal-acao-icone">📝</div>
-                    <div class="modal-acao-texto">
-                        <strong>Editar Cadastro</strong>
-                        <span>Dados, agenda base e técnicos</span>
-                    </div>
-                    <span style="margin-left:auto; opacity:0.35; font-size:1rem;">→</span>
-                </button>
-                <button class="modal-acao-btn acao-excluir" onclick="window.fecharModal(); window.excluirPrestador(${i})">
-                    <div class="modal-acao-icone">🗑️</div>
-                    <div class="modal-acao-texto">
-                        <strong>Excluir Prestador</strong>
-                        <span>Ação permanente e irreversível</span>
-                    </div>
-                </button>
-            </div>
-            <div class="modal-prestador-footer">
-                <button class="modal-btn-cancelar" onclick="window.fecharModal()">Cancelar</button>
-            </div>`;
-
-            // Usa o modal existente mas limpa os wrappers padrão
-            const overlay = document.getElementById('modalAviso');
-            const header = document.getElementById('modalHeader');
-            const body = document.getElementById('modalBody');
-            const footer = document.getElementById('modalFooter');
-
-            if (header) header.innerHTML = '';
-            if (header) header.style.display = 'none';
-            if (body) { body.innerHTML = html; body.style.marginBottom = '0'; }
-            if (footer) { footer.innerHTML = ''; footer.style.display = 'none'; }
-            if (overlay) overlay.style.display = 'flex';
-        };
-
-        // ── PATCH: restaurar modal normal para outros usos ──
-        const origExibirModal = window.exibirModal;
-        window.exibirModal = function(t, b) {
-            const header = document.getElementById('modalHeader');
-            const footer = document.getElementById('modalFooter');
-            if (header) header.style.display = '';
-            if (footer) footer.style.display = '';
-            origExibirModal(t, b);
-        };
-
-        // ── PATCH: Criar aba HOME e injetar no menu ──
-        criarAbaHome();
-
-        // ── PATCH: Adicionar dots de integração no topo ──
-        injetarTopbarIntegrations();
-
-        // ── PATCH: Melhorar visual dos stats-cards do Dashboard ──
-        melhorarStatCards();
-    });
-
-    function criarAbaHome() {
-        // Só cria se ainda não existe
-        if (document.getElementById('home')) return;
-
-        // Cria a div da aba home
-        const homeDiv = document.createElement('div');
-        homeDiv.id = 'home';
-        homeDiv.className = 'aba ativa'; // começa ativa
-
-        homeDiv.innerHTML = `
-        <div id="home-screen">
-            <!-- Welcome bar -->
-            <div class="home-welcome-bar">
-                <h1 id="home-greeting">Bom dia! 👋</h1>
-                <p id="home-subtitle">Visão geral do sistema de agenda exclusiva Apex | Cobli</p>
-                <div class="welcome-date" id="home-date">Carregando...</div>
-            </div>
-
-            <!-- KPI cards -->
-            <div class="home-kpis">
-                <div class="home-kpi-card kpi-total">
-                    <div class="home-kpi-label">Total de Solicitações</div>
-                    <div class="home-kpi-value" id="home-kpi-total">—</div>
-                    <div class="home-kpi-sub">Todos os status</div>
-                </div>
-                <div class="home-kpi-card kpi-green">
-                    <div class="home-kpi-label">Concluídos</div>
-                    <div class="home-kpi-value" id="home-kpi-conc">—</div>
-                    <div class="home-kpi-sub">Inc. impedidos</div>
-                </div>
-                <div class="home-kpi-card kpi-amber">
-                    <div class="home-kpi-label">Agendados</div>
-                    <div class="home-kpi-value" id="home-kpi-agend">—</div>
-                    <div class="home-kpi-sub">Programados</div>
-                </div>
-            </div>
-
-            <!-- Quick actions -->
-            <div class="home-actions-grid">
-                <button class="home-action-btn primary-action" onclick="window.irParaAgendamento()">
-                    <div class="home-action-icon">📅</div>
-                    <div>
-                        <div class="home-action-title">Novo Agendamento</div>
-                        <div class="home-action-sub">Buscar prestador por CEP e agendar serviços</div>
-                    </div>
-                </button>
-                <button class="home-action-btn" onclick="window.trocarAba('painel', document.getElementById('btn-painel'))">
-                    <div class="home-action-icon" style="background:rgba(0,174,151,0.1);">📋</div>
-                    <div>
-                        <div class="home-action-title">Painel</div>
-                        <div class="home-action-sub">Filtros e status detalhado</div>
-                    </div>
-                </button>
-                <button class="home-action-btn" onclick="window.trocarAba('dashboard', document.getElementById('btn-dashboard'))">
-                    <div class="home-action-icon" style="background:rgba(245,158,11,0.1);">📊</div>
-                    <div>
-                        <div class="home-action-title">Dashboard</div>
-                        <div class="home-action-sub">Métricas e ocupação da agenda</div>
-                    </div>
-                </button>
-            </div>
-
-            <!-- Últimos agendamentos -->
-            <div class="card" style="padding: 16px 20px;">
-                <div class="home-recentes-header">
-                    <div class="home-recentes-titulo">Últimas Solicitações</div>
-                    <button onclick="window.trocarAba('painel', document.getElementById('btn-painel'))" style="background:transparent; border:none; color:var(--primary); font-size:0.72rem; font-weight:700; cursor:pointer; padding:0; min-height:auto; text-transform:uppercase; letter-spacing:0.5px;">Ver Todos →</button>
-                </div>
-                <div id="home-lista-recentes">
-                    <div style="color:var(--muted); font-size:0.82rem; padding:8px 0;">Carregando...</div>
-                </div>
-            </div>
-        </div>`;
-
-        // Insere antes da aba consulta
-        const consultaDiv = document.getElementById('consulta');
-        if (consultaDiv) {
-            consultaDiv.parentNode.insertBefore(homeDiv, consultaDiv);
-            // Desativa consulta para não aparecer junto
-            consultaDiv.classList.remove('ativa');
-        }
-
-        // Atualiza o greeting com hora do dia
-        const hora = new Date().getHours();
-        const greeting = hora < 12 ? 'Bom dia' : hora < 18 ? 'Boa tarde' : 'Boa noite';
-        const greetEl = document.getElementById('home-greeting');
-        if (greetEl) greetEl.textContent = `${greeting}! 👋`;
-
-        // Data atual
-        const dateEl = document.getElementById('home-date');
-        if (dateEl) {
-            const agora = new Date();
-            dateEl.textContent = agora.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' });
-        }
-
-        // Adiciona botão HOME ao menu
-        const mainMenu = document.getElementById('main-menu');
-        if (mainMenu) {
-            const btnHome = document.createElement('button');
-            btnHome.id = 'btn-home';
-            btnHome.style.cssText = 'border-top: 4px solid var(--cobli-green) !important;';
-            btnHome.innerHTML = 'Início';
-            btnHome.onclick = function() { window.trocarAba('home', this); };
-
-            // Adiciona ANTES de todos os outros botões
-            const firstBtn = mainMenu.querySelector('button');
-            if (firstBtn) mainMenu.insertBefore(btnHome, firstBtn);
-        }
-
-        // Patch na função trocarAba para suportar aba home
-        const origTrocarAba = window.trocarAba;
-        window.trocarAba = function(id, btn) {
-            origTrocarAba(id, btn);
-            if (id === 'home') {
-                window.atualizarHomeScreen();
-            }
-        };
-
-        // Patch: se era a aba consulta que ficava ativa, agora é o home
-        const btnConsulta = document.getElementById('btn-consulta');
-        if (btnConsulta) {
-            btnConsulta.classList.remove('ativo');
-            // Não remove, apenas redireciona o click para ir ao form direto
-            btnConsulta.onclick = function() {
-                window.irParaAgendamento();
-            };
-        }
-
-        // Ativa o botão home no menu
-        const btnHomeEl = document.getElementById('btn-home');
-        if (btnHomeEl) btnHomeEl.classList.add('ativo');
-    }
-
-    window.irParaAgendamento = function() {
-        // Vai para a aba consulta (agendamento)
-        document.querySelectorAll('.aba').forEach(a => a.classList.remove('ativa'));
-        document.querySelectorAll('.menu button').forEach(b => b.classList.remove('ativo'));
-        const consultaEl = document.getElementById('consulta');
-        if (consultaEl) consultaEl.classList.add('ativa');
-        const btnConsulta = document.getElementById('btn-consulta');
-        if (btnConsulta) btnConsulta.classList.add('ativo');
-    };
-
-    window.atualizarHomeScreen = function() {
-        if (typeof agendamentos === 'undefined') return;
-
-        // KPIs
-        const total = agendamentos.length;
-        let conc = 0, agend = 0;
-        agendamentos.forEach(a => {
-            const s = String(a.status || '').toLowerCase();
-            if (s.includes('conclu') || s.includes('impedido') || s.includes('finalizado')) conc++;
-            if (s.includes('agendado') || s.includes('scheduled')) agend++;
-        });
-
-        const elTotal = document.getElementById('home-kpi-total');
-        const elConc = document.getElementById('home-kpi-conc');
-        const elAgend = document.getElementById('home-kpi-agend');
-        if (elTotal) elTotal.textContent = total;
-        if (elConc) elConc.textContent = conc;
-        if (elAgend) elAgend.textContent = agend;
-
-        // Lista recentes (últimos 5)
-        const lista = document.getElementById('home-lista-recentes');
-        if (!lista) return;
-
-        const statusColors = {
-            concluido: { bg: '#dcfce7', color: '#15803d', label: 'Concluído' },
-            agendado:  { bg: '#e8ecff', color: '#001BB8', label: 'Agendado' },
-            andamento: { bg: '#fef3c7', color: '#b45309', label: 'Andamento' },
-            impedido:  { bg: '#fee2e2', color: '#dc2626', label: 'Impedido' },
-            cancelado: { bg: '#f1f5f9', color: '#64748b', label: 'Cancelado' },
-            negociacao:{ bg: '#ede9fe', color: '#6d28d9', label: 'Negociação' },
-            solicitado:{ bg: '#f0f9ff', color: '#0369a1', label: 'Solicitado' },
-        };
-
-        const recentes = [...agendamentos].slice(0, 8);
-        if (recentes.length === 0) {
-            lista.innerHTML = '<div style="color:var(--muted); font-size:0.82rem; padding:8px 0; font-style:italic;">Nenhum agendamento encontrado.</div>';
-            return;
-        }
-
-        lista.innerHTML = recentes.map(a => {
-            const s = String(a.status || 'solicitado').toLowerCase();
-            let tipo = 'solicitado';
-            if (s.includes('conclu') || s.includes('finalizado')) tipo = 'concluido';
-            else if (s.includes('agendado')) tipo = 'agendado';
-            else if (s.includes('andamento') || s.includes('deslocamento')) tipo = 'andamento';
-            else if (s.includes('impedido')) tipo = 'impedido';
-            else if (s.includes('cancelado')) tipo = 'cancelado';
-            else if (s.includes('negocia') || s.includes('aguardando')) tipo = 'negociacao';
-
-            const sc = statusColors[tipo];
-            const nomeCliente = (typeof window.formatarCapitalize === 'function')
-                ? window.formatarCapitalize(a.cliente || '-')
-                : (a.cliente || '-');
-
-            return `<div class="home-recente-item" onclick="window.trocarAba('painel', document.getElementById('btn-painel'))">
-                <div class="home-recente-ticket">#${a.ticket || '-'}</div>
-                <div class="home-recente-cliente">${nomeCliente}</div>
-                <div style="font-size:0.72rem; color:var(--muted); min-width:80px; text-align:center;">${a.data || '-'}</div>
-                <div class="home-recente-status" style="background:${sc.bg}; color:${sc.color};">${sc.label}</div>
-            </div>`;
-        }).join('');
-    };
-
- // 👇 Hook robusto para atualizar a Home Screen instantaneamente
-    let watchRenderInterval = setInterval(() => {
-        if (typeof window.renderPainel === 'function') {
-            clearInterval(watchRenderInterval); // Achou a função! Para de procurar.
-            
-            const origRenderPainel = window.renderPainel;
-            window.renderPainel = function() {
-                origRenderPainel(); // Executa a função original do sistema
-                
-                // Força a atualização da Home silenciosamente todas as vezes que o painel renderiza
-                if (typeof window.atualizarHomeScreen === 'function') {
-                    window.atualizarHomeScreen();
-                }
-            };
-
-            // Tiro de segurança: se a internet foi tão rápida que os dados já chegaram
-            // antes desse hook ser feito, forçamos uma atualização manual imediata:
-            if (typeof agendamentos !== 'undefined' && agendamentos.length > 0 && typeof window.atualizarHomeScreen === 'function') {
-                window.atualizarHomeScreen();
-            }
-        }
-    }, 50); // Checa a cada 50ms
-
-function injetarTopbarIntegrations() {
-        const topoRight = document.querySelector('.topo-right');
-        if (!topoRight || document.getElementById('topo-integ')) return;
-
-        const wrapper = document.createElement('div');
-        wrapper.id = 'topo-integ';
-        wrapper.className = 'topo-integrations';
-        wrapper.title = 'Status das integrações';
-        wrapper.innerHTML = `
-            <div class="topo-integ-wrapper" title="Slack">
-                <div class="topo-integration-dot" id="dot-slack"></div>
-                <div class="topo-integration-label">SLK</div>
-            </div>
-            <div class="topo-integ-wrapper" title="Field Control">
-                <div class="topo-integration-dot" id="dot-field"></div>
-                <div class="topo-integration-label">FLD</div>
-            </div>
-            <div class="topo-integ-wrapper" title="Banco de Dados">
-                <div class="topo-integration-dot" id="dot-banco"></div>
-                <div class="topo-integration-label">BD</div>
-            </div>`;
-
-        topoRight.insertBefore(wrapper, topoRight.firstChild);
-
-        // Sincroniza os dots
-        function syncDots() {
-            const dSlk = document.getElementById('dot-slack');
-            const dFld = document.getElementById('dot-field');
-            const dBd = document.getElementById('dot-banco');
-            
-            // 👇 CORREÇÃO: Se não for gestor, é sempre TRUE (Verde)
-            if (typeof userRole !== 'undefined' && userRole !== 'GESTOR') {
-                if (dSlk) dSlk.className = 'topo-integration-dot ativo';
-                if (dFld) dFld.className = 'topo-integration-dot ativo';
-                if (dBd)  dBd.className  = 'topo-integration-dot ativo';
-                return;
-            }
-
-            // Lógica original para GESTOR
-            const slk = document.getElementById('slackSwitch');
-            const fld = document.getElementById('fieldSwitch');
-            const bd = document.getElementById('dbSwitch');
-            if (dSlk) dSlk.className = 'topo-integration-dot ' + (slk && slk.checked ? 'ativo' : 'inativo');
-            if (dFld) dFld.className = 'topo-integration-dot ' + (fld && fld.checked ? 'ativo' : 'inativo');
-            if (dBd)  dBd.className  = 'topo-integration-dot ' + (bd  && bd.checked  ? 'ativo' : 'inativo');
-        }
-
-        // Escuta mudanças nos switches se eles existirem
-        ['slackSwitch','fieldSwitch','dbSwitch'].forEach(id => {
-            const el = document.getElementById(id);
-            if (el) el.addEventListener('change', syncDots);
-        });
-
-        // Sync inicial + poll
-        setTimeout(syncDots, 800);
-        setInterval(syncDots, 3000);
-
-        // Oculta para PRESTADOR
-        setTimeout(() => {
-            if (typeof userRole !== 'undefined' && userRole === 'PRESTADOR') {
-                wrapper.style.display = 'none';
-            }
-        }, 1200);
-    }
-
-    function melhorarStatCards() {
-        // Transforma os stats-cards do Dashboard para ter label acima do número
-        document.addEventListener('DOMContentLoaded', () => {
-            setTimeout(() => {
-                document.querySelectorAll('.stats-card').forEach(card => {
-                    // Adiciona classe de label ao text node antes do strong
-                    const nodes = [...card.childNodes];
-                    nodes.forEach(n => {
-                        if (n.nodeType === 3 && n.textContent.trim()) {
-                            const span = document.createElement('div');
-                            span.className = 'stats-label';
-                            span.textContent = n.textContent.trim();
-                            card.insertBefore(span, n);
-                            card.removeChild(n);
-                        }
-                    });
-                });
-            }, 2000);
-        });
-    }
-
-    // 👇 CORREÇÃO: Forçar a atualização da Home no momento certo
-    // Intercepta a função renderPainel (que é chamada logo após o carregamento do banco) 
-    // para atualizar a Home Screen silenciosamente.
-    document.addEventListener('DOMContentLoaded', function() {
-        setTimeout(() => {
-            if (typeof window.renderPainel === 'function') {
-                const origRenderPainel = window.renderPainel;
-                window.renderPainel = function() {
-                    origRenderPainel(); // Executa a função original
-                    
-                    // Se a aba Home estiver visível, atualiza os dados nela
-                    const homeEl = document.getElementById('home');
-                    if (homeEl && homeEl.classList.contains('ativa') && typeof window.atualizarHomeScreen === 'function') {
-                        window.atualizarHomeScreen();
-                    }
-                };
-            }
-        }, 1000);
-    });
-
-})();
-</script>
-
-         <style>
+/* ================================================================
+   PATCH VISUAL — CARDS H2, HOME WELCOME BAR, BOTÕES GLOW
+================================================================ */
     /* 1. CABEÇALHOS DAS TELAS (O "Tchan" do sistema)
        Transforma os títulos normais (h2) dentro dos cards em headers embutidos maravilhosos */
     .conteudo .card h2 {
