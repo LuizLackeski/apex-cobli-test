@@ -2215,6 +2215,119 @@ function injetarTopbarIntegrations() {
         transform: translateY(-2px) scale(1.01) !important;
         filter: brightness(1.1) !important;
     }
+<!--
+  ╔══════════════════════════════════════════════════════════════════╗
+  ║  APEX COBLI — VISUAL PATCH v4.0  PREMIUM                       ║
+  ║  Cole este bloco ANTES do </head> no arquivo principal          ║
+  ║  Preserva toda a lógica JS, IDs e eventos do sistema           ║
+  ╚══════════════════════════════════════════════════════════════════╝
+-->
+
+<!-- Fonte extra para detalhe tipográfico -->
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,600;0,9..40,700;0,9..40,800;1,9..40,400&display=swap" rel="stylesheet">
+
+<style>
+
+/* ================================================================
+   VARIÁVEIS PREMIUM
+================================================================ */
+:root {
+  --navy:    #07074E;
+  --blue:    #001BB8;
+  --teal:    #00AE97;
+  --red:     #FF4633;
+  --amber:   #f59e0b;
+  --purple:  #7c3aed;
+  --bg:      #eaecf6;
+  --card:    #ffffff;
+  --border:  #dde1f0;
+  --muted:   #64748b;
+  --text:    #1e2240;
+  --mono:    'Space Mono', monospace;
+  --sans:    'DM Sans', sans-serif;
+  --r:       12px;
+  --r2:      8px;
+  --r3:      6px;
+  --sh1:     0 1px 3px rgba(7,7,78,0.06), 0 1px 2px rgba(7,7,78,0.04);
+  --sh2:     0 8px 24px rgba(7,7,78,0.12), 0 3px 6px rgba(7,7,78,0.06);
+  --sh3:     0 20px 50px rgba(7,7,78,0.2), 0 6px 12px rgba(7,7,78,0.08);
+}
+
+/* ================================================================
+   CARDS — ESTRUTURA PREMIUM COM ACCENT BAR LATERAL
+================================================================ */
+.card {
+  background: var(--card) !important;
+  border-radius: var(--r) !important;
+  border: 1px solid rgba(210, 218, 240, 0.85) !important;
+  box-shadow: var(--sh1) !important;
+  padding: 0 !important;          /* zeramos: padding vai por seção */
+  overflow: hidden !important;
+  transition: box-shadow 0.22s ease, transform 0.22s ease !important;
+  position: relative !important;
+}
+.card:hover {
+  box-shadow: var(--sh2) !important;
+  transform: translateY(-3px) !important;
+}
+
+/* Accent bar top do card — gradiente azul→teal que desliza ao hover */
+.card::before {
+  content: '' !important;
+  position: absolute !important;
+  top: 0 !important; left: 0 !important; right: 100% !important;
+  height: 3px !important;
+  background: linear-gradient(90deg, var(--blue) 0%, var(--teal) 100%) !important;
+  border-radius: var(--r) var(--r) 0 0 !important;
+  transition: right 0.38s ease !important;
+  z-index: 2 !important;
+}
+.card:hover::before { right: 0 !important; }
+
+/* Padding interno padrão para cards normais (h2 + conteúdo) */
+.card > h2:first-child,
+.card > *:not(.card-section):first-child {
+  padding: 20px 22px 0 22px !important;
+}
+.card > *:last-child { padding-bottom: 22px !important; }
+
+/* Se o card tem só um filho com display block, aplica padding */
+.card > div:only-child {
+  padding: 22px !important;
+}
+
+/* Exceção: cards que usam padding inline do HTML original — mantém */
+.card[style*="padding:0"],
+.card[style*="padding: 0"],
+#step-1.card {
+  padding: 0 !important;
+}
+
+/* h2 premium */
+h2 {
+  font-family: var(--sans) !important;
+  font-size: 0.7rem !important;
+  font-weight: 800 !important;
+  letter-spacing: 1.4px !important;
+  text-transform: uppercase !important;
+  color: var(--navy) !important;
+  margin: 0 0 16px !important;
+  padding-bottom: 13px !important;
+  border-bottom: 1px solid #eef1f8 !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+}
+h2::before {
+  content: '' !important;
+  display: inline-block !important;
+  width: 3px !important;
+  height: 16px !important;
+  background: linear-gradient(180deg, var(--blue) 0%, var(--teal) 100%) !important;
+  border-radius: 3px !important;
+  flex-shrink: 0 !important;
+}
+
 /* ================================================================
    STEP-1 CEP — HERO ESCURO COMPLETO
 ================================================================ */
@@ -2386,8 +2499,740 @@ label {
   margin-bottom: 5px !important;
 }
 
+/* ================================================================
+   BOTÕES GLOBAIS
+================================================================ */
+button {
+  border-radius: var(--r2) !important;
+  font-weight: 700 !important;
+  font-family: var(--sans) !important;
+  transition: all 0.18s ease !important;
+}
+button:hover {
+  filter: brightness(1.08) !important;
+  transform: translateY(-1px) !important;
+  box-shadow: var(--sh2) !important;
+}
+button:active {
+  transform: translateY(0) !important;
+  filter: brightness(0.95) !important;
+}
+
+/* ================================================================
+   STEPPER
+================================================================ */
+.timeline-container { margin-bottom: 22px !important; }
+.timeline-step .step-circle {
+  font-family: var(--mono) !important;
+  font-size: 0.8rem !important;
+  font-weight: 700 !important;
+  width: 36px !important;
+  height: 36px !important;
+  border: 2px solid var(--border) !important;
+  background: white !important;
+  color: var(--muted) !important;
+  box-shadow: var(--sh1) !important;
+  transition: all 0.25s !important;
+}
+.timeline-step.active .step-circle {
+  background: var(--blue) !important;
+  border-color: var(--blue) !important;
+  color: white !important;
+  box-shadow: 0 0 0 5px rgba(0,27,184,0.15) !important;
+}
+.timeline-step.completed .step-circle {
+  background: var(--teal) !important;
+  border-color: var(--teal) !important;
+  color: white !important;
+  box-shadow: 0 3px 10px rgba(0,174,151,0.35) !important;
+}
+.timeline-step .step-label {
+  font-size: 0.6rem !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.8px !important;
+  text-transform: uppercase !important;
+}
+.timeline-step.active .step-label  { color: var(--blue) !important; }
+.timeline-step.completed .step-label { color: var(--teal) !important; }
+.timeline-step::after { background: var(--border) !important; height: 2px !important; }
+.timeline-step.completed::after { background: var(--teal) !important; }
+
+/* ================================================================
+   STATUS BAR DO PAINEL — COMPLETAMENTE REDESENHADA
+================================================================ */
+.status-bar {
+  display: flex !important;
+  align-items: stretch !important;
+  background: var(--navy) !important;
+  border: none !important;
+  border-radius: var(--r) !important;
+  box-shadow: var(--sh2) !important;
+  overflow: hidden !important;
+  padding: 0 !important;
+  margin-bottom: 16px !important;
+}
+.status-bar-item {
+  flex: 1 !important;
+  text-align: center !important;
+  padding: 16px 8px !important;
+  border-right: 1px solid rgba(255,255,255,0.07) !important;
+  transition: background 0.18s !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 4px !important;
+  cursor: default !important;
+  position: relative !important;
+}
+.status-bar-item::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 20%; right: 20%;
+  height: 2px;
+  border-radius: 2px 2px 0 0;
+  background: transparent;
+  transition: background 0.2s;
+}
+.status-bar-item:hover { background: rgba(255,255,255,0.05) !important; }
+.status-bar-item:last-of-type { border-right: none !important; }
+
+.status-bar-item .sb-label {
+  font-size: 0.52rem !important;
+  font-weight: 800 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 1px !important;
+  color: rgba(255,255,255,0.35) !important;
+  line-height: 1.2 !important;
+  white-space: nowrap !important;
+}
+.status-bar-item .sb-value {
+  font-family: var(--mono) !important;
+  font-size: 1.7rem !important;
+  font-weight: 700 !important;
+  line-height: 1 !important;
+  color: rgba(255,255,255,0.6) !important;
+  transition: color 0.2s !important;
+}
+/* Cores por status na sb-bar escura */
+.status-bar-item:nth-child(3) .sb-value { color: #60a5fa !important; } /* agendado */
+.status-bar-item:nth-child(4) .sb-value { color: #fbbf24 !important; } /* andamento */
+.status-bar-item:nth-child(5) .sb-value { color: #f87171 !important; } /* impedido */
+.status-bar-item:nth-child(6) .sb-value { color: #34d399 !important; } /* concluído */
+.status-bar-item:nth-child(7) .sb-value { color: rgba(255,255,255,0.3) !important; } /* cancelado */
+
+/* Indicadores de cor no bottom de cada item */
+.status-bar-item:nth-child(3)::after { background: #60a5fa; }
+.status-bar-item:nth-child(4)::after { background: #fbbf24; }
+.status-bar-item:nth-child(5)::after { background: #f87171; }
+.status-bar-item:nth-child(6)::after { background: #34d399; }
+
+/* Botão Update dentro da status bar */
+.status-bar button[onclick*="atualizarTodosStatus"],
+.status-bar > button {
+  background: rgba(0,174,151,0.2) !important;
+  border: 1px solid rgba(0,174,151,0.35) !important;
+  color: var(--teal) !important;
+  font-size: 0.72rem !important;
+  font-weight: 800 !important;
+  padding: 8px 14px !important;
+  border-radius: var(--r3) !important;
+  margin: 0 14px !important;
+  white-space: nowrap !important;
+  letter-spacing: 0.3px !important;
+  flex-shrink: 0 !important;
+  align-self: center !important;
+  box-shadow: none !important;
+}
+.status-bar button[onclick*="atualizarTodosStatus"]:hover,
+.status-bar > button:hover {
+  background: var(--teal) !important;
+  color: white !important;
+  border-color: var(--teal) !important;
+  box-shadow: 0 4px 12px rgba(0,174,151,0.4) !important;
+  filter: none !important;
+}
+
+/* ================================================================
+   PAINEL ITEMS — CARD COMPLETO SEM FUMAÇA
+================================================================ */
+.painel-item {
+  background: white !important;
+  border-radius: var(--r) !important;
+  border: 1px solid var(--border) !important;
+  border-left: 4px solid var(--blue) !important;
+  box-shadow: var(--sh1) !important;
+  padding: 0 !important;       /* padding vai no div interno via JS patch */
+  margin-bottom: 8px !important;
+  transition: box-shadow 0.2s, transform 0.2s !important;
+  overflow: hidden !important;
+}
+.painel-item:hover {
+  transform: translateX(4px) translateY(-1px) !important;
+  box-shadow: var(--sh2) !important;
+}
+
+/* Cores da borda esquerda por status */
+.painel-item[data-status="concluido"]  { border-left-color: var(--teal) !important; }
+.painel-item[data-status="agendado"]   { border-left-color: var(--blue) !important; }
+.painel-item[data-status="andamento"]  { border-left-color: var(--amber) !important; }
+.painel-item[data-status="impedido"]   { border-left-color: var(--red) !important; }
+.painel-item[data-status="cancelado"]  { border-left-color: #94a3b8 !important; opacity: 0.7 !important; }
+.painel-item[data-status="negociacao"] { border-left-color: var(--purple) !important; }
+
+/* ================================================================
+   FILTROS — CARD COM VISUAL RICO
+================================================================ */
+.grid-filtros {
+  background: white !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--r) !important;
+  box-shadow: var(--sh1) !important;
+  padding: 16px 20px !important;
+  margin-bottom: 12px !important;
+  gap: 12px !important;
+  position: relative !important;
+}
+.grid-filtros::before {
+  content: '⚙ Filtros';
+  position: absolute;
+  top: -10px; left: 18px;
+  background: white;
+  font-size: 0.58rem;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--muted);
+  padding: 0 6px;
+  font-family: var(--sans);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+}
+
+.campo-filtro label {
+  font-size: 0.6rem !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.9px !important;
+  color: var(--muted) !important;
+  text-transform: uppercase !important;
+  margin-bottom: 4px !important;
+  display: block !important;
+}
+.campo-filtro input,
+.campo-filtro select {
+  height: 38px !important;
+  font-size: 0.82rem !important;
+  padding: 0 11px !important;
+  margin: 0 !important;
+}
+
+/* Botão limpar */
+.campo-filtro button[onclick*="limparFiltros"] {
+  height: 38px !important;
+  background: var(--muted) !important;
+  width: 100% !important;
+  font-size: 0.78rem !important;
+  letter-spacing: 0.3px !important;
+}
+
+/* Barra de ordenação */
+#barra-ordenacao {
+  background: white !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--r2) !important;
+  padding: 10px 16px !important;
+  margin-bottom: 10px !important;
+  box-shadow: var(--sh1) !important;
+}
+
+/* ================================================================
+   STATS CARDS DO DASHBOARD — PREMIUM COM BARRA LATERAL
+================================================================ */
+.flex-cards { gap: 14px !important; margin-bottom: 20px !important; }
+
+.stats-card {
+  background: white !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--r) !important;
+  box-shadow: var(--sh1) !important;
+  padding: 20px 20px 18px 28px !important;  /* espaço para barra lateral */
+  text-align: left !important;
+  position: relative !important;
+  overflow: hidden !important;
+  flex: 1 !important;
+  transition: box-shadow 0.2s, transform 0.2s !important;
+}
+.stats-card:hover {
+  box-shadow: var(--sh2) !important;
+  transform: translateY(-3px) !important;
+}
+
+/* Barra lateral colorida */
+.stats-card::before {
+  content: '' !important;
+  position: absolute !important;
+  left: 0 !important; top: 0 !important; bottom: 0 !important;
+  width: 5px !important;
+  height: 100% !important;
+  right: auto !important;
+  border-radius: 0 !important;
+  background: var(--blue) !important;
+  display: block !important;
+  transition: none !important;
+}
+.stats-card:nth-child(1)::before { background: var(--blue) !important; }
+.stats-card:nth-child(2)::before { background: var(--teal) !important; }
+.stats-card:nth-child(3)::before { background: var(--amber) !important; }
+
+/* Círculo de decoração no canto */
+.stats-card::after {
+  content: '' !important;
+  position: absolute !important;
+  right: -18px; top: -18px !important;
+  width: 80px; height: 80px !important;
+  border-radius: 50% !important;
+  opacity: 0.06 !important;
+  bottom: auto !important; left: auto !important;
+  background: var(--blue) !important;
+  display: block !important;
+  transition: none !important;
+}
+.stats-card:nth-child(1)::after { background: var(--blue) !important; }
+.stats-card:nth-child(2)::after { background: var(--teal) !important; }
+.stats-card:nth-child(3)::after { background: var(--amber) !important; }
+
+.stats-card:hover::before { right: auto !important; }
+
+.stats-card strong {
+  font-family: var(--mono) !important;
+  font-size: 2.6rem !important;
+  font-weight: 700 !important;
+  letter-spacing: -2px !important;
+  display: block !important;
+  margin-top: 8px !important;
+  line-height: 1 !important;
+}
+.stats-card:nth-child(1) strong { color: var(--blue) !important; }
+.stats-card:nth-child(2) strong { color: var(--teal) !important; }
+.stats-card:nth-child(3) strong { color: var(--amber) !important; }
+
+/* Label dos stats cards */
+.stats-card > *:not(strong) {
+  font-size: 0.65rem !important;
+  font-weight: 800 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 1px !important;
+  color: var(--muted) !important;
+}
+
+/* ================================================================
+   OCUPAÇÃO AGENDA — LINHAS COM BARRA DE PROGRESSO
+================================================================ */
+#ocupacao-lista > div,
+#ocupacao-tecnicos-lista > div {
+  background: #f7f9fe !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--r2) !important;
+  padding: 10px 14px !important;
+  margin-bottom: 6px !important;
+  transition: background 0.15s, transform 0.15s !important;
+}
+#ocupacao-lista > div:hover,
+#ocupacao-tecnicos-lista > div:hover {
+  background: white !important;
+  transform: translateX(3px) !important;
+  box-shadow: var(--sh1) !important;
+}
+
+/* Linhas serviços e solicitantes */
+#lista-dashboard-servicos > div,
+#lista-dashboard-solicitantes > div {
+  border-radius: var(--r2) !important;
+  padding: 8px 12px !important;
+  transition: background 0.15s, transform 0.15s !important;
+}
+#lista-dashboard-servicos > div:hover,
+#lista-dashboard-solicitantes > div:hover {
+  background: #f7f9fe !important;
+  transform: translateX(3px) !important;
+}
+
+/* ================================================================
+   TOPBAR
+================================================================ */
+.topo {
+  background: linear-gradient(90deg, var(--navy) 0%, #0a0a60 100%) !important;
+  border-bottom: 1px solid rgba(0,27,184,0.25) !important;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.2) !important;
+}
+
+/* ================================================================
+   MODAIS
+================================================================ */
+.modal-overlay {
+  background: rgba(4,4,50,0.82) !important;
+  backdrop-filter: blur(10px) !important;
+  -webkit-backdrop-filter: blur(10px) !important;
+}
+.modal-card {
+  border-radius: 16px !important;
+  box-shadow: 0 32px 72px rgba(4,4,50,0.48), 0 0 0 1px rgba(0,27,184,0.1) !important;
+}
+.modal-card::before {
+  height: 4px !important;
+  background: linear-gradient(90deg, var(--blue) 0%, var(--teal) 100%) !important;
+  border-radius: 16px 16px 0 0 !important;
+}
+
+/* ================================================================
+   PILL DE STATUS (reutilizável, adicionado via JS no painel)
+================================================================ */
+.apex-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.6rem;
+  font-weight: 800;
+  padding: 3px 9px;
+  border-radius: 20px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  vertical-align: middle;
+  font-family: var(--sans);
+  white-space: nowrap;
+}
+.apex-status-pill.concluido  { background: #dcfce7; color: #15803d; }
+.apex-status-pill.agendado   { background: #e8ecff; color: var(--blue); }
+.apex-status-pill.andamento  { background: #fef3c7; color: #b45309; }
+.apex-status-pill.impedido   { background: #fee2e2; color: #dc2626; }
+.apex-status-pill.cancelado  { background: #f1f5f9; color: var(--muted); }
+.apex-status-pill.negociacao { background: #ede9fe; color: var(--purple); }
+.apex-status-pill.solicitado { background: #f0f9ff; color: #0369a1; }
+
+/* ================================================================
+   PRESTADORES — CARDS COM AVATAR
+================================================================ */
+.apex-prest-card {
+  background: white;
+  border: 1px solid var(--border);
+  border-left: 5px solid var(--blue);
+  border-radius: var(--r);
+  box-shadow: var(--sh1);
+  padding: 14px 18px;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  cursor: pointer;
+  transition: box-shadow 0.2s, transform 0.2s, border-left-color 0.2s;
+}
+.apex-prest-card:hover {
+  transform: translateX(5px) translateY(-2px);
+  box-shadow: var(--sh2);
+  border-left-color: var(--teal);
+}
+.apex-prest-avatar {
+  width: 46px;
+  height: 46px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--blue), #0025e8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: white;
+  flex-shrink: 0;
+  letter-spacing: 0.5px;
+  box-shadow: 0 4px 10px rgba(0,27,184,0.3);
+}
+.apex-prest-info { flex: 1; min-width: 0; }
+.apex-prest-name {
+  font-size: 0.88rem;
+  font-weight: 800;
+  color: var(--navy);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+.apex-prest-meta {
+  font-size: 0.74rem;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+.apex-prest-location {
+  background: rgba(0,174,151,0.08);
+  border: 1px solid rgba(0,174,151,0.2);
+  color: #0d7058;
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 5px 10px;
+  border-radius: 6px;
+  flex-shrink: 0;
+  font-family: var(--sans);
+}
+.apex-prest-tag {
+  font-size: 0.58rem;
+  font-weight: 800;
+  padding: 2px 7px;
+  border-radius: 4px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+.apex-prest-tag.teste { background: #fef3c7; color: #b45309; }
+.apex-prest-tag.prod  { background: #dcfce7; color: #15803d; }
+
+/* ================================================================
+   SCROLLBAR COBLI
+================================================================ */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: #eef1f8; border-radius: 5px; }
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, var(--blue), var(--teal));
+  border-radius: 5px;
+}
+
+/* ================================================================
+   AGENDA CELLS
+================================================================ */
+.cell {
+  border-radius: var(--r3) !important;
+  font-family: var(--mono) !important;
+  font-size: 0.7rem !important;
+  font-weight: 600 !important;
+  border: 1.5px solid var(--border) !important;
+  background: white !important;
+  transition: all 0.13s !important;
+}
+.cell:hover {
+  border-color: var(--blue) !important;
+  background: rgba(0,27,184,0.06) !important;
+  transform: scale(1.06) !important;
+}
+.cell.selecionado {
+  background: var(--blue) !important;
+  border-color: var(--blue) !important;
+  color: white !important;
+  box-shadow: 0 2px 8px rgba(0,27,184,0.32) !important;
+}
+
+/* ================================================================
+   TOAST
+================================================================ */
+#toast {
+  background: var(--navy) !important;
+  border-left: 4px solid var(--teal) !important;
+  border-radius: var(--r) !important;
+  box-shadow: var(--sh3) !important;
+  font-weight: 700 !important;
+  color: white !important;
+  font-size: 0.88rem !important;
+  letter-spacing: 0.2px !important;
+}
+
+/* ================================================================
+   MOBILE
+================================================================ */
+@media (max-width: 700px) {
+  .flex-cards { flex-direction: column !important; }
+  .stats-card { padding: 16px 16px 14px 24px !important; }
+  .stats-card strong { font-size: 2rem !important; }
+  .grid-filtros { padding: 18px 14px 14px !important; }
+}
 
 </style>
+
+<script>
+/* ================================================================
+   APEX v4 PREMIUM — JS PATCH
+   Injeções visuais sem alterar lógica de negócio
+================================================================ */
+(function () {
+  'use strict';
+
+  /* ── STATUS CONFIG ── */
+  const STATUS_CFG = {
+    concluido:  { label: 'Concluído',    cls: 'concluido',  icon: '✓' },
+    agendado:   { label: 'Agendado',     cls: 'agendado',   icon: '📅' },
+    andamento:  { label: 'Em Andamento', cls: 'andamento',  icon: '⚡' },
+    impedido:   { label: 'Impedido',     cls: 'impedido',   icon: '⚠' },
+    cancelado:  { label: 'Cancelado',    cls: 'cancelado',  icon: '✕' },
+    negociacao: { label: 'Negociação',   cls: 'negociacao', icon: '💬' },
+    solicitado: { label: 'Solicitado',   cls: 'solicitado', icon: '📋' },
+  };
+
+  /* ── A: Hero CEP ── */
+  function injetarHeroCEP() {
+    const step1 = document.getElementById('step-1');
+    if (!step1 || step1.querySelector('.cep-hero')) return;
+
+    const h2 = step1.querySelector('h2');
+    if (h2) h2.style.display = 'none';
+
+    const hero = document.createElement('div');
+    hero.className = 'cep-hero';
+    hero.innerHTML = `
+      <div class="cep-hero-pill">📍 Localização do Atendimento</div>
+      <h1 class="cep-hero-title">Informe o CEP</h1>
+      <p class="cep-hero-sub">Buscaremos prestadores disponíveis na sua área de atendimento</p>
+    `;
+    step1.insertBefore(hero, step1.firstChild);
+
+    const body = document.createElement('div');
+    body.className = 'cep-form-body';
+    [...step1.children].filter(c => c !== hero).forEach(c => body.appendChild(c));
+    step1.appendChild(body);
+  }
+
+  /* ── B: Enriquece cada painel-item com pill de status e layout melhorado ── */
+  function enriquecerPainelItems() {
+    document.querySelectorAll('.painel-item:not([data-apex-v4])').forEach(item => {
+      item.setAttribute('data-apex-v4', '1');
+      const status = item.dataset.status || 'solicitado';
+      const cfg = STATUS_CFG[status] || STATUS_CFG.solicitado;
+
+      /* Pega o div interno e adiciona padding */
+      const inner = item.querySelector('div[style*="flex-grow"]') || item.firstElementChild;
+      if (!inner) return;
+
+      /* Adiciona padding ao inner div */
+      inner.style.cssText += '; padding: 13px 16px;';
+
+      /* Monta pill de status se não existe ainda */
+      if (!item.querySelector('.apex-status-pill')) {
+        const pill = document.createElement('span');
+        pill.className = `apex-status-pill ${cfg.cls}`;
+        pill.textContent = `${cfg.icon} ${cfg.label}`;
+        pill.style.marginLeft = '10px';
+
+        /* Encontra o span de status gerado pelo JS original e esconde, insere pill */
+        const statusSpan = inner.querySelector('span[style*="color: var(--primary)"]') ||
+                           inner.querySelector('span[style*="var(--primary)"]');
+        if (statusSpan) {
+          statusSpan.style.display = 'none';
+          statusSpan.parentNode.insertBefore(pill, statusSpan.nextSibling);
+        }
+      }
+    });
+  }
+
+  /* ── C: Constrói cards de prestadores com avatar ── */
+  function embelezarPrestadores() {
+    const lista = document.getElementById('lista-prestadores-view');
+    if (!lista) return;
+
+    lista.querySelectorAll('[data-apex-prest]').forEach(() => {}); // já processados
+
+    lista.querySelectorAll(':scope > div:not([data-apex-prest])').forEach(card => {
+      card.setAttribute('data-apex-prest', '1');
+      card.classList.add('apex-prest-card');
+
+      /* Tenta extrair nome do prestador para gerar iniciais no avatar */
+      const nomeEl = card.querySelector('[style*="font-weight: 800"]') ||
+                     card.querySelector('strong') ||
+                     card.querySelector('b');
+      const nome = nomeEl ? nomeEl.textContent.trim().replace(/\[.*?\]/g, '').trim() : '??';
+      const iniciais = nome.split(' ').slice(0, 3).map(w => w[0]).join('').toUpperCase();
+
+      /* Avatar */
+      if (!card.querySelector('.apex-prest-avatar')) {
+        const av = document.createElement('div');
+        av.className = 'apex-prest-avatar';
+        av.textContent = iniciais;
+        card.insertBefore(av, card.firstChild);
+      }
+    });
+  }
+
+  /* ── D: Observer que monitora mudanças no DOM ── */
+  function setupObservers() {
+    const painelConteudo = document.getElementById('painel-conteudo');
+    if (painelConteudo) {
+      new MutationObserver(() => {
+        requestAnimationFrame(enriquecerPainelItems);
+      }).observe(painelConteudo, { childList: true, subtree: true });
+    }
+
+    const listaPrest = document.getElementById('lista-prestadores-view');
+    if (listaPrest) {
+      new MutationObserver(() => {
+        requestAnimationFrame(embelezarPrestadores);
+      }).observe(listaPrest, { childList: true, subtree: true });
+    }
+
+    /* Observer para o app-content (pós-login) */
+    const appContent = document.getElementById('app-content');
+    if (appContent) {
+      new MutationObserver(() => {
+        if (appContent.style.display !== 'none') {
+          setTimeout(() => {
+            injetarHeroCEP();
+            enriquecerPainelItems();
+            embelezarPrestadores();
+          }, 300);
+        }
+      }).observe(appContent, { attributes: true, attributeFilter: ['style'] });
+    }
+  }
+
+  /* ── E: Adiciona padding interno nos painel-items originais via CSS injection ── */
+  function injetarPaddingPainelItems() {
+    const style = document.createElement('style');
+    style.textContent = `
+      /* Padding no div interno dos painel-items gerados pelo JS */
+      .painel-item > div[style*="flex-grow"] {
+        padding: 13px 16px !important;
+      }
+      /* Badge técnico no canto direito */
+      .painel-item > div[style*="flex-grow"] span[style*="background: #e8ecff"] {
+        background: #eef1f8 !important;
+        color: var(--navy) !important;
+        border: 1px solid var(--border) !important;
+        border-radius: 6px !important;
+        font-size: 0.68rem !important;
+        font-weight: 700 !important;
+        padding: 3px 10px !important;
+      }
+      /* Linha de metadata do painel item */
+      .painel-item > div[style*="flex-grow"] > div[style*="border-top: 1px dashed"] {
+        border-top: 1px solid #eef1f8 !important;
+        padding-top: 6px !important;
+        margin-top: 6px !important;
+      }
+      /* Ticket número */
+      .painel-item strong[style*="font-mono"] {
+        font-family: var(--mono) !important;
+        font-size: 0.82rem !important;
+        color: var(--navy) !important;
+        letter-spacing: 0.5px !important;
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
+  /* ── INIT ── */
+  function init() {
+    injetarHeroCEP();
+    enriquecerPainelItems();
+    embelezarPrestadores();
+    injetarPaddingPainelItems();
+    setupObservers();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => setTimeout(init, 250));
+  } else {
+    setTimeout(init, 250);
+  }
+
+})();
+</script>
+
     
 </head>
 <body>
