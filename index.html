@@ -311,7 +311,7 @@
             max-width: 140px;
         }
 
-        /* ============================================================
+/* ============================================================
            CABEÇALHOS DAS ABAS (Padrão Dark Blue Universal)
         ============================================================ */
         .page-header {
@@ -328,20 +328,9 @@
             color: white;
             box-shadow: 0 8px 24px rgba(7, 7, 78, 0.12);
         }
-        .page-header::after {
-            content: 'APEX';
-            position: absolute;
-            right: 24px;
-            top: 50%;
-            transform: translateY(-50%);
-            font-family: var(--font-mono);
-            font-size: 5rem;
-            font-weight: 700;
-            color: rgba(255,255,255,0.04);
-            letter-spacing: 8px;
-            pointer-events: none;
-            user-select: none;
-        }
+        
+        /* 👇 A marca d'água .page-header::after foi REMOVIDA daqui 👇 */
+        
         .page-header h1 {
             margin: 0 0 4px;
             font-size: 1.35rem;
@@ -360,7 +349,7 @@
         }
         .page-header-actions {
             position: relative;
-            z-index: 2; /* Fica acima da marca d'água */
+            z-index: 2; 
             display: flex;
             gap: 10px;
             align-items: center;
