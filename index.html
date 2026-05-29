@@ -6195,165 +6195,356 @@ window.irParaPainelComFiltro = function(status) {
 }
 
 // Captura a tela expandindo os cards temporariamente para mostrar tudo
-window.gerarImagemDashboard = function() {
-    window.showToast("⏳ Preparando relatório visual completo... Aguarde.");
-    
-    const dashElement = document.getElementById('dashboard');
-    const btnToolbar = dashElement.querySelector('.dashboard-controls-toolbar');
-    
-    // Esconde a barra de botões para não sair na foto
-    if (btnToolbar) btnToolbar.style.display = 'none';
+// ============================================================
+// APEX COBLI — RELATÓRIO EXECUTIVO VISUAL (SUBSTITUI gerarImagemDashboard)
+// Substitua a função window.gerarImagemDashboard no seu código
+// e adicione a função auxiliar window._gerarHTMLRelatorio abaixo dela.
+// ============================================================
 
-    // Congela animações do elemento principal
-    dashElement.style.animation = 'none';
-    dashElement.style.transition = 'none';
-
-    // 👇 A MÁGICA DE EXPANDIR TUDO COMEÇA AQUI 👇
-    // Seleciona todos os cards e listas que têm barra de rolagem
-    const elementosParaExpandir = dashElement.querySelectorAll('.card, #ocupacao-lista, #ocupacao-tecnicos-lista, #lista-dashboard-servicos, #lista-dist-prestadores, #lista-dist-locais, #lista-dashboard-solicitantes');
-    const estilosOriginais = new Map();
-
-    elementosParaExpandir.forEach(el => {
-        estilosOriginais.set(el, el.style.cssText); // Salva o CSS original para não estragar sua tela depois
-        el.style.setProperty('max-height', 'none', 'important');
-        el.style.setProperty('height', 'auto', 'important');
-        el.style.setProperty('overflow', 'visible', 'important');
-        el.style.setProperty('overflow-y', 'visible', 'important');
-    });
-    // 👆 FIM DA MÁGICA DE EXPANDIR 👆
-
-    // Busca as datas pelos IDs corretos do HTML
+// ── FUNÇÃO AUXILIAR: Monta o HTML do relatório a partir dos dados do sistema ──
+window._gerarHTMLRelatorio = function() {
+    // ── 1. Coleta os filtros de data ativos ──────────────────────────────────
     const inputIni = document.getElementById('filtroDataInicio');
     const inputFim = document.getElementById('filtroDataFim');
     const dtIni = inputIni && inputIni.value ? inputIni.value.split('-').reverse().join('/') : '';
     const dtFim = inputFim && inputFim.value ? inputFim.value.split('-').reverse().join('/') : '';
-    const periodoTexto = (dtIni && dtFim) ? `${dtIni} até ${dtFim}` : 'Geral (Sem filtro de data)';
+    const periodoTexto = (dtIni && dtFim) ? `${dtIni} → ${dtFim}` : 'Geral · Sem filtro de data';
 
-    // Cria o cabeçalho executivo temporário
-    const reportHeader = document.createElement('div');
-    reportHeader.id = 'temp-report-header';
-    reportHeader.innerHTML = `
-        <div style="display: flex; justify-content: space-between; align-items: center; background-color: #07074E; padding: 20px 30px; border-radius: 8px 8px 0 0; color: white; font-family: sans-serif; margin-bottom: 20px;">
-            <div>
-                <div style="font-size: 1.4rem; font-weight: bold; letter-spacing: -0.5px;">APEX | Cobli</div>
-                <div style="font-size: 0.8rem; color: #00AE97; text-transform: uppercase; font-weight: bold; margin-top: 2px;">Relatório Executivo de Agenda</div>
-            </div>
-            <div style="text-align: right; font-size: 0.8rem; color: #cbd5e1;">
-                <div>PERÍODO:</div>
-                <div style="font-weight: bold; color: white; font-size: 0.95rem;">${periodoTexto}</div>
-                <div style="margin-top: 5px; color: #94a3b8;">Gerado em: ${new Date().toLocaleString('pt-BR')}</div>
-            </div>
-        </div>
-    `;
-    dashElement.prepend(reportHeader);
+    // ── 2. Contagens de KPI e status (sobre filtradosPainel) ─────────────────
+    let total = 0, conc = 0, agend = 0;
+    let cntSol = 0, cntNeg = 0, cntAgd = 0, cntAnd = 0, cntImp = 0, cntCon = 0, cntCan = 0;
 
-    // Espera 1.5s para garantir que tudo esticou e as animações pararam
-    setTimeout(() => {
-        html2canvas(dashElement, {
-            scale: 2, 
-            useCORS: true,
-            allowTaint: true,
-            backgroundColor: '#eaecf6', 
-            logging: false,
-            onclone: function(clonedDoc) {
-                const clonedDash = clonedDoc.getElementById('dashboard');
-                if (clonedDash) {
-                    clonedDash.style.opacity = '1';
-                    clonedDash.style.animation = 'none';
-                    clonedDash.style.transition = 'none';
-                }
-            }
-        }).then(canvas => {
-            // 👇 DEVOLVE AS BARRAS DE ROLAGEM E LIMITES DE ALTURA PARA A TELA NORMAL 👇
-            elementosParaExpandir.forEach(el => {
-                el.style.cssText = estilosOriginais.get(el);
-            });
+    filtradosPainel.forEach(a => {
+        const s = String(a.status || '').toLowerCase();
+        total++;
+        if (s.includes('conclu') || s.includes('finalizado') || s.includes('completed')) { conc++; cntCon++; }
+        else if (s.includes('impedido') || s.includes('reportado')) { conc++; cntImp++; }
+        else if (s.includes('agendado') || s.includes('scheduled')) { agend++; cntAgd++; }
+        else if (s.includes('andamento') || s.includes('progress') || s.includes('deslocamento')) cntAnd++;
+        else if (s.includes('negocia') || s.includes('aguardando')) cntNeg++;
+        else if (s.includes('cancelado') || s.includes('canceled')) cntCan++;
+        else cntSol++;
+    });
 
-            // Limpeza pós-foto
-            if (btnToolbar) btnToolbar.style.display = 'flex';
-            const tempH = document.getElementById('temp-report-header');
-            if (tempH) dashElement.removeChild(tempH);
-            dashElement.style.animation = '';
-            dashElement.style.transition = '';
-            
-            const imgData = canvas.toDataURL('image/png');
-            
-            let html = `
-                <div style="text-align: center;">
-                    <p style="font-size: 0.85rem; color: var(--muted); margin-bottom: 15px; line-height: 1.5;">
-                        Imagem gerada com todos os dados expandidos! Você pode baixar a imagem ou enviar direto para o Slack.
-                    </p>
-                    <div style="max-height: 45vh; overflow-y: auto; border: 2px solid var(--primary); border-radius: 8px; margin-bottom: 20px; box-shadow: var(--shadow-md); background: #eaecf6;">
-                        <img src="${imgData}" id="preview-dashboard-img" style="width: 100%; height: auto; display: block;" />
-                    </div>
-                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                        <button onclick="window.fecharModal()" style="background: var(--muted); flex: 1; min-height: auto;">Fechar</button>
-                        <a href="${imgData}" download="APEX_Dashboard.png" style="flex: 1; text-decoration: none;">
-                            <button style="background: #00AE97; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; min-height: auto;">
-                                <span>📥</span> Baixar
-                            </button>
-                        </a>
-                        <button onclick="window.enviarDashboardSlack()" id="btn-envia-dash-slack" style="background: #4A154B; flex: 1.5; display: flex; align-items: center; justify-content: center; gap: 6px; min-height: auto;">
-                            <span>💬</span> Enviar pro Slack
-                        </button>
-                    </div>
-                </div>
-            `;
-            window.exibirModal("📸 Relatório Visual", html);
-            
-        }).catch(err => {
-            // Em caso de erro, também devolve as barras de rolagem para não quebrar o layout
-            elementosParaExpandir.forEach(el => {
-                el.style.cssText = estilosOriginais.get(el);
-            });
+    // ── 3. Distribuição por prestador ────────────────────────────────────────
+    const distPrest = {};
+    filtradosPainel.forEach(a => { if (a.prestador) distPrest[a.prestador] = (distPrest[a.prestador] || 0) + 1; });
+    const prestTop = Object.entries(distPrest).sort((a, b) => b[1] - a[1]).slice(0, 5);
+    const prestMax = prestTop[0] ? prestTop[0][1] : 1;
 
-            if (btnToolbar) btnToolbar.style.display = 'flex';
-            const tempH = document.getElementById('temp-report-header');
-            if (tempH) dashElement.removeChild(tempH);
-            dashElement.style.animation = '';
-            dashElement.style.transition = '';
-            
-            console.error(err);
-            window.showMessage("❌ Houve um erro ao gerar a imagem.");
+    // ── 4. Distribuição por solicitante ──────────────────────────────────────
+    const distSol = {};
+    filtradosPainel.forEach(a => {
+        if (a.solicitante) {
+            const nome = window.formatarCapitalize(a.solicitante);
+            distSol[nome] = (distSol[nome] || 0) + 1;
+        }
+    });
+    const solTop = Object.entries(distSol).sort((a, b) => b[1] - a[1]).slice(0, 5);
+    const solMax = solTop[0] ? solTop[0][1] : 1;
+
+    // ── 5. Distribuição por localidade ───────────────────────────────────────
+    const distLoc = {};
+    filtradosPainel.forEach(a => {
+        if (a.cidade && a.uf) {
+            const k = `${a.cidade.toUpperCase()}/${a.uf.toUpperCase()}`;
+            distLoc[k] = (distLoc[k] || 0) + 1;
+        }
+    });
+    const locTop = Object.entries(distLoc).sort((a, b) => b[1] - a[1]).slice(0, 5);
+    const locMax = locTop[0] ? locTop[0][1] : 1;
+
+    // ── 6. Ocupação da agenda (próximos dias com dados) ──────────────────────
+    const diasSemana = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab'];
+    const ocupRows = [];
+    const hoje = new Date();
+    for (let i = 0; i < 30 && ocupRows.length < 6; i++) {
+        const d = new Date(hoje);
+        d.setDate(hoje.getDate() + i);
+        const dStr = d.toLocaleDateString('pt-BR');
+        const dNome = diasSemana[d.getDay()];
+        let totalH = 0, ocupH = 0;
+        prestadores.forEach(p => {
+            const s = window.getOcupacaoReal(p, dStr, dNome);
+            totalH += Math.max(s.geral.total, s.geral.ocupadas);
+            ocupH  += s.geral.ocupadas;
         });
-    }, 1500); 
+        if (totalH > 0 || ocupH > 0) {
+            const pct = totalH > 0 ? Math.round((ocupH / totalH) * 100) : (ocupH > 0 ? 100 : 0);
+            ocupRows.push({ data: dStr.substring(0, 5), dia: dNome, livres: Math.max(0, totalH - ocupH), ocupH, totalH, pct });
+        }
+    }
+
+    // ── 7. Helpers de renderização ──────────────────────────────────────────
+    const rankRows = (arr, max, cor) => arr.map((item, i) => {
+        const pct = max > 0 ? Math.round((item[1] / max) * 100) : 0;
+        return `<div style="display:flex;align-items:center;gap:10px;margin-bottom:9px;">
+            <span style="font-family:'Space Mono',monospace;font-size:0.6rem;color:rgba(255,255,255,0.22);width:14px;flex-shrink:0;">${i + 1}</span>
+            <div style="flex:1;min-width:0;">
+                <div style="font-size:0.72rem;font-weight:700;color:rgba(255,255,255,0.82);margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${item[0]}</div>
+                <div style="height:3px;background:rgba(255,255,255,0.07);border-radius:2px;overflow:hidden;">
+                    <div style="height:100%;width:${pct}%;background:${cor};border-radius:2px;"></div>
+                </div>
+            </div>
+            <span style="font-family:'Space Mono',monospace;font-size:0.7rem;font-weight:700;color:rgba(255,255,255,0.45);flex-shrink:0;min-width:20px;text-align:right;">${item[1]}</span>
+        </div>`;
+    }).join('');
+
+    const ocupRows = ocupRows.map(o => {
+        const cls = o.pct >= 80 ? '#FF4633' : o.pct >= 50 ? '#f59e0b' : '#00AE97';
+        const pct2 = Math.max(2, o.pct); // barra mínima visível
+        return `<div style="display:flex;align-items:center;gap:8px;margin-bottom:7px;">
+            <span style="font-family:'Space Mono',monospace;font-size:0.62rem;color:rgba(255,255,255,0.35);width:62px;flex-shrink:0;">${o.data} ${o.dia}</span>
+            <div style="flex:1;">
+                <div style="display:flex;justify-content:space-between;font-size:0.58rem;color:rgba(255,255,255,0.3);margin-bottom:3px;">
+                    <span>${o.livres}h livre${o.livres !== 1 ? 's' : ''}</span>
+                    <span>${o.ocupH}h ocup.</span>
+                </div>
+                <div style="height:4px;background:rgba(255,255,255,0.07);border-radius:2px;overflow:hidden;">
+                    <div style="height:100%;width:${pct2}%;background:${cls};border-radius:2px;"></div>
+                </div>
+            </div>
+            <span style="font-family:'Space Mono',monospace;font-size:0.65rem;font-weight:700;color:${cls};min-width:30px;text-align:right;flex-shrink:0;">${o.pct}%</span>
+        </div>`;
+    }).join('');
+
+    const statusPill = (label, count, bg, color) => count > 0
+        ? `<div style="display:inline-flex;align-items:center;gap:5px;padding:5px 11px;border-radius:20px;font-size:0.7rem;font-weight:700;background:${bg};color:${color};margin:0 4px 6px 0;">
+            <span style="width:6px;height:6px;border-radius:50%;background:${color};flex-shrink:0;"></span>${label} · ${count}
+           </div>` : '';
+
+    // ── 8. Monta o HTML completo do relatório ────────────────────────────────
+    const agora = new Date().toLocaleString('pt-BR');
+
+    return `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #07074E; }
+</style>
+</head>
+<body>
+<div id="apex-report" style="width:680px;background:#07074E;font-family:'DM Sans',sans-serif;overflow:hidden;">
+
+  <!-- CABEÇALHO -->
+  <div style="background:linear-gradient(135deg,#07074E 0%,#001BB8 100%);padding:26px 30px 22px;display:flex;justify-content:space-between;align-items:flex-end;border-bottom:2px solid #00AE97;">
+    <div style="display:flex;align-items:center;gap:12px;">
+      <div style="background:#001BB8;border:1.5px solid #00AE97;color:#fff;font-family:'Space Mono',monospace;font-size:1rem;font-weight:700;padding:6px 13px;border-radius:6px;letter-spacing:1.5px;">APEX</div>
+      <div style="color:#fff;">
+        <div style="font-size:0.95rem;font-weight:700;letter-spacing:1px;">Cobli</div>
+        <div style="font-size:0.5rem;opacity:0.38;text-transform:uppercase;letter-spacing:2px;margin-top:2px;">agenda exclusiva</div>
+      </div>
+    </div>
+    <div style="text-align:right;">
+      <div style="font-size:0.52rem;text-transform:uppercase;letter-spacing:1.5px;color:rgba(255,255,255,0.35);margin-bottom:5px;">Período</div>
+      <div style="font-size:0.82rem;font-weight:700;color:#00AE97;font-family:'Space Mono',monospace;">${periodoTexto}</div>
+      <div style="font-size:0.55rem;color:rgba(255,255,255,0.25);margin-top:4px;">Gerado em ${agora}</div>
+    </div>
+  </div>
+
+  <!-- KPIs -->
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:#0d1565;border-bottom:1px solid rgba(255,255,255,0.06);">
+    <div style="background:#0a1158;padding:20px;text-align:center;">
+      <div style="font-family:'Space Mono',monospace;font-size:2.4rem;font-weight:700;color:#4f8af7;line-height:1;margin-bottom:6px;">${total}</div>
+      <div style="font-size:0.56rem;text-transform:uppercase;letter-spacing:1.2px;color:rgba(255,255,255,0.35);font-weight:700;">Total de solicitações</div>
+    </div>
+    <div style="background:#0a1158;padding:20px;text-align:center;border-left:1px solid rgba(255,255,255,0.05);border-right:1px solid rgba(255,255,255,0.05);">
+      <div style="font-family:'Space Mono',monospace;font-size:2.4rem;font-weight:700;color:#00AE97;line-height:1;margin-bottom:6px;">${conc}</div>
+      <div style="font-size:0.56rem;text-transform:uppercase;letter-spacing:1.2px;color:rgba(255,255,255,0.35);font-weight:700;">Concluídos (inc. impedidos)</div>
+    </div>
+    <div style="background:#0a1158;padding:20px;text-align:center;">
+      <div style="font-family:'Space Mono',monospace;font-size:2.4rem;font-weight:700;color:#f59e0b;line-height:1;margin-bottom:6px;">${agend}</div>
+      <div style="font-size:0.56rem;text-transform:uppercase;letter-spacing:1.2px;color:rgba(255,255,255,0.35);font-weight:700;">Agendados (programados)</div>
+    </div>
+  </div>
+
+  <!-- STATUS -->
+  <div style="padding:18px 28px;border-bottom:1px solid rgba(255,255,255,0.06);">
+    <div style="font-size:0.56rem;text-transform:uppercase;letter-spacing:2px;color:rgba(255,255,255,0.3);font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:8px;">
+      <span style="display:inline-block;width:14px;height:2px;background:#00AE97;border-radius:1px;"></span>Distribuição por status
+    </div>
+    <div>
+      ${statusPill('Solicitado', cntSol, 'rgba(100,116,139,0.2)', '#94a3b8')}
+      ${statusPill('Negociação', cntNeg, 'rgba(139,92,246,0.15)', '#a78bfa')}
+      ${statusPill('Agendado', cntAgd, 'rgba(0,27,184,0.3)', '#7aabff')}
+      ${statusPill('Andamento', cntAnd, 'rgba(245,158,11,0.15)', '#fbbf24')}
+      ${statusPill('Impedido', cntImp, 'rgba(255,70,51,0.18)', '#f87171')}
+      ${statusPill('Concluído', cntCon, 'rgba(0,174,151,0.18)', '#34d399')}
+      ${statusPill('Cancelado', cntCan, 'rgba(71,85,105,0.2)', '#64748b')}
+    </div>
+  </div>
+
+  <!-- PRESTADORES + SOLICITANTES -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:1px;background:#0d1565;border-bottom:1px solid rgba(255,255,255,0.06);">
+    <div style="background:#0a1158;padding:18px 20px;">
+      <div style="font-size:0.56rem;text-transform:uppercase;letter-spacing:2px;color:rgba(255,255,255,0.3);font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:8px;">
+        <span style="display:inline-block;width:14px;height:2px;background:#00AE97;border-radius:1px;"></span>Por prestador
+      </div>
+      ${rankRows(prestTop, prestMax, '#00AE97')}
+    </div>
+    <div style="background:#0a1158;padding:18px 20px;border-left:1px solid rgba(255,255,255,0.05);">
+      <div style="font-size:0.56rem;text-transform:uppercase;letter-spacing:2px;color:rgba(255,255,255,0.3);font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:8px;">
+        <span style="display:inline-block;width:14px;height:2px;background:#4f8af7;border-radius:1px;"></span>Por solicitante
+      </div>
+      ${rankRows(solTop, solMax, '#4f8af7')}
+    </div>
+  </div>
+
+  <!-- LOCALIDADE + OCUPAÇÃO -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:1px;background:#0d1565;border-bottom:1px solid rgba(255,255,255,0.06);">
+    <div style="background:#0a1158;padding:18px 20px;">
+      <div style="font-size:0.56rem;text-transform:uppercase;letter-spacing:2px;color:rgba(255,255,255,0.3);font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:8px;">
+        <span style="display:inline-block;width:14px;height:2px;background:#a78bfa;border-radius:1px;"></span>Volume por localidade
+      </div>
+      ${rankRows(locTop, locMax, '#a78bfa')}
+    </div>
+    <div style="background:#0a1158;padding:18px 20px;border-left:1px solid rgba(255,255,255,0.05);">
+      <div style="font-size:0.56rem;text-transform:uppercase;letter-spacing:2px;color:rgba(255,255,255,0.3);font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:8px;">
+        <span style="display:inline-block;width:14px;height:2px;background:#f59e0b;border-radius:1px;"></span>Ocupação da agenda
+      </div>
+      ${ocupRows || '<div style="font-size:0.75rem;color:rgba(255,255,255,0.3);font-style:italic;">Nenhum dado de agenda configurado.</div>'}
+    </div>
+  </div>
+
+  <!-- RODAPÉ -->
+  <div style="background:#050e3a;padding:13px 28px;display:flex;justify-content:space-between;align-items:center;">
+    <span style="font-size:0.52rem;color:rgba(255,255,255,0.18);letter-spacing:1px;text-transform:uppercase;">APEX · Cobli · Agenda Exclusiva</span>
+    <span style="font-size:0.52rem;font-family:'Space Mono',monospace;color:rgba(0,174,151,0.45);">apex.cobli.co</span>
+  </div>
+
+</div>
+</body>
+</html>`;
 };
 
-window.enviarDashboardSlack = async function() {
-    const btn = document.getElementById('btn-envia-dash-slack');
-    const originalText = btn.innerHTML;
-    btn.innerHTML = '<span class="icone-girando">⏳</span> Enviando...';
-    btn.disabled = true;
+
+// ── FUNÇÃO PRINCIPAL: substitui window.gerarImagemDashboard ─────────────────
+window.gerarImagemDashboard = function () {
+    window.showToast('⏳ Gerando relatório executivo...');
+
+    // Pequeno delay para o toast aparecer antes do html2canvas bloquear
+    setTimeout(async () => {
+        const htmlRelatorio = window._gerarHTMLRelatorio();
+
+        // Cria um iframe oculto para renderizar o HTML com fontes e estilos corretos
+        const iframe = document.createElement('iframe');
+        iframe.style.cssText = 'position:fixed;left:-9999px;top:-9999px;width:680px;height:auto;visibility:hidden;border:none;';
+        document.body.appendChild(iframe);
+
+        const iDoc = iframe.contentDocument || iframe.contentWindow.document;
+        iDoc.open();
+        iDoc.write(htmlRelatorio);
+        iDoc.close();
+
+        // Aguarda as fontes carregarem dentro do iframe
+        await new Promise(resolve => setTimeout(resolve, 1800));
+
+        const reportEl = iDoc.getElementById('apex-report');
+        if (!reportEl) {
+            document.body.removeChild(iframe);
+            return window.showMessage('❌ Erro ao montar o relatório.');
+        }
+
+        try {
+            const canvas = await html2canvas(reportEl, {
+                scale: 2,
+                useCORS: true,
+                allowTaint: true,
+                backgroundColor: '#07074E',
+                logging: false,
+                windowWidth: 680,
+            });
+
+            document.body.removeChild(iframe);
+
+            const imgData = canvas.toDataURL('image/png');
+
+            const html = `
+            <div style="text-align:center;">
+                <p style="font-size:0.82rem;color:var(--muted);margin-bottom:14px;line-height:1.5;">
+                    Relatório executivo gerado com sucesso! Baixe ou envie direto para o Slack.
+                </p>
+                <div style="max-height:55vh;overflow-y:auto;border:2px solid var(--primary);border-radius:10px;margin-bottom:18px;box-shadow:var(--shadow-md);">
+                    <img src="${imgData}" id="preview-relatorio-img" style="width:100%;height:auto;display:block;" />
+                </div>
+                <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                    <button onclick="window.fecharModal()" style="background:var(--muted);flex:1;min-height:auto;">Fechar</button>
+                    <a href="${imgData}" download="APEX_Relatorio_${new Date().toLocaleDateString('pt-BR').replace(/\//g,'-')}.png" style="flex:1;text-decoration:none;">
+                        <button style="background:#00AE97;width:100%;height:100%;display:flex;align-items:center;justify-content:center;gap:8px;min-height:auto;">
+                            📥 Baixar
+                        </button>
+                    </a>
+                    <button onclick="window._enviarRelatorioSlack()" id="btn-envia-relatorio-slack" style="background:#4A154B;flex:1.5;display:flex;align-items:center;justify-content:center;gap:6px;min-height:auto;">
+                        💬 Enviar pro Slack
+                    </button>
+                </div>
+            </div>`;
+
+            window.exibirModal('📊 Relatório Executivo', html);
+
+        } catch (err) {
+            if (document.body.contains(iframe)) document.body.removeChild(iframe);
+            console.error(err);
+            window.showMessage('❌ Erro ao gerar a imagem do relatório.');
+        }
+    }, 200);
+};
+
+
+// ── HELPER: envia o relatório para o Slack (substitui window.enviarDashboardSlack) ──
+window._enviarRelatorioSlack = async function () {
+    const btn = document.getElementById('btn-envia-relatorio-slack');
+    const originalText = btn ? btn.innerHTML : '';
+    if (btn) { btn.innerHTML = '<span class="icone-girando">⏳</span> Enviando...'; btn.disabled = true; }
 
     try {
-        const imgEl = document.getElementById('preview-dashboard-img');
-        const blob = dataURLtoBlob(imgEl.src);
-        const fileName = `resumo_dash_${new Date().getTime()}.png`;
+        const imgEl = document.getElementById('preview-relatorio-img');
+        if (!imgEl) throw new Error('Imagem não encontrada');
 
-        // Upload pro Supabase
-        const { data, error } = await supabaseClient.storage
+        // Converte dataURL → Blob
+        const arr = imgEl.src.split(',');
+        const mime = arr[0].match(/:(.*?);/)[1];
+        const bstr = atob(arr[1]);
+        let n = bstr.length;
+        const u8arr = new Uint8Array(n);
+        while (n--) u8arr[n] = bstr.charCodeAt(n);
+        const blob = new Blob([u8arr], { type: mime });
+
+        const fileName = `relatorio_apex_${new Date().getTime()}.png`;
+
+        // Upload para o Supabase Storage
+        const { error: uploadError } = await supabaseClient.storage
             .from('icones')
             .upload(`dashboards/${fileName}`, blob, { contentType: 'image/png', upsert: true });
 
-        if (error) throw error;
+        if (uploadError) throw uploadError;
 
-        // Pega URL Pública
-        const { data: publicUrlData } = supabaseClient.storage.from('icones').getPublicUrl(`dashboards/${fileName}`);
-        const publicUrl = publicUrlData.publicUrl;
+        const { data: publicUrlData } = supabaseClient.storage
+            .from('icones')
+            .getPublicUrl(`dashboards/${fileName}`);
 
-        // Manda pro Slack
-        let msg = `> 📊 *Snapshot do Dashboard APEX | Cobli*\n> Gerado por: ${currentUser ? currentUser.email : 'Usuário'}\n> Data: ${new Date().toLocaleString('pt-BR')}\n> \n${publicUrl}`;
+        // Mensagem de texto + URL da imagem para o Slack
+        const inputIni = document.getElementById('filtroDataInicio');
+        const inputFim = document.getElementById('filtroDataFim');
+        const dtIni = inputIni && inputIni.value ? inputIni.value.split('-').reverse().join('/') : '';
+        const dtFim = inputFim && inputFim.value ? inputFim.value.split('-').reverse().join('/') : '';
+        const periodoStr = (dtIni && dtFim) ? `${dtIni} → ${dtFim}` : 'Geral';
+
+        const msg = `> 📊 *Relatório Executivo APEX | Cobli*\n> Período: ${periodoStr}\n> Enviado por: ${currentUser ? currentUser.email : 'Usuário'}\n> ${new Date().toLocaleString('pt-BR')}\n> \n${publicUrlData.publicUrl}`;
+
         await window.enviarNotificacaoSlack(msg);
 
-        window.showToast("✅ Dashboard enviado pro Slack com sucesso!");
+        window.showToast('✅ Relatório enviado pro Slack!');
         window.fecharModal();
-        
+
     } catch (e) {
         console.error(e);
-        window.showMessage("❌ Erro ao enviar para o Slack. Verifique as políticas do bucket.");
+        window.showMessage('❌ Erro ao enviar para o Slack. Verifique as políticas do bucket.');
     } finally {
-        btn.innerHTML = originalText;
-        btn.disabled = false;
+        if (btn) { btn.innerHTML = originalText; btn.disabled = false; }
     }
 };
 // ==========================================
