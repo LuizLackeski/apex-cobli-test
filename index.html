@@ -311,6 +311,65 @@
             max-width: 140px;
         }
 
+        /* ============================================================
+           CABEÇALHOS DAS ABAS (Padrão Dark Blue Universal)
+        ============================================================ */
+        .page-header {
+            background: linear-gradient(135deg, var(--cobli-dark) 0%, #0d1660 100%);
+            border-radius: var(--radius);
+            padding: 22px 28px;
+            margin-bottom: 20px;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(0,27,184,0.3);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: white;
+            box-shadow: 0 8px 24px rgba(7, 7, 78, 0.12);
+        }
+        .page-header::after {
+            content: 'APEX';
+            position: absolute;
+            right: 24px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-family: var(--font-mono);
+            font-size: 5rem;
+            font-weight: 700;
+            color: rgba(255,255,255,0.04);
+            letter-spacing: 8px;
+            pointer-events: none;
+            user-select: none;
+        }
+        .page-header h1 {
+            margin: 0 0 4px;
+            font-size: 1.35rem;
+            font-weight: 800;
+            color: white;
+            letter-spacing: -0.5px;
+            border: none;
+            padding: 0;
+            text-transform: none;
+        }
+        .page-header p {
+            margin: 0;
+            font-size: 0.82rem;
+            color: rgba(255,255,255,0.5);
+            font-weight: 500;
+        }
+        .page-header-actions {
+            position: relative;
+            z-index: 2; /* Fica acima da marca d'água */
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        @media (max-width: 700px) {
+            .page-header { flex-direction: column; align-items: flex-start; gap: 15px; padding: 18px 20px; }
+            .page-header-actions { width: 100%; justify-content: flex-start; }
+        }
+
 /* ── MAIN AREA ── */
         .main-wrapper {
             margin-left: var(--sidebar-w);
@@ -2414,9 +2473,16 @@ function injetarTopbarIntegrations() {
             </div>
         </div>
 
-        <div class="conteudo">
-        
-        <div id="consulta" class="aba ativa">
+       <div class="conteudo">
+           
+            <<div id="consulta" class="aba ativa">
+            <div class="page-header">
+                <div>
+                    <h1>📅 Novo Agendamento</h1>
+                    <p>Busque um prestador por CEP, aloque serviços e gere a OS.</p>
+                </div>
+            </div>
+            
             <div class="timeline-container" id="timeline-agendamento">
                 <div class="timeline-step active" id="ts-1">
                     <div class="step-circle">1</div>
@@ -2525,13 +2591,21 @@ function injetarTopbarIntegrations() {
         </div>
 
         <div id="cadastro" class="aba">
+            <div class="page-header">
+                <div>
+                    <h1>👷 Gestão de Prestadores</h1>
+                    <p>Administre bases, raios de cobertura e horários da equipe técnica.</p>
+                </div>
+                <div class="page-header-actions" id="btn-novo-container">
+                    </div>
+            </div>
+
             <div id="lista-prestadores-view" class="card">
-                <div id="btn-novo-container"></div> 
                 <div id="lista-prestadores"></div>
             </div>
+
             <div id="cadastro-flow" class="card" style="display:none;">
-         
-<div id="etapa-1">
+                <div id="etapa-1">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
                         <h2 style="color: var(--primary); margin: 0; border: none; padding: 0;">Dados do Prestador</h2>
                         <button type="button" id="btn-toggle-dados" onclick="window.toggleDadosPrestador()" style="display: none; background: var(--bg); color: var(--cobli-dark); border: 1px solid var(--border); font-size: 0.75rem; padding: 6px 12px; min-height: auto; border-radius: 20px;">Ocultar Dados 🔼</button>
@@ -2627,8 +2701,18 @@ function injetarTopbarIntegrations() {
         </div>
 
         <div id="painel" class="aba">
+            <div class="page-header">
+                <div>
+                    <h1>📋 Painel de Solicitações</h1>
+                    <p>Acompanhamento detalhado, filtros e status de agendamentos.</p>
+                </div>
+                <div class="page-header-actions">
+                    <button onclick="window.atualizarTodosStatus()" style="background: #00AE97; color: white; border: none; font-weight: 700; padding: 8px 16px; border-radius: 6px; min-height: auto;">🔄 Sincronizar Status</button>
+                </div>
+            </div>
+
             <div class="status-bar-wrapper">
-                <div class="status-bar" style="display: flex; align-items: center;">
+                <div class="status-bar" style="display: flex; align-items: center; box-shadow: none;">
                     <div style="display: flex; flex: 1; min-width: 650px;">
                         <div class="status-bar-item"><div class="sb-label">Solicitado</div><div class="sb-value" id="st-solicitado">0</div></div>
                         <div class="status-bar-item"><div class="sb-label">Em Negociação</div><div class="sb-value" id="st-negociacao">0</div></div>
@@ -2638,8 +2722,6 @@ function injetarTopbarIntegrations() {
                         <div class="status-bar-item"><div class="sb-label">Concluído</div><div class="sb-value green" id="st-concluido">0</div></div>
                         <div class="status-bar-item"><div class="sb-label">Cancelado</div><div class="sb-value gray" id="st-cancelado">0</div></div>
                     </div>
-                    <div style="width: 1px; height: 35px; background: var(--border); margin: 0 12px; flex-shrink: 0;"></div>
-                    <button onclick="window.atualizarTodosStatus()" style="background:var(--cobli-green); height: 36px; padding: 0 16px; font-size: 0.8rem; border-radius: var(--radius-sm); border: none; color: white; cursor: pointer; white-space: nowrap; min-height: auto; flex-shrink: 0;">🔄 Update</button>
                 </div>
             </div>
 
@@ -2714,16 +2796,17 @@ function injetarTopbarIntegrations() {
             <div id="painel-conteudo" style="max-height: 520px; overflow-y: auto;"></div>
         </div>
 
-<div id="dashboard" class="aba">
-            
-            <div class="dashboard-controls-toolbar" style="display: flex; justify-content: space-between; align-items: center; background: white; padding: 12px 20px; border-radius: var(--radius); border: 1px solid var(--border); box-shadow: var(--shadow-sm); margin-bottom: 20px;">
-                <div style="display: flex; align-items: center; gap: 10px;">
-                    <span style="font-size: 1.2rem;">📊</span>
-                    <h3 style="border: none; padding: 0; margin: 0; font-size: 0.95rem; color: var(--cobli-dark);">Visão Geral e Exportação</h3>
+        <div id="dashboard" class="aba">
+            <div class="page-header">
+                <div>
+                    <h1>📊 Dashboard Executivo</h1>
+                    <p>Métricas consolidadas, evolução temporal e volume de serviços.</p>
                 </div>
-                <button onclick="window.gerarImagemDashboard()" id="btn-exportar-dash" style="background: var(--cobli-green); color: white; display: flex; align-items: center; gap: 8px; padding: 8px 16px; font-size: 0.8rem; font-weight: 700; border: none; border-radius: 6px; cursor: pointer; transition: 0.2s;">
-                    <span style="font-size: 1rem;">📸</span> Exportar Resumo
-                </button>
+                <div class="page-header-actions">
+                    <button onclick="window.gerarImagemDashboard()" id="btn-exportar-dash" style="background: #00AE97; color: white; display: flex; align-items: center; gap: 8px; padding: 8px 16px; font-size: 0.8rem; font-weight: 700; border: none; border-radius: 6px; cursor: pointer; transition: 0.2s;">
+                        <span style="font-size: 1rem;">📸</span> Exportar Resumo
+                    </button>
+                </div>
             </div>
 
             <div class="flex-cards">
@@ -2804,14 +2887,20 @@ function injetarTopbarIntegrations() {
             <canvas id="chartPrestadores" style="display:none;"></canvas>
             <canvas id="chartLocais" style="display:none;"></canvas>
         </div>
-      
+        
         <div id="usuarios" class="aba">
-            <div class="card">
-                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--bg); padding-bottom: 15px; margin-bottom: 15px;">
-                    <h2 style="border:none; margin:0;">Gestão de Acessos</h2>
-                    <button id="btn-atualizar-user-tab" onclick="window.carregarListaUsuarios()" style="background: var(--cobli-green); min-height: auto;">🔄 Atualizar</button>
+            <div class="page-header">
+                <div>
+                    <h1>🔐 Gestão de Acessos</h1>
+                    <p>Controle de perfis, permissões e histórico de login dos usuários.</p>
                 </div>
-                <p style="font-size: 0.82rem; color: var(--muted);">Níveis: <strong>GESTOR</strong> (Acesso Total) | <strong>ADMIN</strong> (Visualização Restrita) | <strong>SMARTOPS</strong> (Apenas Agendamentos) | <strong>PRESTADOR</strong> (Visualização Própria)</p>
+                <div class="page-header-actions">
+                    <button id="btn-atualizar-user-tab" onclick="window.carregarListaUsuarios()" style="background: #00AE97; color: white; border: none; font-weight: 700; padding: 8px 16px; border-radius: 6px; min-height: auto;">🔄 Atualizar</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <p style="font-size: 0.82rem; color: var(--muted); margin-top:0;">Níveis: <strong>GESTOR</strong> (Acesso Total) | <strong>ADMIN</strong> (Visualização Restrita) | <strong>SMARTOPS</strong> (Apenas Agendamentos) | <strong>PRESTADOR</strong> (Visualização Própria)</p>
                 
                 <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin:12px 0; padding:12px; background:var(--bg); border-radius:var(--radius-sm); border:1px solid var(--border);">
                     <input type="text" id="filtro-usuario-nome" placeholder="🔍 Buscar por e-mail..." oninput="window.filtrarTabelaUsuarios()" style="flex:1; min-width:160px; padding:7px 10px; font-size:0.8rem; border:1.5px solid var(--border); border-radius:var(--radius-sm); font-family:var(--font-main); background:white;">
@@ -2842,12 +2931,14 @@ function injetarTopbarIntegrations() {
         </div>
         
         <div id="disponibilidade" class="aba">
-            <div class="card">
-                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--bg); padding-bottom: 15px; margin-bottom: 15px;">
-                    <h2 style="border:none; margin:0;">Minha Agenda / Ausências</h2>
+            <div class="page-header">
+                <div>
+                    <h1>🛑 Minha Agenda e Ausências</h1>
+                    <p>Adicione feriados, férias ou imprevistos para bloquear sua agenda.</p>
                 </div>
-                <p style="font-size: 0.85rem; color: var(--muted); margin-bottom: 20px;">Adicione feriados, férias ou imprevistos para bloquear sua agenda.</p>
-                
+            </div>
+
+            <div class="card">
                 <div style="background: #fff5f5; border: 1px solid #fecaca; padding: 15px; border-radius: var(--radius); margin-bottom: 15px;">
                     <div style="display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap;">
                         <div style="flex: 1; min-width: 120px;"><label style="color: var(--cobli-red);">Data Inicial</label><input type="date" id="meuDataBloqueio" style="border-color: #fca5a5; background: white;"></div>
@@ -2870,26 +2961,25 @@ function injetarTopbarIntegrations() {
                         </div>
                         <button onclick="window.adicionarMeuBloqueioData()" style="height: 42px; background: var(--cobli-red); min-width: 100px; min-height: auto;">Adicionar</button>
                     </div>
-<div id="lista-meus-bloqueios-ui" style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 15px;"></div>
+                    <div id="lista-meus-bloqueios-ui" style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 15px;"></div>
                 </div>
             </div>
         </div>
         
-<div id="mapa" class="aba">
-            <div class="card" style="display: flex; flex-direction: row; justify-content: space-between; align-items: center; padding: 15px 24px; margin-bottom: 15px;">
-                <h2 style="margin: 0; border: none; padding: 0;">🗺️ Logística e Serviços</h2>
-                <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-                    <label style="font-size: 0.7rem; font-weight: 700; color: var(--muted); text-transform: uppercase;">Mostrar:</label>
-                    
-                    <div style="display: flex; background: var(--bg); border-radius: var(--radius-sm); border: 1px solid var(--border); overflow: hidden; height: 38px;">
-                        <button class="btn-filtro-mapa" data-value="pendentes" onclick="window.mudarFiltroMapa(this)" style="background: white; color: var(--primary); font-weight: 800; border: none; padding: 0 14px; font-size: 0.75rem; border-right: 1px solid var(--border); min-height: auto; border-radius: 0;">🔴 Pendentes</button>
-                        <button class="btn-filtro-mapa" data-value="concluidos" onclick="window.mudarFiltroMapa(this)" style="background: transparent; color: var(--muted); font-weight: 600; border: none; padding: 0 14px; font-size: 0.75rem; border-right: 1px solid var(--border); min-height: auto; border-radius: 0;">🟢 Concluídos</button>
-                        <button class="btn-filtro-mapa" data-value="todos" onclick="window.mudarFiltroMapa(this)" style="background: transparent; color: var(--muted); font-weight: 600; border: none; padding: 0 14px; font-size: 0.75rem; min-height: auto; border-radius: 0;">🌍 Todos</button>
+        <div id="mapa" class="aba">
+            <div class="page-header">
+                <div>
+                    <h1>🗺️ Logística e Serviços</h1>
+                    <p>Visão geográfica dos agendamentos e bases de prestadores.</p>
+                </div>
+                <div class="page-header-actions">
+                    <div style="display: flex; background: rgba(255,255,255,0.1); border-radius: var(--radius-sm); border: 1px solid rgba(255,255,255,0.2); overflow: hidden; height: 38px;">
+                        <button class="btn-filtro-mapa" data-value="pendentes" onclick="window.mudarFiltroMapa(this)" style="background: white; color: var(--primary); font-weight: 800; border: none; padding: 0 14px; font-size: 0.75rem; border-right: 1px solid rgba(255,255,255,0.2); min-height: auto; border-radius: 0;">🔴 Pendentes</button>
+                        <button class="btn-filtro-mapa" data-value="concluidos" onclick="window.mudarFiltroMapa(this)" style="background: transparent; color: white; font-weight: 600; border: none; padding: 0 14px; font-size: 0.75rem; border-right: 1px solid rgba(255,255,255,0.2); min-height: auto; border-radius: 0;">🟢 Concluídos</button>
+                        <button class="btn-filtro-mapa" data-value="todos" onclick="window.mudarFiltroMapa(this)" style="background: transparent; color: white; font-weight: 600; border: none; padding: 0 14px; font-size: 0.75rem; min-height: auto; border-radius: 0;">🌍 Todos</button>
                     </div>
-                    
                     <input type="hidden" id="filtro-status-mapa" value="pendentes">
-                    
-                    <button id="btn-att-mapa" onclick="window.plotarAgendamentosNoMapa()" style="background: var(--cobli-green); height: 38px; min-height: auto;">🔄 Atualizar Mapa</button>
+                    <button id="btn-att-mapa" onclick="window.plotarAgendamentosNoMapa()" style="background: #00AE97; color: white; height: 38px; min-height: auto; padding: 0 16px; border: none; border-radius: 6px; font-weight: 700;">🔄 Atualizar</button>
                 </div>
             </div>
             
@@ -3786,7 +3876,7 @@ window.mudarFiltroMapa = function(btnClicado) {
     // 1. Apaga todos os botões
     document.querySelectorAll('.btn-filtro-mapa').forEach(b => {
         b.style.background = 'transparent';
-        b.style.color = 'var(--muted)';
+        b.style.color = 'white'; // 👈 Mudou para branco
         b.style.fontWeight = '600';
     });
     
@@ -4756,8 +4846,7 @@ window.cancelarAgendamento = function() { window.showConfirm("Deseja cancelar es
 // CADASTRO DE PRESTADOR
 // ==========================================
 window.renderizarListaPrestadores = function(){ 
-    document.getElementById("btn-novo-container").innerHTML = (userRole === 'GESTOR' || userRole === 'ADMIN') ? `<button onclick="window.abrirCadastro()" style="margin-bottom: 20px; background: var(--cobli-dark); min-height:auto;">+ Novo Prestador</button>` : '';
-    document.getElementById("lista-prestadores").innerHTML = prestadores.map((p, i) => {
+document.getElementById("btn-novo-container").innerHTML = (userRole === 'GESTOR' || userRole === 'ADMIN') ? `<button onclick="window.abrirCadastro()" style="background: #00AE97; color: white; border: none; font-weight: 700; padding: 8px 16px; border-radius: 6px; min-height: auto; font-size: 0.8rem;">+ Novo Prestador</button>` : '';    document.getElementById("lista-prestadores").innerHTML = prestadores.map((p, i) => {
         const acaoClique = (userRole === 'GESTOR') ? `window.abrirOpcoesPrestador(${i})` : `window.abrirDetalhesPrestador(${i})`;
         let coberturaDisplay = p.modo_cobertura === 'POLIGONO' ? '🗺️ Área Delimitada' : `📏 Raio: ${p.range}km`;
         return `<div class="painel-item" onclick="${acaoClique}" style="cursor: pointer; flex-direction: column; align-items: flex-start; margin-bottom: 12px;">
