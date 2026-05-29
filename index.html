@@ -2880,28 +2880,28 @@ function injetarTopbarIntegrations() {
             </div>
         </div>
         
-        <div id="mapa" class="aba">
+<div id="mapa" class="aba">
             <div class="card" style="display: flex; flex-direction: row; justify-content: space-between; align-items: center; padding: 15px 24px; margin-bottom: 15px;">
                 <h2 style="margin: 0; border: none; padding: 0;">🗺️ Logística e Serviços</h2>
-<div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-    <label style="font-size: 0.7rem; font-weight: 700; color: var(--muted); text-transform: uppercase;">Mostrar:</label>
-    
-    <div style="display: flex; background: var(--bg); border-radius: var(--radius-sm); border: 1px solid var(--border); overflow: hidden; height: 38px;">
-        <button class="btn-filtro-mapa" data-value="pendentes" onclick="window.mudarFiltroMapa(this)" style="background: white; color: var(--primary); font-weight: 800; border: none; padding: 0 14px; font-size: 0.75rem; border-right: 1px solid var(--border); min-height: auto; border-radius: 0;">🔴 Pendentes</button>
-        <button class="btn-filtro-mapa" data-value="concluidos" onclick="window.mudarFiltroMapa(this)" style="background: transparent; color: var(--muted); font-weight: 600; border: none; padding: 0 14px; font-size: 0.75rem; border-right: 1px solid var(--border); min-height: auto; border-radius: 0;">🟢 Concluídos</button>
-        <button class="btn-filtro-mapa" data-value="todos" onclick="window.mudarFiltroMapa(this)" style="background: transparent; color: var(--muted); font-weight: 600; border: none; padding: 0 14px; font-size: 0.75rem; min-height: auto; border-radius: 0;">🌍 Todos</button>
-    </div>
-    
-    <input type="hidden" id="filtro-status-mapa" value="pendentes">
-    
-    <button id="btn-att-mapa" onclick="window.plotarAgendamentosNoMapa()" style="background: var(--cobli-green); height: 38px; min-height: auto;">🔄 Atualizar Mapa</button>
-</div>
+                <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                    <label style="font-size: 0.7rem; font-weight: 700; color: var(--muted); text-transform: uppercase;">Mostrar:</label>
+                    
+                    <div style="display: flex; background: var(--bg); border-radius: var(--radius-sm); border: 1px solid var(--border); overflow: hidden; height: 38px;">
+                        <button class="btn-filtro-mapa" data-value="pendentes" onclick="window.mudarFiltroMapa(this)" style="background: white; color: var(--primary); font-weight: 800; border: none; padding: 0 14px; font-size: 0.75rem; border-right: 1px solid var(--border); min-height: auto; border-radius: 0;">🔴 Pendentes</button>
+                        <button class="btn-filtro-mapa" data-value="concluidos" onclick="window.mudarFiltroMapa(this)" style="background: transparent; color: var(--muted); font-weight: 600; border: none; padding: 0 14px; font-size: 0.75rem; border-right: 1px solid var(--border); min-height: auto; border-radius: 0;">🟢 Concluídos</button>
+                        <button class="btn-filtro-mapa" data-value="todos" onclick="window.mudarFiltroMapa(this)" style="background: transparent; color: var(--muted); font-weight: 600; border: none; padding: 0 14px; font-size: 0.75rem; min-height: auto; border-radius: 0;">🌍 Todos</button>
+                    </div>
+                    
+                    <input type="hidden" id="filtro-status-mapa" value="pendentes">
+                    
+                    <button id="btn-att-mapa" onclick="window.plotarAgendamentosNoMapa()" style="background: var(--cobli-green); height: 38px; min-height: auto;">🔄 Atualizar Mapa</button>
+                </div>
             </div>
             
             <div class="card" style="padding: 0; overflow: hidden; height: 65vh; position: relative;">
                 <div id="mapa-canvas" style="width: 100%; height: 100%; background: #e2e8f0; display: flex; align-items: center; justify-content: center; font-weight: 700; color: var(--muted);">
                     O mapa será carregado aqui...
-                 </div>
+                </div>
             </div>
         </div>
 
