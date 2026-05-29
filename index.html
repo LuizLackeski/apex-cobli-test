@@ -6017,13 +6017,16 @@ window.renderDashboard = function() {
     let elServ = document.getElementById('lista-dashboard-servicos');
     if (elServ) elServ.innerHTML = listaServHtml || "Sem dados.";
 
-    // ── 4. Solicitantes — ranking numerado ───────────────────────────────────
+// ── 4. Solicitantes — ranking numerado ───────────────────────────────────
     let solOrdenados = Object.entries(distSolicitante).sort((a,b) => b[1]-a[1]);
     let listaSolHtml = solOrdenados.map((s,i) => {
         let pct = totalAgend > 0 ? Math.round((s[1] / totalAgend) * 100) : 0;
-        let barCor = i===0?'var(--primary)':i===1?'#4f6ef7':i===2?'var(--cobli-green)':'var(--border)';
-        let avatarBg = i===0?'var(--primary)':i===1?'#e8ecff':i===2?'rgba(0,174,151,0.15)':'var(--bg)';
-        let avatarText = i<2?'white':'var(--muted)';
+        
+        // 👇 CORREÇÃO: O 4º lugar em diante agora usa a cor #94a3b8 para ficar visível!
+        let barCor = i===0 ? 'var(--primary)' : i===1 ? '#4f6ef7' : i===2 ? 'var(--cobli-green)' : '#94a3b8';
+        let avatarBg = i===0 ? 'var(--primary)' : i===1 ? '#e8ecff' : i===2 ? 'rgba(0,174,151,0.15)' : 'var(--bg)';
+        let avatarText = i<2 ? 'white' : 'var(--muted)';
+        
         return `<div style="padding:8px 0 6px;border-bottom:1px solid var(--border);">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;">
                 <div style="display:flex;align-items:center;gap:7px;flex:1;min-width:0;">
@@ -6032,9 +6035,10 @@ window.renderDashboard = function() {
                 </div>
                 <div style="font-size:0.82rem;font-weight:800;color:var(--primary);font-family:var(--font-mono);margin-left:10px;flex-shrink:0;">${s[1]} <span style="font-size:0.6rem;color:var(--muted);font-weight:700;">(${pct}%)</span></div>
             </div>
-            <div style="height:4px;background:var(--border);border-radius:2px;overflow:hidden;"><div style="height:100%;width:${pct}%;background:${barCor};border-radius:2px;transition:width .4s ease;"></div></div>
+            <div style="height:4px;background:rgba(0,27,184,0.06);border-radius:2px;overflow:hidden;"><div style="height:100%;width:${pct}%;background:${barCor};border-radius:2px;transition:width .4s ease;"></div></div>
         </div>`;
     }).join('');
+    
     let elSol = document.getElementById('lista-dashboard-solicitantes');
     if (elSol) elSol.innerHTML = listaSolHtml || '<div style="font-size:0.85rem;color:var(--muted);">Nenhum dado encontrado.</div>';
 
@@ -6190,23 +6194,42 @@ window.irParaPainelComFiltro = function(status) {
     return new Blob([u8arr], {type:mime});
 }
 
-// Captura a tela de forma segura
+// Captura a tela expandindo os cards temporariamente para mostrar tudo
 window.gerarImagemDashboard = function() {
-    window.showToast("⏳ Preparando relatório visual... Aguarde.");
+    window.showToast("⏳ Preparando relatório visual completo... Aguarde.");
     
     const dashElement = document.getElementById('dashboard');
     const btnToolbar = dashElement.querySelector('.dashboard-controls-toolbar');
     
+    // Esconde a barra de botões para não sair na foto
     if (btnToolbar) btnToolbar.style.display = 'none';
 
-    // Busca as datas pelos IDs corretos do seu HTML
+    // Congela animações do elemento principal
+    dashElement.style.animation = 'none';
+    dashElement.style.transition = 'none';
+
+    // 👇 A MÁGICA DE EXPANDIR TUDO COMEÇA AQUI 👇
+    // Seleciona todos os cards e listas que têm barra de rolagem
+    const elementosParaExpandir = dashElement.querySelectorAll('.card, #ocupacao-lista, #ocupacao-tecnicos-lista, #lista-dashboard-servicos, #lista-dist-prestadores, #lista-dist-locais, #lista-dashboard-solicitantes');
+    const estilosOriginais = new Map();
+
+    elementosParaExpandir.forEach(el => {
+        estilosOriginais.set(el, el.style.cssText); // Salva o CSS original para não estragar sua tela depois
+        el.style.setProperty('max-height', 'none', 'important');
+        el.style.setProperty('height', 'auto', 'important');
+        el.style.setProperty('overflow', 'visible', 'important');
+        el.style.setProperty('overflow-y', 'visible', 'important');
+    });
+    // 👆 FIM DA MÁGICA DE EXPANDIR 👆
+
+    // Busca as datas pelos IDs corretos do HTML
     const inputIni = document.getElementById('filtroDataInicio');
     const inputFim = document.getElementById('filtroDataFim');
     const dtIni = inputIni && inputIni.value ? inputIni.value.split('-').reverse().join('/') : '';
     const dtFim = inputFim && inputFim.value ? inputFim.value.split('-').reverse().join('/') : '';
     const periodoTexto = (dtIni && dtFim) ? `${dtIni} até ${dtFim}` : 'Geral (Sem filtro de data)';
 
-    // Cria o cabeçalho (sem imagem externa para não dar erro de CORS no PC)
+    // Cria o cabeçalho executivo temporário
     const reportHeader = document.createElement('div');
     reportHeader.id = 'temp-report-header';
     reportHeader.innerHTML = `
@@ -6224,28 +6247,43 @@ window.gerarImagemDashboard = function() {
     `;
     dashElement.prepend(reportHeader);
 
-    // ADICIONADO: Um pequeno delay (750ms) para dar tempo de o HTML temporário e todos os estilos carregarem...
+    // Espera 1.5s para garantir que tudo esticou e as animações pararam
     setTimeout(() => {
-        // Tira a foto
         html2canvas(dashElement, {
             scale: 2, 
             useCORS: true,
-            allowTaint: true, // Ajuda a evitar erros quando abre via file://
-            backgroundColor: '#eaecf6', // Fixa o fundo para evitar opacidade
-            logging: false
+            allowTaint: true,
+            backgroundColor: '#eaecf6', 
+            logging: false,
+            onclone: function(clonedDoc) {
+                const clonedDash = clonedDoc.getElementById('dashboard');
+                if (clonedDash) {
+                    clonedDash.style.opacity = '1';
+                    clonedDash.style.animation = 'none';
+                    clonedDash.style.transition = 'none';
+                }
+            }
         }).then(canvas => {
+            // 👇 DEVOLVE AS BARRAS DE ROLAGEM E LIMITES DE ALTURA PARA A TELA NORMAL 👇
+            elementosParaExpandir.forEach(el => {
+                el.style.cssText = estilosOriginais.get(el);
+            });
+
+            // Limpeza pós-foto
             if (btnToolbar) btnToolbar.style.display = 'flex';
             const tempH = document.getElementById('temp-report-header');
             if (tempH) dashElement.removeChild(tempH);
+            dashElement.style.animation = '';
+            dashElement.style.transition = '';
             
             const imgData = canvas.toDataURL('image/png');
             
             let html = `
                 <div style="text-align: center;">
                     <p style="font-size: 0.85rem; color: var(--muted); margin-bottom: 15px; line-height: 1.5;">
-                        A imagem foi gerada com sucesso! Você pode baixar ou enviar direto para o Slack.
+                        Imagem gerada com todos os dados expandidos! Você pode baixar a imagem ou enviar direto para o Slack.
                     </p>
-                    <div style="max-height: 45vh; overflow-y: auto; border: 2px solid var(--primary); border-radius: 8px; margin-bottom: 20px; box-shadow: var(--shadow-md);">
+                    <div style="max-height: 45vh; overflow-y: auto; border: 2px solid var(--primary); border-radius: 8px; margin-bottom: 20px; box-shadow: var(--shadow-md); background: #eaecf6;">
                         <img src="${imgData}" id="preview-dashboard-img" style="width: 100%; height: auto; display: block;" />
                     </div>
                     <div style="display: flex; gap: 10px; flex-wrap: wrap;">
@@ -6264,14 +6302,21 @@ window.gerarImagemDashboard = function() {
             window.exibirModal("📸 Relatório Visual", html);
             
         }).catch(err => {
+            // Em caso de erro, também devolve as barras de rolagem para não quebrar o layout
+            elementosParaExpandir.forEach(el => {
+                el.style.cssText = estilosOriginais.get(el);
+            });
+
             if (btnToolbar) btnToolbar.style.display = 'flex';
             const tempH = document.getElementById('temp-report-header');
             if (tempH) dashElement.removeChild(tempH);
+            dashElement.style.animation = '';
+            dashElement.style.transition = '';
             
             console.error(err);
-            window.showMessage("❌ Houve um erro ao gerar a imagem. Tente usar a aplicação hospedada ao invés do arquivo local.");
+            window.showMessage("❌ Houve um erro ao gerar a imagem.");
         });
-    }, 750); // Delay de 750 milissegundos
+    }, 1500); 
 };
 
 window.enviarDashboardSlack = async function() {
