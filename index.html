@@ -6195,23 +6195,19 @@ window.irParaPainelComFiltro = function(status) {
 }
 
 // ============================================================
-// APEX COBLI — RELATÓRIO EXECUTIVO VISUAL (SUBSTITUI gerarImagemDashboard)
-// Substitua a função window.gerarImagemDashboard no seu código
-// e adicione as funções auxiliares abaixo dela.
+/ APEX COBLI — RELATÓRIO EXECUTIVO VISUAL (SUBSTITUI gerarImagemDashboard)
 // ============================================================
 
-// ── FUNÇÃO AUXILIAR: Monta o HTML do relatório a partir dos dados do sistema ──
 window._gerarHTMLRelatorio = function() {
 
-    // ── 1. Lê filtros de data ativos no painel ───────────────────────────────
-    const inputIni = document.getElementById('filtroDataInicio');
-    const inputFim = document.getElementById('filtroDataFim');
-    const dtIni = inputIni && inputIni.value ? inputIni.value.split('-').reverse().join('/') : '';
-    const dtFim = inputFim && inputFim.value ? inputFim.value.split('-').reverse().join('/') : '';
+    // ── 1. Filtros de data do PAINEL (para KPIs e rankings) ─────────────────
+    const inputPanelIni = document.getElementById('filtroDataInicio');
+    const inputPanelFim = document.getElementById('filtroDataFim');
+    const dtIni = inputPanelIni && inputPanelIni.value ? inputPanelIni.value.split('-').reverse().join('/') : '';
+    const dtFim = inputPanelFim && inputPanelFim.value ? inputPanelFim.value.split('-').reverse().join('/') : '';
     const periodoTexto = (dtIni && dtFim) ? `${dtIni} → ${dtFim}` : 'Geral · Sem filtro de data';
 
-    // ── 2. KPIs e status — calculados sobre filtradosPainel ─────────────────
-    // filtradosPainel já respeita TODOS os filtros ativos do painel
+    // ── 2. KPIs e status — filtradosPainel (respeita todos filtros do painel) ─
     let total = 0, conc = 0, agend = 0;
     let cntSol = 0, cntNeg = 0, cntAgd = 0, cntAnd = 0, cntImp = 0, cntCon = 0, cntCan = 0;
 
@@ -6227,18 +6223,16 @@ window._gerarHTMLRelatorio = function() {
         else cntSol++;
     });
 
-    // ── 3. Rankings — todos calculados sobre filtradosPainel ────────────────
+    // ── 3. Rankings — filtradosPainel ────────────────────────────────────────
     const distPrest = {}, distSol = {}, distLoc = {};
 
     filtradosPainel.forEach(a => {
         if (a.prestador)
             distPrest[a.prestador] = (distPrest[a.prestador] || 0) + 1;
-
         if (a.solicitante) {
             const nome = window.formatarCapitalize(a.solicitante);
             distSol[nome] = (distSol[nome] || 0) + 1;
         }
-
         if (a.cidade && a.uf) {
             const k = `${a.cidade.toUpperCase()}/${a.uf.toUpperCase()}`;
             distLoc[k] = (distLoc[k] || 0) + 1;
@@ -6247,48 +6241,105 @@ window._gerarHTMLRelatorio = function() {
 
     const prestTop = Object.entries(distPrest).sort((a, b) => b[1] - a[1]).slice(0, 5);
     const prestMax = prestTop[0] ? prestTop[0][1] : 1;
+    const solTop   = Object.entries(distSol).sort((a, b) => b[1] - a[1]).slice(0, 5);
+    const solMax   = solTop[0] ? solTop[0][1] : 1;
+    const locTop   = Object.entries(distLoc).sort((a, b) => b[1] - a[1]).slice(0, 5);
+    const locMax   = locTop[0] ? locTop[0][1] : 1;
 
-    const solTop = Object.entries(distSol).sort((a, b) => b[1] - a[1]).slice(0, 5);
-    const solMax = solTop[0] ? solTop[0][1] : 1;
+    // ── 4. EVOLUÇÃO — usa o estado atual do card de Evolução ─────────────────
+    // Replica exatamente a mesma lógica de window.renderEvolucao
+    const evolModo = window.evolucaoPeriodoAtual || 15;
+    const evolDatas = [];
 
-    const locTop = Object.entries(distLoc).sort((a, b) => b[1] - a[1]).slice(0, 5);
-    const locMax = locTop[0] ? locTop[0][1] : 1;
+    if (evolModo === 'custom') {
+        const iniStr = document.getElementById('evolucao-data-ini') && document.getElementById('evolucao-data-ini').value;
+        const fimStr = document.getElementById('evolucao-data-fim') && document.getElementById('evolucao-data-fim').value;
+        if (iniStr && fimStr) {
+            let cur = new Date(iniStr + 'T00:00:00');
+            const fim = new Date(fimStr + 'T00:00:00');
+            while (cur <= fim) { evolDatas.push(new Date(cur)); cur.setDate(cur.getDate() + 1); }
+        }
+    } else {
+        const dias = parseInt(evolModo) || 15;
+        const hoje = new Date();
+        for (let i = dias - 1; i >= 0; i--) {
+            const d = new Date(hoje);
+            d.setDate(hoje.getDate() - i);
+            evolDatas.push(d);
+        }
+    }
 
-    // ── 4. Ocupação — respeita o período filtrado e os prestadores marcados ──
+    // Conta agendamentos por dia (mesma lógica do renderEvolucao — usa filtradosPainel)
+    const parseDataAgend = a => a.created_at
+        ? new Date(a.created_at)
+        : (a.data ? (([d,m,y]) => new Date(y, m-1, d))(a.data.split('/')) : null);
+
+    const evolLabels = [];
+    const evolDados  = [];
+    evolDatas.forEach(d => {
+        d.setHours(0,0,0,0);
+        const dFim = new Date(d); dFim.setHours(23,59,59,999);
+        evolLabels.push(d.toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit'}));
+        evolDados.push(filtradosPainel.filter(a => {
+            const dt = parseDataAgend(a);
+            return dt && dt >= d && dt <= dFim;
+        }).length);
+    });
+
+    const evolMax   = Math.max(...evolDados, 1);
+    const evolTotal = evolDados.reduce((s, v) => s + v, 0);
+    // Label do período de evolução
+    let evolPeriodoLabel = `Últimos ${evolModo} dias`;
+    if (evolModo === 'custom') {
+        const iniEl = document.getElementById('evolucao-data-ini');
+        const fimEl = document.getElementById('evolucao-data-fim');
+        if (iniEl && fimEl && iniEl.value && fimEl.value) {
+            evolPeriodoLabel = `${iniEl.value.split('-').reverse().join('/')} → ${fimEl.value.split('-').reverse().join('/')}`;
+        } else {
+            evolPeriodoLabel = 'Personalizado';
+        }
+    }
+
+    // ── 5. OCUPAÇÃO — usa o estado atual do card de Ocupação ─────────────────
+    // Respeita window.ocupacaoPeriodo / CustomIni / CustomFim
+    // e o prestador selecionado no select do card (sel-ocup-prest)
     const diasSemana = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab'];
-    const ocupRows = [];
+    const ocupRows   = [];
 
-    // Monta o array de datas:
-    // — filtro ativo → usa exatamente o intervalo do filtro
-    // — sem filtro → próximos 15 dias (padrão do dashboard)
-    const ocupDatas = [];
-    if (inputIni && inputIni.value && inputFim && inputFim.value) {
-        let cur = new Date(inputIni.value + 'T00:00:00');
-        const fim = new Date(inputFim.value + 'T00:00:00');
-        while (cur <= fim) {
-            ocupDatas.push(new Date(cur));
-            cur.setDate(cur.getDate() + 1);
+    // Período de ocupação — mesmo estado do card
+    const ocupPeriodo = window.ocupacaoPeriodo || 15;
+    const ocupDatas   = [];
+
+    if (ocupPeriodo === 'custom') {
+        const iniStr = window.ocupacaoPeriodoCustomIni;
+        const fimStr = window.ocupacaoPeriodoCustomFim;
+        if (iniStr && fimStr) {
+            let cur = new Date(iniStr + 'T00:00:00');
+            const fim = new Date(fimStr + 'T00:00:00');
+            while (cur <= fim) { ocupDatas.push(new Date(cur)); cur.setDate(cur.getDate() + 1); }
         }
     } else {
         const hoje = new Date();
-        for (let i = 0; i < 15; i++) {
+        for (let i = 0; i < parseInt(ocupPeriodo); i++) {
             const d = new Date(hoje);
             d.setDate(hoje.getDate() + i);
             ocupDatas.push(d);
         }
     }
 
-    // Filtra prestadores pelo checkbox ativo no painel (se houver seleção)
-    const prestMarcados = Array.from(
-        document.querySelectorAll('.cb-prestador:checked')
-    ).map(cb => cb.value);
-    const prestParaOcup = prestMarcados.length > 0
-        ? prestadores.filter(p => prestMarcados.includes(p.nome))
+    // Prestador selecionado no card de ocupação (select sel-ocup-prest)
+    const selOcupPrest = document.getElementById('sel-ocup-prest');
+    const ocupPrestNome = selOcupPrest ? selOcupPrest.value : '';
+    const prestParaOcup = ocupPrestNome
+        ? prestadores.filter(p => p.nome === ocupPrestNome)
         : prestadores;
+
+    // Label do período de ocupação
+    let ocupPeriodoLabel = ocupPeriodo === 'custom' ? 'Personalizado' : `Próximos ${ocupPeriodo} dias`;
 
     for (const d of ocupDatas) {
         if (ocupRows.length >= 8) break;
-        const dStr = d.toLocaleDateString('pt-BR');
+        const dStr  = d.toLocaleDateString('pt-BR');
         const dNome = diasSemana[d.getDay()];
         let totalH = 0, ocupH = 0;
         prestParaOcup.forEach(p => {
@@ -6299,17 +6350,13 @@ window._gerarHTMLRelatorio = function() {
         if (totalH > 0 || ocupH > 0) {
             const pct = totalH > 0 ? Math.round((ocupH / totalH) * 100) : (ocupH > 0 ? 100 : 0);
             ocupRows.push({
-                data: dStr.substring(0, 5),
-                dia: dNome,
-                livres: Math.max(0, totalH - ocupH),
-                ocupH,
-                totalH,
-                pct
+                data: dStr.substring(0, 5), dia: dNome,
+                livres: Math.max(0, totalH - ocupH), ocupH, totalH, pct
             });
         }
     }
 
-    // ── 5. Helpers de renderização ───────────────────────────────────────────
+    // ── 6. Helpers de renderização ───────────────────────────────────────────
     const rankRows = (arr, max, cor) => arr.map((item, i) => {
         const pct = max > 0 ? Math.round((item[1] / max) * 100) : 0;
         return `<div style="display:flex;align-items:center;gap:10px;margin-bottom:9px;">
@@ -6325,14 +6372,13 @@ window._gerarHTMLRelatorio = function() {
     }).join('');
 
     const ocupHtml = ocupRows.map(o => {
-        const cls = o.pct >= 80 ? '#FF4633' : o.pct >= 50 ? '#f59e0b' : '#00AE97';
+        const cls  = o.pct >= 80 ? '#FF4633' : o.pct >= 50 ? '#f59e0b' : '#00AE97';
         const pct2 = Math.max(2, o.pct);
         return `<div style="display:flex;align-items:center;gap:8px;margin-bottom:7px;">
             <span style="font-family:'Space Mono',monospace;font-size:0.62rem;color:rgba(255,255,255,0.35);width:62px;flex-shrink:0;">${o.data} ${o.dia}</span>
             <div style="flex:1;">
                 <div style="display:flex;justify-content:space-between;font-size:0.58rem;color:rgba(255,255,255,0.3);margin-bottom:3px;">
-                    <span>${o.livres}h livre${o.livres !== 1 ? 's' : ''}</span>
-                    <span>${o.ocupH}h ocup.</span>
+                    <span>${o.livres}h livres</span><span>${o.ocupH}h ocup.</span>
                 </div>
                 <div style="height:4px;background:rgba(255,255,255,0.07);border-radius:2px;overflow:hidden;">
                     <div style="height:100%;width:${pct2}%;background:${cls};border-radius:2px;"></div>
@@ -6342,12 +6388,33 @@ window._gerarHTMLRelatorio = function() {
         </div>`;
     }).join('');
 
+    // Sparkline SVG para evolução (barras simples)
+    const sparkW = 280, sparkH = 60, barW = Math.max(2, Math.floor(sparkW / evolDados.length) - 2);
+    const sparkBars = evolDados.map((v, i) => {
+        const h   = evolMax > 0 ? Math.round((v / evolMax) * (sparkH - 14)) : 0;
+        const x   = i * (sparkW / evolDados.length);
+        const y   = sparkH - h - 1;
+        const cor = v === 0 ? 'rgba(255,255,255,0.1)' : '#4f8af7';
+        const label = evolDados.length <= 15 && v > 0
+            ? `<text x="${x + barW/2}" y="${y - 3}" text-anchor="middle" font-size="7" fill="rgba(255,255,255,0.45)" font-family="Space Mono">${v}</text>`
+            : '';
+        return `<rect x="${x}" y="${y}" width="${barW}" height="${Math.max(h, 2)}" rx="1" fill="${cor}"/>${label}`;
+    }).join('');
+
+    // Eixo de datas (só algumas labels para não poluir)
+    const step = Math.ceil(evolDados.length / 6);
+    const xLabels = evolLabels.map((l, i) => {
+        if (i % step !== 0 && i !== evolLabels.length - 1) return '';
+        const x = i * (sparkW / evolDados.length) + barW / 2;
+        return `<text x="${x}" y="${sparkH + 10}" text-anchor="middle" font-size="7" fill="rgba(255,255,255,0.3)" font-family="Space Mono">${l}</text>`;
+    }).join('');
+
     const statusPill = (label, count, bg, color) => count > 0
         ? `<div style="display:inline-flex;align-items:center;gap:5px;padding:5px 11px;border-radius:20px;font-size:0.7rem;font-weight:700;background:${bg};color:${color};margin:0 4px 6px 0;">
             <span style="width:6px;height:6px;border-radius:50%;background:${color};flex-shrink:0;"></span>${label} · ${count}
            </div>` : '';
 
-    // ── 6. Monta o HTML final ────────────────────────────────────────────────
+    // ── 7. HTML final ────────────────────────────────────────────────────────
     const agora = new Date().toLocaleString('pt-BR');
 
     return `<!DOCTYPE html>
@@ -6370,7 +6437,7 @@ window._gerarHTMLRelatorio = function() {
       </div>
     </div>
     <div style="text-align:right;">
-      <div style="font-size:0.52rem;text-transform:uppercase;letter-spacing:1.5px;color:rgba(255,255,255,0.35);margin-bottom:5px;">Período</div>
+      <div style="font-size:0.52rem;text-transform:uppercase;letter-spacing:1.5px;color:rgba(255,255,255,0.35);margin-bottom:5px;">Filtro do painel</div>
       <div style="font-size:0.82rem;font-weight:700;color:#00AE97;font-family:'Space Mono',monospace;">${periodoTexto}</div>
       <div style="font-size:0.55rem;color:rgba(255,255,255,0.25);margin-top:4px;">Gerado em ${agora}</div>
     </div>
@@ -6400,12 +6467,29 @@ window._gerarHTMLRelatorio = function() {
     <div>
       ${statusPill('Solicitado', cntSol, 'rgba(100,116,139,0.2)', '#94a3b8')}
       ${statusPill('Negociação', cntNeg, 'rgba(139,92,246,0.15)', '#a78bfa')}
-      ${statusPill('Agendado', cntAgd, 'rgba(0,27,184,0.3)', '#7aabff')}
-      ${statusPill('Andamento', cntAnd, 'rgba(245,158,11,0.15)', '#fbbf24')}
-      ${statusPill('Impedido', cntImp, 'rgba(255,70,51,0.18)', '#f87171')}
-      ${statusPill('Concluído', cntCon, 'rgba(0,174,151,0.18)', '#34d399')}
-      ${statusPill('Cancelado', cntCan, 'rgba(71,85,105,0.2)', '#64748b')}
+      ${statusPill('Agendado',   cntAgd, 'rgba(0,27,184,0.3)',    '#7aabff')}
+      ${statusPill('Andamento',  cntAnd, 'rgba(245,158,11,0.15)', '#fbbf24')}
+      ${statusPill('Impedido',   cntImp, 'rgba(255,70,51,0.18)',  '#f87171')}
+      ${statusPill('Concluído',  cntCon, 'rgba(0,174,151,0.18)',  '#34d399')}
+      ${statusPill('Cancelado',  cntCan, 'rgba(71,85,105,0.2)',   '#64748b')}
     </div>
+  </div>
+
+  <!-- EVOLUÇÃO -->
+  <div style="padding:18px 28px;border-bottom:1px solid rgba(255,255,255,0.06);">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+      <div style="font-size:0.56rem;text-transform:uppercase;letter-spacing:2px;color:rgba(255,255,255,0.3);font-weight:700;display:flex;align-items:center;gap:8px;">
+        <span style="display:inline-block;width:14px;height:2px;background:#4f8af7;border-radius:1px;"></span>Evolução de agendamentos
+      </div>
+      <div style="display:flex;align-items:center;gap:14px;">
+        <span style="font-size:0.6rem;color:rgba(255,255,255,0.25);font-family:'Space Mono',monospace;">${evolPeriodoLabel}</span>
+        <span style="font-family:'Space Mono',monospace;font-size:0.82rem;font-weight:700;color:#4f8af7;">${evolTotal} registros</span>
+      </div>
+    </div>
+    <svg width="100%" viewBox="0 0 ${sparkW} ${sparkH + 14}" xmlns="http://www.w3.org/2000/svg" style="overflow:visible;">
+      ${sparkBars}
+      ${xLabels}
+    </svg>
   </div>
 
   <!-- PRESTADORES + SOLICITANTES -->
@@ -6433,8 +6517,11 @@ window._gerarHTMLRelatorio = function() {
       ${rankRows(locTop, locMax, '#a78bfa')}
     </div>
     <div style="background:#0a1158;padding:18px 20px;border-left:1px solid rgba(255,255,255,0.05);">
-      <div style="font-size:0.56rem;text-transform:uppercase;letter-spacing:2px;color:rgba(255,255,255,0.3);font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:8px;">
-        <span style="display:inline-block;width:14px;height:2px;background:#f59e0b;border-radius:1px;"></span>Ocupação da agenda ${(dtIni && dtFim) ? '' : '· próximos 15 dias'}
+      <div style="font-size:0.56rem;text-transform:uppercase;letter-spacing:2px;color:rgba(255,255,255,0.3);font-weight:700;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;">
+        <span style="display:flex;align-items:center;gap:8px;">
+          <span style="display:inline-block;width:14px;height:2px;background:#f59e0b;border-radius:1px;"></span>Ocupação da agenda
+        </span>
+        <span style="font-size:0.55rem;color:rgba(255,255,255,0.2);font-family:'Space Mono',monospace;">${ocupPeriodoLabel}${ocupPrestNome ? ' · ' + ocupPrestNome : ''}</span>
       </div>
       ${ocupHtml || '<div style="font-size:0.75rem;color:rgba(255,255,255,0.3);font-style:italic;">Nenhum dado de agenda no período.</div>'}
     </div>
@@ -6452,14 +6539,13 @@ window._gerarHTMLRelatorio = function() {
 };
 
 
-// ── FUNÇÃO PRINCIPAL: substitui window.gerarImagemDashboard ──────────────────
+// ── FUNÇÃO PRINCIPAL ──────────────────────────────────────────────────────────
 window.gerarImagemDashboard = function () {
     window.showToast('⏳ Gerando relatório executivo...');
 
     setTimeout(async () => {
         const htmlRelatorio = window._gerarHTMLRelatorio();
 
-        // Iframe oculto para renderizar com fontes corretas
         const iframe = document.createElement('iframe');
         iframe.style.cssText = 'position:fixed;left:-9999px;top:-9999px;width:680px;height:auto;visibility:hidden;border:none;';
         document.body.appendChild(iframe);
@@ -6469,7 +6555,6 @@ window.gerarImagemDashboard = function () {
         iDoc.write(htmlRelatorio);
         iDoc.close();
 
-        // Aguarda fontes carregarem
         await new Promise(resolve => setTimeout(resolve, 1800));
 
         const reportEl = iDoc.getElementById('apex-report');
@@ -6494,7 +6579,7 @@ window.gerarImagemDashboard = function () {
             const html = `
             <div style="text-align:center;">
                 <p style="font-size:0.82rem;color:var(--muted);margin-bottom:14px;line-height:1.5;">
-                    Relatório executivo gerado com sucesso! Baixe ou envie direto para o Slack.
+                    Relatório executivo gerado! Baixe ou envie direto para o Slack.
                 </p>
                 <div style="max-height:55vh;overflow-y:auto;border:2px solid var(--primary);border-radius:10px;margin-bottom:18px;box-shadow:var(--shadow-md);">
                     <img src="${imgData}" id="preview-relatorio-img" style="width:100%;height:auto;display:block;" />
@@ -6523,7 +6608,7 @@ window.gerarImagemDashboard = function () {
 };
 
 
-// ── HELPER: envia o relatório para o Slack ───────────────────────────────────
+// ── HELPER SLACK ──────────────────────────────────────────────────────────────
 window._enviarRelatorioSlack = async function () {
     const btn = document.getElementById('btn-envia-relatorio-slack');
     const originalText = btn ? btn.innerHTML : '';
@@ -6533,8 +6618,7 @@ window._enviarRelatorioSlack = async function () {
         const imgEl = document.getElementById('preview-relatorio-img');
         if (!imgEl) throw new Error('Imagem não encontrada');
 
-        // dataURL → Blob
-        const arr = imgEl.src.split(',');
+        const arr  = imgEl.src.split(',');
         const mime = arr[0].match(/:(.*?);/)[1];
         const bstr = atob(arr[1]);
         let n = bstr.length;
