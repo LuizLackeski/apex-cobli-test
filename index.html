@@ -6194,7 +6194,6 @@ window.irParaPainelComFiltro = function(status) {
     return new Blob([u8arr], {type:mime});
 }
 
-// Captura a tela expandindo os cards temporariamente para mostrar tudo
 // ============================================================
 // APEX COBLI — RELATÓRIO EXECUTIVO VISUAL (SUBSTITUI gerarImagemDashboard)
 // Substitua a função window.gerarImagemDashboard no seu código
@@ -6290,7 +6289,7 @@ window._gerarHTMLRelatorio = function() {
         </div>`;
     }).join('');
 
-    const ocupRows = ocupRows.map(o => {
+    const ocupHtml = ocupRows.map(o => {
         const cls = o.pct >= 80 ? '#FF4633' : o.pct >= 50 ? '#f59e0b' : '#00AE97';
         const pct2 = Math.max(2, o.pct); // barra mínima visível
         return `<div style="display:flex;align-items:center;gap:8px;margin-bottom:7px;">
@@ -6405,7 +6404,7 @@ window._gerarHTMLRelatorio = function() {
       <div style="font-size:0.56rem;text-transform:uppercase;letter-spacing:2px;color:rgba(255,255,255,0.3);font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:8px;">
         <span style="display:inline-block;width:14px;height:2px;background:#f59e0b;border-radius:1px;"></span>Ocupação da agenda
       </div>
-      ${ocupRows || '<div style="font-size:0.75rem;color:rgba(255,255,255,0.3);font-style:italic;">Nenhum dado de agenda configurado.</div>'}
+      ${ocupHtml || '<div style="font-size:0.75rem;color:rgba(255,255,255,0.3);font-style:italic;">Nenhum dado de agenda configurado.</div>'}
     </div>
   </div>
 
