@@ -15,6 +15,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,600;0,9..40,700;0,9..40,800;1,9..40,400&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
     
@@ -2713,13 +2714,60 @@ function injetarTopbarIntegrations() {
             <div id="painel-conteudo" style="max-height: 520px; overflow-y: auto;"></div>
         </div>
 
-        <div id="dashboard" class="aba">
+<div id="dashboard" class="aba">
+            
+            <div class="dashboard-controls-toolbar" style="display: flex; justify-content: space-between; align-items: center; background: white; padding: 12px 20px; border-radius: var(--radius); border: 1px solid var(--border); box-shadow: var(--shadow-sm); margin-bottom: 20px;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <span style="font-size: 1.2rem;">📊</span>
+                    <h3 style="border: none; padding: 0; margin: 0; font-size: 0.95rem; color: var(--cobli-dark);">Visão Geral e Exportação</h3>
+                </div>
+                <button onclick="window.gerarImagemDashboard()" id="btn-exportar-dash" style="background: var(--cobli-green); color: white; display: flex; align-items: center; gap: 8px; padding: 8px 16px; font-size: 0.8rem; font-weight: 700; border: none; border-radius: 6px; cursor: pointer; transition: 0.2s;">
+                    <span style="font-size: 1rem;">📸</span> Exportar Resumo
+                </button>
+            </div>
+
             <div class="flex-cards">
-                <div class="stats-card">Solicitações (Total)<strong id="dash-agend" style="color: var(--primary);">0</strong></div>
-                <div class="stats-card">Concluídos <span style="font-size:0.6rem; color:var(--muted); font-weight:400;">(inc. impedidos)</span><strong id="dash-concluidos" style="color: var(--cobli-green);">0</strong></div>
-                <div class="stats-card">Agendados <span style="font-size:0.6rem; color:var(--muted); font-weight:400;">(programados)</span><strong id="dash-programados" style="color: #f59e0b;">0</strong></div>
+                <div class="stats-card" onclick="window.irParaPainelComFiltro('')" title="Ver todos no painel" style="cursor:pointer;">
+                    Solicitações (Total)
+                    <strong id="dash-agend" style="color: var(--primary);">0</strong>
+                    <div style="font-size:0.58rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--primary);opacity:0.55;margin-top:6px;">Ver no painel →</div>
+                </div>
+                <div class="stats-card" onclick="window.irParaPainelComFiltro('concluido')" title="Ver concluídos no painel" style="cursor:pointer;">
+                    Concluídos <span style="font-size:0.6rem; color:var(--muted); font-weight:400;">(inc. impedidos)</span>
+                    <strong id="dash-concluidos" style="color: var(--cobli-green);">0</strong>
+                    <div style="font-size:0.58rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--cobli-green);opacity:0.55;margin-top:6px;">Ver no painel →</div>
+                </div>
+                <div class="stats-card" onclick="window.irParaPainelComFiltro('agendado')" title="Ver agendados no painel" style="cursor:pointer;">
+                    Agendados <span style="font-size:0.6rem; color:var(--muted); font-weight:400;">(programados)</span>
+                    <strong id="dash-programados" style="color: #f59e0b;">0</strong>
+                    <div style="font-size:0.58rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#f59e0b;opacity:0.55;margin-top:6px;">Ver no painel →</div>
+                </div>
             </div>
             
+            <div class="card" id="card-evolucao-temporal" style="margin-bottom:20px;">
+                <h2 style="display: flex !important; justify-content: space-between !important; align-items: center !important; flex-wrap: wrap; gap: 10px;">
+                    <span>Evolução de Agendamentos</span>
+                    <div style="display:flex; gap:6px; flex-wrap:wrap;" id="evolucao-periodo-tabs">
+                        <button onclick="window.renderEvolucao(7,this)" style="padding:4px 12px;font-size:0.72rem;border-radius:14px;border:1px solid var(--border);background:white;color:var(--muted);min-height:auto;font-weight:700;">7 dias</button>
+                        <button onclick="window.renderEvolucao(15,this)" style="padding:4px 12px;font-size:0.72rem;border-radius:14px;border:1px solid var(--primary);background:var(--primary);color:white;min-height:auto;font-weight:700;">15 dias</button>
+                        <button onclick="window.renderEvolucao(30,this)" style="padding:4px 12px;font-size:0.72rem;border-radius:14px;border:1px solid var(--border);background:white;color:var(--muted);min-height:auto;font-weight:700;">30 dias</button>
+                        <button onclick="window.renderEvolucao('custom',this)" style="padding:4px 12px;font-size:0.72rem;border-radius:14px;border:1px solid var(--border);background:white;color:var(--muted);min-height:auto;font-weight:700;">Personalizado</button>
+                    </div>
+                </h2>
+                
+                <div id="evolucao-custom-range" style="display:none; gap:8px; align-items:center; margin-bottom:14px; width:100%; flex-wrap:nowrap; padding: 0 10px;">
+                    <div style="flex:1;">
+                        <input type="date" id="evolucao-data-ini" onchange="window.renderEvolucao('custom', null)" style="width:100%; padding:5px 8px; border:1.5px solid var(--border); border-radius:6px; font-size:0.75rem; font-family:var(--font-main); height:auto; margin:0;">
+                    </div>
+                    <span style="font-size:0.75rem; color:var(--muted); flex-shrink:0;">até</span>
+                    <div style="flex:1;">
+                        <input type="date" id="evolucao-data-fim" onchange="window.renderEvolucao('custom', null)" style="width:100%; padding:5px 8px; border:1.5px solid var(--border); border-radius:6px; font-size:0.75rem; font-family:var(--font-main); height:auto; margin:0;">
+                    </div>
+                </div>
+
+                <div style="position:relative; height:220px; width:100%; padding-top:8px;"><canvas id="chartEvolucao"></canvas></div>
+            </div>
+
             <div class="card" id="card-prod-tecnicos" style="display:none; margin-bottom:20px;">
                 <h2>👷 Equipe Técnica</h2>
                 <div id="lista-prod-tecnicos" style="display:flex; flex-direction:column; gap:8px;"></div>
@@ -2727,15 +2775,9 @@ function injetarTopbarIntegrations() {
             
             <div style="display: flex; gap: 16px; margin-bottom: 20px; flex-wrap: wrap;">
                 <div class="card" id="card-ocupacao-diaria" style="flex: 1; min-width: 300px; margin-bottom: 0; max-height: 400px; display: flex; flex-direction: column;">
-                    <h2 style="flex-shrink: 0;">Ocupação da Agenda (15 Dias)</h2>
+                    <h2 style="flex-shrink: 0;">Ocupação da Agenda (Horas ocupadas X Dias)</h2>
                     <div id="ocupacao-filtros-prestador" style="margin-bottom:10px;"></div>
                     <div id="ocupacao-lista" style="display: flex; flex-direction: column; gap: 6px; overflow-y: auto; padding-right: 5px; flex-grow: 1;"></div>
-                </div>
-
-                <div class="card" id="card-ocupacao-tecnicos" style="flex: 1; min-width: 300px; margin-bottom: 0; max-height: 400px; display: none; flex-direction: column;">
-                    <h2 style="flex-shrink: 0;" id="titulo-ocupacao-tecnicos">Por Técnico (15 Dias)</h2>
-                    <div id="tabs-ocupacao-tecnicos" style="display:flex; gap:5px; margin-bottom:10px; overflow-x:auto;"></div>
-                    <div id="ocupacao-tecnicos-lista" style="display: flex; flex-direction: column; gap: 6px; overflow-y: auto; padding-right: 5px; flex-grow: 1;"></div>
                 </div>
 
                 <div class="card" style="flex: 1; min-width: 300px; margin-bottom: 0; max-height: 400px; display: flex; flex-direction: column;">
@@ -2745,19 +2787,27 @@ function injetarTopbarIntegrations() {
             </div>
             
             <div style="display: flex; gap: 16px; flex-wrap: wrap;">
-                <div class="card" id="card-dist-prestadores" style="flex: 1; min-width: 300px; margin-bottom: 20px;">
-                    <h2>Distribuição por Prestador</h2>
-                    <div style="position: relative; height: 250px; width: 100%;"><canvas id="chartPrestadores"></canvas></div>
+                <div class="card" id="card-dist-prestadores" style="flex: 1; min-width: 280px; margin-bottom: 20px; max-height: 334px; display:flex; flex-direction:column;">
+                    <h2 style="flex-shrink:0;">Distribuição por Prestador</h2>
+                    <div id="lista-dist-prestadores" style="display:flex; flex-direction:column; gap:6px; overflow-y:auto; flex-grow:1; padding-right:4px;"></div>
                 </div>
-                <div class="card" style="flex: 1; min-width: 300px; margin-bottom: 20px;">
-                    <h2>Volume por Localidade (Top 10)</h2>
-                    <div style="position: relative; height: 250px; width: 100%;"><canvas id="chartLocais"></canvas></div>
+                <div class="card" style="flex: 1; min-width: 280px; margin-bottom: 20px; max-height: 334px; display:flex; flex-direction:column;">
+                    <h2 style="flex-shrink:0;">Volume por Localidade (Top 10)</h2>
+                    <div id="lista-dist-locais" style="display:flex; flex-direction:column; gap:6px; overflow-y:auto; flex-grow:1; padding-right:4px;"></div>
                 </div>
-                <div class="card" style="flex: 1; min-width: 300px; margin-bottom: 20px; max-height: 334px; display: flex; flex-direction: column;">
+                <div class="card" style="flex: 1; min-width: 280px; margin-bottom: 20px; max-height: 334px; display: flex; flex-direction: column;">
                     <h2 style="flex-shrink: 0;">Volume por Solicitante</h2>
                     <div id="lista-dashboard-solicitantes" style="display: flex; flex-direction: column; gap: 6px; overflow-y: auto; padding-right: 5px; flex-grow: 1;"></div>
                 </div>
             </div>
+
+            <canvas id="chartPrestadores" style="display:none;"></canvas>
+            <canvas id="chartLocais" style="display:none;"></canvas>
+        </div>
+
+            <!-- canvas ocultos mantidos para não quebrar refs JS legadas -->
+            <canvas id="chartPrestadores" style="display:none;"></canvas>
+            <canvas id="chartLocais" style="display:none;"></canvas>
         </div>
         
         <div id="usuarios" class="aba">
@@ -2914,6 +2964,11 @@ window.meuPrestadorLogado = null;
 
 window.periodoResumoAtual = 'semana';
 
+ // ── PERÍODO DA OCUPAÇÃO (novo) ──────────────────────────────────
+window.ocupacaoPeriodo = 15; // padrão: 15 dias
+window.ocupacaoPeriodoCustomIni = null;
+window.ocupacaoPeriodoCustomFim = null;
+
 const serviçosDisponíveis = {
     "Telemetria": [{desc:"Telemetria: Leves ou Pesados", tempo:40, id_field: "b2098d2f-c060-445b-8e4b-bdcc5b6e613a"}, {desc:"Telemetria: Motos / Maquinários", tempo:40, id_field: "fe2057ba-abd5-44b6-9686-2f50e7717f16"}, {desc:"Leves ou pesados + CAN", tempo:60, id_field: "b04b9472-5663-4d77-8dc9-a79b2f06aa28"}], 
     "Identificador": [{desc:"Identificador: Leves e Pesados", tempo:60, id_field: "a5aa5112-5b34-48fe-bf9b-1d655522db0b"}, {desc:"Identificador + CAN", tempo:90, id_field: "b04b9472-5663-4d77-8dc9-a79b2f06aa28"}], 
@@ -3030,7 +3085,7 @@ window.atualizarPreviewResumo = function() {
     let solStr = Object.entries(distSol).sort((a,b)=>b[1]-a[1]).map(([n,c]) => `>   • ${n}: ${c}`).join('\n');
     // 👆 FIM DA ADIÇÃO 👆
 
-    let periodoLabel = { 'semana': 'Esta Semana', 'semana_passada': 'Semana Passada', 'mes': 'Este Mês', 'personalizado': 'Período Personalizado' }[window.periodoResumoAtual] || 'Período';
+let periodoLabel = { 'semana': 'Esta Semana', 'semana_passada': 'Semana Passada', 'mes': 'Este Mês', 'personalizado': 'Período Personalizado' }[window.periodoResumoAtual] || 'Período';
     
     let statusLines = [];
     if (solicitado > 0)  statusLines.push(`>   • 📋 Solicitados: ${solicitado}`);
@@ -3040,7 +3095,56 @@ window.atualizarPreviewResumo = function() {
     if (concluidos > 0)  statusLines.push(`>   • ✅ Concluídos: ${concluidos}`);
     if (impedidos > 0)   statusLines.push(`>   • 🛑 Impedidos: ${impedidos}`);
     if (cancelados > 0)  statusLines.push(`>   • ❌ Cancelados: ${cancelados}`);
+
+    // 👇 INÍCIO DA ADIÇÃO: CÁLCULO DE OCUPAÇÃO CONSIDERANDO O FILTRO DO SLACK 👇
+    let totalLivres = 0;
+    let totalOcupadas = 0;
+    let baseTotal = 0;
+    let currDate = new Date(ini);
+    const diasSemana = ["Dom","Seg","Ter","Qua","Qui","Sex","Sab"];
+
+    let diasOcupacaoArr = []; // Array para guardar o detalhamento dia a dia
+
+    while (currDate <= fim) {
+        let dStr = currDate.toLocaleDateString('pt-BR');
+        let dNome = diasSemana[currDate.getDay()];
+        
+        let diaLivres = 0;
+        let diaOcupadas = 0;
+        let diaTotal = 0;
+
+        prestadores.forEach(p => {
+            let stats = window.getOcupacaoReal(p, dStr, dNome);
+            diaLivres += stats.geral.livres;
+            diaOcupadas += stats.geral.ocupadas;
+            diaTotal += Math.max(stats.geral.total, stats.geral.ocupadas);
+        });
+
+        totalLivres += diaLivres;
+        totalOcupadas += diaOcupadas;
+        baseTotal += diaTotal;
+
+        // Só adiciona na lista diária se houver agenda configurada ou OS alocada no dia
+        if (diaTotal > 0 || diaOcupadas > 0) {
+            let diaPct = diaTotal > 0 ? Math.round((diaOcupadas / diaTotal) * 100) : (diaOcupadas > 0 ? 100 : 0);
+            // Coloquei um semáforo de cores automático dependendo da lotação!
+            let bolinha = diaPct >= 80 ? '🔴' : (diaPct >= 50 ? '🟡' : '🟢'); 
+            diasOcupacaoArr.push(`>   ${bolinha} ${dStr.substring(0,5)} (${dNome}): ${diaLivres}h livres | ${diaOcupadas}h ocup. (${diaPct}%)`);
+        }
+
+        currDate.setDate(currDate.getDate() + 1);
+    }
     
+    let pctOcupacao = baseTotal > 0 ? Math.round((totalOcupadas / baseTotal) * 100) : 0;
+    
+    // Monta a string consolidada (Geral + Diário)
+    let ocupacaoStr = `> *Ocupação Geral da Agenda:*\n>   • 🟢 Livres: ${totalLivres}h\n>   • 🔴 Ocupadas: ${totalOcupadas}h\n>   • 📊 Ocupação: ${pctOcupacao}%\n> \n`;
+    
+    if (diasOcupacaoArr.length > 0) {
+        ocupacaoStr += `> *Ocupação por Dia:*\n` + diasOcupacaoArr.join('\n') + `\n> \n`;
+    }
+    // 👆 FIM DA ADIÇÃO 👆
+
     let texto = `> 📊 *Resumo APEX | Cobli — ${periodoLabel}*\n` +
         `> 📅 ${fmtDate(ini)} → ${fmtDate(fim)}\n> \n` +
         `> *Visão Geral:*\n` +
@@ -3048,7 +3152,8 @@ window.atualizarPreviewResumo = function() {
         (statusLines.length > 0 ? statusLines.join('\n') + '\n> \n' : '> \n') +
         (prestStr ? `> *Por Prestador:*\n${prestStr}\n> \n` : '') +
         (cidadeStr ? `> *Principais Cidades:*\n${cidadeStr}\n> \n` : '') +
-        (solStr ? `> *Por Solicitante:*\n${solStr}\n> \n` : '') + // 👈 ADICIONADO AQUI NO TEXTO
+        (solStr ? `> *Por Solicitante:*\n${solStr}\n> \n` : '') +
+        ocupacaoStr + // 👈 INJEÇÃO DA OCUPAÇÃO (GERAL + DIÁRIA)
         `> _Enviado via APEX · Cobli_`;
     
     window._resumoSlackTexto = texto;
@@ -5198,11 +5303,12 @@ window.getOcupacaoReal = function(prestador, dataStr, dNome) {
     };
 };
 
-function calcularOcupacao(prestadorNome) {
+function calcularOcupacao(prestadorNome, diasALookar) {
     let p = prestadores.find(x => x.nome === prestadorNome); if (!p) return [];
     let hoje = new Date(); const diasSemana = ["Dom","Seg","Ter","Qua","Qui","Sex","Sab"];
     let resultado = [];
-    for (let i = 0; i < 15; i++) {
+    let limite = diasALookar || window.ocupacaoPeriodo || 15;
+    for (let i = 0; i < limite; i++) {
         let d = new Date(); d.setDate(hoje.getDate() + i); let dStr = d.toLocaleDateString('pt-BR'); let dNome = diasSemana[d.getDay()];
         let stats = window.getOcupacaoReal(p, dStr, dNome);
         
@@ -5219,24 +5325,44 @@ window.renderOcupacaoDiaria = function(prestadorNome, tecnicoId) {
     let containerLista = document.getElementById('ocupacao-lista');
     if (!containerLista) return;
 
-    if (userRole !== 'PRESTADOR') {
+    let periodo = window.ocupacaoPeriodo || 15;
+
+    // ── Botões de período (sempre renderiza) ──────────────────────────
+    let periodoHtml = `<div id="ocupacao-periodo-btns" style="display:flex; gap:6px; margin-bottom:10px; flex-wrap:wrap;">`;
+    [[7,'7 dias'],[15,'15 dias'],[30,'30 dias'],['custom','Personalizado']].forEach(([val, label]) => {
+        let isActive = (val === 'custom' && window.ocupacaoPeriodo === 'custom') || val === periodo;
+        periodoHtml += `<button onclick="window.mudarPeriodoOcupacao('${val}','${prestadorNome||''}')" style="padding:4px 12px; font-size:0.72rem; border-radius:14px; border:1.5px solid ${isActive?'var(--primary)':'var(--border)'}; background:${isActive?'var(--primary)':'white'}; color:${isActive?'white':'var(--muted)'}; cursor:pointer; font-family:var(--font-main); min-height:auto; font-weight:700; transition:0.15s;">${label}</button>`;
+    });
+    periodoHtml += `</div>`;
+
+    // Campos personalizados (visíveis apenas no modo custom)
+    periodoHtml += `<div id="ocupacao-custom-range" style="display:${periodo==='custom'?'flex':'none'}; gap:8px; align-items:center; margin-bottom:10px; width:100%; flex-wrap:nowrap;">
+        <div style="flex:1;">
+            <input type="date" id="ocup-data-ini" value="${window.ocupacaoPeriodoCustomIni||''}" onchange="window.ocupacaoPeriodoCustomIni=this.value; window.renderOcupacaoDiaria('${prestadorNome||''}', ${tecnicoId||'null'})" style="width:100%; padding:5px 8px; border:1.5px solid var(--border); border-radius:6px; font-size:0.75rem; font-family:var(--font-main); height:auto; margin:0;">
+        </div>
+        <span style="font-size:0.75rem; color:var(--muted); flex-shrink:0;">até</span>
+        <div style="flex:1;">
+            <input type="date" id="ocup-data-fim" value="${window.ocupacaoPeriodoCustomFim||''}" onchange="window.ocupacaoPeriodoCustomFim=this.value; window.renderOcupacaoDiaria('${prestadorNome||''}', ${tecnicoId||'null'})" style="width:100%; padding:5px 8px; border:1.5px solid var(--border); border-radius:6px; font-size:0.75rem; font-family:var(--font-main); height:auto; margin:0;">
+        </div>
+    </div>`;
+
+if (userRole !== 'PRESTADOR') {
         containerFiltros.style.display = 'block';
         let pObj = prestadorNome ? prestadores.find(p => p.nome === prestadorNome) : null;
         let qtdTec = pObj ? (parseInt(pObj.qtdtecnicos) || 1) : 1;
-        let selectPrest = `<select id="sel-ocup-prest" onchange="window.renderOcupacaoDiaria(this.value||null,null)" style="width:100%;padding:7px 10px;font-size:0.8rem;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:white;font-family:var(--font-main);font-weight:700;color:var(--text);cursor:pointer;margin-bottom:${pObj&&qtdTec>1?'8px':'0'};">`;
+        let selectPrest = `<select id="sel-ocup-prest" onchange="window.renderOcupacaoDiaria(this.value||null,null)" style="width:100%;padding:7px 10px;font-size:0.8rem;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:white;font-family:var(--font-main);font-weight:700;color:var(--text);cursor:pointer;margin-bottom:8px;">`;
         selectPrest += `<option value="">— Todos os Prestadores —</option>`;
         prestadores.forEach(p => { selectPrest += `<option value="${p.nome}" ${p.nome === prestadorNome ? 'selected' : ''}>${p.nome}</option>`; });
         selectPrest += `</select>`;
-        
+
         let selectTec = '';
         if (pObj && qtdTec > 1) {
-            selectTec = `<div id="sel-ocup-tec" style="display:flex; gap:6px; overflow-x:auto; padding:6px 0; flex-wrap:nowrap;">`;
+            selectTec = `<div id="sel-ocup-tec" style="display:flex; gap:6px; overflow-x:auto; padding:6px 0; flex-wrap:nowrap; margin-bottom:6px;">`;
             for (let t = 1; t <= qtdTec; t++) {
                 let nomeTec = window.getNomeTecnico(pObj, t);
                 let isSelected = tecnicoId == t;
                 selectTec += `<button onclick="window.toggleTecOcupacao(${t},'${prestadorNome}')" id="btn-ocup-tec-${t}" data-ativo="${isSelected?'1':'0'}" style="padding:5px 12px;font-size:0.75rem;border-radius:14px;border:1px solid var(--border);background:${isSelected?'var(--primary)':'white'};color:${isSelected?'white':'var(--muted)'};white-space:nowrap;cursor:pointer;font-family:var(--font-main);min-height:auto;font-weight:700;flex-shrink:0;">${nomeTec}</button>`;
             }
-            
             let hasOrphans = false;
             let dHoje = new Date();
             for(let i=0; i<15; i++) {
@@ -5248,32 +5374,95 @@ window.renderOcupacaoDiaria = function(prestadorNome, tecnicoId) {
                 let isSelected = tecnicoId == 0;
                 selectTec += `<button onclick="window.toggleTecOcupacao(0,'${prestadorNome}')" id="btn-ocup-tec-0" data-ativo="${isSelected?'1':'0'}" style="padding:5px 12px;font-size:0.75rem;border-radius:14px;border:1px solid var(--cobli-red);background:${isSelected?'var(--cobli-red)':'#fee2e2'};color:${isSelected?'white':'var(--cobli-red)'};white-space:nowrap;cursor:pointer;font-family:var(--font-main);min-height:auto;font-weight:800;flex-shrink:0;">Ex-Técnicos</button>`;
             }
-            
             selectTec += `</div>`;
         }
-        containerFiltros.innerHTML = selectPrest + selectTec;
+        
+        // 👇 AQUI ENTRA O BOTÃO PARA GESTORES/SMARTOPS
+        let btnToggleHtml = `<div style="display:flex; justify-content:flex-end; margin-bottom:8px;">
+            <button id="btn-toggle-filtros-ocup" onclick="window.toggleFiltrosOcupacao()" style="background:var(--bg); border:1px solid var(--border); color:var(--muted); font-size:0.65rem; font-weight:700; padding:4px 10px; border-radius:12px; min-height:auto; cursor:pointer; transition:0.2s;">Filtros 🔼</button>
+        </div>`;
+        containerFiltros.innerHTML = btnToggleHtml + `<div id="ocupacao-filtros-conteudo">` + periodoHtml + selectPrest + selectTec + `</div>`;
+        
     } else {
-        containerFiltros.style.display = 'none';
+        containerFiltros.style.display = 'block';
+        
+        // 👇 AQUI ENTRA O BOTÃO PARA PRESTADORES
+        let btnToggleHtml = `<div style="display:flex; justify-content:flex-end; margin-bottom:8px;">
+            <button id="btn-toggle-filtros-ocup" onclick="window.toggleFiltrosOcupacao()" style="background:var(--bg); border:1px solid var(--border); color:var(--muted); font-size:0.65rem; font-weight:700; padding:4px 10px; border-radius:12px; min-height:auto; cursor:pointer; transition:0.2s;">Filtros 🔼</button>
+        </div>`;
+        containerFiltros.innerHTML = btnToggleHtml + `<div id="ocupacao-filtros-conteudo">` + periodoHtml + `</div>`;
+        
         if (window.meuPrestadorLogado) prestadorNome = window.meuPrestadorLogado.nome;
         else { containerLista.innerHTML = `<div style="font-size:0.85rem;color:var(--muted);">Conta não vinculada.</div>`; return; }
     }
 
     function linhaOcupacao(o) {
-        let bgPill='#e8ecff'; let colorPill='var(--primary)';
-        if(o.pct>=80){bgPill='#fee2e2';colorPill='var(--cobli-red)';}else if(o.pct>=50){bgPill='#fef3c7';colorPill='#d97706';}
-        return `<div style="display:flex;justify-content:space-between;align-items:center;background:var(--bg);padding:10px 12px;border-radius:var(--radius-sm);border:1px solid var(--border);">
-            <div style="font-size:0.78rem;font-weight:700;color:var(--cobli-dark);width:85px;font-family:var(--font-mono);">${o.data.substring(0,5)} <span style="color:var(--muted);font-weight:400;">(${o.dia})</span></div>
-            <div style="font-size:0.72rem;color:var(--muted);flex:1;text-align:center;"><span style="color:var(--cobli-green);font-weight:700;">${o.livres}h livres</span> <span style="opacity:0.4;">|</span> <span style="color:var(--cobli-red);font-weight:700;">${o.ocupadas}h ocup.</span></div>
-            <div style="font-size:0.82rem;font-weight:800;color:${colorPill};background:${bgPill};padding:4px 10px;border-radius:5px;min-width:42px;text-align:center;font-family:var(--font-mono);">${o.pct}%</div>
+        let bgPill='#e8ecff'; let colorPill='var(--primary)'; let barColor='var(--primary)';
+        if (o.pct >= 80) { bgPill='#fee2e2'; colorPill='var(--cobli-red)'; barColor='var(--cobli-red)'; }
+        else if (o.pct >= 50) { bgPill='#fef3c7'; colorPill='#d97706'; barColor='#f59e0b'; }
+        
+        return `<div style="background:var(--bg);padding:10px 12px;border-radius:var(--radius-sm);border:1px solid var(--border);margin-bottom:6px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                <div style="font-size:0.78rem;font-weight:700;color:var(--cobli-dark);width:85px;font-family:var(--font-mono);">${o.data.substring(0,5)} <span style="color:var(--muted);font-weight:400;">(${o.dia})</span></div>
+                <div style="font-size:0.72rem;color:var(--muted);flex:1;text-align:center;"><span style="color:var(--cobli-green);font-weight:700;">${o.livres}h livres</span> <span style="opacity:0.4;">|</span> <span style="color:var(--cobli-red);font-weight:700;">${o.ocupadas}h ocup.</span></div>
+                <div style="font-size:0.82rem;font-weight:800;color:${colorPill};background:${bgPill};padding:4px 10px;border-radius:5px;min-width:42px;text-align:center;font-family:var(--font-mono);">${o.pct}%</div>
+            </div>
+            <div style="height:4px;background:rgba(0,27,184,0.06);border-radius:2px;overflow:hidden;">
+                <div style="height:100%;width:${o.pct}%;background:${barColor};border-radius:2px;transition:width .4s ease;"></div>
+            </div>
         </div>`;
+    }
+
+    // ── Calcula o range de datas do período ──────────────────────────────
+    function getDiasRange() {
+        if (periodo === 'custom') {
+            if (!window.ocupacaoPeriodoCustomIni || !window.ocupacaoPeriodoCustomFim) return { tipo: 'dias', qtd: 15 };
+            return { tipo: 'range', ini: window.ocupacaoPeriodoCustomIni, fim: window.ocupacaoPeriodoCustomFim };
+        }
+        return { tipo: 'dias', qtd: parseInt(periodo) };
+    }
+
+    function calcularOcupacaoRange(pNome) {
+        let p = prestadores.find(x => x.nome === pNome); if (!p) return [];
+        let resultado = [];
+        const diasSemana = ["Dom","Seg","Ter","Qua","Qui","Sex","Sab"];
+        let range = getDiasRange();
+        let datas = [];
+
+        if (range.tipo === 'range') {
+            let cur = new Date(range.ini + 'T00:00:00');
+            let fim = new Date(range.fim + 'T00:00:00');
+            while (cur <= fim) { datas.push(new Date(cur)); cur.setDate(cur.getDate() + 1); }
+        } else {
+            let hoje = new Date();
+            for (let i = 0; i < range.qtd; i++) { let d = new Date(); d.setDate(hoje.getDate() + i); datas.push(d); }
+        }
+
+        datas.forEach(d => {
+            let dStr = d.toLocaleDateString('pt-BR');
+            let dNome = diasSemana[d.getDay()];
+            let stats = window.getOcupacaoReal(p, dStr, dNome);
+            if (stats.geral.total > 0 || stats.geral.ocupadas > 0) {
+                resultado.push({ data: dStr, dia: dNome, livres: stats.geral.livres, ocupadas: stats.geral.ocupadas, total: Math.max(stats.geral.total, stats.geral.ocupadas), pct: stats.geral.pct });
+            }
+        });
+        return resultado;
     }
 
     let cardTec = document.getElementById('card-ocupacao-tecnicos');
 
     if (!prestadorNome && userRole !== 'PRESTADOR') {
+        let range = getDiasRange();
+        let datas = [];
+        const diasSemana2 = ["Dom","Seg","Ter","Qua","Qui","Sex","Sab"];
+        if (range.tipo === 'range') {
+            let cur = new Date(range.ini + 'T00:00:00'); let fim = new Date(range.fim + 'T00:00:00');
+            while (cur <= fim) { datas.push(new Date(cur)); cur.setDate(cur.getDate() + 1); }
+        } else { let hoje = new Date(); for (let i = 0; i < range.qtd; i++) { let d = new Date(); d.setDate(hoje.getDate() + i); datas.push(d); } }
+
         let diasMap = {};
         prestadores.forEach(p => {
-            calcularOcupacao(p.nome).forEach(o => {
+            calcularOcupacaoRange(p.nome).forEach(o => {
                 if (!diasMap[o.data]) diasMap[o.data] = {data:o.data,dia:o.dia,livres:0,ocupadas:0,total:0};
                 diasMap[o.data].livres += o.livres; diasMap[o.data].ocupadas += o.ocupadas; diasMap[o.data].total += o.total;
             });
@@ -5288,101 +5477,71 @@ window.renderOcupacaoDiaria = function(prestadorNome, tecnicoId) {
     if (tecnicoId !== null && prestadorNome && userRole !== 'PRESTADOR') {
         let pO = prestadores.find(p=>p.nome===prestadorNome);
         if (!pO) { containerLista.innerHTML=''; return; }
-        let hoje = new Date(); const ds = ["Dom","Seg","Ter","Qua","Qui","Sex","Sab"]; let resultado = [];
-        for(let i=0; i<15; i++){
-            let d=new Date(); d.setDate(hoje.getDate()+i); let dStr=d.toLocaleDateString('pt-BR'); let dNome=ds[d.getDay()];
+        let range = getDiasRange();
+        let datas = [];
+        const diasSemana3 = ["Dom","Seg","Ter","Qua","Qui","Sex","Sab"];
+        if (range.tipo === 'range') {
+            let cur = new Date(range.ini + 'T00:00:00'); let fim = new Date(range.fim + 'T00:00:00');
+            while (cur <= fim) { datas.push(new Date(cur)); cur.setDate(cur.getDate() + 1); }
+        } else { let hoje = new Date(); for (let i = 0; i < range.qtd; i++) { let d = new Date(); d.setDate(hoje.getDate() + i); datas.push(d); } }
+
+        let resultado = [];
+        datas.forEach(d => {
+            let dStr = d.toLocaleDateString('pt-BR'); let dNome = diasSemana3[d.getDay()];
             let stats = window.getOcupacaoReal(pO, dStr, dNome);
             let tStats = stats.tecnicos[tecnicoId];
             if (tStats && (tStats.total > 0 || tStats.ocupadas > 0)) {
                 resultado.push({data:dStr, dia:dNome, livres:tStats.livres, ocupadas:tStats.ocupadas, total:Math.max(tStats.total, tStats.ocupadas), pct:tStats.pct});
             }
-        }
+        });
         containerLista.innerHTML = resultado.length===0 ? `<div style="font-size:0.82rem;color:var(--muted);padding:10px;">Sem agenda para este técnico.</div>` : resultado.map(linhaOcupacao).join('');
         if(cardTec) cardTec.style.display='none';
         return;
     }
 
-    let ocupacao = calcularOcupacao(prestadorNome);
+    let ocupacao = calcularOcupacaoRange(prestadorNome);
     containerLista.innerHTML = ocupacao.length===0 ? `<div style="font-size:0.82rem;color:var(--muted);padding:10px;">Sem agenda configurada.</div>` : ocupacao.map(linhaOcupacao).join('');
 
     if (userRole === 'PRESTADOR' && window.meuPrestadorLogado) {
         let pObj = window.meuPrestadorLogado; let qtd = parseInt(pObj.qtdtecnicos) || 1;
         if (qtd > 1 && cardTec) {
             cardTec.style.display = 'flex';
-            let tituloEl = document.getElementById('titulo-ocupacao-tecnicos'); if(tituloEl) tituloEl.textContent='Por Técnico (15 Dias)';
+            let tituloEl = document.getElementById('titulo-ocupacao-tecnicos'); if(tituloEl) tituloEl.textContent='Por Técnico';
             let tabsEl = document.getElementById('tabs-ocupacao-tecnicos');
-            if (tabsEl) { 
-                tabsEl.innerHTML=''; 
+            if (tabsEl) {
+                tabsEl.innerHTML='';
                 for(let t=1;t<=qtd;t++){
                     let nome=window.getNomeTecnico(pObj,t);
                     tabsEl.innerHTML+=`<button onclick="window.renderOcupacaoPorTecnico(${t})" id="tab-tec-ocup-${t}" style="padding:4px 10px;font-size:0.72rem;border-radius:14px;border:1px solid var(--border);background:${t===1?'var(--primary)':'white'};color:${t===1?'white':'var(--muted)'};white-space:nowrap;cursor:pointer;font-family:var(--font-main);min-height:auto;font-weight:700;">${nome}</button>`;
                 }
-                
-                let hasOrphans = false;
-                let dHoje = new Date();
-                for(let i=0; i<15; i++) {
-                    let d = new Date(); d.setDate(dHoje.getDate()+i);
-                    let s = window.getOcupacaoReal(pObj, d.toLocaleDateString('pt-BR'), ["Dom","Seg","Ter","Qua","Qui","Sex","Sab"][d.getDay()]);
-                    if(s.tecnicos[0] && s.tecnicos[0].ocupadas > 0) hasOrphans = true;
-                }
-                if(hasOrphans) {
-                    tabsEl.innerHTML+=`<button onclick="window.renderOcupacaoPorTecnico(0)" id="tab-tec-ocup-0" style="padding:4px 10px;font-size:0.72rem;border-radius:14px;border:1px solid var(--cobli-red);background:#fee2e2;color:var(--cobli-red);white-space:nowrap;cursor:pointer;font-family:var(--font-main);min-height:auto;font-weight:800;">Ex-Técnicos</button>`;
-                }
+                let hasOrphans2 = false; let dHoje2 = new Date();
+                for(let i=0; i<15; i++) { let d=new Date(); d.setDate(dHoje2.getDate()+i); let s=window.getOcupacaoReal(pObj,d.toLocaleDateString('pt-BR'),["Dom","Seg","Ter","Qua","Qui","Sex","Sab"][d.getDay()]); if(s.tecnicos[0]&&s.tecnicos[0].ocupadas>0) hasOrphans2=true; }
+                if(hasOrphans2) tabsEl.innerHTML+=`<button onclick="window.renderOcupacaoPorTecnico(0)" id="tab-tec-ocup-0" style="padding:4px 10px;font-size:0.72rem;border-radius:14px;border:1px solid var(--cobli-red);background:#fee2e2;color:var(--cobli-red);white-space:nowrap;cursor:pointer;font-family:var(--font-main);min-height:auto;font-weight:800;">Ex-Técnicos</button>`;
             }
             window.renderOcupacaoPorTecnico(1);
         } else if(cardTec) { cardTec.style.display='none'; }
     } else if(cardTec) { cardTec.style.display='none'; }
 };
 
-window.toggleTecOcupacao = function(tecId, prestadorNome) {
-    let btn = document.getElementById(`btn-ocup-tec-${tecId}`);
-    let atualAtivo = btn && btn.dataset.ativo === '1';
-    if (atualAtivo) window.renderOcupacaoDiaria(prestadorNome, null);
-    else window.renderOcupacaoDiaria(prestadorNome, tecId);
+// Função auxiliar para trocar período
+window.mudarPeriodoOcupacao = function(valor, prestadorAtual) {
+    window.ocupacaoPeriodo = isNaN(parseInt(valor)) ? valor : parseInt(valor);
+    if (valor !== 'custom') { window.ocupacaoPeriodoCustomIni = null; window.ocupacaoPeriodoCustomFim = null; }
+    window.renderOcupacaoDiaria(prestadorAtual || null, null);
 };
 
-window.renderOcupacaoPorTecnico = function(tecId) {
-    let pObj = window.meuPrestadorLogado; if (!pObj) return;
-    let qtd = parseInt(pObj.qtdtecnicos) || 1;
-    let hoje = new Date(); const diasSemana = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sab"];
-    let resultado = [];
-    for (let i = 0; i < 15; i++) {
-        let d = new Date(); d.setDate(hoje.getDate() + i); let dStr = d.toLocaleDateString('pt-BR'); let dNome = diasSemana[d.getDay()];
-        let stats = window.getOcupacaoReal(pObj, dStr, dNome);
-        let tStats = stats.tecnicos[tecId];
-        if (tStats && (tStats.total > 0 || tStats.ocupadas > 0)) {
-            resultado.push({data:dStr, dia:dNome, livres:tStats.livres, ocupadas:tStats.ocupadas, total:Math.max(tStats.total, tStats.ocupadas), pct:tStats.pct});
-        }
+    window.toggleFiltrosOcupacao = function() {
+    let conteudo = document.getElementById('ocupacao-filtros-conteudo');
+    let btn = document.getElementById('btn-toggle-filtros-ocup');
+    if (conteudo.style.display === 'none') {
+        conteudo.style.display = 'block';
+        btn.innerHTML = 'Filtros 🔼';
+    } else {
+        conteudo.style.display = 'none';
+        btn.innerHTML = 'Filtros 🔽';
     }
-    
-    for (let t = 0; t <= qtd; t++) {
-        let btn = document.getElementById(`tab-tec-ocup-${t}`);
-        if (btn) { 
-            if (t === 0) {
-                btn.style.background = t === tecId ? 'var(--cobli-red)' : '#fee2e2'; 
-                btn.style.color = t === tecId ? 'white' : 'var(--cobli-red)';
-            } else {
-                btn.style.background = t === tecId ? 'var(--primary)' : 'white'; 
-                btn.style.color = t === tecId ? 'white' : 'var(--muted)'; 
-            }
-        }
-    }
-    
-    let lista = document.getElementById('ocupacao-tecnicos-lista');
-    if (!lista) return;
-    if (resultado.length === 0) { lista.innerHTML = `<div style="font-size:0.82rem; color:var(--muted); padding:10px;">Sem agenda para este técnico.</div>`; return; }
-    
-    lista.innerHTML = resultado.map(o => {
-        let bgPill = '#e8ecff'; let colorPill = 'var(--primary)';
-        if (o.pct >= 80) { bgPill = '#fee2e2'; colorPill = 'var(--cobli-red)'; } else if (o.pct >= 50) { bgPill = '#fef3c7'; colorPill = '#d97706'; }
-        return `<div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg); padding: 10px 12px; border-radius: var(--radius-sm); border: 1px solid var(--border);">
-            <div style="font-size: 0.78rem; font-weight: 700; color: var(--cobli-dark); width: 85px; font-family:var(--font-mono);">${o.data.substring(0,5)} <span style="color:var(--muted); font-weight:400;">(${o.dia})</span></div>
-            <div style="font-size: 0.72rem; color: var(--muted); flex:1; text-align:center;"><span style="color:var(--cobli-green); font-weight:700;">${o.livres}h livres</span> <span style="opacity:0.4;">|</span> <span style="color:var(--cobli-red); font-weight:700;">${o.ocupadas}h ocup.</span></div>
-            <div style="font-size: 0.82rem; font-weight: 800; color: ${colorPill}; background: ${bgPill}; padding: 4px 10px; border-radius: 5px; min-width:42px; text-align:center; font-family:var(--font-mono);">${o.pct}%</div>
-        </div>`;
-    }).join('');
 };
-
+    
 // ==========================================
 // PAINEL (C/ FILTROS DINÂMICOS E DETALHES DE STATUS)
 // ==========================================
@@ -5750,60 +5909,31 @@ window.renderDashboard = function() {
     let isPrestadorDashboard = (userRole === 'PRESTADOR');
     let nomeLogado = currentUser ? extrairNomeDoEmail(currentUser.email).toLowerCase() : '';
     let totalAgend = 0, concluidosCount = 0, programadosCount = 0;
-    
-    // 👇 ADICIONADO A VARIÁVEL distSolicitante AQUI 👇
     let distPrest = {}, distServ = {}, distLocais = {}, distSolicitante = {}, totalServicosGeral = 0;
 
-    // Lemos de filtradosPainel para que o Dashboard seja DINÂMICO de acordo com os filtros!
     filtradosPainel.forEach(a => {
-        if (isUserDashboard) { 
-            let sol = String(a.solicitante || '').toLowerCase(); 
-            if (!sol.includes(nomeLogado)) return; 
-        }
-        
+        if (isUserDashboard) { let sol = String(a.solicitante || '').toLowerCase(); if (!sol.includes(nomeLogado)) return; }
         if (isPrestadorDashboard) { 
             if (!window.meuPrestadorLogado) return;
-            let nomeAgend = String(a.prestador || '').trim().toUpperCase();
-            let nomeMeu = String(window.meuPrestadorLogado.nome || '').trim().toUpperCase();
-            if (nomeAgend !== nomeMeu) return; 
+            if (String(a.prestador||'').trim().toUpperCase() !== String(window.meuPrestadorLogado.nome||'').trim().toUpperCase()) return; 
         }
-        
         totalAgend++;
         let status = a.status ? String(a.status).toLowerCase() : '';
         if (status.includes('conclu') || status.includes('completed') || status.includes('finalizado') || status.includes('impedido')) concluidosCount++;
         if (status.includes('agendado') || status.includes('scheduled')) programadosCount++;
-        
         if(a.prestador) distPrest[a.prestador] = (distPrest[a.prestador] || 0) + 1;
         if(a.cidade && a.uf) { let local = `${a.cidade}/${a.uf}`.toUpperCase(); distLocais[local] = (distLocais[local] || 0) + 1; }
-
-        // 👇 CONTAGEM DOS SOLICITANTES AQUI 👇
         let nomeSol = a.solicitante ? window.formatarCapitalize(a.solicitante) : 'Desconhecido';
         distSolicitante[nomeSol] = (distSolicitante[nomeSol] || 0) + 1;
-
         let txtRaw = a.produtos_texto || a.produtos || '';
         let txtServicos = txtRaw;
-        
-        // Corta tudo que estiver de "Observações:" para baixo
-        if (txtRaw.toLowerCase().includes('observações:')) { 
-            txtServicos = txtRaw.split(/observações:/i)[0].trim(); 
-        }
-
+        if (txtRaw.toLowerCase().includes('observações:')) { txtServicos = txtRaw.split(/observações:/i)[0].trim(); }
         if (txtServicos.length > 0) {
-            let linhas = txtServicos.split('\n');
-            linhas.forEach(linha => {
-                let limpo = linha.replace('•', '').trim(); 
-                if (!limpo) return; 
-                
-                let qtd = 1; 
-                let matchQtd = linha.match(/Qtd:\s*(\d+)/i); 
-                if (matchQtd) qtd = parseInt(matchQtd[1]) || 1;
-
+            txtServicos.split('\n').forEach(linha => {
+                let limpo = linha.replace('•', '').trim(); if (!limpo) return;
+                let qtd = 1; let matchQtd = linha.match(/Qtd:\s*(\d+)/i); if (matchQtd) qtd = parseInt(matchQtd[1]) || 1;
                 let nomeServico = limpo.replace(/\s*\([^)]*\)/g, '').trim();
-                
-                if (nomeServico && nomeServico.startsWith('[')) {
-                    distServ[nomeServico] = (distServ[nomeServico] || 0) + qtd; 
-                    totalServicosGeral += qtd; 
-                }
+                if (nomeServico && nomeServico.startsWith('[')) { distServ[nomeServico] = (distServ[nomeServico] || 0) + qtd; totalServicosGeral += qtd; }
             });
         }
     });
@@ -5811,24 +5941,20 @@ window.renderDashboard = function() {
     document.getElementById("dash-agend").innerText = totalAgend;
     document.getElementById("dash-concluidos").innerText = concluidosCount;
     document.getElementById("dash-programados").innerText = programadosCount;
-    
+
+    // ── Equipe técnica (PRESTADOR) ─────────────────────────────────────────
     let cardProdTec = document.getElementById('card-prod-tecnicos');
-    
     if (isPrestadorDashboard && window.meuPrestadorLogado) {
         cardProdTec.style.display = 'block';
         let pObj = window.meuPrestadorLogado;
         let contagemProducaoTecnico = {};
-        
         let qtdAtivos = parseInt(pObj.qtdtecnicos) || 0;
-        let nomesAtivos = [];
-        for(let i=1; i <= qtdAtivos; i++) {
+        for(let i=1; i<=qtdAtivos; i++) {
             if (window.isTecnicoAtivo(pObj, i)) {
                 let nomeTec = window.getNomeTecnico(pObj, i).trim();
-                nomesAtivos.push(nomeTec.toLowerCase());
                 contagemProducaoTecnico[nomeTec] = { nome: nomeTec, count: 0, isAtivo: true };
             }
         }
-
         filtradosPainel.forEach(a => {
             if (a.prestador !== pObj.nome) return;
             let tecAlocado = a.tecnico_alocado || "Não Alocado";
@@ -5836,74 +5962,355 @@ window.renderDashboard = function() {
             if (!contagemProducaoTecnico[tecAlocado]) contagemProducaoTecnico[tecAlocado] = { nome: tecAlocado, count: 0, isAtivo: false };
             contagemProducaoTecnico[tecAlocado].count++;
         });
-
+        let techsOrdenados = Object.values(contagemProducaoTecnico).sort((a,b) => { if (a.isAtivo === b.isAtivo) return b.count - a.count; return a.isAtivo ? -1 : 1; });
         let listaTecHtml = '';
-        let techsOrdenados = Object.values(contagemProducaoTecnico).sort((a,b) => {
-            if (a.isAtivo === b.isAtivo) return b.count - a.count;
-            return a.isAtivo ? -1 : 1; 
-        });
-
         techsOrdenados.forEach(item => {
             if (!item.isAtivo && item.count === 0 && item.nome !== "Não Alocado") return;
             let estilo = item.isAtivo ? "font-weight:700;" : "text-decoration:line-through; color: var(--cobli-red); opacity:0.8;";
-            let tag = item.isAtivo ? "" : " <span style='font-size:0.6rem; background:#fee2e2; color:var(--cobli-red); padding:2px 5px; border-radius:4px; font-weight:800; margin-left: 5px;'>EX-TÉCNICO</span>";
-            listaTecHtml += `<div style="display:flex; justify-content:space-between; padding:8px 12px; background:var(--bg); border-radius:6px; margin-bottom:4px; border:1px solid var(--border);">
-                <div style="font-size:0.8rem; ${estilo}">👷 ${item.nome}${tag}</div>
-                <div style="font-size:0.85rem; font-weight:800; color:var(--primary);">${item.count} OSs</div>
-            </div>`;
+            let tag = item.isAtivo ? "" : " <span style=\'font-size:0.6rem; background:#fee2e2; color:var(--cobli-red); padding:2px 5px; border-radius:4px; font-weight:800; margin-left: 5px;\'>EX-TÉCNICO</span>";
+            listaTecHtml += `<div style="display:flex; justify-content:space-between; padding:8px 12px; background:var(--bg); border-radius:6px; margin-bottom:4px; border:1px solid var(--border);"><div style="font-size:0.8rem; ${estilo}">👷 ${item.nome}${tag}</div><div style="font-size:0.85rem; font-weight:800; color:var(--primary);">${item.count} OSs</div></div>`;
         });
         document.getElementById('lista-prod-tecnicos').innerHTML = listaTecHtml;
-    } else {
-        cardProdTec.style.display = 'none';
-    }
-    
-    if(myChart) myChart.destroy();
-    const ctxPrest = document.getElementById('chartPrestadores');
-    if (ctxPrest) {
-        myChart = new Chart(ctxPrest.getContext('2d'), {
-            type: 'bar',
-            data: { labels: Object.keys(distPrest), datasets: [{ label: 'Agendamentos', data: Object.values(distPrest), backgroundColor: '#001BB8', borderRadius: 5 }] },
-            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, datalabels: { anchor: 'center', align: 'center', color: 'white', font: {weight: 'bold', size: 12}, formatter: (v) => v } }, scales: { y: { beginAtZero: true } } },
-            plugins: [ChartDataLabels]
-        });
+    } else { cardProdTec.style.display = 'none'; }
+
+    // ── Função auxiliar: linha de ranking com barra proporcional ─────────────
+    function linhaRanking(nome, valor, total, cor, badge) {
+        let pct = total > 0 ? Math.round((valor / total) * 100) : 0;
+        let badgeHtml = badge ? `<span style="font-size:0.55rem;font-weight:800;padding:1px 5px;border-radius:3px;background:#fef3c7;color:#b45309;margin-left:5px;">${badge}</span>` : '';
+        return `<div style="padding:8px 0 6px;border-bottom:1px solid var(--border);">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;">
+                <div style="font-size:0.78rem;font-weight:600;color:var(--cobli-dark);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${nome}${badgeHtml}</div>
+                <div style="font-size:0.82rem;font-weight:800;color:${cor};font-family:var(--font-mono);margin-left:10px;flex-shrink:0;">${valor} <span style="font-size:0.6rem;color:var(--muted);font-weight:700;">(${pct}%)</span></div>
+            </div>
+            <div style="height:4px;background:var(--border);border-radius:2px;overflow:hidden;"><div style="height:100%;width:${pct}%;background:${cor};border-radius:2px;transition:width .4s ease;"></div></div>
+        </div>`;
     }
 
-    let servicosOrdenados = Object.entries(distServ).sort((a,b) => b[1] - a[1]);
-    let listaHtml = servicosOrdenados.map(s => {
+    // ── 1. Prestadores — ranking com barra ───────────────────────────────────
+    let prestOrdenados = Object.entries(distPrest).sort((a,b) => b[1]-a[1]);
+    let totalPrest = Object.values(distPrest).reduce((s,v)=>s+v,0);
+    let elPrest = document.getElementById('lista-dist-prestadores');
+    if (elPrest) elPrest.innerHTML = prestOrdenados.map((p,i) => linhaRanking(p[0],p[1],totalPrest,'var(--primary)',i===0?'★ líder':null)).join('') || '<div style="font-size:0.82rem;color:var(--muted);">Sem dados.</div>';
+
+    // ── 2. Localidades — ranking com barra ──────────────────────────────────
+    let locaisOrdenados = Object.entries(distLocais).sort((a,b) => b[1]-a[1]).slice(0,10);
+    let totalLocais = locaisOrdenados.reduce((s,[,v])=>s+v,0);
+    let elLocais = document.getElementById('lista-dist-locais');
+    if (elLocais) elLocais.innerHTML = locaisOrdenados.map((l,i) => linhaRanking(l[0],l[1],totalLocais,'var(--cobli-green)',i===0?'★ top':null)).join('') || '<div style="font-size:0.82rem;color:var(--muted);">Sem dados.</div>';
+
+    // ── 3. Serviços — badge de tipo + barra separada ─────────────────────────
+    let servicosOrdenados = Object.entries(distServ).sort((a,b) => b[1]-a[1]);
+    let listaServHtml = servicosOrdenados.map(s => {
         let pct = totalServicosGeral > 0 ? Math.round((s[1] / totalServicosGeral) * 100) : 0;
-        return `<div style="display:flex; justify-content:space-between; align-items:center; background: linear-gradient(90deg, #e8ecff ${pct}%, var(--bg) ${pct}%); padding:10px 12px; border-radius:var(--radius-sm); border:1px solid var(--border); margin-bottom:4px;">
-            <div style="font-size:0.78rem; font-weight:600; color:var(--cobli-dark); flex:1; text-shadow: 1px 1px 0px rgba(255,255,255,0.7);">${s[0]}</div>
-            <div style="font-size:0.88rem; font-weight:800; color:var(--primary); background:rgba(255,255,255,0.6); padding:2px 8px; border-radius:5px; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">${s[1]} <span style="font-size:0.6rem; color:var(--muted); font-weight:700;">(${pct}%)</span></div>
+        let match = s[0].match(/^\[([^\]]+)\]\s*(.*)/);
+        let tipo = match ? match[1] : ''; let nomeServ = match ? match[2] : s[0];
+        let tipoColors = {'INSTALAÇÃO':['#dcfce7','#15803d'],'DESINSTALAÇÃO':['#fee2e2','#dc2626'],'UPGRADE':['#fef3c7','#b45309'],'MANUTENÇÃO':['#ede9fe','#6d28d9']};
+        let [tcBg, tcText] = tipoColors[tipo.toUpperCase()] || ['#f1f5f9','#64748b'];
+        return `<div style="padding:8px 0 6px;border-bottom:1px solid var(--border);">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:5px;">
+                <div style="flex:1;min-width:0;">${tipo?`<span style="font-size:0.55rem;font-weight:800;padding:1px 6px;border-radius:3px;background:${tcBg};color:${tcText};display:inline-block;margin-bottom:3px;">${tipo}</span>`:''}<div style="font-size:0.78rem;font-weight:600;color:var(--cobli-dark);line-height:1.3;">${nomeServ}</div></div>
+                <div style="font-size:0.82rem;font-weight:800;color:var(--primary);font-family:var(--font-mono);flex-shrink:0;">${s[1]} <span style="font-size:0.6rem;color:var(--muted);font-weight:700;">(${pct}%)</span></div>
+            </div>
+            <div style="height:4px;background:var(--border);border-radius:2px;overflow:hidden;"><div style="height:100%;width:${pct}%;background:var(--primary);border-radius:2px;transition:width .4s ease;"></div></div>
         </div>`;
     }).join('');
-    if (document.getElementById('lista-dashboard-servicos')) document.getElementById('lista-dashboard-servicos').innerHTML = listaHtml || "Sem dados.";
+    let elServ = document.getElementById('lista-dashboard-servicos');
+    if (elServ) elServ.innerHTML = listaServHtml || "Sem dados.";
 
-    // 👇 RENDERIZAÇÃO DO NOVO CARD DE SOLICITANTES 👇
-    let solOrdenados = Object.entries(distSolicitante).sort((a,b) => b[1] - a[1]);
-    let listaSolHtml = solOrdenados.map(s => {
+    // ── 4. Solicitantes — ranking numerado ───────────────────────────────────
+    let solOrdenados = Object.entries(distSolicitante).sort((a,b) => b[1]-a[1]);
+    let listaSolHtml = solOrdenados.map((s,i) => {
         let pct = totalAgend > 0 ? Math.round((s[1] / totalAgend) * 100) : 0;
-        return `<div style="display:flex; justify-content:space-between; align-items:center; background: linear-gradient(90deg, #e8ecff ${pct}%, var(--bg) ${pct}%); padding:10px 12px; border-radius:var(--radius-sm); border:1px solid var(--border); margin-bottom:4px;">
-            <div style="font-size:0.78rem; font-weight:600; color:var(--cobli-dark); flex:1; text-shadow: 1px 1px 0px rgba(255,255,255,0.7);">${s[0]}</div>
-            <div style="font-size:0.88rem; font-weight:800; color:var(--primary); background:rgba(255,255,255,0.6); padding:2px 8px; border-radius:5px; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">${s[1]} <span style="font-size:0.6rem; color:var(--muted); font-weight:700;">(${pct}%)</span></div>
+        let barCor = i===0?'var(--primary)':i===1?'#4f6ef7':i===2?'var(--cobli-green)':'var(--border)';
+        let avatarBg = i===0?'var(--primary)':i===1?'#e8ecff':i===2?'rgba(0,174,151,0.15)':'var(--bg)';
+        let avatarText = i<2?'white':'var(--muted)';
+        return `<div style="padding:8px 0 6px;border-bottom:1px solid var(--border);">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;">
+                <div style="display:flex;align-items:center;gap:7px;flex:1;min-width:0;">
+                    <div style="width:20px;height:20px;border-radius:50%;background:${avatarBg};display:flex;align-items:center;justify-content:center;flex-shrink:0;"><span style="font-size:0.6rem;font-weight:800;color:${avatarText};">${i+1}</span></div>
+                    <div style="font-size:0.78rem;font-weight:600;color:var(--cobli-dark);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${s[0]}</div>
+                </div>
+                <div style="font-size:0.82rem;font-weight:800;color:var(--primary);font-family:var(--font-mono);margin-left:10px;flex-shrink:0;">${s[1]} <span style="font-size:0.6rem;color:var(--muted);font-weight:700;">(${pct}%)</span></div>
+            </div>
+            <div style="height:4px;background:var(--border);border-radius:2px;overflow:hidden;"><div style="height:100%;width:${pct}%;background:${barCor};border-radius:2px;transition:width .4s ease;"></div></div>
         </div>`;
     }).join('');
-    if (document.getElementById('lista-dashboard-solicitantes')) document.getElementById('lista-dashboard-solicitantes').innerHTML = listaSolHtml || `<div style="font-size:0.85rem; color:var(--muted);">Nenhum dado encontrado.</div>`;
-    // 👆 FIM DA RENDERIZAÇÃO DE SOLICITANTES 👆
+    let elSol = document.getElementById('lista-dashboard-solicitantes');
+    if (elSol) elSol.innerHTML = listaSolHtml || '<div style="font-size:0.85rem;color:var(--muted);">Nenhum dado encontrado.</div>';
 
-    if(chartLocais) chartLocais.destroy();
-    const ctxLocais = document.getElementById('chartLocais');
-    if (ctxLocais) {
-        let locaisOrdenados = Object.entries(distLocais).sort((a,b) => b[1] - a[1]).slice(0, 10);
-        chartLocais = new Chart(ctxLocais.getContext('2d'), {
-            type: 'bar',
-            data: { labels: locaisOrdenados.map(l => l[0]), datasets: [{ label: 'Atendimentos', data: locaisOrdenados.map(l => l[1]), backgroundColor: '#00AE97', borderRadius: 5 }] },
-            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, datalabels: { color: 'white', font: {weight: 'bold'} } } },
-            plugins: [ChartDataLabels]
-        });
-    }
+    // ── 5. Evolução temporal ─────────────────────────────────────────────────
+    window.renderEvolucao(window.evolucaoPeriodoAtual || 15, null);
+
+    // ── 6. Ocupação ──────────────────────────────────────────────────────────
     window.renderOcupacaoDiaria(window.meuPrestadorLogado ? window.meuPrestadorLogado.nome : null);
+
+    // Canvas ocultos — destrói instâncias antigas para não vazar memória
+    if(myChart) { myChart.destroy(); myChart = null; }
+    if(chartLocais) { chartLocais.destroy(); chartLocais = null; }
 };
 
+// ── Evolução temporal (gráfico de linha) ─────────────────────────────────────
+window._chartEvolucao = null;
+window.evolucaoPeriodoAtual = 15; // padrão 15 dias
+
+window.renderEvolucao = function(modo, btn) {
+    window.evolucaoPeriodoAtual = modo;
+    
+    // Atualiza o visual dos botões
+    document.querySelectorAll('#evolucao-periodo-tabs button').forEach(b => {
+        b.style.background = 'white'; b.style.color = 'var(--muted)'; b.style.borderColor = 'var(--border)';
+    });
+    
+    if (btn) {
+        btn.style.background = 'var(--primary)'; btn.style.color = 'white'; btn.style.borderColor = 'var(--primary)';
+    } else {
+        // Se vier de uma atualização de aba, tenta reacender o botão certo
+        let bs = document.querySelectorAll('#evolucao-periodo-tabs button');
+        if (bs.length === 4) {
+            if (modo === 7) { bs[0].style.background='var(--primary)'; bs[0].style.color='white'; bs[0].style.borderColor='var(--primary)'; }
+            else if (modo === 15) { bs[1].style.background='var(--primary)'; bs[1].style.color='white'; bs[1].style.borderColor='var(--primary)'; }
+            else if (modo === 30) { bs[2].style.background='var(--primary)'; bs[2].style.color='white'; bs[2].style.borderColor='var(--primary)'; }
+            else if (modo === 'custom') { bs[3].style.background='var(--primary)'; bs[3].style.color='white'; bs[3].style.borderColor='var(--primary)'; }
+        }
+    }
+
+    // Oculta/Exibe os inputs de data personalizada
+    let customRange = document.getElementById('evolucao-custom-range');
+    if (customRange) customRange.style.display = (modo === 'custom') ? 'flex' : 'none';
+
+    let labels = [], dados = [];
+    let parseData = a => a.created_at ? new Date(a.created_at) : (a.data ? (([d,m,y])=>new Date(y,m-1,d))(a.data.split('/')) : null);
+
+    let datasArray = [];
+    
+    // Gera as datas do eixo X baseadas no período
+    if (modo === 'custom') {
+        let iStr = document.getElementById('evolucao-data-ini')?.value;
+        let fStr = document.getElementById('evolucao-data-fim')?.value;
+        if (!iStr || !fStr) return; // Aguarda o usuário preencher as duas datas
+        
+        let cur = new Date(iStr + 'T00:00:00');
+        let fim = new Date(fStr + 'T00:00:00');
+        while(cur <= fim) { datasArray.push(new Date(cur)); cur.setDate(cur.getDate()+1); }
+    } else {
+        let dias = parseInt(modo) || 15;
+        let hoje = new Date();
+        for(let i = dias - 1; i >= 0; i--) {
+            let d = new Date(hoje);
+            d.setDate(hoje.getDate() - i);
+            datasArray.push(d);
+        }
+    }
+
+    // Calcula os dados de cada dia do array
+    datasArray.forEach(d => {
+        d.setHours(0,0,0,0);
+        let dFim = new Date(d); dFim.setHours(23,59,59,999);
+        
+        labels.push(d.toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit'}));
+        
+        dados.push(filtradosPainel.filter(a => {
+            let dt = parseData(a);
+            return dt && dt >= d && dt <= dFim;
+        }).length);
+    });
+
+    if (window._chartEvolucao) { window._chartEvolucao.destroy(); window._chartEvolucao = null; }
+    const ctx = document.getElementById('chartEvolucao');
+    if (!ctx) return;
+    
+    window._chartEvolucao = new Chart(ctx.getContext('2d'), {
+        type: 'line',
+        data: { labels, datasets: [{ label: 'Agendamentos', data: dados, borderColor: '#001BB8', backgroundColor: 'rgba(0,27,184,0.08)', borderWidth: 2, pointBackgroundColor: '#001BB8', pointRadius: 4, pointHoverRadius: 6, fill: true, tension: 0.4 }] },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            layout: { padding: { top: 28 } },
+            plugins: {
+                legend: { display: false },
+                datalabels: {
+                    anchor: 'end',
+                    align: 'top',
+                    color: '#001BB8',
+                    font: { weight: 'bold', size: 11 },
+                    formatter: v => v > 0 ? v : '',
+                    clip: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: { color: 'rgba(0,0,0,0.05)' },
+                    ticks: { stepSize: 1, font: { size: 11 } }
+                },
+                x: {
+                    grid: { display: false },
+                    ticks: { font: { size: 11 } }
+                }
+            }
+        },
+        plugins: [ChartDataLabels]
+    });
+};
+
+// ── KPI cards — navegar para painel com filtro de status ─────────────────────
+window.irParaPainelComFiltro = function(status) {
+    // 1. Navega para o painel
+    window.trocarAba('painel', document.getElementById('btn-painel'));
+
+    setTimeout(() => {
+        // 2. Limpa todos os checkboxes de status antes
+        document.querySelectorAll('.cb-status').forEach(cb => cb.checked = false);
+
+        // 3. Se passou um status específico, marca só ele
+        if (status) {
+            // Mapeia os valores dos KPI cards para os values dos checkboxes
+            const mapaStatus = {
+                'concluido': 'concluido',
+                'agendado':  'agendado',
+                'impedido':  'impedido',
+                'andamento': 'andamento',
+                'negociacao':'negociacao',
+                'cancelado': 'cancelado',
+                'solicitado':'solicitado'
+            };
+            let valorCb = mapaStatus[status] || status;
+            let cb = document.querySelector(`.cb-status[value="${valorCb}"]`);
+            if (cb) cb.checked = true;
+        }
+        // 4. Re-renderiza o painel com o filtro aplicado
+        window.renderPainel();
+    }, 200);
+};
+
+   function dataURLtoBlob(dataurl) {
+    let arr = dataurl.split(','), mime = arr[0].match(/:(.*?);/)[1],
+        bstr = atob(arr[1]), n = bstr.length, u8arr = new Uint8Array(n);
+    while(n--){ u8arr[n] = bstr.charCodeAt(n); }
+    return new Blob([u8arr], {type:mime});
+}
+
+// Captura a tela de forma segura
+window.gerarImagemDashboard = function() {
+    window.showToast("⏳ Preparando relatório visual... Aguarde.");
+    
+    const dashElement = document.getElementById('dashboard');
+    const btnToolbar = dashElement.querySelector('.dashboard-controls-toolbar');
+    
+    if (btnToolbar) btnToolbar.style.display = 'none';
+
+    // Busca as datas pelos IDs corretos do seu HTML
+    const inputIni = document.getElementById('filtroDataInicio');
+    const inputFim = document.getElementById('filtroDataFim');
+    const dtIni = inputIni && inputIni.value ? inputIni.value.split('-').reverse().join('/') : '';
+    const dtFim = inputFim && inputFim.value ? inputFim.value.split('-').reverse().join('/') : '';
+    const periodoTexto = (dtIni && dtFim) ? `${dtIni} até ${dtFim}` : 'Geral (Sem filtro de data)';
+
+    // Cria o cabeçalho (sem imagem externa para não dar erro de CORS no PC)
+    const reportHeader = document.createElement('div');
+    reportHeader.id = 'temp-report-header';
+    reportHeader.innerHTML = `
+        <div style="display: flex; justify-content: space-between; align-items: center; background-color: #07074E; padding: 20px 30px; border-radius: 8px 8px 0 0; color: white; font-family: sans-serif; margin-bottom: 20px;">
+            <div>
+                <div style="font-size: 1.4rem; font-weight: bold; letter-spacing: -0.5px;">APEX | Cobli</div>
+                <div style="font-size: 0.8rem; color: #00AE97; text-transform: uppercase; font-weight: bold; margin-top: 2px;">Relatório Executivo de Agenda</div>
+            </div>
+            <div style="text-align: right; font-size: 0.8rem; color: #cbd5e1;">
+                <div>PERÍODO:</div>
+                <div style="font-weight: bold; color: white; font-size: 0.95rem;">${periodoTexto}</div>
+                <div style="margin-top: 5px; color: #94a3b8;">Gerado em: ${new Date().toLocaleString('pt-BR')}</div>
+            </div>
+        </div>
+    `;
+    dashElement.prepend(reportHeader);
+
+    // ADICIONADO: Um pequeno delay (750ms) para dar tempo de o HTML temporário e todos os estilos carregarem...
+    setTimeout(() => {
+        // Tira a foto
+        html2canvas(dashElement, {
+            scale: 2, 
+            useCORS: true,
+            allowTaint: true, // Ajuda a evitar erros quando abre via file://
+            backgroundColor: '#eaecf6', // Fixa o fundo para evitar opacidade
+            logging: false
+        }).then(canvas => {
+            if (btnToolbar) btnToolbar.style.display = 'flex';
+            const tempH = document.getElementById('temp-report-header');
+            if (tempH) dashElement.removeChild(tempH);
+            
+            const imgData = canvas.toDataURL('image/png');
+            
+            let html = `
+                <div style="text-align: center;">
+                    <p style="font-size: 0.85rem; color: var(--muted); margin-bottom: 15px; line-height: 1.5;">
+                        A imagem foi gerada com sucesso! Você pode baixar ou enviar direto para o Slack.
+                    </p>
+                    <div style="max-height: 45vh; overflow-y: auto; border: 2px solid var(--primary); border-radius: 8px; margin-bottom: 20px; box-shadow: var(--shadow-md);">
+                        <img src="${imgData}" id="preview-dashboard-img" style="width: 100%; height: auto; display: block;" />
+                    </div>
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                        <button onclick="window.fecharModal()" style="background: var(--muted); flex: 1; min-height: auto;">Fechar</button>
+                        <a href="${imgData}" download="APEX_Dashboard.png" style="flex: 1; text-decoration: none;">
+                            <button style="background: #00AE97; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; min-height: auto;">
+                                <span>📥</span> Baixar
+                            </button>
+                        </a>
+                        <button onclick="window.enviarDashboardSlack()" id="btn-envia-dash-slack" style="background: #4A154B; flex: 1.5; display: flex; align-items: center; justify-content: center; gap: 6px; min-height: auto;">
+                            <span>💬</span> Enviar pro Slack
+                        </button>
+                    </div>
+                </div>
+            `;
+            window.exibirModal("📸 Relatório Visual", html);
+            
+        }).catch(err => {
+            if (btnToolbar) btnToolbar.style.display = 'flex';
+            const tempH = document.getElementById('temp-report-header');
+            if (tempH) dashElement.removeChild(tempH);
+            
+            console.error(err);
+            window.showMessage("❌ Houve um erro ao gerar a imagem. Tente usar a aplicação hospedada ao invés do arquivo local.");
+        });
+    }, 750); // Delay de 750 milissegundos
+};
+
+window.enviarDashboardSlack = async function() {
+    const btn = document.getElementById('btn-envia-dash-slack');
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<span class="icone-girando">⏳</span> Enviando...';
+    btn.disabled = true;
+
+    try {
+        const imgEl = document.getElementById('preview-dashboard-img');
+        const blob = dataURLtoBlob(imgEl.src);
+        const fileName = `resumo_dash_${new Date().getTime()}.png`;
+
+        // Upload pro Supabase
+        const { data, error } = await supabaseClient.storage
+            .from('icones')
+            .upload(`dashboards/${fileName}`, blob, { contentType: 'image/png', upsert: true });
+
+        if (error) throw error;
+
+        // Pega URL Pública
+        const { data: publicUrlData } = supabaseClient.storage.from('icones').getPublicUrl(`dashboards/${fileName}`);
+        const publicUrl = publicUrlData.publicUrl;
+
+        // Manda pro Slack
+        let msg = `> 📊 *Snapshot do Dashboard APEX | Cobli*\n> Gerado por: ${currentUser ? currentUser.email : 'Usuário'}\n> Data: ${new Date().toLocaleString('pt-BR')}\n> \n${publicUrl}`;
+        await window.enviarNotificacaoSlack(msg);
+
+        window.showToast("✅ Dashboard enviado pro Slack com sucesso!");
+        window.fecharModal();
+        
+    } catch (e) {
+        console.error(e);
+        window.showMessage("❌ Erro ao enviar para o Slack. Verifique as políticas do bucket.");
+    } finally {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+    }
+};
 // ==========================================
 // INIT
 // ==========================================
