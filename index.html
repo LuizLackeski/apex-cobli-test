@@ -6329,7 +6329,7 @@ window._gerarHTMLRelatorio = function() {
     let ocupPeriodoLabel = ocupPeriodo === 'custom' ? 'Personalizado' : `Próximos ${ocupPeriodo} dias`;
 
     for (const d of ocupDatas) {
-        if (ocupRows.length >= 15) break; // 👈 AQUI: Aumentamos o limite de 8 para 15 dias!
+        if (ocupRows.length >= 15) break; 
         const dStr  = d.toLocaleDateString('pt-BR');
         const dNome = diasSemana[d.getDay()];
         let totalH = 0, ocupH = 0;
@@ -6398,28 +6398,25 @@ window._gerarHTMLRelatorio = function() {
             return { x, y, v };
         });
 
-        const pathData = "M " + points.map(p => `${p.x},${p.y}`).join(" L ");
-        const areaData = pathData + ` L ${points[points.length-1].x},${sparkH} L ${points[0].x},${sparkH} Z`;
+        const pathData = "M " + points.map(p => p.x + "," + p.y).join(" L ");
+        const areaData = pathData + " L " + points[points.length-1].x + "," + sparkH + " L " + points[0].x + "," + sparkH + " Z";
 
         sparkBars = `
             <path d="${areaData}" fill="rgba(79, 138, 247, 0.15)" stroke="none" />
             <path d="${pathData}" fill="none" stroke="#4f8af7" stroke-width="2.5" stroke-linejoin="round" />
             ${points.map(p => {
-                // 👇 REMOVIDA A TRAVA DOS NÚMEROS: Agora mostra TODOS os que forem maiores que 0!
                 const label = p.v > 0 
-                    ? \`<text x="\${p.x}" y="\${p.y - 6}" text-anchor="middle" font-size="7" fill="rgba(255,255,255,0.7)" font-family="Space Mono" font-weight="bold">\${p.v}</text>\` 
+                    ? '<text x="' + p.x + '" y="' + (p.y - 6) + '" text-anchor="middle" font-size="7" fill="rgba(255,255,255,0.7)" font-family="Space Mono" font-weight="bold">' + p.v + '</text>' 
                     : '';
-                return \`<circle cx="\${p.x}" cy="\${p.y}" r="3" fill="#0d1565" stroke="#4f8af7" stroke-width="1.5" />\${label}\`;
+                return '<circle cx="' + p.x + '" cy="' + p.y + '" r="3" fill="#0d1565" stroke="#4f8af7" stroke-width="1.5" />' + label;
             }).join('')}
         `;
 
-        // 👇 MOSTRAR MAIS DATAS NO EIXO X 👇
-        // Se for 16 dias ou menos, exibe todas as datas. Se for mais, mostra uma sim uma não.
         const stepLabel = len <= 16 ? 1 : 2; 
         xLabels = evolLabels.map((l, i) => {
             if (i % stepLabel !== 0 && i !== evolLabels.length - 1) return '';
             const x = paddingX + (i * stepX);
-            return \`<text x="\${x}" y="\${sparkH + 12}" text-anchor="middle" font-size="6.5" fill="rgba(255,255,255,0.3)" font-family="Space Mono">\${l}</text>\`;
+            return '<text x="' + x + '" y="' + (sparkH + 12) + '" text-anchor="middle" font-size="6.5" fill="rgba(255,255,255,0.3)" font-family="Space Mono">' + l + '</text>';
         }).join('');
     }
     // 👆 FIM DA MÁGICA DA LINHA 👆
