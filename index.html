@@ -6197,19 +6197,21 @@ window.irParaPainelComFiltro = function(status) {
 // ============================================================
 // APEX COBLI — RELATÓRIO EXECUTIVO VISUAL (SUBSTITUI gerarImagemDashboard)
 // Substitua a função window.gerarImagemDashboard no seu código
-// e adicione a função auxiliar window._gerarHTMLRelatorio abaixo dela.
+// e adicione as funções auxiliares abaixo dela.
 // ============================================================
 
 // ── FUNÇÃO AUXILIAR: Monta o HTML do relatório a partir dos dados do sistema ──
 window._gerarHTMLRelatorio = function() {
-    // ── 1. Coleta os filtros de data ativos ──────────────────────────────────
+
+    // ── 1. Lê filtros de data ativos no painel ───────────────────────────────
     const inputIni = document.getElementById('filtroDataInicio');
     const inputFim = document.getElementById('filtroDataFim');
     const dtIni = inputIni && inputIni.value ? inputIni.value.split('-').reverse().join('/') : '';
     const dtFim = inputFim && inputFim.value ? inputFim.value.split('-').reverse().join('/') : '';
     const periodoTexto = (dtIni && dtFim) ? `${dtIni} → ${dtFim}` : 'Geral · Sem filtro de data';
 
-    // ── 2. Contagens de KPI e status (sobre filtradosPainel) ─────────────────
+    // ── 2. KPIs e status — calculados sobre filtradosPainel ─────────────────
+    // filtradosPainel já respeita TODOS os filtros ativos do painel
     let total = 0, conc = 0, agend = 0;
     let cntSol = 0, cntNeg = 0, cntAgd = 0, cntAnd = 0, cntImp = 0, cntCon = 0, cntCan = 0;
 
@@ -6225,56 +6227,89 @@ window._gerarHTMLRelatorio = function() {
         else cntSol++;
     });
 
-    // ── 3. Distribuição por prestador ────────────────────────────────────────
-    const distPrest = {};
-    filtradosPainel.forEach(a => { if (a.prestador) distPrest[a.prestador] = (distPrest[a.prestador] || 0) + 1; });
-    const prestTop = Object.entries(distPrest).sort((a, b) => b[1] - a[1]).slice(0, 5);
-    const prestMax = prestTop[0] ? prestTop[0][1] : 1;
+    // ── 3. Rankings — todos calculados sobre filtradosPainel ────────────────
+    const distPrest = {}, distSol = {}, distLoc = {};
 
-    // ── 4. Distribuição por solicitante ──────────────────────────────────────
-    const distSol = {};
     filtradosPainel.forEach(a => {
+        if (a.prestador)
+            distPrest[a.prestador] = (distPrest[a.prestador] || 0) + 1;
+
         if (a.solicitante) {
             const nome = window.formatarCapitalize(a.solicitante);
             distSol[nome] = (distSol[nome] || 0) + 1;
         }
-    });
-    const solTop = Object.entries(distSol).sort((a, b) => b[1] - a[1]).slice(0, 5);
-    const solMax = solTop[0] ? solTop[0][1] : 1;
 
-    // ── 5. Distribuição por localidade ───────────────────────────────────────
-    const distLoc = {};
-    filtradosPainel.forEach(a => {
         if (a.cidade && a.uf) {
             const k = `${a.cidade.toUpperCase()}/${a.uf.toUpperCase()}`;
             distLoc[k] = (distLoc[k] || 0) + 1;
         }
     });
+
+    const prestTop = Object.entries(distPrest).sort((a, b) => b[1] - a[1]).slice(0, 5);
+    const prestMax = prestTop[0] ? prestTop[0][1] : 1;
+
+    const solTop = Object.entries(distSol).sort((a, b) => b[1] - a[1]).slice(0, 5);
+    const solMax = solTop[0] ? solTop[0][1] : 1;
+
     const locTop = Object.entries(distLoc).sort((a, b) => b[1] - a[1]).slice(0, 5);
     const locMax = locTop[0] ? locTop[0][1] : 1;
 
-    // ── 6. Ocupação da agenda (próximos dias com dados) ──────────────────────
+    // ── 4. Ocupação — respeita o período filtrado e os prestadores marcados ──
     const diasSemana = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab'];
     const ocupRows = [];
-    const hoje = new Date();
-    for (let i = 0; i < 30 && ocupRows.length < 6; i++) {
-        const d = new Date(hoje);
-        d.setDate(hoje.getDate() + i);
+
+    // Monta o array de datas:
+    // — filtro ativo → usa exatamente o intervalo do filtro
+    // — sem filtro → próximos 15 dias (padrão do dashboard)
+    const ocupDatas = [];
+    if (inputIni && inputIni.value && inputFim && inputFim.value) {
+        let cur = new Date(inputIni.value + 'T00:00:00');
+        const fim = new Date(inputFim.value + 'T00:00:00');
+        while (cur <= fim) {
+            ocupDatas.push(new Date(cur));
+            cur.setDate(cur.getDate() + 1);
+        }
+    } else {
+        const hoje = new Date();
+        for (let i = 0; i < 15; i++) {
+            const d = new Date(hoje);
+            d.setDate(hoje.getDate() + i);
+            ocupDatas.push(d);
+        }
+    }
+
+    // Filtra prestadores pelo checkbox ativo no painel (se houver seleção)
+    const prestMarcados = Array.from(
+        document.querySelectorAll('.cb-prestador:checked')
+    ).map(cb => cb.value);
+    const prestParaOcup = prestMarcados.length > 0
+        ? prestadores.filter(p => prestMarcados.includes(p.nome))
+        : prestadores;
+
+    for (const d of ocupDatas) {
+        if (ocupRows.length >= 8) break;
         const dStr = d.toLocaleDateString('pt-BR');
         const dNome = diasSemana[d.getDay()];
         let totalH = 0, ocupH = 0;
-        prestadores.forEach(p => {
+        prestParaOcup.forEach(p => {
             const s = window.getOcupacaoReal(p, dStr, dNome);
             totalH += Math.max(s.geral.total, s.geral.ocupadas);
             ocupH  += s.geral.ocupadas;
         });
         if (totalH > 0 || ocupH > 0) {
             const pct = totalH > 0 ? Math.round((ocupH / totalH) * 100) : (ocupH > 0 ? 100 : 0);
-            ocupRows.push({ data: dStr.substring(0, 5), dia: dNome, livres: Math.max(0, totalH - ocupH), ocupH, totalH, pct });
+            ocupRows.push({
+                data: dStr.substring(0, 5),
+                dia: dNome,
+                livres: Math.max(0, totalH - ocupH),
+                ocupH,
+                totalH,
+                pct
+            });
         }
     }
 
-    // ── 7. Helpers de renderização ──────────────────────────────────────────
+    // ── 5. Helpers de renderização ───────────────────────────────────────────
     const rankRows = (arr, max, cor) => arr.map((item, i) => {
         const pct = max > 0 ? Math.round((item[1] / max) * 100) : 0;
         return `<div style="display:flex;align-items:center;gap:10px;margin-bottom:9px;">
@@ -6291,7 +6326,7 @@ window._gerarHTMLRelatorio = function() {
 
     const ocupHtml = ocupRows.map(o => {
         const cls = o.pct >= 80 ? '#FF4633' : o.pct >= 50 ? '#f59e0b' : '#00AE97';
-        const pct2 = Math.max(2, o.pct); // barra mínima visível
+        const pct2 = Math.max(2, o.pct);
         return `<div style="display:flex;align-items:center;gap:8px;margin-bottom:7px;">
             <span style="font-family:'Space Mono',monospace;font-size:0.62rem;color:rgba(255,255,255,0.35);width:62px;flex-shrink:0;">${o.data} ${o.dia}</span>
             <div style="flex:1;">
@@ -6312,7 +6347,7 @@ window._gerarHTMLRelatorio = function() {
             <span style="width:6px;height:6px;border-radius:50%;background:${color};flex-shrink:0;"></span>${label} · ${count}
            </div>` : '';
 
-    // ── 8. Monta o HTML completo do relatório ────────────────────────────────
+    // ── 6. Monta o HTML final ────────────────────────────────────────────────
     const agora = new Date().toLocaleString('pt-BR');
 
     return `<!DOCTYPE html>
@@ -6320,10 +6355,7 @@ window._gerarHTMLRelatorio = function() {
 <head>
 <meta charset="UTF-8">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
-<style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { background: #07074E; }
-</style>
+<style>* { box-sizing: border-box; margin: 0; padding: 0; } body { background: #07074E; }</style>
 </head>
 <body>
 <div id="apex-report" style="width:680px;background:#07074E;font-family:'DM Sans',sans-serif;overflow:hidden;">
@@ -6402,9 +6434,9 @@ window._gerarHTMLRelatorio = function() {
     </div>
     <div style="background:#0a1158;padding:18px 20px;border-left:1px solid rgba(255,255,255,0.05);">
       <div style="font-size:0.56rem;text-transform:uppercase;letter-spacing:2px;color:rgba(255,255,255,0.3);font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:8px;">
-        <span style="display:inline-block;width:14px;height:2px;background:#f59e0b;border-radius:1px;"></span>Ocupação da agenda
+        <span style="display:inline-block;width:14px;height:2px;background:#f59e0b;border-radius:1px;"></span>Ocupação da agenda ${(dtIni && dtFim) ? '' : '· próximos 15 dias'}
       </div>
-      ${ocupHtml || '<div style="font-size:0.75rem;color:rgba(255,255,255,0.3);font-style:italic;">Nenhum dado de agenda configurado.</div>'}
+      ${ocupHtml || '<div style="font-size:0.75rem;color:rgba(255,255,255,0.3);font-style:italic;">Nenhum dado de agenda no período.</div>'}
     </div>
   </div>
 
@@ -6420,15 +6452,14 @@ window._gerarHTMLRelatorio = function() {
 };
 
 
-// ── FUNÇÃO PRINCIPAL: substitui window.gerarImagemDashboard ─────────────────
+// ── FUNÇÃO PRINCIPAL: substitui window.gerarImagemDashboard ──────────────────
 window.gerarImagemDashboard = function () {
     window.showToast('⏳ Gerando relatório executivo...');
 
-    // Pequeno delay para o toast aparecer antes do html2canvas bloquear
     setTimeout(async () => {
         const htmlRelatorio = window._gerarHTMLRelatorio();
 
-        // Cria um iframe oculto para renderizar o HTML com fontes e estilos corretos
+        // Iframe oculto para renderizar com fontes corretas
         const iframe = document.createElement('iframe');
         iframe.style.cssText = 'position:fixed;left:-9999px;top:-9999px;width:680px;height:auto;visibility:hidden;border:none;';
         document.body.appendChild(iframe);
@@ -6438,7 +6469,7 @@ window.gerarImagemDashboard = function () {
         iDoc.write(htmlRelatorio);
         iDoc.close();
 
-        // Aguarda as fontes carregarem dentro do iframe
+        // Aguarda fontes carregarem
         await new Promise(resolve => setTimeout(resolve, 1800));
 
         const reportEl = iDoc.getElementById('apex-report');
@@ -6458,7 +6489,6 @@ window.gerarImagemDashboard = function () {
             });
 
             document.body.removeChild(iframe);
-
             const imgData = canvas.toDataURL('image/png');
 
             const html = `
@@ -6493,7 +6523,7 @@ window.gerarImagemDashboard = function () {
 };
 
 
-// ── HELPER: envia o relatório para o Slack (substitui window.enviarDashboardSlack) ──
+// ── HELPER: envia o relatório para o Slack ───────────────────────────────────
 window._enviarRelatorioSlack = async function () {
     const btn = document.getElementById('btn-envia-relatorio-slack');
     const originalText = btn ? btn.innerHTML : '';
@@ -6503,7 +6533,7 @@ window._enviarRelatorioSlack = async function () {
         const imgEl = document.getElementById('preview-relatorio-img');
         if (!imgEl) throw new Error('Imagem não encontrada');
 
-        // Converte dataURL → Blob
+        // dataURL → Blob
         const arr = imgEl.src.split(',');
         const mime = arr[0].match(/:(.*?);/)[1];
         const bstr = atob(arr[1]);
@@ -6514,7 +6544,6 @@ window._enviarRelatorioSlack = async function () {
 
         const fileName = `relatorio_apex_${new Date().getTime()}.png`;
 
-        // Upload para o Supabase Storage
         const { error: uploadError } = await supabaseClient.storage
             .from('icones')
             .upload(`dashboards/${fileName}`, blob, { contentType: 'image/png', upsert: true });
@@ -6525,7 +6554,6 @@ window._enviarRelatorioSlack = async function () {
             .from('icones')
             .getPublicUrl(`dashboards/${fileName}`);
 
-        // Mensagem de texto + URL da imagem para o Slack
         const inputIni = document.getElementById('filtroDataInicio');
         const inputFim = document.getElementById('filtroDataFim');
         const dtIni = inputIni && inputIni.value ? inputIni.value.split('-').reverse().join('/') : '';
@@ -6535,7 +6563,6 @@ window._enviarRelatorioSlack = async function () {
         const msg = `> 📊 *Relatório Executivo APEX | Cobli*\n> Período: ${periodoStr}\n> Enviado por: ${currentUser ? currentUser.email : 'Usuário'}\n> ${new Date().toLocaleString('pt-BR')}\n> \n${publicUrlData.publicUrl}`;
 
         await window.enviarNotificacaoSlack(msg);
-
         window.showToast('✅ Relatório enviado pro Slack!');
         window.fecharModal();
 
