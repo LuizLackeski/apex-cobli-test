@@ -3867,22 +3867,38 @@ async function checkSession() {
         
         window.startInactivityTracker();
         
-        // ── Logout ao fechar a aba ──────────────────────────
-window.addEventListener('pagehide', () => {
-    localStorage.setItem('apex_logout_pending', Date.now().toString());
+// ── Logout ao fechar a aba ──────────────────────────
+window.addEventListener('pagehide', (e) => {
+    // e.persisted = true significa que a página foi para o bfcache (não fechou)
+    // Só marca logout se a página realmente está sendo descartada
+    if (!e.persisted) {
+        localStorage.setItem('apex_logout_pending', Date.now().toString());
+    }
 });
 
+// Marca no sessionStorage que esta é uma aba ativa (recarregamento legítimo)
+// sessionStorage sobrevive a recarregamentos mas é apagado ao fechar a aba
+const estaAbaAtiva = sessionStorage.getItem('apex_aba_ativa');
+
 const logoutPending = localStorage.getItem('apex_logout_pending');
-if (logoutPending) {
+if (logoutPending && !estaAbaAtiva) {
+    // Só desloga se NÃO for um recarregamento da mesma aba
     const tempoDecorrido = Date.now() - parseInt(logoutPending);
-    if (tempoDecorrido < 30000) {
-        localStorage.removeItem('apex_logout_pending');
+    localStorage.removeItem('apex_logout_pending');
+    if (tempoDecorrido < 60000) { // janela de 60s
         await supabaseClient.auth.signOut();
         window.location.reload();
         return;
     }
+} else {
+    // Limpa qualquer pending antigo se a aba estava ativa
     localStorage.removeItem('apex_logout_pending');
 }
+
+// Marca esta aba como ativa para sobreviver a recarregamentos
+sessionStorage.setItem('apex_aba_ativa', '1');
+// ────────────────────────────────────────────────────
+
     } else {
         document.getElementById('auth-overlay').style.display = 'flex';
         document.body.style.display = 'block'; 
