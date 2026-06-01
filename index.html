@@ -3328,39 +3328,34 @@ window.authAction = async function(type) {
         if (error) { 
             btn.innerText = "Entrar"; 
             errDiv.style.display = 'block'; 
-} else { 
-            // 👇 MÁGICA DO LOG DE ACESSO AQUI 👇
-            const userId = data.user.id;
-            const agora = new Date().toISOString();
-            
-            // Busca qual foi o último login e o penúltimo
-            const { data: perfil } = await supabaseClient.from('perfis_usuarios')
-                .select('ultimo_login, penultimo_login') // 👈 Agora puxamos o penúltimo também
-                .eq('id', userId)
-                .single();
-            
-            let novoPenultimo = perfil?.penultimo_login || null;
-            
-            if (perfil?.ultimo_login) {
-                // Pega só a data (DD/MM/YYYY) para comparar, ignorando as horas
-                let dataUltimo = new Date(perfil.ultimo_login).toLocaleDateString('pt-BR');
-                let dataHoje = new Date(agora).toLocaleDateString('pt-BR');
-                
-                // Só joga para o "penúltimo" se o login anterior foi num dia diferente
-                if (dataUltimo !== dataHoje) {
-                    novoPenultimo = perfil.ultimo_login;
-                }
-            }
-            
-            // Salva no banco com a lógica corrigida
-            await supabaseClient.from('perfis_usuarios').update({
-                penultimo_login: novoPenultimo,
-                ultimo_login: agora
-            }).eq('id', userId);
-            // 👆 FIM DA MÁGICA 👆
+} else {
+    const userId = data.user.id;
+    const agora = new Date().toISOString();
 
-            window.location.reload(); 
+    const { data: perfil } = await supabaseClient.from('perfis_usuarios')
+        .select('ultimo_login, penultimo_login')
+        .eq('id', userId)
+        .single();
+
+    let novoPenultimo = perfil?.penultimo_login || null;
+
+    if (perfil?.ultimo_login) {
+        // CORRIGIDO: compara datas em UTC puro (sem toLocaleDateString)
+        const dataUltimoUTC = perfil.ultimo_login.substring(0, 10); // "YYYY-MM-DD"
+        const dataAgoraUTC  = agora.substring(0, 10);               // "YYYY-MM-DD"
+
+        if (dataUltimoUTC !== dataAgoraUTC) {
+            novoPenultimo = perfil.ultimo_login;
         }
+    }
+
+    await supabaseClient.from('perfis_usuarios').update({
+        penultimo_login: novoPenultimo,
+        ultimo_login: agora
+    }).eq('id', userId);
+
+    window.location.reload();
+}
     } else if (type === 'reset') {
         const email = document.getElementById('reset-email').value;
         const btn = document.getElementById('btnReset');
@@ -3813,25 +3808,41 @@ window.resetInactivityTimer = function() {
 };
 
 window.startInactivityTracker = function() {
-    if (window._inactivityTrackerAtivo) return; // evita múltiplos listeners
+    if (window._inactivityTrackerAtivo) return;
     window._inactivityTrackerAtivo = true;
+
+    // Registra quando o usuário saiu da aba
+    let _backgroundSince = null;
 
     const eventos = ['mousemove', 'mousedown', 'keydown', 'scroll', 'touchstart', 'click'];
     eventos.forEach(evt => {
         document.addEventListener(evt, window.resetInactivityTimer, { passive: true });
     });
 
-    // Pausa o timer quando a aba fica em background, retoma quando volta
     document.addEventListener('visibilitychange', () => {
         if (document.visibilityState === 'visible') {
+            // Verifica se ficou tempo demais em background
+            if (_backgroundSince !== null) {
+                const ausente = Date.now() - _backgroundSince;
+                if (ausente >= TEMPO_LIMITE_INATIVIDADE) {
+                    // Tempo expirou enquanto estava em outra aba
+                    if (typeof window.handleLogout === 'function') {
+                        window.showToast('⏱️ Sessão expirada por inatividade. Saindo...');
+                        setTimeout(() => window.handleLogout(), 2000);
+                        return;
+                    }
+                }
+                _backgroundSince = null;
+            }
             window.resetInactivityTimer();
         } else {
-            // Aba em background: cancela o timer de aviso mas mantém o de logout
+            // Indo para background: cancela avisos e registra quando saiu
             clearTimeout(window._inactivityWarningTimer);
+            _backgroundSince = Date.now();
         }
     });
 
-    window.resetInactivityTimer(); // inicia a contagem
+    window.resetInactivityTimer();
 };
             
 async function checkSession() {
@@ -3855,6 +3866,23 @@ async function checkSession() {
         supabaseClient.channel('mudancas-agendamentos').on('postgres_changes', { event: '*', schema: 'public', table: 'agendamentos' }, (payload) => { console.log('🚨 BD mudou! Atualizando...', payload); window.carregarDadosDoBanco(); }).subscribe();
         
         window.startInactivityTracker();
+        
+        // ── Logout ao fechar a aba ──────────────────────────
+window.addEventListener('pagehide', () => {
+    localStorage.setItem('apex_logout_pending', Date.now().toString());
+});
+
+const logoutPending = localStorage.getItem('apex_logout_pending');
+if (logoutPending) {
+    const tempoDecorrido = Date.now() - parseInt(logoutPending);
+    if (tempoDecorrido < 30000) {
+        localStorage.removeItem('apex_logout_pending');
+        await supabaseClient.auth.signOut();
+        window.location.reload();
+        return;
+    }
+    localStorage.removeItem('apex_logout_pending');
+}
     } else {
         document.getElementById('auth-overlay').style.display = 'flex';
         document.body.style.display = 'block'; 
@@ -5903,8 +5931,8 @@ document.getElementById("painel-conteudo").innerHTML = filtradosPainel.map((a, i
         if (statusOriginal.includes('negocia') || statusOriginal.includes('aguardando')) statusMapeado = 'negociacao';
         else if (statusOriginal.includes('agendado') || statusOriginal.includes('scheduled')) statusMapeado = 'agendado';
         else if (statusOriginal.includes('andamento') || statusOriginal.includes('progress') || statusOriginal.includes('deslocamento')) statusMapeado = 'andamento';
-        else if (statusOriginal.includes('impedido') || statusOriginal.includes('reportado') || status.includes('falha')) statusMapeado = 'impedido';
-        else if (statusOriginal.includes('conclu') || statusOriginal.includes('completed') || status.includes('finalizado')) statusMapeado = 'concluido';
+else if (statusOriginal.includes('impedido') || statusOriginal.includes('reportado') || statusOriginal.includes('falha')) statusMapeado = 'impedido';
+else if (statusOriginal.includes('conclu') || statusOriginal.includes('completed') || statusOriginal.includes('finalizado')) statusMapeado = 'concluido';
         else if (statusOriginal.includes('cancelado') || statusOriginal.includes('canceled')) statusMapeado = 'cancelado';
 
         return `<div class="painel-item" data-ticket="${a.ticket}" data-status="${statusMapeado}" onclick="window.abrirDetalhesAgendamento(${i})">
